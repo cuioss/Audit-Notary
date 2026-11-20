@@ -54,7 +54,7 @@ the header of `src/styles/tokens.css`, and a change of the token contract is tak
 Tokens, fonts and checks:
 
 * `src/styles/tokens.css`: the token contract of `pm-web-app`; `:root` light, dark under `prefers-color-scheme` and
-  `[data-theme]`. `src/lib/theme.ts`: light, dark, system; stored in `localStorage` key `cf_theme`.
+  `[data-theme]`. `src/lib/theme.ts`: light, dark, system; stored in `localStorage` key `trailhand_theme`.
 * Inter variable font self-hosted in `static/fonts/` with its licence file; own icon set in `src/lib/icons/`.
 * Contrast: an automated test computes the relative luminance of WCAG 2.1
   (link:https://www.w3.org/TR/WCAG21/#dfn-relative-luminance[definition]) for every text/background token pair in both
@@ -145,6 +145,11 @@ missing `lang` returns English; any other value is answered with `400`. `src/lib
 application version. A lint rule
 fails on string literals in markup outside `src/lib/i18n`.
 
+The catalogue has one source: `web-app/src/main/resources/META-INF/trailhand/messages/messages_en.properties` and
+`messages_de.properties` (UTF-8). The `web-app` JAR carries them; the application and the mock server (`web-mock`,
+xref:testing.adoc#TRH-TEST-1[TRH-TEST-1]) serve them from the class path, and the web unit tests read the same
+files.
+
 [#TRH-WEB-8]
 == TRH-WEB-8: Page Security
 
@@ -174,3 +179,76 @@ header that differs from the application's own origin is answered with `403`; a 
 by the anti-CSRF header alone.
 
 AsciiDoc: rendered by the server in safe mode; the HTML is sanitised against an allow-list before it is returned.
+
+[#TRH-WEB-9]
+== TRH-WEB-9: Shell Requests
+
+* The shell must start from three requests: the application status, the message catalogue and the session.
+* Every refused `/api/v1` request must answer a JSON body that names its outcome, so the web app decides by the outcome
+  and never by the status code alone.
+
+[cols="2,1,3"]
+|===
+|Request |Login |Answer
+
+|`GET /api/v1/status`
+|no
+|`{"version", "degraded", "repositories": [{"alias", "fetch"}]}`; `degraded` is `true` while a fetch of a repository
+fails (xref:architecture-and-modules.adoc#TRH-GEN-6[TRH-GEN-6]), `fetch` is `UP` or `DOWN`. Carries no personal data.
+
+|`GET /api/v1/messages?lang=en\|de`
+|no
+|The catalogue (<<TRH-WEB-7>>)
+
+|`GET /api/v1/session`
+|yes
+|`{"user": {"pseudonym", "name"}, "rights": [{"repository", "actions"}], "csrfToken", "firstLoginRequired"}`;
+`firstLoginRequired` is `true` until the own directory entry is saved
+(xref:directory.adoc#TRH-DIR-2[TRH-DIR-2]), `pseudonym` is then `null`
+
+|`GET /api/v1/due`
+|yes
+|`{"items": [{"kind", "lens", "title", "address", "due"}]}`: the launcher of the *Due* lens; `kind` is `deadline`,
+`review` or `release`, `address` a canonical address (<<TRH-WEB-3>>), `due` an ISO 8601 date
+
+|`GET /api/v1/events`
+|yes
+|The event stream (<<TRH-WEB-5>>); besides `document-saved` the event `status` with the body of
+`GET /api/v1/status`
+|===
+
+Refusals:
+
+[cols="1,1,3"]
+|===
+|Status |`outcome` |Meaning
+
+|`401`
+|`UNAUTHENTICATED`
+|No session; the body carries `login`, the login address (xref:authentication.adoc#TRH-AUTH-1[TRH-AUTH-1])
+
+|`403`
+|`CSRF_REJECTED`
+|Anti-CSRF header missing or wrong, or foreign `Origin` (<<TRH-WEB-8>>)
+
+|`403`
+|`FORBIDDEN`
+|No mapped right (xref:authentication.adoc#TRH-AUTH-2[TRH-AUTH-2])
+
+|`403`
+|`FIRST_LOGIN_REQUIRED`
+|Request outside the first-login allow-list (xref:directory.adoc#TRH-DIR-2[TRH-DIR-2])
+
+|`422`
+|`VALIDATION`
+|`errors`: a list of `{"pointer", "code"}`, `pointer` a JSON Pointer into the request body
+
+|`503`
+|`GIT_UNAVAILABLE`
+|The Git server is unreachable (xref:architecture-and-modules.adoc#TRH-GEN-6[TRH-GEN-6])
+|===
+
+The login callback (xref:authentication.adoc#TRH-AUTH-1[TRH-AUTH-1]) navigates with
+`<meta http-equiv="refresh" content="0;url=<return>">`, so the page needs no script and passes the policy of
+<<TRH-WEB-8>> unchanged. `POST /api/v1/auth/logout` answers `{"redirect"}`, the address the web app navigates to
+(the provider's `end_session_endpoint`).

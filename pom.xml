@@ -37,7 +37,70 @@
     <properties>
         <!-- Target Java 25; CI also builds on 27 (.github/project.yml, maven-build.java-versions). -->
         <maven.compiler.release>25</maven.compiler.release>
+        <!-- Token Sheriff: the OIDC confidential-client engine and the bearer validation (ADR-0001). -->
+        <version.token-sheriff>0.9.9</version.token-sheriff>
+        <!-- The git-document-repository libraries have no release yet; their snapshots come from the
+             Sonatype snapshot repository declared below. A release of TrailHand needs a release of them. -->
+        <version.git-document-repository>0.1.0-SNAPSHOT</version.git-document-repository>
     </properties>
-    <!-- The modules of doc/specification/architecture-and-modules.adoc are added when they are built:
-         categories, web-app, trailhand, web-e2e, integration-tests, deployment. -->
+    <!-- The modules of doc/specification/architecture-and-modules.adoc, in reactor order; categories and
+         deployment are added when they are built. -->
+    <modules>
+        <module>web-app</module>
+        <module>web-mock</module>
+        <module>web-e2e</module>
+    </modules>
+    <dependencyManagement>
+        <dependencies>
+            <!-- Import order as specified: quarkus-bom first, so Quarkus wins version conflicts, then the
+                 Token Sheriff BOM, then the git-document-repository versions. -->
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-bom</artifactId>
+                <version>${version.quarkus}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>de.cuioss.sheriff.token</groupId>
+                <artifactId>token-sheriff-bom</artifactId>
+                <version>${version.token-sheriff}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>de.cuioss</groupId>
+                <artifactId>git-core</artifactId>
+                <version>${version.git-document-repository}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.cuioss</groupId>
+                <artifactId>git-store</artifactId>
+                <version>${version.git-document-repository}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.cuioss</groupId>
+                <artifactId>git-testing</artifactId>
+                <version>${version.git-document-repository}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.cuioss</groupId>
+                <artifactId>trailhand-web-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <repositories>
+        <!-- Snapshots only: the git-document-repository libraries until their first release. -->
+        <repository>
+            <id>central-snapshots</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 </project>

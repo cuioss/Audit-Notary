@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>de.cuioss</groupId>
+        <artifactId>trailhand-parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <artifactId>trailhand-web-e2e</artifactId>
+    <packaging>pom</packaging>
+    <name>TrailHand Web E2E</name>
+    <description>The end-to-end suite of the web app: Playwright and axe-core against the Vite dev server of web-app and
+        the mock server web-mock (doc/specification/testing.adoc, TRH-TEST-1). Runs with the profile e2e.
+    </description>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.install.skip>true</maven.install.skip>
+        <sonar.skip>true</sonar.skip>
+        <skip.lint>false</skip.lint>
+        <!-- Skipped in the default build, which has no browser; -Pe2e runs the suite. -->
+        <skipPlaywrightTests>true</skipPlaywrightTests>
+        <!-- Empty: the ports of web-e2e/tests/helpers/ports.js (5173 and 7420) apply. -->
+        <trailhand.e2e.webPort/>
+        <trailhand.e2e.mockPort/>
+    </properties>
+
+    <dependencies>
+        <!-- Reactor order only: the suite starts web-mock and the dev server of web-app. -->
+        <dependency>
+            <groupId>de.cuioss</groupId>
+            <artifactId>trailhand-web-mock</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>${version.frontend-maven-plugin}</version>
+                <configuration>
+                    <nodeVersion>${frontend.node.version}</nodeVersion>
+                    <npmVersion>${frontend.npm.version}</npmVersion>
+                    <installDirectory>target</installDirectory>
+                    <environmentVariables>
+                        <TRAILHAND_WEB_PORT>${trailhand.e2e.webPort}</TRAILHAND_WEB_PORT>
+                        <TRAILHAND_MOCK_PORT>${trailhand.e2e.mockPort}</TRAILHAND_MOCK_PORT>
+                        <PLAYWRIGHT_OUTPUT_DIR>${project.build.directory}</PLAYWRIGHT_OUTPUT_DIR>
+                        <PW_TEST_HTML_REPORT_OPEN>never</PW_TEST_HTML_REPORT_OPEN>
+                    </environmentVariables>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>install-node-and-npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                    </execution>
+                    <execution>
+                        <id>npm-install</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <!-- 'ci', not 'install': exactly the committed package-lock.json. -->
+                            <arguments>ci</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-lint</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>test</phase>
+                        <configuration>
+                            <arguments>run lint</arguments>
+                            <skip>${skip.lint}</skip>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>playwright-install</id>
+                        <goals>
+                            <goal>npx</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <arguments>playwright install chromium</arguments>
+                            <skip>${skipPlaywrightTests}</skip>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>playwright-test</id>
+                        <goals>
+                            <goal>npx</goal>
+                        </goals>
+                        <phase>integration-test</phase>
+                        <configuration>
+                            <arguments>playwright test --reporter=list</arguments>
+                            <skip>${skipPlaywrightTests}</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>e2e</id>
+            <properties>
+                <skipPlaywrightTests>false</skipPlaywrightTests>
+            </properties>
+        </profile>
+        <profile>
+            <id>env-web-port</id>
+            <activation>
+                <property>
+                    <name>env.TRAILHAND_WEB_PORT</name>
+                </property>
+            </activation>
+            <properties>
+                <trailhand.e2e.webPort>${env.TRAILHAND_WEB_PORT}</trailhand.e2e.webPort>
+            </properties>
+        </profile>
+        <profile>
+            <id>env-mock-port</id>
+            <activation>
+                <property>
+                    <name>env.TRAILHAND_MOCK_PORT</name>
+                </property>
+            </activation>
+            <properties>
+                <trailhand.e2e.mockPort>${env.TRAILHAND_MOCK_PORT}</trailhand.e2e.mockPort>
+            </properties>
+        </profile>
+    </profiles>
+</project>

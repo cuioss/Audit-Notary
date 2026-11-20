@@ -1,0 +1,185 @@
+= TrailHand Web Mock
+:toc: left
+:toclevels: 2
+:source-highlighter: highlight.js
+
+A mock server of the `/api/v1` requests of the TrailHand web app, driven by scenario files. The web unit tests, the
+end-to-end suite (`web-e2e`) and manual work on views run against it instead of the application, the identity provider
+and a Git server. Specification: `doc/specification/testing.adoc`, TRH-TEST-1; decision:
+`doc/adr/0003-UI_tests_run_against_a_scenario_mock_server.adoc`. Development and tests only; never deployed.
+
+Plain Java 25: the JDK HTTP server on `127.0.0.1`, one virtual thread per request, Jackson. The message catalogue
+and the canonical addresses come from the `trailhand-web-app` JAR (`META-INF/trailhand/`).
+
+== Start and Stop
+
+[source,bash]
+----
+web-mock/start.sh -s workshop            # background; PID and log in web-mock/target/
+web-mock/start.sh -s first-login -p 7421 -t ordered
+web-mock/start.sh -f                     # foreground
+web-mock/stop.sh
+----
+
+`start.sh` compiles when a source is newer than the last build; the build of `web-app` then contributes its resources
+only (no Node build). On start the mock prints one line:
+
+----
+web-mock listening on http://127.0.0.1:7420 scenario workshop#ready
+----
+
+[cols="1,1,3"]
+|===
+|Option |Default |Meaning
+
+|`-s`, `--scenario`
+|`workshop`
+|A profile name, `name#state`, or the path of a scenario file (optionally with `#state`)
+
+|`-p`, `--port`
+|`$TRAILHAND_MOCK_PORT` or `7420`
+|Port on `127.0.0.1`; `0` takes any free port
+
+|`-t`, `--timing`
+|`realistic`
+|`realistic` waits for the delays of events and timed transitions; `ordered` plays them at once, in file order
+
+|`-h`, `--help`
+|
+|Prints the usage
+|===
+
+Without the scripts: `java -cp … de.cuioss.trailhand.mock.cli.WebMockCli --scenario workshop`, or
+`./mvnw -pl web-mock exec:java -Dexec.args="--scenario workshop"`. From a JUnit test:
+`try (var mock = WebMock.start("workshop", 0, Timing.ORDERED)) { … }`.
+
+== Profiles
+
+[cols="1,1,3"]
+|===
+|Profile |States |Represents
+
+|`workshop` (default)
+|`ready`, `saved-by-other`, `forbidden`
+|An assessor in a populated installation: Due list with every kind, catalogs; `saved-by-other` pushes a
+`document-saved` event, `forbidden` refuses the Due list
+
+|`first-login`
+|`form`, `invalid-team`, `registered`
+|A user without directory entry: everything outside the first-login allow-list answers `FIRST_LOGIN_REQUIRED`;
+`PUT /api/v1/directory/me` saves the entry (`registered`) or is refused with `REFERENCE_NOT_FOUND`
+(`invalid-team`)
+
+|`read-only`
+|`ready`
+|The right `read` only; an edit answers `FORBIDDEN`
+
+|`degraded`
+|`unreachable`, `recovered`
+|The fetch of `samm-assessments` fails: status `degraded`, a save answers `GIT_UNAVAILABLE`; `recovered` pushes the
+`status` event with the healthy status
+
+|`empty`
+|`ready`
+|A fresh installation: nothing due
+|===
+
+`src/main/resources/scenarios/primary.txt` lists the primary profiles; a test module can add its own under
+`src/test/resources/scenarios/<name>.json`.
+
+== What the Mock Emulates
+
+* *Session:* `GET /api/v1/auth/login?return=<address>` signs in as the scenario's user without an identity provider:
+  it sets the cookie `trailhand-mock-session` (`HttpOnly`, `SameSite=Strict`, `Path=/`; not `Secure`, the mock runs
+  on plain HTTP) and answers a page that navigates to the checked `return` by `<meta http-equiv="refresh">`, no
+  script. A `return` that is not a canonical address becomes `/`. Every other `/api/v1` request without session
+  answers `401 UNAUTHENTICATED` with `login`.
+* *Anti-CSRF and Origin:* every state-changing request must carry `X-CSRF-Token` with the token of
+  `GET /api/v1/session`; an `Origin` header must be the own origin, which is `X-Forwarded-Proto://X-Forwarded-Host`
+  behind the Vite proxy (`xfwd: true`), otherwise `http://<Host>`. Otherwise `403 CSRF_REJECTED`.
+* *First login:* while `first_login_required` holds, every request outside the allow-list of TRH-DIR-2 answers
+  `403 FIRST_LOGIN_REQUIRED`.
+* *Built in:* `GET /api/v1/session`, `POST /api/v1/auth/logout` (answers `{"redirect"}` to the page
+  `/api/v1/auth/mock-signed-out`), `GET /api/v1/messages?lang=en|de` (`400` for another language) and
+  `GET /api/v1/events`.
+* *Event stream:* `text/event-stream`, frames `id:`, `event:`, `data:`; a `: keepalive` comment every 15 s. Events
+  come from entered states and `POST /mock/broadcast`; switching, resetting or jumping first announces the new
+  `status`.
+
+== Control Routes
+
+No login; the Vite dev server forwards `/mock` for loopback clients only.
+
+[cols="1,3"]
+|===
+|Request |Effect
+
+|`GET /mock/state`
+|`{"scenario", "state", "description", "first_login_required", "timing", "links": [{name, method, path, next}]}`
+
+|`GET /mock/scenarios`
+|`{"primary": [...]}`
+
+|`POST /mock/scenario`
+|Body `{"scenario": "name[#state]"}` (or `?name=`): switches the profile; keeps the sessions, clears the acts
+
+|`POST /mock/goto/{state}`
+|Moves to a state of the active profile and plays its events
+
+|`POST /mock/reset`
+|Back to the start state; clears the acts; keeps the sessions
+
+|`POST /mock/broadcast`
+|Body `{"event", "data"}`: pushes one event to every open stream
+
+|`GET /mock/acts`, `DELETE /mock/acts`
+|The recorded state-changing `/api/v1` requests `{method, path, state, body}`; clears them
+
+|`POST /mock/sessions/clear`
+|Drops every session
+|===
+
+== Scenario Format
+
+[source,json]
+----
+{
+  "format_version": 1,
+  "name": "workshop",
+  "description": "…",
+  "user": { "pseudonym": "p-4c1a9e", "name": "Alex Example", "groups": ["samm-assessors"] },
+  "rights": [ { "repository": "samm-assessments", "actions": ["read", "edit"] } ],
+  "first_login_required": false,
+  "start": "ready",
+  "routes": { "GET /api/v1/status": { "status": 200, "body": { } } },
+  "states": {
+    "ready": {
+      "description": "…",
+      "first_login_required": false,
+      "routes": { "GET /api/v1/due": { "status": 200, "body": { } } },
+      "links": { "save-entry": { "method": "PUT", "path": "/api/v1/directory/me", "next": "registered",
+                                  "status": 200, "body": { } } },
+      "events": [ { "after_ms": 0, "event": "document-saved", "data": { } } ],
+      "auto": { "after_ms": 1500, "next": "other" }
+    }
+  }
+}
+----
+
+* A request is answered by the first of: a link of the current state with the same method and path (moves to `next`
+  and plays that state's events and timed transition), a route of the state, a route of the scenario; otherwise
+  `404 MOCK_NO_ROUTE`.
+* Route keys are `"METHOD /path"` without query; `status` defaults to `200`, `body` to `{}`, `after_ms` to `0`.
+* Checked on load: format version `1`; name, user name and start present; every `next` names a state; methods `GET`,
+  `POST`, `PUT`, `DELETE`; paths below `/api/v1/` without query; status 100 to 599; actions `read`, `edit`,
+  `approve`, `administer-catalogs`; no negative delay. A violation names file, location and rule.
+
+== Use by the Web App and the End-to-End Suite
+
+* *Vite dev server:* proxies `/api` and `/mock` to `http://127.0.0.1:$TRAILHAND_MOCK_PORT` with `changeOrigin` and
+  `xfwd`; `/mock` only for loopback clients.
+* *Web unit tests:* read the scenario files directly as fixtures.
+* *End-to-end suite:* starts the mock in its global setup on a fixed port with `--timing ordered`, switches profiles
+  with `POST /mock/scenario` and asserts the sent requests with `GET /mock/acts`.
+
+Log records: link:doc/LogMessages.adoc[LogMessages].

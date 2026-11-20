@@ -24,9 +24,13 @@ xref:../concepts/application-architecture.adoc#_testing[Application Architecture
 |`web-app` build
 |Vitest, jsdom, Testing Library
 
+|Mock server
+|`web-mock` build (surefire)
+|JUnit 5, `cui-test-generator`, `cui-test-juli-logger`; the scenario files themselves (<<TRH-TEST-1>>)
+
 |End-to-end
 |Profile `e2e`
-|Playwright, axe-core
+|Playwright, axe-core against the Vite dev server of `web-app` and the mock server `web-mock` (<<TRH-TEST-1>>)
 
 |Integration
 |Profile `integration-tests` (failsafe `*IT`)
@@ -35,6 +39,44 @@ xref:../concepts/application-architecture.adoc#_testing[Application Architecture
 |Benchmarks
 |Profile `benchmarks` of the `integration-tests` module, in a CI job of its own
 |The fixture and measurements of <<TRH-NFR-1>> and <<TRH-NFR-2>>; reports, does not gate
+|===
+
+[#TRH-TEST-1]
+== TRH-TEST-1: Mock Server for the Web App
+
+* The web unit tests and the end-to-end suite must run without the application, the identity provider and a Git
+  server, against a mock server that answers the requests of the web app (xref:web-app.adoc#TRH-WEB-9[TRH-WEB-9]).
+* The mock server must emulate the session cookie, the anti-CSRF header and the `Origin` check of
+  xref:web-app.adoc#TRH-WEB-8[TRH-WEB-8], so the end-to-end suite exercises them.
+* Test scenarios must be data: each profile a scenario file, selectable at start and switchable at run time.
+
+[cols="1,3"]
+|===
+|Item |Value
+
+|Module
+|`web-mock`, plain Java (JDK HTTP server, Jackson), not deployed; reasoning in
+xref:../adr/0003-UI_tests_run_against_a_scenario_mock_server.adoc[ADR-0003]
+
+|Scenarios
+|`web-mock/src/main/resources/scenarios/<profile>.json`: a state machine with `user`, `routes` and `states`
+(representations, links, events, timed transitions); the primary profiles are listed in `primary.txt`; a reference
+`<profile>#<state>` starts a profile in a state
+
+|Profiles
+|`workshop` (default: populated lenses), `first-login` (no directory entry), `read-only` (right `read` only),
+`degraded` (Git server unreachable), `empty` (a fresh installation)
+
+|Control
+|`GET /mock/state`, `POST /mock/scenario`, `POST /mock/goto/{state}`, `POST /mock/reset`, `POST /mock/broadcast`,
+`GET /mock/acts`; the Vite dev server forwards `/mock` for loopback clients only
+
+|Texts
+|The catalogue from the `web-app` JAR (xref:web-app.adoc#TRH-WEB-7[TRH-WEB-7])
+
+|Shared fixtures
+|The web unit tests read the scenario files directly, so unit tests, end-to-end tests and manual runs see the same
+data
 |===
 
 [#TRH-NFR-1]

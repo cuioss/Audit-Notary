@@ -10,7 +10,8 @@ Gate Status]]
 image:https://sonarcloud.io/api/project_badges/measure?project=cuioss_TrailHand&metric=ncloc[Lines of Code,link=https://sonarcloud.io/summary/new_code?id=cuioss_TrailHand]
 image:https://sonarcloud.io/api/project_badges/measure?project=cuioss_TrailHand&metric=coverage[Coverage,link=https://sonarcloud.io/summary/new_code?id=cuioss_TrailHand]
 
-*Design phase.* The concepts, specifications and decisions are written; no application code exists yet.
+*Bootstrap.* The concepts, specifications and decisions are written; the web app, its mock server and its end-to-end
+suite are built, the application follows.
 
 == What is it?
 
@@ -34,8 +35,29 @@ The target is Java 25; CI builds on Java 25 and 27.
 ./mvnw clean verify
 ----
 
-The root `de.cuioss:trailhand-parent` is a parent POM without modules so far; the modules of
-link:doc/specification/architecture-and-modules.adoc[Architecture and Modules] are added as they are built.
+The modules of link:doc/specification/architecture-and-modules.adoc[Architecture and Modules] are added as they are
+built: `web-app` (the Svelte web app), `web-mock` (the mock server of its requests, development and tests only) and
+`web-e2e` (Playwright and axe-core). The end-to-end suite runs with the profile `e2e`:
+
+[source,bash]
+----
+./mvnw verify -Pe2e -pl web-e2e -am
+----
+
+== Working on the Web App
+
+The web app runs in the Vite dev server against the mock server, which answers its requests from a test profile
+(link:web-mock/README.adoc[web-mock]):
+
+[source,bash]
+----
+web-mock/start.sh -s workshop        # profiles: workshop, first-login, read-only, degraded, empty
+cd web-app && npm run dev            # http://127.0.0.1:5173, /api and /mock go to the mock
+web-mock/stop.sh
+----
+
+The mock signs in by itself; switch the profile while the app runs with
+`curl -X POST http://127.0.0.1:7420/mock/scenario -d '{"scenario":"first-login"}'`.
 
 == Credentials
 

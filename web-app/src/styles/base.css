@@ -1,0 +1,134 @@
+@import './tokens.css';
+
+/*
+ * Inter, self-hosted (TRH-WEB-2): the file ships with the app under `static/fonts/`, so the browser never
+ * asks a font service for it (TRH-WEB-1). The licence travels beside it as `OFL.txt`.
+ */
+@font-face {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/InterVariable.woff2') format('woff2');
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+  font-size: 100%;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-app);
+}
+
+body {
+  height: 100%;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--line-height-base);
+  font-feature-settings: var(--font-feature-settings);
+  color: inherit;
+  background-color: inherit;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-root {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: var(--color-brand);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  color: var(--color-brand-hover);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+input,
+select,
+textarea {
+  background-color: var(--color-bg-surface);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+/*
+ * The focus ring is a shadow in the brand colour; the transparent outline stays, because forced-colors
+ * mode drops shadows and paints a transparent outline in the system colour.
+ */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
+}
+
+code,
+pre,
+kbd {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: var(--weight-semibold);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* SvelteKit's route announcer, whose inline style vite.config.ts turns into this class. */
+#svelte-announcer,
+.svelte-announcer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+  width: 1px;
+  height: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

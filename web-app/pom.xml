@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>de.cuioss</groupId>
+        <artifactId>trailhand-parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>trailhand-web-app</artifactId>
+    <packaging>jar</packaging>
+
+    <name>TrailHand Web App</name>
+    <description>The TrailHand web app: a SvelteKit single-page application packaged as a resource JAR under
+        META-INF/resources, together with the message catalogue and the canonical addresses under
+        META-INF/trailhand (doc/specification/web-app.adoc).
+    </description>
+
+    <properties>
+        <maven.jar.plugin.automatic.module.name>de.cuioss.trailhand.web.app</maven.jar.plugin.automatic.module.name>
+        <skip.lint>false</skip.lint>
+        <skip.npm.build>false</skip.npm.build>
+        <skip.typecheck>false</skip.typecheck>
+        <!-- Set together with -Dskip.npm and -Dskip.installnodenpm (frontend-maven-plugin) to build only the
+             resources of META-INF/trailhand, for example to work on web-mock without a Node build. -->
+        <skip.spa.check>false</skip.spa.check>
+        <sonar.sources>src</sonar.sources>
+        <sonar.tests>src</sonar.tests>
+        <sonar.exclusions>src/main/resources/**</sonar.exclusions>
+        <sonar.test.inclusions>**/*.test.ts,**/*.test.js,**/setupTests.ts,**/src/test/**,**/src/lib/test/**</sonar.test.inclusions>
+        <sonar.javascript.lcov.reportPaths>${project.basedir}/target/coverage/lcov.info</sonar.javascript.lcov.reportPaths>
+    </properties>
+
+    <build>
+        <plugins>
+            <!-- Node.js and npm through frontend-maven-plugin; node and npm versions come from cui-parent-pom. -->
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>${version.frontend-maven-plugin}</version>
+                <configuration>
+                    <nodeVersion>${frontend.node.version}</nodeVersion>
+                    <npmVersion>${frontend.npm.version}</npmVersion>
+                    <installDirectory>target</installDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>install-node-and-npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                    </execution>
+                    <execution>
+                        <id>npm-install</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <!-- 'ci', not 'install': the build must install exactly the committed
+                                 package-lock.json. 'install' may rewrite the lockfile and resolve
+                                 beyond it, which hides a lockfile that no longer satisfies the
+                                 platform - the failure mode behind rolldown's "Cannot find native
+                                 binding" on the Linux runner. 'ci' fails at install time instead. -->
+                            <arguments>ci</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-build</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>compile</phase>
+                        <configuration>
+                            <arguments>run build</arguments>
+                            <skip>${skip.npm.build}</skip>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-test</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>test</phase>
+                        <configuration>
+                            <arguments>run test:ci</arguments>
+                            <skip>${maven.test.skip}</skip>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm-lint</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>verify</phase>
+                        <configuration>
+                            <arguments>run lint</arguments>
+                            <skip>${skip.lint}</skip>
+                        </configuration>
+                    </execution>
+                    <!-- The type check is the gate the editor already shows: 'run build' transpiles the
+                         sources without checking their types, so a type error would otherwise reach
+                         main while the editor reports it on every file. -->
+                    <execution>
+                        <id>npm-typecheck</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>verify</phase>
+                        <configuration>
+                            <arguments>run check</arguments>
+                            <skip>${skip.typecheck}</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Copy built SPA into META-INF/resources for runtime serving -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-spa-resources</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/META-INF/resources</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/build</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Prove that the SPA build reached the published resource JAR (TRH-WEB-1). The copy above and the
+                 jar plugin would both succeed on an empty build directory, so the artifact alone is not the
+                 evidence: the application serves exactly META-INF/resources. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>verify-spa-resources</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skip.spa.check}</skip>
+                            <target>
+                                <resourcecount property="spa.index.count">
+                                    <zipfileset src="${project.build.directory}/${project.build.finalName}.jar"
+                                                includes="META-INF/resources/index.html"/>
+                                </resourcecount>
+                                <fail message="trailhand-web-app: ${project.build.finalName}.jar carries no META-INF/resources/index.html; the SPA build did not reach the resource JAR.">
+                                    <condition>
+                                        <equals arg1="${spa.index.count}" arg2="0"/>
+                                    </condition>
+                                </fail>
+                                <resourcecount property="spa.immutable.count">
+                                    <zipfileset src="${project.build.directory}/${project.build.finalName}.jar"
+                                                includes="META-INF/resources/_app/immutable/**"/>
+                                </resourcecount>
+                                <fail message="trailhand-web-app: ${project.build.finalName}.jar carries no META-INF/resources/_app/immutable asset; the SPA build did not reach the resource JAR.">
+                                    <condition>
+                                        <equals arg1="${spa.immutable.count}" arg2="0"/>
+                                    </condition>
+                                </fail>
+                                <echo message="trailhand-web-app: packaged ${spa.index.count} index.html and ${spa.immutable.count} immutable asset(s) under META-INF/resources."/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!-- The unit tests with the V8 coverage of Vitest: the npm-test execution runs test:coverage in
+             place of test:ci, so the tests run once and the default build measures nothing. The lcov
+             report lands in target/coverage, where sonar.javascript.lcov.reportPaths reads it. -->
+        <profile>
+            <id>coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.eirslett</groupId>
+                        <artifactId>frontend-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>npm-test</id>
+                                <configuration>
+                                    <arguments>run test:coverage</arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- What the CI Sonar job builds with (reusable-maven-build.yml runs `verify -Psonar`, never
+             `-Pcoverage`): the same npm-test override as the coverage profile, so the job finds
+             target/coverage/lcov.info where sonar.javascript.lcov.reportPaths points. The CI files
+             carry no change for it. -->
+        <profile>
+            <id>sonar</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.eirslett</groupId>
+                        <artifactId>frontend-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>npm-test</id>
+                                <configuration>
+                                    <arguments>run test:coverage</arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

@@ -1,0 +1,16 @@
+= TrailHand Web E2E
+
+The end-to-end suite of the web app: Playwright and axe-core against the Vite dev server of `web-app`, whose `/api`
+and `/mock` go to `web-mock` (`doc/specification/testing.adoc`, TRH-TEST-1). The global setup starts the mock through
+`web-mock/start.sh` (profile `workshop`, timing `ordered`) unless one already answers, and the tests switch profiles
+through its control routes.
+
+[source,bash]
+----
+./mvnw verify -Pe2e -pl web-e2e -am     # through Maven
+cd web-e2e && npx playwright test       # directly, after npm ci
+----
+
+Ports: `TRAILHAND_WEB_PORT` (5173) and `TRAILHAND_MOCK_PORT` (7420), named only in `tests/helpers/ports.js`
+(`scripts/guard-ports.js`). The audit fails on axe violations of impact `serious` or `critical`
+(`tests/helpers/a11y.js`).

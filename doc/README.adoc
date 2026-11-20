@@ -111,8 +111,8 @@ describe its planned design, including every check and CI job they name.
 |Repository cut, references, erasure, retention, personal details, read-access events
 
 |xref:specification/testing.adoc[Testing]
-|`TRH-NFR`
-|Test lanes, index size, save latency, concurrency, security tests, native image
+|`TRH-TEST`, `TRH-NFR`
+|Test lanes, mock server, index size, save latency, concurrency, security tests, native image
 |===
 
 [#_decisions]
@@ -129,4 +129,8 @@ describe its planned design, including every check and CI job they name.
 |xref:adr/0002-A_local_gateway_base_project_holds_the_user_tokens_for_MCP_agents.adoc[ADR-0002]
 |A local gateway base project holds the user's tokens for MCP agents
 |Proposed
+
+|xref:adr/0003-UI_tests_run_against_a_scenario_mock_server.adoc[ADR-0003]
+|UI tests run against a scenario mock server
+|Accepted
 |===
