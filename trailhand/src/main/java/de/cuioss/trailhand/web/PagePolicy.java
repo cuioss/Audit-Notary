@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 public class PagePolicy {
 
     /** The web app's start page in the {@code web-app} JAR. */
-    public static final String INDEX = "META-INF/resources/index.html";
+    public static final String INDEX_RESOURCE = "META-INF/resources/index.html";
 
     /** The policy when the page carries none (no built web app on the class path). */
     static final String FALLBACK_POLICY = "default-src 'self'; script-src 'self'; style-src 'self'; "
@@ -91,7 +91,7 @@ public class PagePolicy {
     }
 
     private static byte[] readIndex() {
-        try (InputStream in = PagePolicy.class.getClassLoader().getResourceAsStream(INDEX)) {
+        try (InputStream in = PagePolicy.class.getClassLoader().getResourceAsStream(INDEX_RESOURCE)) {
             return in == null ? new byte[0] : in.readAllBytes();
         } catch (IOException e) {
             throw new UncheckedIOException(e);

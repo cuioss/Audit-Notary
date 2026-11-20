@@ -64,7 +64,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class LoginServiceTest {
 
     private static final String ORIGIN = "https://trailhand.example.org";
-    private static final String CALLBACK = ORIGIN + LoginService.CALLBACK_PATH;
+    private static final String CALLBACK = ORIGIN + "/api/v1/auth/callback";
     private static final String ISSUER = "https://idp.example.org/realms/trailhand";
 
     private DiscoveryResolver discovery;

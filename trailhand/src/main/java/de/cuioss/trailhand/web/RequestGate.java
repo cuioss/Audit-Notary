@@ -55,10 +55,8 @@ public class RequestGate {
     /** The anti-CSRF header. */
     public static final String CSRF_HEADER = "X-CSRF-Token";
 
-    private static final String API = "/api/v1/";
-    private static final Set<String> PUBLIC_GET = Set.of("/api/v1/status", "/api/v1/messages", "/api/v1/auth/login");
-    /** The provider's form post: bound by the login transaction, {@code state} and PKCE instead of the header. */
-    private static final String CALLBACK = "/api/v1/auth/callback";
+    private static final Set<String> PUBLIC_GET = Set.of("/api/v1/status", "/api/v1/messages", "/api/v1/auth/login",
+            "/api/v1/auth/callback");
     private static final String STATIC_ROOT = "META-INF/resources";
 
     private final SessionStore sessions;
@@ -98,10 +96,6 @@ public class RequestGate {
         var session = session(context);
         if (session != null) {
             context.put(SESSION_KEY, session);
-        }
-        if (CALLBACK.equals(path) && method == HttpMethod.POST) {
-            context.next();
-            return;
         }
         if (method == HttpMethod.GET && PUBLIC_GET.contains(path)) {
             context.next();

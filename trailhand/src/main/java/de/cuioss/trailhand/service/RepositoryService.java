@@ -90,11 +90,11 @@ public class RepositoryService {
                         entry.retention()))
                 .toList();
         var registry = RepositoryRegistry.of(repositories, policy.get());
-        if (!registry.isOk() || registry.value() == null) {
+        var value = registry.value();
+        if (!registry.isOk() || value == null) {
             return ServiceResult.refused(String.valueOf(registry.detail()));
         }
-        return ServiceResult.ok(new RepositoryService(registry.value(), new JGitRepositoryOperations(policy.get()),
-                dataDirectory));
+        return ServiceResult.ok(new RepositoryService(value, new JGitRepositoryOperations(policy.get()), dataDirectory));
     }
 
     /**

@@ -1,3 +1,4 @@
-# Only the native runner enters the image (Dockerfile.native copies target/*-runner).
+# Only the native runner and the data directory placeholder enter the image (Dockerfile.native).
 *
 !target/*-runner
+!src/main/docker/data/

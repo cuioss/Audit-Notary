@@ -48,7 +48,20 @@ The application sets these values; the column shows the application's value, not
 |`trailhand.config.dir`
 |`config`
 |Directory holding `trailhand.yaml`
+
+|`trailhand.oidc.jwks-url`
+|not set
+|The address of the provider's keys, set only when the application reaches the provider under another origin than
+its issuer (split horizon, as in the compose stack); otherwise the keys are found through the issuer's well-known
+document
 |===
+
+Token Sheriff reads its own keys (`sheriff.client.*`, `sheriff.token.issuers.*`); the application derives them from
+`trailhand.yaml` → `oidc` and `web.origin` with an ordinal above `application.properties` and below the environment.
+Settings of the deployment's network stay in the environment, among them `SHERIFF_CLIENT_BACK_CHANNEL_ORIGIN` (the
+origin the client dials instead of the issuer's), `SHERIFF_CLIENT_ALLOWED_EGRESS_HOSTS` and
+`SHERIFF_TOKEN_ISSUERS_TRAILHAND_JWKS_HTTP_ALLOWED_EGRESS_HOSTS` (hosts on private addresses that the egress guard
+admits).
 
 === trailhand.yaml
 

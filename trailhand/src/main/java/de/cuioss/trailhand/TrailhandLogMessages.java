@@ -104,7 +104,7 @@ public final class TrailhandLogMessages {
 
         /** A refresh of the repositories ended with an unexpected failure: the exception type and its message. */
         public static final LogRecord REFRESH_FAILED = LogRecordModel.builder()
-                .template("Refresh of the repositories failed: %s")
+                .template("Refresh of the repositories failed: %s: %s")
                 .prefix(PREFIX)
                 .identifier(105)
                 .build();

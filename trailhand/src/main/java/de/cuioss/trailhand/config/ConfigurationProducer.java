@@ -48,13 +48,14 @@ public class ConfigurationProducer {
      * @throws InvalidConfigurationException if the configuration has a violation
      */
     @Produces
-    @Singleton
+    @Singleton // a record is final and cannot stand behind the client proxy of a normal scope
     public TrailhandConfiguration configuration() {
         var result = ConfigurationLoader.fromProcessEnvironment().load(directory);
-        if (!result.isValid() || result.configuration() == null) {
+        var configuration = result.configuration();
+        if (!result.isValid() || configuration == null) {
             LOGGER.error(ERROR.BOOT_STOPPED, result.violations().size());
             throw new InvalidConfigurationException(result.violations().size());
         }
-        return result.configuration();
+        return configuration;
     }
 }

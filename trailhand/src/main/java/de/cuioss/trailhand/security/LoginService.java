@@ -31,6 +31,7 @@ import de.cuioss.sheriff.token.validation.domain.token.IdTokenContent;
 import de.cuioss.tools.logging.CuiLogger;
 import de.cuioss.trailhand.config.TrailhandConfiguration;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
@@ -38,6 +39,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static de.cuioss.trailhand.TrailhandLogMessages.INFO;
 import static de.cuioss.trailhand.TrailhandLogMessages.WARN;
@@ -53,9 +55,6 @@ public class LoginService {
 
     private static final CuiLogger LOGGER = new CuiLogger(LoginService.class);
 
-    /** The path of the callback below the origin. */
-    public static final String CALLBACK_PATH = "/api/v1/auth/callback";
-
     private final DiscoveryResolver discovery;
     private final AuthorizationCodeFlow flow;
     private final ClientAuthentication clientAuthentication;
@@ -65,7 +64,7 @@ public class LoginService {
     private final LoginTransactions transactions;
     private final ReturnAddresses returnAddresses;
     private final TrailhandConfiguration configuration;
-    private volatile @Nullable ProviderMetadata metadata;
+    private final AtomicReference<@Nullable ProviderMetadata> metadata = new AtomicReference<>();
 
     /**
      * @param discovery            Token Sheriff's discovery
@@ -79,7 +78,7 @@ public class LoginService {
      * @param configuration        the configuration
      */
     @SuppressWarnings("java:S107") // the collaborators of the flow; grouping them would only hide them
-    public LoginService(DiscoveryResolver discovery, AuthorizationCodeFlow flow,
+    public LoginService(DiscoveryResolver discovery, @Named(LoginFlowProducer.WEB_LOGIN) AuthorizationCodeFlow flow,
             ClientAuthentication clientAuthentication, TokenLifecycleManager tokens, RevocationClient revocation,
             SessionStore sessions, LoginTransactions transactions, ReturnAddresses returnAddresses,
             TrailhandConfiguration configuration) {
@@ -100,10 +99,10 @@ public class LoginService {
      * @return the metadata
      */
     ProviderMetadata metadata() {
-        var current = metadata;
+        var current = metadata.get();
         if (current == null) {
             current = discovery.resolve();
-            metadata = current;
+            metadata.set(current);
         }
         return current;
     }
@@ -122,13 +121,13 @@ public class LoginService {
     }
 
     /**
-     * Completes a login from the provider's form post.
+     * Completes a login from the provider's answer.
      *
      * @param transactionReference the reference from the transaction cookie, or {@code null} when it is missing
-     * @param formBody             the {@code application/x-www-form-urlencoded} body of the callback
+     * @param callbackQuery        the raw query of the callback ({@code code}, {@code state}, {@code iss})
      * @return the new session and the return address, or empty when the login cannot be completed
      */
-    public Optional<LoginCompletion> complete(@Nullable String transactionReference, String formBody) {
+    public Optional<LoginCompletion> complete(@Nullable String transactionReference, String callbackQuery) {
         if (transactionReference == null) {
             LOGGER.warn(WARN.LOGIN_FAILED, "no login transaction cookie");
             return Optional.empty();
@@ -139,7 +138,7 @@ public class LoginService {
             return Optional.empty();
         }
         try {
-            var callback = CallbackParameters.parse(formBody);
+            var callback = CallbackParameters.parse(callbackQuery);
             var result = flow.exchange(metadata(), transaction.get().context(), callback, clientAuthentication);
             var identity = identity(result.idToken());
             var session = sessions.open(identity);
@@ -207,12 +206,13 @@ public class LoginService {
         revoke(metadataNow, held.get().refreshToken(), "refresh_token");
         revoke(metadataNow, held.get().accessToken(), "access_token");
         var endSession = metadataNow.getEndSessionEndpoint();
-        if (endSession.isEmpty() || held.get().idToken() == null) {
+        var idToken = held.get().idToken();
+        if (endSession.isEmpty() || idToken == null) {
             return home;
         }
         LOGGER.info(INFO.LOGOUT_COMPLETED);
         return new EndSessionFlow(new PostLogoutRedirectValidator(Set.of(home)))
-                .buildLogoutRedirect(endSession.get(), held.get().idToken(), home, SessionStore.randomToken());
+                .buildLogoutRedirect(endSession.get(), idToken, home, SessionStore.randomToken());
     }
 
     private void revoke(ProviderMetadata metadataNow, @Nullable String token, String hint) {

@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * Derives the configuration of Token Sheriff's client and validation extensions from {@code trailhand.yaml} →
@@ -48,6 +48,12 @@ public class TokenSheriffConfigSourceFactory implements ConfigSourceFactory {
     /** The ordinal of the derived source. */
     public static final int ORDINAL = 260;
 
+    /**
+     * The optional key of the JWKS address, for a deployment that reaches the provider under another origin than the
+     * issuer's (split horizon): it replaces the discovery of the keys through the issuer's well-known document.
+     */
+    public static final String JWKS_URL = "trailhand.oidc.jwks-url";
+
     /** The name of the issuer configuration that validates the login's tokens. */
     public static final String ISSUER_NAME = "trailhand";
 
@@ -55,7 +61,12 @@ public class TokenSheriffConfigSourceFactory implements ConfigSourceFactory {
     public Iterable<ConfigSource> getConfigSources(ConfigSourceContext context) {
         var dirValue = context.getValue("trailhand.config.dir");
         var directory = Path.of(dirValue == null || dirValue.getValue() == null ? "config" : dirValue.getValue());
-        return List.of(new MapBackedConfigSource("trailhand.yaml (oidc)", derive(directory, System::getenv), ORDINAL) {
+        var keys = new LinkedHashMap<>(derive(directory, System::getenv));
+        var jwksUrl = context.getValue(JWKS_URL);
+        if (!keys.isEmpty() && jwksUrl != null && jwksUrl.getValue() != null && !jwksUrl.getValue().isBlank()) {
+            useJwksUrl(keys, jwksUrl.getValue().trim());
+        }
+        return List.of(new MapBackedConfigSource("trailhand.yaml (oidc)", keys, ORDINAL) {
         });
     }
 
@@ -69,7 +80,7 @@ public class TokenSheriffConfigSourceFactory implements ConfigSourceFactory {
      * @param environment the environment of the placeholders
      * @return the derived keys; empty when {@code trailhand.yaml} is missing or invalid
      */
-    static Map<String, String> derive(Path directory, Function<String, String> environment) {
+    static Map<String, String> derive(Path directory, UnaryOperator<String> environment) {
         var file = directory.resolve(ConfigurationLoader.FILE_NAME);
         if (!Files.isRegularFile(file)) {
             return Map.of();
@@ -77,10 +88,11 @@ public class TokenSheriffConfigSourceFactory implements ConfigSourceFactory {
         try {
             var tree = new ObjectMapper(new YAMLFactory()).readValue(file.toFile(), Object.class);
             var result = new ConfigurationLoader(environment).validate(tree);
-            if (!result.isValid() || result.configuration() == null) {
+            var configuration = result.configuration();
+            if (!result.isValid() || configuration == null) {
                 return Map.of();
             }
-            return derive(result.configuration());
+            return derive(configuration);
         } catch (IOException e) {
             return Map.of();
         }
@@ -108,6 +120,16 @@ public class TokenSheriffConfigSourceFactory implements ConfigSourceFactory {
         // an access token's audience is the resource the provider names; the client id (azp) is checked for both.
         keys.put(issuer + "audience-validation-disabled", "true");
         return keys;
+    }
+
+    /**
+     * @param keys    the derived keys
+     * @param jwksUrl the JWKS address
+     */
+    static void useJwksUrl(Map<String, String> keys, String jwksUrl) {
+        var issuer = "sheriff.token.issuers." + ISSUER_NAME + ".";
+        keys.remove(issuer + "jwks.http.well-known-url");
+        keys.put(issuer + "jwks.http.url", jwksUrl);
     }
 
     private static String stripSlash(String issuer) {

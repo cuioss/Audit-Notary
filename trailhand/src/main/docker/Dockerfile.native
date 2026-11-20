@@ -21,6 +21,9 @@ LABEL org.opencontainers.image.title="TrailHand" \
 
 WORKDIR /app
 COPY --chmod=0755 target/*-runner /app/application
+# /app/data (TRH-OPS-2): owned by nonroot, so a new named volume mounted there is writable; the image declares no
+# volume. The distroless base has no shell to create it, so a placeholder directory is copied.
+COPY --chown=65532:65532 --chmod=0750 src/main/docker/data/ /app/data/
 
 # 8443 HTTPS (web app, /api/v1, /mcp), 8080 redirect to HTTPS, 9000 management (health, metrics) - TRH-OPS-2.
 EXPOSE 8080 8443 9000

@@ -36,22 +36,22 @@ public class Cookies {
      * @param sessionId the session id
      * @return the {@code Set-Cookie} value of the session: {@code SameSite=Strict}
      */
-    public static String session(String sessionId) {
+    public static String sessionCookie(String sessionId) {
         return SESSION + "=" + sessionId + "; Path=/; Secure; HttpOnly; SameSite=Strict";
     }
 
     /**
-     * The login-transaction cookie must reach the callback, which the provider sends as a cross-site form post
-     * ({@code response_mode=form_post} of Token Sheriff); a browser sends a {@code SameSite=Lax} cookie only with
-     * cross-site top-level navigations by a safe method, so this cookie is {@code SameSite=None}. It carries only an
-     * opaque reference, lives ten minutes and is deleted by the callback.
+     * The login-transaction cookie: {@code SameSite=Lax}, because the browser sends no {@code Strict} cookie with the
+     * cross-site navigation back from the identity provider, and the callback is such a navigation by {@code GET}
+     * ({@code response_mode=query}). It carries only an opaque reference, lives ten minutes and is deleted by the
+     * callback.
      *
      * @param reference the transaction reference
      * @param maxAge    the lifetime
      * @return the {@code Set-Cookie} value
      */
-    public static String login(String reference, Duration maxAge) {
-        return LOGIN + "=" + reference + "; Path=/; Secure; HttpOnly; SameSite=None; Max-Age=" + maxAge.toSeconds();
+    public static String loginCookie(String reference, Duration maxAge) {
+        return LOGIN + "=" + reference + "; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=" + maxAge.toSeconds();
     }
 
     /**

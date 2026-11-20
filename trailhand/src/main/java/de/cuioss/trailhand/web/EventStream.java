@@ -26,10 +26,12 @@ import jakarta.ws.rs.sse.Sse;
 import jakarta.ws.rs.sse.SseBroadcaster;
 import jakarta.ws.rs.sse.SseEventSink;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jspecify.annotations.Nullable;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The one event stream of all browsers (TRH-WEB-9): the event {@code status} when the degraded state changes, and a
@@ -41,10 +43,19 @@ public class EventStream {
     private final RepositoryService repositories;
     private final String version;
     private final ObjectMapper mapper = new ObjectMapper();
-    private volatile Sse sse;
-    private volatile SseBroadcaster broadcaster;
-    private volatile String lastStatus = "";
-    private ScheduledExecutorService scheduler;
+    /** The SSE factory and the broadcaster, created with the first connection. */
+    private final AtomicReference<@Nullable Channel> channel = new AtomicReference<>();
+    private final AtomicReference<String> lastStatus = new AtomicReference<>("");
+    private @Nullable ScheduledExecutorService scheduler;
+
+    /**
+     * The SSE factory of the first request and the broadcaster it created.
+     *
+     * @param sse         the factory of events
+     * @param broadcaster the broadcaster of all connections
+     */
+    private record Channel(Sse sse, SseBroadcaster broadcaster) {
+    }
 
     /**
      * @param repositories the repository service
@@ -66,8 +77,9 @@ public class EventStream {
         if (scheduler != null) {
             scheduler.shutdownNow();
         }
-        if (broadcaster != null) {
-            broadcaster.close();
+        var current = channel.get();
+        if (current != null) {
+            current.broadcaster().close();
         }
     }
 
@@ -77,28 +89,26 @@ public class EventStream {
      * @param sink the connection
      * @param sseFactory the SSE factory of the request
      */
-    synchronized void register(SseEventSink sink, Sse sseFactory) {
-        if (broadcaster == null) {
-            sse = sseFactory;
-            broadcaster = sseFactory.newBroadcaster();
-        }
-        broadcaster.register(sink);
+    void register(SseEventSink sink, Sse sseFactory) {
+        var current = channel.updateAndGet(
+                existing -> existing != null ? existing : new Channel(sseFactory, sseFactory.newBroadcaster()));
+        current.broadcaster().register(sink);
         sink.send(sseFactory.newEventBuilder().name("status").data(statusJson()).build());
     }
 
     void tick() {
-        var current = statusJson();
-        if (!current.equals(lastStatus)) {
-            lastStatus = current;
-            if (broadcaster != null) {
-                broadcaster.broadcast(sse.newEventBuilder().name("status").data(current).build());
-            }
+        var status = statusJson();
+        var previous = lastStatus.getAndSet(status);
+        var current = channel.get();
+        if (!status.equals(previous) && current != null) {
+            current.broadcaster().broadcast(current.sse().newEventBuilder().name("status").data(status).build());
         }
     }
 
     void keepAlive() {
-        if (broadcaster != null) {
-            broadcaster.broadcast(sse.newEventBuilder().comment("keepalive").build());
+        var current = channel.get();
+        if (current != null) {
+            current.broadcaster().broadcast(current.sse().newEventBuilder().comment("keepalive").build());
         }
     }
 

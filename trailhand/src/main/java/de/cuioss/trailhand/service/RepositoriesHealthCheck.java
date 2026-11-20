@@ -41,8 +41,19 @@ public class RepositoriesHealthCheck implements HealthCheck {
     public HealthCheckResponse call() {
         var builder = HealthCheckResponse.named("repositories").status(repositories.allPresent());
         for (RepositoryState state : repositories.states()) {
-            builder.withData(state.alias(), state.present() ? state.fetchUp() ? "UP" : "FETCH_DOWN" : "ABSENT");
+            builder.withData(state.alias(), describe(state));
         }
         return builder.build();
+    }
+
+    /**
+     * @param state the state of one repository
+     * @return {@code ABSENT}, {@code UP} or {@code FETCH_DOWN}
+     */
+    static String describe(RepositoryState state) {
+        if (!state.present()) {
+            return "ABSENT";
+        }
+        return state.fetchUp() ? "UP" : "FETCH_DOWN";
     }
 }

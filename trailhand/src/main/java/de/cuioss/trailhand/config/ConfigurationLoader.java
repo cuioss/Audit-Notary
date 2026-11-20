@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 import static de.cuioss.trailhand.TrailhandLogMessages.ERROR;
@@ -60,13 +60,16 @@ public class ConfigurationLoader {
     private static final Pattern ALIAS = Pattern.compile("[a-z0-9-]+");
     private static final Set<String> CONFIDENTIALITY = Set.of("public-internal", "restricted", "strongly-restricted");
     private static final List<String> REFERENCE_FORMS = List.of("file:", "vault:");
+    private static final String MUST_BE_MAPPING = "must be a mapping";
+    private static final String ALIAS_KEY = ".alias";
+    private static final String CREDENTIAL_KEY = ".credential-ref";
 
-    private final Function<String, String> environment;
+    private final UnaryOperator<String> environment;
 
     /**
      * @param environment the environment the placeholders are resolved from
      */
-    public ConfigurationLoader(Function<String, String> environment) {
+    public ConfigurationLoader(UnaryOperator<String> environment) {
         this.environment = environment;
     }
 
@@ -88,11 +91,11 @@ public class ConfigurationLoader {
         Object tree;
         try {
             if (!Files.isRegularFile(file)) {
-                return report(directory, List.of(new Violation(FILE_NAME, "the file is missing")));
+                return report(List.of(new Violation(FILE_NAME, "the file is missing")));
             }
             tree = new ObjectMapper(new YAMLFactory()).readValue(file.toFile(), Object.class);
         } catch (IOException e) {
-            return report(directory, List.of(new Violation(FILE_NAME, "the file is no valid YAML")));
+            return report(List.of(new Violation(FILE_NAME, "the file is no valid YAML")));
         }
         return report(directory, validate(tree));
     }
@@ -129,10 +132,7 @@ public class ConfigurationLoader {
         return new ConfigurationResult(new TrailhandConfiguration(repositories, rights, oidc, web, fetch), List.of());
     }
 
-    private static ConfigurationResult report(Path directory, List<Violation> violations) {
-        if (violations.isEmpty()) {
-            throw new IllegalStateException("report without violations needs a configuration");
-        }
+    private static ConfigurationResult report(List<Violation> violations) {
         for (Violation violation : violations) {
             LOGGER.error(ERROR.CONFIGURATION_VIOLATION, violation.key(), violation.rule());
         }
@@ -140,11 +140,12 @@ public class ConfigurationLoader {
     }
 
     private ConfigurationResult report(Path directory, ConfigurationResult result) {
-        if (result.isValid()) {
-            LOGGER.info(INFO.CONFIGURATION_LOADED, directory, result.configuration().repositories().size());
+        var configuration = result.configuration();
+        if (result.isValid() && configuration != null) {
+            LOGGER.info(INFO.CONFIGURATION_LOADED, directory, configuration.repositories().size());
             return result;
         }
-        return report(directory, result.violations());
+        return report(result.violations());
     }
 
     /** Reads typed values from the tree and records a violation for every problem. */
@@ -166,7 +167,7 @@ public class ConfigurationLoader {
                 return (Map<String, Object>) map;
             }
             if (value != null || required) {
-                violations.add(new Violation(key, value == null ? "is required" : "must be a mapping"));
+                violations.add(new Violation(key, value == null ? "is required" : MUST_BE_MAPPING));
             }
             return null;
         }
@@ -213,7 +214,7 @@ public class ConfigurationLoader {
             for (int index = 0; index < list.size(); index++) {
                 var path = "repositories[" + index + "]";
                 if (!(list.get(index) instanceof Map<?, ?> entry)) {
-                    violations.add(new Violation(path, "must be a mapping"));
+                    violations.add(new Violation(path, MUST_BE_MAPPING));
                     continue;
                 }
                 var repository = repository((Map<String, Object>) entry, path, seen);
@@ -227,11 +228,11 @@ public class ConfigurationLoader {
         @Nullable
         private RepositorySettings repository(Map<String, Object> entry, String path, Set<String> seen) {
             int before = violations.size();
-            var alias = text(entry, path + ".alias", "alias", true);
+            var alias = text(entry, path + ALIAS_KEY, "alias", true);
             if (alias != null && !ALIAS.matcher(alias).matches()) {
-                violations.add(new Violation(path + ".alias", "must match [a-z0-9-]+"));
+                violations.add(new Violation(path + ALIAS_KEY, "must match [a-z0-9-]+"));
             } else if (alias != null && !seen.add(alias)) {
-                violations.add(new Violation(path + ".alias", "is used by another repository"));
+                violations.add(new Violation(path + ALIAS_KEY, "is used by another repository"));
             }
             var remote = text(entry, path + ".remote", "remote", true);
             if (remote != null && !remote.startsWith("https://") && !remote.startsWith("file:")) {
@@ -243,11 +244,11 @@ public class ConfigurationLoader {
                         "must be public-internal, restricted or strongly-restricted"));
             }
             var retention = retention(text(entry, path + ".retention", "retention", true), path + ".retention");
-            var credentialRef = text(entry, path + ".credential-ref", "credential-ref", false);
+            var credentialRef = text(entry, path + CREDENTIAL_KEY, "credential-ref", false);
             if (remote != null && remote.startsWith("https://") && credentialRef == null) {
-                violations.add(new Violation(path + ".credential-ref", "is required for an https remote"));
+                violations.add(new Violation(path + CREDENTIAL_KEY, "is required for an https remote"));
             }
-            reference(credentialRef, path + ".credential-ref");
+            reference(credentialRef, path + CREDENTIAL_KEY);
             if (violations.size() > before || alias == null || remote == null || confidentiality == null) {
                 return null;
             }
@@ -290,7 +291,7 @@ public class ConfigurationLoader {
                 for (int index = 0; index < list.size(); index++) {
                     var entryPath = path + "[" + index + "]";
                     if (!(list.get(index) instanceof Map<?, ?> entry)) {
-                        violations.add(new Violation(entryPath, "must be a mapping"));
+                        violations.add(new Violation(entryPath, MUST_BE_MAPPING));
                         continue;
                     }
                     var right = right((Map<String, Object>) entry, entryPath, aliases);

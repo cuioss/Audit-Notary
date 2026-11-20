@@ -139,8 +139,7 @@ class WebApiTest {
         @Test
         @DisplayName("refuses a callback without login transaction and offers a new login")
         void withoutTransaction() {
-            var response = given().contentType("application/x-www-form-urlencoded").body("code=x&state=y")
-                    .post("/api/v1/auth/callback").then().statusCode(400).extract();
+            var response = given().get("/api/v1/auth/callback?code=x&state=y").then().statusCode(400).extract();
             assertTrue(response.asString().contains("/api/v1/auth/login?return=/"));
             assertTrue(response.header("Set-Cookie").startsWith(Cookies.LOGIN + "=;"));
         }
@@ -148,8 +147,8 @@ class WebApiTest {
         @Test
         @DisplayName("refuses a callback with an unknown login transaction")
         void unknownTransaction() {
-            given().cookie(Cookies.LOGIN, "unknown").contentType("application/x-www-form-urlencoded")
-                    .body("code=x&state=y").post("/api/v1/auth/callback").then().statusCode(400);
+            given().cookie(Cookies.LOGIN, "unknown").get("/api/v1/auth/callback?code=x&state=y").then()
+                    .statusCode(400);
         }
     }
 

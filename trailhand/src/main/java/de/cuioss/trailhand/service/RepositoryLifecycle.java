@@ -24,8 +24,10 @@ import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -44,8 +46,8 @@ public class RepositoryLifecycle {
 
     private final TrailhandConfiguration configuration;
     private final Path dataDirectory;
-    private ScheduledExecutorService scheduler;
-    private RepositoryService service;
+    private @Nullable ScheduledExecutorService scheduler;
+    private @Nullable RepositoryService service;
 
     /**
      * @param configuration the configuration
@@ -62,7 +64,7 @@ public class RepositoryLifecycle {
      * @throws IllegalStateException if the library refuses the repositories
      */
     @Produces
-    @Singleton
+    @Singleton // a pseudo-scope: the service is used directly, without a client proxy, by the health checks and the web
     public synchronized RepositoryService repositoryService() {
         if (service == null) {
             var created = RepositoryService.create(configuration.repositories(), dataDirectory);
@@ -71,7 +73,7 @@ public class RepositoryLifecycle {
             }
             service = created.value();
         }
-        return service;
+        return Objects.requireNonNull(service);
     }
 
     void onStart(@Observes StartupEvent event) {
@@ -90,10 +92,10 @@ public class RepositoryLifecycle {
     static void refreshSafely(RepositoryService repositories) {
         try {
             repositories.refresh();
-        }
-        /*TODO: Catch specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
-        catch (RuntimeException | LinkageError e) {
-            /*~~(TODO: String concatenation with LogRecord parameter is always wrong. Use separate parameters instead. Suppress: // cui-rewrite:disable CuiLogRecordPatternRecipe)~~>*/LOGGER.warn(e, WARN.REFRESH_FAILED, e.getClass().getName() + ": " + e.getMessage());
+            // Deliberately broad: whatever a refresh throws must not end the periodic fetch.
+            // cui-rewrite:disable InvalidExceptionUsageRecipe
+        } catch (RuntimeException | LinkageError e) {
+            LOGGER.warn(e, WARN.REFRESH_FAILED, e.getClass().getName(), e.getMessage());
         }
     }
 

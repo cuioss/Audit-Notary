@@ -21,6 +21,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -55,6 +57,18 @@ class TokenSheriffConfigSourceFactoryTest {
                 keys.get("sheriff.token.issuers.trailhand.jwks.http.well-known-url"));
         assertEquals("trailhand-web", keys.get("sheriff.token.issuers.trailhand.expected-client-id"));
         assertEquals("true", keys.get("sheriff.token.issuers.trailhand.enabled"));
+    }
+
+    @Test
+    @DisplayName("an explicit JWKS address replaces the well-known discovery")
+    void jwksUrl() {
+        var keys = new LinkedHashMap<String, String>();
+        keys.put("sheriff.token.issuers.trailhand.jwks.http.well-known-url", "https://idp/.well-known");
+
+        TokenSheriffConfigSourceFactory.useJwksUrl(keys, "https://keycloak:8443/certs");
+
+        assertEquals(Map.of("sheriff.token.issuers.trailhand.jwks.http.url", "https://keycloak:8443/certs"),
+                keys);
     }
 
     @Test

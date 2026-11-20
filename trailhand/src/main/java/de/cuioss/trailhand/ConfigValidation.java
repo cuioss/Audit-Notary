@@ -19,7 +19,7 @@ import de.cuioss.trailhand.config.ConfigurationLoader;
 
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,7 +43,7 @@ final class ConfigValidation {
      * @param environment the environment of the placeholders
      * @return the exit code
      */
-    static int run(String[] args, Function<String, String> environment) {
+    static int run(String[] args, UnaryOperator<String> environment) {
         int index = Arrays.asList(args).indexOf(FLAG);
         if (index < 0 || index + 1 >= args.length) {
             return 2;

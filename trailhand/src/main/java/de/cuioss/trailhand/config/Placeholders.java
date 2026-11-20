@@ -20,7 +20,7 @@ import lombok.experimental.UtilityClass;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,7 +41,7 @@ public class Placeholders {
      * @param unresolved  receives the name of every placeholder without value and without default
      * @return the resolved string
      */
-    public static String resolve(String value, Function<String, String> environment, List<String> unresolved) {
+    public static String resolve(String value, UnaryOperator<String> environment, List<String> unresolved) {
         Matcher matcher = PLACEHOLDER.matcher(value);
         var result = new StringBuilder();
         while (matcher.find()) {
@@ -69,7 +69,7 @@ public class Placeholders {
      * @return the resolved node
      */
     @SuppressWarnings("unchecked")
-    public static Object resolveTree(Object node, Function<String, String> environment, List<String> unresolved) {
+    public static Object resolveTree(Object node, UnaryOperator<String> environment, List<String> unresolved) {
         return switch (node) {
             case String text -> resolve(text, environment, unresolved);
             case Map<?, ?> map -> {

@@ -20,6 +20,7 @@ import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
+import org.jspecify.annotations.Nullable;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -33,7 +34,7 @@ public class SessionJanitor {
 
     private final SessionStore sessions;
     private final TokenLifecycleManager tokens;
-    private ScheduledExecutorService scheduler;
+    private @Nullable ScheduledExecutorService scheduler;
 
     /**
      * @param sessions the sessions
