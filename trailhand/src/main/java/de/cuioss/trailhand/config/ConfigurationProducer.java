@@ -48,7 +48,8 @@ public class ConfigurationProducer {
      * @throws InvalidConfigurationException if the configuration has a violation
      */
     @Produces
-    @Singleton // a record is final and cannot stand behind the client proxy of a normal scope
+    // @Singleton, not @ApplicationScoped: a record is final and cannot stand behind the client proxy of a normal scope.
+    @Singleton
     public TrailhandConfiguration configuration() {
         var result = ConfigurationLoader.fromProcessEnvironment().load(directory);
         var configuration = result.configuration();
