@@ -49,6 +49,8 @@ public final class ScenarioLoader {
     private static final Set<String> METHODS = Set.of("GET", "POST", "PUT", "DELETE");
     private static final Pattern ROUTE_KEY = Pattern.compile("([A-Z]+) (\\S+)");
     private static final String STATES = "states";
+    private static final String ROUTES = "routes";
+    private static final String NO_STATE = "names no state: ";
     private static final String STATUS = "status";
 
     private final ObjectMapper mapper;
@@ -103,7 +105,7 @@ public final class ScenarioLoader {
         var rights = readRights(context, root.path("rights"));
         boolean firstLogin = readBoolean(context, root, "first_login_required", false);
         String start = requiredText(context, root, "start");
-        var routes = readRoutes(context, "routes", root.path("routes"));
+        var routes = readRoutes(context, ROUTES, root.path(ROUTES));
         var statesNode = root.path(STATES);
         if (!statesNode.isObject() || statesNode.isEmpty()) {
             throw context.fail(STATES, "at least one state is required");
@@ -112,7 +114,7 @@ public final class ScenarioLoader {
         statesNode.properties().forEach(entry -> states.put(entry.getKey(),
                 readState(context, entry.getKey(), entry.getValue())));
         if (!states.containsKey(start)) {
-            throw context.fail("start", "names no state: " + start);
+            throw context.fail("start", NO_STATE + start);
         }
         for (var state : states.values()) {
             checkTargets(context, state, states);
@@ -146,7 +148,7 @@ public final class ScenarioLoader {
             String repository = requiredText(context.at(location), entry, "repository");
             List<String> actions = new ArrayList<>();
             for (var action : entry.path("actions")) {
-                if (!Right.ACTIONS.contains(action.asText())) {
+                if (!Right.ALLOWED_ACTIONS.contains(action.asText())) {
                     throw context.fail(location + ".actions", "unknown action: " + action.asText());
                 }
                 actions.add(action.asText());
@@ -170,7 +172,7 @@ public final class ScenarioLoader {
             }
             firstLogin = firstLoginNode.asBoolean();
         }
-        var routes = readRoutes(context, location + ".routes", node.path("routes"));
+        var routes = readRoutes(context, location + "." + ROUTES, node.path(ROUTES));
         Map<String, Link> links = new LinkedHashMap<>();
         node.path("links").properties().forEach(entry -> links.put(entry.getKey(),
                 readLink(context, location + ".links." + entry.getKey(), entry.getKey(), entry.getValue())));
@@ -228,12 +230,12 @@ public final class ScenarioLoader {
         for (var link : state.links().values()) {
             if (!states.containsKey(link.next())) {
                 throw context.fail(STATES + "." + state.id() + ".links." + link.name() + ".next",
-                        "names no state: " + link.next());
+                        NO_STATE + link.next());
             }
         }
         var auto = state.auto();
         if (auto != null && !states.containsKey(auto.next())) {
-            throw context.fail(STATES + "." + state.id() + ".auto.next", "names no state: " + auto.next());
+            throw context.fail(STATES + "." + state.id() + ".auto.next", NO_STATE + auto.next());
         }
     }
 

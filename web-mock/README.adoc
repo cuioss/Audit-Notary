@@ -22,10 +22,10 @@ web-mock/stop.sh
 ----
 
 `start.sh` compiles when a source is newer than the last build; the build of `web-app` then contributes its resources
-only (no Node build). On start the mock prints one line:
+only (no Node build). On start the mock logs one line, which `start.sh` waits for:
 
 ----
-web-mock listening on http://127.0.0.1:7420 scenario workshop#ready
+WEB_MOCK-1: Web mock listening on http://127.0.0.1:7420 with scenario workshop#ready, timing REALISTIC
 ----
 
 [cols="1,1,3"]

@@ -23,12 +23,12 @@ import java.util.Set;
  * TRH-AUTH-2).
  *
  * @param repository the repository alias
- * @param actions    the actions, a subset of {@link #ACTIONS}
+ * @param actions    the actions, a subset of {@link #ALLOWED_ACTIONS}
  */
 public record Right(String repository, List<String> actions) {
 
     /** The actions a right may name. */
-    public static final Set<String> ACTIONS = Set.of("read", "edit", "approve", "administer-catalogs");
+    public static final Set<String> ALLOWED_ACTIONS = Set.of("read", "edit", "approve", "administer-catalogs");
 
     /**
      * Copies the actions.

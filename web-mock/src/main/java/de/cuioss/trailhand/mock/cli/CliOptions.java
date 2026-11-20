@@ -56,15 +56,16 @@ public record CliOptions(String scenario, int port, Timing timing, boolean help)
         String portText = environment.getOrDefault(PORT_VARIABLE, String.valueOf(WebMock.DEFAULT_PORT));
         String timingText = "realistic";
         boolean help = false;
-        for (int index = 0; index < args.size(); index++) {
-            String arg = args.get(index);
+        var remaining = args.iterator();
+        while (remaining.hasNext()) {
+            String arg = remaining.next();
             switch (arg) {
                 case "-h", "--help" -> help = true;
                 case "-s", "--scenario", "-p", "--port", "-t", "--timing" -> {
-                    if (index + 1 >= args.size()) {
+                    if (!remaining.hasNext()) {
                         return ParseResult.error("Missing value for " + arg);
                     }
-                    String value = args.get(++index);
+                    String value = remaining.next();
                     switch (arg) {
                         case "-s", "--scenario" -> scenario = value;
                         case "-p", "--port" -> portText = value;

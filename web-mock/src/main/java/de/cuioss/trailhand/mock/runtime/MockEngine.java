@@ -62,27 +62,30 @@ public final class MockEngine implements AutoCloseable {
     /** The header of the anti-CSRF token. */
     public static final String CSRF_HEADER = "X-CSRF-Token";
 
+    /** The prefix of every request of the web app. */
+    private static final String API = "/api/v1/";
+
     /** The login address the {@code 401} answer names. */
-    public static final String LOGIN_PATH = "/api/v1/auth/login";
+    public static final String LOGIN_PATH = API + "auth/login";
 
     /** The page the emulated logout leads to. */
-    public static final String SIGNED_OUT_PATH = "/api/v1/auth/mock-signed-out";
+    public static final String SIGNED_OUT_PATH = API + "auth/mock-signed-out";
 
     private static final CuiLogger LOGGER = new CuiLogger(MockEngine.class);
 
-    private static final String API = "/api/v1/";
     private static final String MOCK = "/mock/";
     private static final String GET = "GET";
     private static final String POST = "POST";
     private static final String OUTCOME = "outcome";
-    private static final String STATUS_ROUTE = "GET /api/v1/status";
-    private static final String EVENTS_PATH = "/api/v1/events";
+    private static final String STATUS_ROUTE = GET + " " + API + "status";
+    private static final String SCENARIO_FIELD = "scenario";
+    private static final String EVENTS_PATH = API + "events";
     private static final int ORDERED_DEPTH_LIMIT = 64;
 
     /** The requests answered during the first login (doc/specification/directory.adoc, TRH-DIR-2). */
     private static final Set<String> FIRST_LOGIN_ALLOWED = Set.of("GET /api/v1/directory/me",
             "PUT /api/v1/directory/me", "GET /api/v1/catalogs/team", "GET /api/v1/catalogs/role",
-            "GET /api/v1/session", "GET /api/v1/messages", "GET /api/v1/status", "POST /api/v1/auth/logout",
+            "GET /api/v1/session", "GET /api/v1/messages", STATUS_ROUTE, "POST /api/v1/auth/logout",
             "GET " + EVENTS_PATH, "GET " + LOGIN_PATH, "GET " + SIGNED_OUT_PATH);
 
     private final ObjectMapper mapper;
@@ -187,7 +190,7 @@ public final class MockEngine implements AutoCloseable {
             if (scenario.firstLoginRequired(state) && !FIRST_LOGIN_ALLOWED.contains(key)) {
                 return json(403, object().put(OUTCOME, "FIRST_LOGIN_REQUIRED"));
             }
-            return builtIn(request, key, session.get()).orElseGet(() -> scenarioAnswer(request, key));
+            return builtIn(key, session.get()).orElseGet(() -> scenarioAnswer(request, key));
         } finally {
             lock.unlock();
         }
@@ -212,7 +215,7 @@ public final class MockEngine implements AutoCloseable {
         };
     }
 
-    private Optional<MockResponse> builtIn(MockRequest request, String key, MockSession session) {
+    private Optional<MockResponse> builtIn(String key, MockSession session) {
         return switch (key) {
             case "GET /api/v1/session" -> Optional.of(json(200, sessionBody(session)));
             case "POST /api/v1/auth/logout" -> {
@@ -355,7 +358,7 @@ public final class MockEngine implements AutoCloseable {
 
     private MockResponse switchScenario(MockRequest request) {
         var body = parseBody(request);
-        String reference = body.path("scenario").asText(request.queryParameter("name").orElse(""));
+        String reference = body.path(SCENARIO_FIELD).asText(request.queryParameter("name").orElse(""));
         if (reference.isBlank()) {
             return validation("/scenario", "REQUIRED");
         }
@@ -363,7 +366,7 @@ public final class MockEngine implements AutoCloseable {
             var resolved = registry.resolve(reference);
             if (resolved.isEmpty()) {
                 LOGGER.warn(WebMockLogMessages.WARN.UNKNOWN_REFERENCE, reference);
-                return json(404, object().put(OUTCOME, "MOCK_UNKNOWN_SCENARIO").put("scenario", reference));
+                return json(404, object().put(OUTCOME, "MOCK_UNKNOWN_SCENARIO").put(SCENARIO_FIELD, reference));
             }
             scenario = resolved.get().scenario();
             acts.clear();
@@ -390,7 +393,7 @@ public final class MockEngine implements AutoCloseable {
     }
 
     private ObjectNode stateBody() {
-        ObjectNode body = object().put("scenario", scenario.name()).put("state", state.id())
+        ObjectNode body = object().put(SCENARIO_FIELD, scenario.name()).put("state", state.id())
                 .put("description", state.description())
                 .put("first_login_required", scenario.firstLoginRequired(state))
                 .put("timing", timing.name().toLowerCase(Locale.ROOT));

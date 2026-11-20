@@ -21,7 +21,6 @@ import de.cuioss.trailhand.mock.WebMockLogMessages;
 import lombok.experimental.UtilityClass;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -44,17 +43,16 @@ public class WebMockCli {
      * @throws InterruptedException if the main thread is interrupted while waiting
      */
     public static void main(String[] args) throws IOException, InterruptedException {
-        PrintStream out = System.out;
         var parsed = CliOptions.parse(List.of(args), System.getenv());
         if (parsed.options().isEmpty()) {
             LOGGER.error(WebMockLogMessages.ERROR.INVALID_ARGUMENTS, parsed.error());
-            out.println(CliOptions.USAGE);
+            LOGGER.info(WebMockLogMessages.INFO.USAGE, CliOptions.USAGE);
             System.exit(2);
             return;
         }
         var options = parsed.options().get();
         if (options.help()) {
-            out.println(CliOptions.USAGE);
+            LOGGER.info(WebMockLogMessages.INFO.USAGE, CliOptions.USAGE);
             return;
         }
         var mock = WebMock.start(options.scenario(), options.port(), options.timing());
@@ -63,8 +61,6 @@ public class WebMockCli {
             mock.close();
             stopped.countDown();
         }, "web-mock-shutdown"));
-        out.println("web-mock listening on " + mock.baseUrl() + " scenario " + mock.current());
-        out.flush();
         stopped.await();
     }
 }

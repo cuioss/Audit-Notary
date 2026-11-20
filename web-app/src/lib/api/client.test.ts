@@ -218,7 +218,7 @@ describe('the event stream', () => {
     const calls = fetchMock.mock.calls.length;
     client.retryEvents();
     await vi.advanceTimersByTimeAsync(0);
-    expect(fetchMock.mock.calls.length).toBe(calls + 1);
+    expect(fetchMock.mock.calls).toHaveLength(calls + 1);
     stop();
   });
 });

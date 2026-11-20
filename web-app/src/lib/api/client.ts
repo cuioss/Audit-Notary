@@ -291,6 +291,31 @@ export class ApiClient {
     }
   }
 
+  /**
+   * Reads the frames of an event stream until it ends or the stream is closed, and dispatches each event.
+   *
+   * @param reader the reader of the response body
+   * @param isActive whether the stream is still wanted
+   */
+  private async readFrames(
+    reader: ReadableStreamDefaultReader<Uint8Array>,
+    isActive: () => boolean,
+  ): Promise<void> {
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (isActive()) {
+      const { done, value } = await reader.read();
+      if (done) return;
+      buffer += decoder.decode(value, { stream: true });
+      const frames = buffer.split(/(?:\r\n|\r|\n){2}/);
+      buffer = frames.pop() ?? '';
+      for (const frame of frames) {
+        const parsed = parseSseChunk(frame);
+        if (parsed) this.dispatch(parsed.event, parsed.data);
+      }
+    }
+  }
+
   private openStream(): () => void {
     let active = true;
     let failures = 0;
@@ -331,20 +356,7 @@ export class ApiClient {
         }
         this.setStreamState('connected');
         failures = 0;
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-        while (active) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const frames = buffer.split(/(?:\r\n|\r|\n){2}/);
-          buffer = frames.pop() ?? '';
-          for (const frame of frames) {
-            const parsed = parseSseChunk(frame);
-            if (parsed) this.dispatch(parsed.event, parsed.data);
-          }
-        }
+        await this.readFrames(response.body.getReader(), () => active);
         if (active) schedule();
       } catch {
         if (active) schedule();

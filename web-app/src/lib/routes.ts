@@ -78,7 +78,10 @@ export const ROUTES: readonly string[] = ADDRESSES.map((address) => address.rout
  * @returns the address, or `null`
  */
 export function parseAddress(pathname: string): Address | null {
-  const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
+  let path = pathname;
+  while (path.length > 1 && path.endsWith('/')) {
+    path = path.slice(0, -1);
+  }
   for (const candidate of ADDRESSES) {
     const match = candidate.regex.exec(path);
     if (match) {

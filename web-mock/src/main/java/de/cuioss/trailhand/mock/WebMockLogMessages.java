@@ -47,6 +47,13 @@ public final class WebMockLogMessages {
                 .identifier(2)
                 .build();
 
+        /** The usage of the command line: the usage text. */
+        public static final LogRecord USAGE = LogRecordModel.builder()
+                .template("%s")
+                .prefix(PREFIX)
+                .identifier(4)
+                .build();
+
         /** The mock stopped. */
         public static final LogRecord STOPPED = LogRecordModel.builder()
                 .template("Web mock stopped")

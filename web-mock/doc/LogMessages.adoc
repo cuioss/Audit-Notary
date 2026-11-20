@@ -21,6 +21,12 @@ ranges: INFO 1-99, WARN 100-199, ERROR 200-299. No record carries a session id o
 |scenario, state
 |`POST /mock/scenario`
 
+|`WEB_MOCK-4`
+|INFO
+|%s
+|usage text
+|`--help`, or invalid arguments (after `WEB_MOCK-202`)
+
 |`WEB_MOCK-3`
 |INFO
 |Web mock stopped

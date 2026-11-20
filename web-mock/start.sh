@@ -112,8 +112,8 @@ nohup java -cp "$CLASSPATH_VALUE" "$MAIN_CLASS" "${ARGS[@]}" >"$LOG_FILE" 2>&1 &
 echo $! >"$PID_FILE"
 
 for _ in $(seq 1 60); do
-    if grep -q "web-mock listening on" "$LOG_FILE" 2>/dev/null; then
-        grep "web-mock listening on" "$LOG_FILE"
+    if grep -q "Web mock listening on" "$LOG_FILE" 2>/dev/null; then
+        grep -o "Web mock listening on .*" "$LOG_FILE" | head -n1
         echo "PID $(cat "$PID_FILE"), log $LOG_FILE, stop with $SCRIPT_DIR/stop.sh"
         exit 0
     fi
