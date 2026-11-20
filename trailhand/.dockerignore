@@ -1,0 +1,3 @@
+# Only the native runner enters the image (Dockerfile.native copies target/*-runner).
+*
+!target/*-runner

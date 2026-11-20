@@ -35,17 +35,25 @@ https://github.com/cuioss/git-document-repository/blob/main/doc/specification/gi
 |Authorization code, PKCE `S256`, session-bound `state` and `nonce`, issuer check; PAR when the provider supports it
 
 |Endpoints
-|`GET /api/v1/auth/login?return=<address>`, `GET /api/v1/auth/callback`, `POST /api/v1/auth/logout`
+|`GET /api/v1/auth/login?return=<address>`, `POST /api/v1/auth/callback`, `POST /api/v1/auth/logout`
+
+|Callback
+|The provider answers with `response_mode=form_post`, which Token Sheriff's authorization request always sets: the
+callback is a cross-site `POST` of `code`, `state` and `iss` as `application/x-www-form-urlencoded`. It needs no
+anti-CSRF header; the login transaction, `state`, the PKCE verifier and the `nonce` bind it to the browser that
+started the login
 
 |`return`
 |Starts with a single `/` (not `//`, no `\`, no scheme, no authority) and matches one of the canonical addresses of
 xref:web-app.adoc#TRH-WEB-3[Web App, Navigation]; kept in the server-side login transaction, not in the browser
 
 |Transaction cookie
-|`__Host-trailhand-login`; `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, `Max-Age=600`; carries only an opaque
-reference to the server-side login transaction (`state`, `nonce`, PKCE verifier); deleted by the callback. `Lax`,
-because the browser does not send a `SameSite=Strict` cookie on the cross-site redirect back from the identity
-provider
+|`__Host-trailhand-login`; `HttpOnly`, `Secure`, `SameSite=None`, `Path=/`, `Max-Age=600`; carries only an opaque
+reference to the server-side login transaction (`state`, `nonce`, PKCE verifier); taken once and deleted by the
+callback. `None`, because the callback is a cross-site `POST` (form post): a browser sends a `SameSite=Lax` cookie with
+a cross-site request only for a top-level navigation by a safe method such as `GET`
+(link:https://www.ietf.org/archive/id/draft-ietf-httpbis-rfc6265bis-22.html#section-5.6.7.1[draft-ietf-httpbis-rfc6265bis-22, §5.6.7.1]),
+and `POST` is not one
 
 |Session cookie
 |`__Host-trailhand-session`; `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/`; set by the callback

@@ -1,0 +1,1607 @@
+[
+  {
+    "name": "org.eclipse.jgit.internal.JGitText",
+    "allPublicFields": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "org.eclipse.jgit.api.CheckoutCommand$Stage",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.api.CheckoutResult$Status",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.api.CherryPickResult$CherryPickStatus",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.api.CloneCommand$FETCH_TYPE",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.api.CreateBranchCommand$SetupUpstreamMode",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.api.ListBranchCommand$ListMode",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.api.MergeCommand$ConflictStyle",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.api.MergeCommand$FastForwardMode",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.api.MergeCommand$FastForwardMode$Merge",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.api.MergeResult$MergeStatus",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.api.RebaseCommand$Operation",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.api.RebaseResult$Status",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.api.RemoteSetUrlCommand$UriType",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.api.ResetCommand$ResetType",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.api.SubmoduleDeinitCommand$SubmoduleDeinitStatus",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.api.VerifySignatureCommand$VerifyMode",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.attributes.Attribute$State",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.diff.DiffAlgorithm$SupportedAlgorithm",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.diff.DiffConfig$RenameDetectionType",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.diff.DiffDriver",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.diff.DiffEntry$ChangeType",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.diff.DiffEntry$Side",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.diff.Edit$Type",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.dircache.DirCache$DirCacheVersion",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.errors.CorruptPackIndexException$ErrorType",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.errors.NoMergeBaseException$MergeBaseFailureReason",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.ignore.IgnoreNode$MatchResult",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.ignore.internal.Strings$PatternState",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.internal.diffmergetool.CommandLineDiffTool",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.internal.diffmergetool.CommandLineMergeTool",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.internal.diffmergetool.FileElement$Type",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.internal.storage.dfs.DfsObjDatabase$PackSource",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.internal.storage.file.FileObjectDatabase$InsertLooseObjectResult",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.internal.storage.pack.PackExt",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.internal.storage.pack.PackWriter$PackingPhase",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.internal.util.ShutdownHook",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.BranchConfig$BranchRebaseMode",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.CommitConfig$CleanupMode",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.CoreConfig$AutoCRLF",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.CoreConfig$CheckStat",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.CoreConfig$EOL",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.CoreConfig$EolStreamType",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.CoreConfig$HideDotFiles",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.CoreConfig$LogRefUpdates",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.CoreConfig$SymLinks",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.CoreConfig$TrustLooseRefStat",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.CoreConfig$TrustPackedRefsStat",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.CoreConfig$TrustStat",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.GcConfig$PackRefsMode",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.GpgConfig$GpgFormat",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.IndexDiff$StageState",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.internal.BooleanTriState",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.ObjectChecker$ErrorType",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.PackedRefsTrait",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.RebaseTodoLine$Action",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.Ref$Storage",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.RefUpdate$Result",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.RepositoryState",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.SignatureVerifier$TrustLevel",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.lib.SubmoduleConfig$FetchRecurseSubmodulesMode",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.merge.ContentMergeStrategy",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.merge.MergeChunk$ConflictState",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.merge.ResolveMerger$MergeFailureReason",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.patch.BinaryHunk$Type",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.patch.FileHeader$PatchType",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.patch.FormatError$Severity",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.revwalk.RevSort",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.revwalk.RevWalk$GetMergedIntoStrategy",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.submodule.SubmoduleStatusType",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.submodule.SubmoduleWalk$IgnoreSubmoduleMode",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.GitProtocolConstants$MultiAck",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.HttpAuthMethod$Type",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.HttpConfig$HttpRedirectMode",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.NetRC$State",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.PacketLineIn$AckNackResult",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.PackParser$Source",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.PushCertificate$NonceStatus",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.PushConfig$PushDefault",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.PushConfig$PushRecurseSubmodulesMode",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.ReceiveCommand$Result",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.ReceiveCommand$Type",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.RefSpec$WildcardMode",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.RemoteRefUpdate$Status",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.TagOpt",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.TransferConfig$FsckMode",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.TransferConfig$ProtocolVersion",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.Transport$Operation",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.TransportHttp$AcceptEncoding",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.TransportProtocol$URIishField",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.UploadPack$Option",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.transport.UploadPack$RequestPolicy",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.treewalk.TreeWalk$OperationType",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.treewalk.WorkingTreeIterator$MetadataDiff",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.util.FS_POSIX$AtomicFileCreation",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.util.GitDateFormatter$Format",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.util.GitDateParser$ParseableSimpleDateFormat",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.util.GitTimeParser$ParseableSimpleDateFormat",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.util.io.AutoLFInputStream$StreamFlag",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.util.ProcessResult$Status",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.jgit.util.sha1.SHA1$Sha1Implementation",
+    "allPublicFields": true,
+    "methods": [
+      {
+        "name": "values",
+        "parameterTypes": []
+      },
+      {
+        "name": "valueOf",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  }
+]

@@ -125,7 +125,9 @@ https://github.com/cuioss/git-document-repository/blob/main/doc/specification/gi
 
 |`web`
 |yes
-|`session.idle-timeout` (default `PT30M`), `session.max-lifetime` (default `PT8H`), `information-text-ref`
+|`origin` (the application's own origin, an absolute `https` URI without path: the `Origin` check of
+xref:web-app.adoc#TRH-WEB-8[TRH-WEB-8] compares with it, and the login callback is `<origin>/api/v1/auth/callback`),
+`session.idle-timeout` (default `PT30M`), `session.max-lifetime` (default `PT8H`), `information-text-ref`
 
 |`directory`
 |no
@@ -160,8 +162,9 @@ an unresolved placeholder without default is a boot error.
 Before the application accepts requests, every rule runs; each violation produces one `ERROR` record, and any
 violation stops the boot. Besides the schema, the rules refuse what the schema cannot see: two repositories with one
 alias, a `rights` entry or `directory.persons.repository` naming an unknown alias, a `-ref` value in a form its key
-does not accept, an `anchor.signed-key-ref` equal to `signing.key-ref`, and an `mcp.canonical-uri` that is not an
-absolute HTTPS URI without fragment. `--validate-config <dir>` runs the same rules offline.
+does not accept, an `anchor.signed-key-ref` equal to `signing.key-ref`, an `mcp.canonical-uri` that is not an
+absolute HTTPS URI without fragment, and a `web.origin` that is no HTTPS origin or a `web.session.idle-timeout` longer
+than `web.session.max-lifetime`. `--validate-config <dir>` runs the same rules offline.
 
 [#TRH-CONF-2]
 == TRH-CONF-2: Repositories and Refresh

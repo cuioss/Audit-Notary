@@ -243,12 +243,17 @@ Refusals:
 |`VALIDATION`
 |`errors`: a list of `{"pointer", "code"}`, `pointer` a JSON Pointer into the request body
 
+|`502`
+|`IDENTITY_PROVIDER_UNAVAILABLE`
+|`GET /api/v1/auth/login` cannot start the login: the provider's metadata cannot be read
+
 |`503`
 |`GIT_UNAVAILABLE`
 |The Git server is unreachable (xref:architecture-and-modules.adoc#TRH-GEN-6[TRH-GEN-6])
 |===
 
-The login callback (xref:authentication.adoc#TRH-AUTH-1[TRH-AUTH-1]) navigates with
+The login callback (`POST`, a form post of the provider, xref:authentication.adoc#TRH-AUTH-1[TRH-AUTH-1]) answers a
+page that navigates with
 `<meta http-equiv="refresh" content="0;url=<return>">`, so the page needs no script and passes the policy of
 <<TRH-WEB-8>> unchanged. `POST /api/v1/auth/logout` answers `{"redirect"}`, the address the web app navigates to
 (the provider's `end_session_endpoint`).

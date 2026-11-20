@@ -1,0 +1,14 @@
+{
+  "bundles": [
+    {
+      "name": "org.eclipse.jgit.internal.JGitText"
+    }
+  ],
+  "resources": {
+    "includes": [
+      {
+        "pattern": "org/eclipse/jgit/internal/JGitText.*\\.properties"
+      }
+    ]
+  }
+}

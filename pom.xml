@@ -48,6 +48,7 @@
     <modules>
         <module>web-app</module>
         <module>web-mock</module>
+        <module>trailhand</module>
         <module>web-e2e</module>
     </modules>
     <dependencyManagement>

@@ -1,0 +1,34 @@
+# TrailHand native image (doc/specification/deployment.adoc, TRH-OPS-1).
+#
+# Build the native executable first:  ./mvnw package -Pnative -pl trailhand -am
+# then, from the trailhand module:    docker build -f src/main/docker/Dockerfile.native -t trailhand:dev .
+#
+# Single stage: the runner is built by Maven (Mandrel builder image, quarkus.native.builder-image) and copied
+# into the distroless base. The base image digest is pinned and updated by the dependency bot.
+FROM quay.io/quarkus/quarkus-distroless-image:2.0@sha256:f8cbe79d903703e741b84eca9d321e286e7537da87cb414832d7c71cd0c5063a
+
+ARG APP_VERSION=dev
+ARG APP_REVISION=dev
+
+LABEL org.opencontainers.image.title="TrailHand" \
+      org.opencontainers.image.description="Security documents as versioned Git documents on the Git server you already run - the CISO's friend" \
+      org.opencontainers.image.version="${APP_VERSION}" \
+      org.opencontainers.image.revision="${APP_REVISION}" \
+      org.opencontainers.image.vendor="CUIoss" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.source="https://github.com/cuioss/TrailHand" \
+      org.opencontainers.image.base.name="quay.io/quarkus/quarkus-distroless-image:2.0"
+
+WORKDIR /app
+COPY --chmod=0755 target/*-runner /app/application
+
+# 8443 HTTPS (web app, /api/v1, /mcp), 8080 redirect to HTTPS, 9000 management (health, metrics) - TRH-OPS-2.
+EXPOSE 8080 8443 9000
+
+# The distroless image has no shell: the binary probes its own management port (TrailhandApplication).
+HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=3 \
+    CMD ["/app/application", "--health-probe"]
+
+# nonroot of the distroless base (65532:65532 in its /etc/passwd), numeric so the host can resolve it.
+USER 65532:65532
+ENTRYPOINT ["/app/application", "-Dquarkus.http.host=0.0.0.0"]

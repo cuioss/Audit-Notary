@@ -31,7 +31,7 @@ xref:../concepts/deployment.adoc[Deployment].
 |`quay.io/quarkus/quarkus-distroless-image:2.0@sha256:<digest>`; the digest is updated by a dependency bot
 
 |User and binary
-|`nonroot`; `/app/application`
+|`nonroot`, declared numerically as `65532:65532`, its id in the base image's `/etc/passwd`; `/app/application`
 
 |Health check
 |`HEALTHCHECK CMD ["/app/application","--health-probe"]`; the binary probes its own management port and exits `0`

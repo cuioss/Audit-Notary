@@ -10,8 +10,9 @@ Gate Status]]
 image:https://sonarcloud.io/api/project_badges/measure?project=cuioss_TrailHand&metric=ncloc[Lines of Code,link=https://sonarcloud.io/summary/new_code?id=cuioss_TrailHand]
 image:https://sonarcloud.io/api/project_badges/measure?project=cuioss_TrailHand&metric=coverage[Coverage,link=https://sonarcloud.io/summary/new_code?id=cuioss_TrailHand]
 
-*Bootstrap.* The concepts, specifications and decisions are written; the web app, its mock server and its end-to-end
-suite are built, the application follows.
+*Bootstrap.* The concepts, specifications and decisions are written; the web app, its mock server, its end-to-end
+suite and the application with its login, configuration and repository handling are built; the document operations
+follow.
 
 == What is it?
 
@@ -36,12 +37,15 @@ The target is Java 25; CI builds on Java 25 and 27.
 ----
 
 The modules of link:doc/specification/architecture-and-modules.adoc[Architecture and Modules] are added as they are
-built: `web-app` (the Svelte web app), `web-mock` (the mock server of its requests, development and tests only) and
-`web-e2e` (Playwright and axe-core). The end-to-end suite runs with the profile `e2e`:
+built: `web-app` (the Svelte web app), `web-mock` (the mock server of its requests, development and tests only),
+`trailhand` (the Quarkus application) and `web-e2e` (Playwright and axe-core). The end-to-end suite runs with the
+profile `e2e`, the native image with the profile `native` (Mandrel in a container):
 
 [source,bash]
 ----
 ./mvnw verify -Pe2e -pl web-e2e -am
+./mvnw package -Pnative -pl trailhand -am -DskipTests
+docker build -f trailhand/src/main/docker/Dockerfile.native -t trailhand:dev trailhand
 ----
 
 == Working on the Web App
