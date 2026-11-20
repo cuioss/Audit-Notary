@@ -1,0 +1,73 @@
+# The integration stack (doc/specification/testing.adoc, Integration lane): the native TrailHand image with
+# Keycloak. Gitea joins with the Git round trip (TRH-NFR-5); until then the repositories are local bare
+# repositories mounted as file: remotes (TRH-CONF-2). Certificates and remotes are generated into target/ by the
+# scripts of the module (TRAILHAND_IT_TARGET).
+name: trailhand-it
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1@sha256:79c623a22abacf3fe6c00a5fb30f5b7843d717b234033b80995891c06116d244
+    command:
+      - start-dev
+      - --import-realm
+      - --https-certificate-file=/opt/keycloak/certificates/tls.crt
+      - --https-certificate-key-file=/opt/keycloak/certificates/tls.key
+      - --https-port=8443
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+      KC_HTTP_ENABLED: "false"
+      # One identity, the browser-facing one: every issuer and redirect is minted from it. TrailHand reaches the
+      # same server as https://keycloak:8443 (SHERIFF_CLIENT_BACK_CHANNEL_ORIGIN below).
+      KC_HOSTNAME: https://localhost:1443
+    ports:
+      - "1443:8443"
+      - "1090:9000"
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
+      - ${TRAILHAND_IT_TARGET:-../../../target}/certificates:/opt/keycloak/certificates:ro
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && exec 3<&-"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks: [trailhand-it]
+
+  trailhand:
+    image: trailhand:it
+    # The trust store makes Token Sheriff's calls to Keycloak trust its self-signed certificate.
+    command:
+      - -Djavax.net.ssl.trustStore=/run/secrets/tls/truststore.p12
+      - -Djavax.net.ssl.trustStorePassword=trailhand-it
+      - -Djavax.net.ssl.trustStoreType=PKCS12
+    environment:
+      SHERIFF_CLIENT_BACK_CHANNEL_ORIGIN: https://keycloak:8443
+      SHERIFF_CLIENT_ALLOWED_EGRESS_HOSTS: keycloak
+      SHERIFF_TOKEN_ISSUERS_TRAILHAND_JWKS_HTTP_ALLOWED_EGRESS_HOSTS: keycloak
+      TRAILHAND_OIDC_JWKS_URL: https://keycloak:8443/realms/trailhand/protocol/openid-connect/certs
+    ports:
+      - "10443:8443"
+      - "19000:9000"
+    volumes:
+      - ./trailhand-config:/app/config:ro
+      - ./secrets:/app/secrets:ro
+      - ${TRAILHAND_IT_TARGET:-../../../target}/certificates:/run/secrets/tls:ro
+      - ${TRAILHAND_IT_TARGET:-../../../target}/remotes:/srv/remotes:ro
+      - trailhand-data:/app/data
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    # No healthcheck key: the image's HEALTHCHECK (the binary's --health-probe) applies.
+    networks: [trailhand-it]
+
+volumes:
+  trailhand-data:
+
+networks:
+  trailhand-it:

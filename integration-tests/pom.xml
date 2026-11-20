@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>de.cuioss</groupId>
+        <artifactId>trailhand-parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <artifactId>trailhand-integration-tests</artifactId>
+    <packaging>jar</packaging>
+    <name>TrailHand Integration Tests</name>
+    <description>The integration lane (doc/specification/testing.adoc): the native image in its distroless container with
+        Keycloak, driven over HTTPS by failsafe *IT classes. Runs with the profile integration-tests.
+    </description>
+
+    <properties>
+        <maven.jar.plugin.automatic.module.name>de.cuioss.trailhand.integration</maven.jar.plugin.automatic.module.name>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.install.skip>true</maven.install.skip>
+        <sonar.skip>true</sonar.skip>
+        <skipITs>true</skipITs>
+    </properties>
+
+    <dependencies>
+        <!-- Reactor order only: the native runner of trailhand is built by the scripts of this module. -->
+        <dependency>
+            <groupId>de.cuioss</groupId>
+            <artifactId>trailhand</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>integration-tests</id>
+            <properties>
+                <skipITs>false</skipITs>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>prepare-stack</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>bash</executable>
+                                    <arguments>
+                                        <argument>-c</argument>
+                                        <argument>scripts/stop-integration-stack.sh --clean; scripts/generate-certificates.sh &amp;&amp; scripts/seed-remotes.sh &amp;&amp; scripts/build-native-if-needed.sh &amp;&amp; scripts/start-integration-stack.sh</argument>
+                                    </arguments>
+                                    <workingDirectory>${project.basedir}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>invalid-config</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${project.basedir}/scripts/verify-invalid-config-fails.sh</executable>
+                                    <workingDirectory>${project.basedir}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>stop-stack</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${project.basedir}/scripts/stop-integration-stack.sh</executable>
+                                    <arguments>
+                                        <argument>--clean</argument>
+                                    </arguments>
+                                    <workingDirectory>${project.basedir}</workingDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <!-- The qualified pattern **/integration/**/*IT.java matches nothing under failsafe 3.6.0
+                                 (observed in API Sheriff); the plain pattern is used. -->
+                            <includes>
+                                <include>**/*IT.java</include>
+                            </includes>
+                            <systemPropertyVariables>
+                                <trailhand.it.base>https://localhost:10443</trailhand.it.base>
+                                <trailhand.it.management>http://localhost:19000</trailhand.it.management>
+                                <trailhand.it.keycloak>https://localhost:1443</trailhand.it.keycloak>
+                            </systemPropertyVariables>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

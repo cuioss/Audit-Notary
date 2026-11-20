@@ -34,7 +34,9 @@ xref:../concepts/application-architecture.adoc#_testing[Application Architecture
 
 |Integration
 |Profile `integration-tests` (failsafe `*IT`)
-|Native image, distroless container, compose stack with Keycloak and Gitea
+|Native image, distroless container, compose stack with Keycloak and Gitea; until the Git round trip
+(<<TRH-NFR-5>>) is built, the repositories are local bare repositories mounted as `file:` remotes (TRH-CONF-2) and
+Gitea is not started
 
 |Benchmarks
 |Profile `benchmarks` of the `integration-tests` module, in a CI job of its own

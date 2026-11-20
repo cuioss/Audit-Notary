@@ -38,12 +38,14 @@ The target is Java 25; CI builds on Java 25 and 27.
 
 The modules of link:doc/specification/architecture-and-modules.adoc[Architecture and Modules] are added as they are
 built: `web-app` (the Svelte web app), `web-mock` (the mock server of its requests, development and tests only),
-`trailhand` (the Quarkus application) and `web-e2e` (Playwright and axe-core). The end-to-end suite runs with the
+`trailhand` (the Quarkus application), `web-e2e` (Playwright and axe-core) and `integration-tests` (the native image
+with Keycloak). The end-to-end suite runs with the
 profile `e2e`, the native image with the profile `native` (Mandrel in a container):
 
 [source,bash]
 ----
 ./mvnw verify -Pe2e -pl web-e2e -am
+./mvnw verify -Pintegration-tests -pl integration-tests -am   # native image + Keycloak, Docker required
 ./mvnw package -Pnative -pl trailhand -am -DskipTests
 docker build -f trailhand/src/main/docker/Dockerfile.native -t trailhand:dev trailhand
 ----
