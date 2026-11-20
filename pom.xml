@@ -5,64 +5,39 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>de.cuioss</groupId>
-        <artifactId>cui-java-parent</artifactId>
+        <artifactId>cui-quarkus-parent</artifactId>
         <version>1.7.7</version>
         <relativePath/>
     </parent>
-    <artifactId>cui-java-module-template</artifactId>
+    <artifactId>trailhand-parent</artifactId>
     <version>0.1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
     <!-- Must be declared: <inceptionYear> is inherited, and the license plugin binds the
          copyright ${year} to it. Without this, a new project reports cui-parent-pom's 2022
          and every -Ppre-commit run restamps every header. customize.sh sets this. -->
-    <inceptionYear>2023</inceptionYear>
-    <name>cui java module template</name>
-    <description>Template module for cuioss open source projects.
+    <inceptionYear>2026</inceptionYear>
+    <name>TrailHand</name>
+    <description>TrailHand, the CISO's friend: security documents as versioned Git documents on the Git server you already run. Quarkus native, with a web app and an MCP server for AI agents.
     </description>
-    <url>https://github.com/cuioss/cui-java-module-template/</url>
+    <url>https://github.com/cuioss/TrailHand/</url>
     <scm>
-        <url>https://github.com/cuioss/cui-java-module-template/</url>
+        <url>https://github.com/cuioss/TrailHand/</url>
         <connection>
-            scm:git:https://github.com/cuioss/cui-java-module-template.git
+            scm:git:https://github.com/cuioss/TrailHand.git
         </connection>
         <developerConnection>
-            scm:git:https://github.com/cuioss/cui-java-module-template/
+            scm:git:https://github.com/cuioss/TrailHand/
         </developerConnection>
         <tag>HEAD</tag>
     </scm>
     <issueManagement>
-        <url>https://github.com/cuioss/cui-java-module-template/issues</url>
+        <url>https://github.com/cuioss/TrailHand/issues</url>
         <system>GitHub Issues</system>
     </issueManagement>
     <properties>
-        <maven.compiler.release>21</maven.compiler.release>
-        <maven.jar.plugin.automatic.module.name>de.cuioss.template</maven.jar.plugin.automatic.module.name>
+        <!-- Target Java 25; CI also builds on 27 (.github/project.yml, maven-build.java-versions). -->
+        <maven.compiler.release>25</maven.compiler.release>
     </properties>
-    <dependencies>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-        </dependency>
-        <!-- Unit testing -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-        </dependency>
-    </dependencies>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    <!-- The modules of doc/specification/architecture-and-modules.adoc are added when they are built:
+         categories, web-app, trailhand, web-e2e, integration-tests, deployment. -->
 </project>
