@@ -64,7 +64,9 @@ public class RepositoryLifecycle {
      * @throws IllegalStateException if the library refuses the repositories
      */
     @Produces
-    @Singleton // a pseudo-scope: the service is used directly, without a client proxy, by the health checks and the web
+    // @Singleton, not @ApplicationScoped: the service is used directly, without a client proxy, by the health checks
+    // and the web resources.
+    @Singleton
     public synchronized RepositoryService repositoryService() {
         if (service == null) {
             var created = RepositoryService.create(configuration.repositories(), dataDirectory);
