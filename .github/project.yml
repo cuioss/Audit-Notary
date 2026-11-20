@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/cuioss/cuioss-organization/main/.github/actions/read-project-config/schema.json
 name: trailhand
-description: TrailHand, the CISO's friend: security documents as versioned Git documents on the Git server you already run. Quarkus native, with a web app and an MCP server for AI agents.
+description: "TrailHand, the CISO's friend: security documents as versioned Git documents on the Git server you already run. Quarkus native, with a web app and an MCP server for AI agents."
 
 # MERGING A CHANGE OF current-version IS A RELEASE to Maven Central (central version-changed guard
 # in reusable-maven-release.yml). Never change it while customizing or in an ordinary PR:
