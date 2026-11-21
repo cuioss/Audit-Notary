@@ -182,7 +182,9 @@ than `web.session.max-lifetime`. `--validate-config <dir>` runs the same rules o
 
 The bootstrap enforces the rules of the keys it reads: `repositories`, `rights`, `oidc`, `web` and `fetch`, the
 placeholders, and `web.origin` and the session lifetimes. Until the Vault adapter is built, `file:` is the only
-reference form it accepts; `vault:` and `kms:` are refused at boot. The JSON Schema and the rules of `signing`,
+reference form it accepts for the references it reads, `repositories[].credential-ref` and
+`oidc.client-credential-ref`; `vault:` and `kms:` are refused there at boot. Other `-ref` keys, such as
+`web.information-text-ref`, are not read yet and not checked. The JSON Schema and the rules of `signing`,
 `anchor`, `mcp` and `directory`, with the per-key reference forms, apply once their modules are built; until then a
 value under those keys is not checked.
 

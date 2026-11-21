@@ -160,7 +160,7 @@ public class RepositoryService {
         return known != null && known.present();
     }
 
-    private synchronized void record(RepositoryState state) {
+    private synchronized void recordState(RepositoryState state) {
         states.put(state.alias(), state);
     }
 
@@ -169,12 +169,12 @@ public class RepositoryService {
                 new RepositoryOperations.CloneInput(gitDir, repository.remote(), PUSH_SPECS, null));
         if (result.outcome() == GitOutcome.OK) {
             LOGGER.info(INFO.REPOSITORY_READY, repository.alias());
-            record(new RepositoryState(repository.alias(), true, true));
+            recordState(new RepositoryState(repository.alias(), true, true));
             // An existing clone is opened without contacting the remote; the fetch brings it up to date.
             fetch(repository, gitDir);
         } else {
             LOGGER.warn(WARN.CLONE_FAILED, repository.alias(), result.outcome(), result.detail());
-            record(new RepositoryState(repository.alias(), false, false));
+            recordState(new RepositoryState(repository.alias(), false, false));
         }
     }
 
@@ -184,7 +184,7 @@ public class RepositoryService {
         if (!up) {
             LOGGER.warn(WARN.FETCH_FAILED, repository.alias(), result.outcome(), result.detail());
         }
-        record(new RepositoryState(repository.alias(), true, up));
+        recordState(new RepositoryState(repository.alias(), true, up));
     }
 
     /**

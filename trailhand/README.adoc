@@ -97,7 +97,7 @@ On the management port 9000 (plain HTTP, fixed at build time): `/q/health/live`,
 
 [source,bash]
 ----
-./mvnw package -Pnative -pl trailhand -am -DskipTests      # Mandrel in a container (quarkus.native.builder-image)
+./mvnw package -Pnative -pl trailhand -am      # Mandrel in a container; runs NativeRegistrationTest first
 docker build -f trailhand/src/main/docker/Dockerfile.native -t trailhand:dev trailhand
 docker run --rm -v "$PWD/my-config:/cfg:ro" trailhand:dev --validate-config /cfg   # exit 0 or 1
 ----
@@ -127,7 +127,8 @@ answers
 |===
 
 `NativeRegistrationTest` compares both lists with the resolved JARs: every converter of the Token Sheriff client and
-every enum of JGit must be registered, and nothing else. A dependency update that changes them fails there; this lists
+every enum of JGit must be registered, and nothing else. The profile `native` runs it before every native build, so a
+dependency update that changes them fails before an image is packaged; this lists
 every enum of the JGit JAR for `reflect-config.json`:
 
 [source,bash]

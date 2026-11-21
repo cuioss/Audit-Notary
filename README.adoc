@@ -46,7 +46,7 @@ in a container):
 [source,bash]
 ----
 ./mvnw verify -Pe2e -pl web-e2e -am
-./mvnw package -Pnative -pl trailhand -am -DskipTests
+./mvnw package -Pnative -pl trailhand -am
 docker build -f trailhand/src/main/docker/Dockerfile.native -t trailhand:dev trailhand
 ----
 

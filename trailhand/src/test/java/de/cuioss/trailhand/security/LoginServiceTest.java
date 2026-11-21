@@ -187,6 +187,26 @@ class LoginServiceTest {
     }
 
     @Test
+    @DisplayName("frees the place of a login whose PAR request fails, so the next login can start")
+    void parFailureFreesCapacity() {
+        var context = FlowContext.create(CALLBACK);
+        var single = service(new LoginTransactions(Clock.systemUTC(), 1));
+        expect(discovery.resolve()).andReturn(metadata);
+        expect(metadata.getPushedAuthorizationRequestEndpoint()).andReturn(Optional.of("https://idp/par")).anyTimes();
+        expect(flow.authorize(metadata)).andReturn(
+                new AuthorizationCodeFlow.AuthorizationRedirect("https://idp/auth?client_id=c", context)).times(2);
+        var answer = new ParResponse();
+        answer.requestUri = "urn:x";
+        expect(par.pushAuthorizationRequest(anyObject(), anyObject(), anyObject()))
+                .andThrow(new ClientProtocolException("PAR refused")).andReturn(answer);
+        replay(discovery, flow, metadata, par);
+
+        assertThrows(ClientProtocolException.class, () -> single.start("/"));
+
+        assertEquals("https://idp/auth?client_id=c&request_uri=urn%3Ax", single.start("/").authorizationUrl());
+    }
+
+    @Test
     @DisplayName("completes a login into a session with the identity values and keeps the tokens server-side")
     void complete() {
         var context = FlowContext.create(CALLBACK);

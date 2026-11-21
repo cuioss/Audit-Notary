@@ -247,7 +247,30 @@ class SecurityTest {
             assertTrue(transactions.begin(context, "/").isEmpty());
 
             clock.advance(LoginTransactions.LIFETIME.plusSeconds(1));
-            assertTrue(transactions.begin(context, "/").isPresent(), "a full store sweeps the expired logins");
+            assertTrue(transactions.begin(context, "/").isPresent(), "a start drops the expired logins");
+        }
+
+        @Test
+        @DisplayName("stay bounded when starts at the limit repeat and when started logins are taken at once")
+        void repeatedStarts() {
+            var clock = new MovableClock();
+            var transactions = new LoginTransactions(clock, 3);
+            var context = FlowContext.create(CALLBACK);
+            for (int start = 0; start < 3; start++) {
+                assertTrue(transactions.begin(context, "/").isPresent());
+            }
+            for (int start = 0; start < 1_000; start++) {
+                assertTrue(transactions.begin(context, "/").isEmpty(), "every start at the limit is refused");
+            }
+            clock.advance(LoginTransactions.LIFETIME.plusSeconds(1));
+            for (int cycle = 0; cycle < 1_000; cycle++) {
+                var reference = transactions.begin(context, "/").orElseThrow();
+                assertTrue(transactions.take(reference).isPresent());
+            }
+            for (int start = 0; start < 3; start++) {
+                assertTrue(transactions.begin(context, "/").isPresent(), "taken logins left their places free");
+            }
+            assertTrue(transactions.begin(context, "/").isEmpty());
         }
     }
 }

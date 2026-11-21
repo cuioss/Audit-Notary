@@ -50,10 +50,10 @@ public class AuthResource {
     public static final String PATH = "/api/v1/auth";
 
     /** The start of the login, below {@link #PATH}; public. */
-    public static final String LOGIN = "/login";
+    public static final String LOGIN_PATH = "/login";
 
     /** The provider's return, below {@link #PATH}; public. */
-    public static final String CALLBACK = "/callback";
+    public static final String CALLBACK_PATH = "/callback";
 
     private static final String SET_COOKIE = "Set-Cookie";
     private static final String CACHE_CONTROL = "Cache-Control";
@@ -79,7 +79,7 @@ public class AuthResource {
      *         used, or {@code 503} when too many logins are pending
      */
     @GET
-    @Path(LOGIN)
+    @Path(LOGIN_PATH)
     public Response start(@QueryParam("return") @Nullable String returnAddress) {
         try {
             var started = login.start(returnAddress);
@@ -104,7 +104,7 @@ public class AuthResource {
      *         login
      */
     @GET
-    @Path(CALLBACK)
+    @Path(CALLBACK_PATH)
     @Produces(MediaType.TEXT_HTML)
     public Response callback(@CookieParam(Cookies.LOGIN) @Nullable String transaction, @Context UriInfo uriInfo) {
         var query = uriInfo.getRequestUri().getRawQuery();
