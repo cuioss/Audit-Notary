@@ -16,7 +16,8 @@ https://github.com/cuioss/git-document-repository/blob/main/doc/specification/gi
 == TRH-AUTH-1: Web Login
 
 * The web login must use the authorization code flow with PKCE `S256` as a confidential client through Token Sheriff.
-* No access, refresh or ID token may be sent to the browser.
+* No access, refresh or ID token may be sent to the browser, with one exception: the ID token as `id_token_hint` in
+  the address of the RP-initiated logout, after the held tokens are revoked and the session is ended.
 * During login the browser must hold only a short-lived login-transaction cookie, afterwards only the session cookie,
   both `HttpOnly` and `Secure`; the session must end after a configurable idle time (default 30 minutes) and absolute
   lifetime (default 8 hours).
@@ -37,15 +38,19 @@ https://github.com/cuioss/git-document-repository/blob/main/doc/specification/gi
 |Endpoints
 |`GET /api/v1/auth/login?return=<address>`, `GET /api/v1/auth/callback`, `POST /api/v1/auth/logout`
 
-|`return`
-|Starts with a single `/` (not `//`, no `\`, no scheme, no authority) and matches one of the canonical addresses of
-xref:web-app.adoc#TRH-WEB-3[Web App, Navigation]; kept in the server-side login transaction, not in the browser
+|Response mode
+|`response_mode=query`: the provider sends the browser back to the callback with `code`, `state` and `iss` in the
+query, a top-level `GET` navigation that carries the transaction cookie. Token Sheriff's request builder sets
+`form_post`, whose callback is a cross-site `POST` without `SameSite=Lax` cookies
+(link:https://www.ietf.org/archive/id/draft-ietf-httpbis-rfc6265bis-22.html#section-5.6.7.1[draft-ietf-httpbis-rfc6265bis-22, §5.6.7.1]);
+the application replaces only that parameter, as API Sheriff does. Accepted cost: the code appears in the callback
+address; PKCE, the single use of the code, the transaction with `state` and `Referrer-Policy: no-referrer` bound it
 
 |Transaction cookie
 |`__Host-trailhand-login`; `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, `Max-Age=600`; carries only an opaque
-reference to the server-side login transaction (`state`, `nonce`, PKCE verifier); deleted by the callback. `Lax`,
-because the browser does not send a `SameSite=Strict` cookie on the cross-site redirect back from the identity
-provider
+reference to the server-side login transaction (`state`, `nonce`, PKCE verifier); taken once and deleted by the
+callback. `Lax`, because the browser does not send a `SameSite=Strict` cookie on the cross-site redirect back from the
+identity provider
 
 |Session cookie
 |`__Host-trailhand-session`; `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/`; set by the callback
@@ -64,7 +69,20 @@ carries the session cookie.
 |`web.session.idle-timeout` (default `PT30M`), `web.session.max-lifetime` (default `PT8H`)
 
 |Logout
-|RP-initiated at the provider's `end_session_endpoint`; held tokens revoked first
+|RP-initiated at the provider's `end_session_endpoint`; held tokens revoked first. Revocation is best effort: a
+provider without `revocation_endpoint` or a refused revocation (logged, `TRAILHAND-104`) does not stop the logout. The
+session ends and the tokens are dropped from the application in every case, and the end-session request ends the
+provider's session. The address carries the ID token as
+`id_token_hint`, which OpenID Connect RP-Initiated Logout recommends
+(link:https://openid.net/specs/openid-connect-rpinitiated-1_0.html#RPLogout[RP-Initiated Logout 1.0, §2]: the RP
+redirects the user agent to the logout endpoint; `id_token_hint` RECOMMENDED); with it the provider ends its session
+without asking again. The application accepts no token from the browser, only the session cookie
+
+|Pending logins
+|At most 10,000 login transactions at once, each for 10 minutes; a start beyond that answers `503 TOO_MANY_LOGINS`
+with `Retry-After: 60` (the login is reachable without a session). Every transaction has the same lifetime, so each
+start drops the expired and taken transactions in the order of their expiry, without scanning the others. A start
+whose authorization request cannot be sent (PAR refused) frees its place at once
 
 |`401` from `/api/v1`
 |Response body names the login address; the web app follows it with the current canonical address as `return`
@@ -78,8 +96,9 @@ carries the session cookie.
 * Every request must be checked; a request without a mapped right must be refused (deny by default).
 * No right may be derived from a directory role.
 
-Input: the `groups` claim (or the claim configured as group source) of the session or bearer token. Mapping:
-`trailhand.yaml` → `rights`.
+Input: the `groups` claim (or the claim configured as group source) of the session or bearer token, read from the
+JSON payload of the validated token as the provider wrote it: an array yields its strings, a single string one group,
+anything else none, so a group name that contains a comma stays one group. Mapping: `trailhand.yaml` → `rights`.
 
 [cols="1,3"]
 |===

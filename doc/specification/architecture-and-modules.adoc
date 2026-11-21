@@ -297,7 +297,8 @@ created with the code. Metrics: `quarkus-micrometer-registry-prometheus` at `/q/
 |Condition |Behaviour
 
 |Fetch fails
-|The index serves the last fetched state; the health check `git-remote` reports `DOWN` per repository; readiness
+|The index serves the last fetched state; the health check `git-remote` (health group
+`/q/health/group/git-remote`) reports `DOWN` with the fetch state per repository; readiness
 stays `UP`
 
 |Push fails during a save

@@ -27,7 +27,9 @@ application; the identity provider is the external system.
 * The application is a confidential client through `token-sheriff-client-quarkus`. It holds the tokens server-side.
 * During the login the browser holds a short-lived `HttpOnly`, `Secure`, `SameSite=Lax` login-transaction cookie
   that binds `state` and `nonce` across the identity provider's callback. Afterwards it holds only an `HttpOnly`,
-  `Secure`, `SameSite=Strict` session cookie.
+  `Secure`, `SameSite=Strict` session cookie. The authorization request asks for `response_mode=query`, so the
+  callback is a top-level `GET` navigation that carries the `Lax` cookie
+  (xref:../specification/authentication.adoc#TRH-AUTH-1[TRH-AUTH-1]).
 * Step-up for releases uses RFC 9470 through the client.
 * Agents present bearer tokens that `token-sheriff-validation-quarkus` validates.
 * Rights come from identity-provider groups, mapped per repository. Directory roles grant nothing.
@@ -57,12 +59,15 @@ option for organisations that run API Sheriff anyway.
 
 === Properties of the design
 
-* No token reaches the browser.
+* No token reaches the browser, except the ID token as `id_token_hint` in the address of the RP-initiated logout,
+  after the held tokens are revoked (TRH-AUTH-1).
 * One authentication component serves the web app and the MCP server.
 
 === Accepted costs
 
 * Sessions are lost on restart. Users log in again.
+* The logout address shows the browser the ID token of the ended session, so the provider can end its own session
+  without a confirmation page.
 * The application runs as one instance; a second instance would need a shared session store.
 
 === When this is revisited
