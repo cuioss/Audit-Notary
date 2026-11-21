@@ -20,6 +20,7 @@ import java.net.URI;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * The web app: {@code trailhand.yaml} → {@code web} (TRH-AUTH-1, TRH-WEB-8).
@@ -65,12 +66,21 @@ public record WebSettings(URI origin, Duration idleTimeout, Duration maxLifetime
         if (!lower.startsWith("[") || !lower.endsWith("]")) {
             return lower;
         }
+        return ipv6Pieces(lower.substring(1, lower.length() - 1)).map(pieces -> "[" + ipv6Text(pieces) + "]")
+                .orElse(lower);
+    }
+
+    /**
+     * @param literal an IPv6 literal without brackets
+     * @return its eight pieces, or empty when it is no IPv6 literal
+     */
+    private static Optional<int[]> ipv6Pieces(String literal) {
         byte[] bytes;
         try {
             // A literal is only parsed, never looked up.
-            bytes = InetAddress.getByName(lower.substring(1, lower.length() - 1)).getAddress();
+            bytes = InetAddress.getByName(literal).getAddress();
         } catch (UnknownHostException e) {
-            return lower;
+            return Optional.empty();
         }
         if (bytes.length == IPV4_BYTES) {
             // Java answers an IPv4-mapped literal (::ffff:a.b.c.d) with the IPv4 address; the browser keeps it IPv6.
@@ -84,22 +94,30 @@ public record WebSettings(URI origin, Duration idleTimeout, Duration maxLifetime
         for (int index = 0; index < IPV6_PIECES; index++) {
             pieces[index] = ((bytes[2 * index] & 0xff) << 8) | (bytes[2 * index + 1] & 0xff);
         }
+        return Optional.of(pieces);
+    }
+
+    /**
+     * @param pieces the eight pieces of an IPv6 address
+     * @return the address as the URL Standard's IPv6 serializer writes it
+     */
+    private static String ipv6Text(int[] pieces) {
         var compress = compressedPiece(pieces);
-        var text = new StringBuilder("[");
-        for (int index = 0; index < IPV6_PIECES; index++) {
+        var text = new StringBuilder();
+        var index = 0;
+        while (index < IPV6_PIECES) {
             if (index == compress) {
                 text.append(index == 0 ? "::" : ":");
-                while (index < IPV6_PIECES - 1 && pieces[index + 1] == 0) {
-                    index++;
+                index += zeroRun(pieces, index);
+            } else {
+                text.append(Integer.toHexString(pieces[index]));
+                if (index < IPV6_PIECES - 1) {
+                    text.append(':');
                 }
-                continue;
-            }
-            text.append(Integer.toHexString(pieces[index]));
-            if (index < IPV6_PIECES - 1) {
-                text.append(':');
+                index++;
             }
         }
-        return text.append(']').toString();
+        return text.toString();
     }
 
     /**
@@ -107,22 +125,25 @@ public record WebSettings(URI origin, Duration idleTimeout, Duration maxLifetime
      * @return the index of the first longest run of two or more zero pieces, or {@code -1}
      */
     private static int compressedPiece(int[] pieces) {
-        int longestIndex = -1;
-        int longestSize = 1;
-        for (int index = 0; index < pieces.length; index++) {
-            if (pieces[index] != 0) {
-                continue;
-            }
-            int size = 0;
-            while (index + size < pieces.length && pieces[index + size] == 0) {
-                size++;
-            }
+        var longestIndex = -1;
+        var longestSize = 1;
+        var index = 0;
+        while (index < pieces.length) {
+            var size = zeroRun(pieces, index);
             if (size > longestSize) {
                 longestIndex = index;
                 longestSize = size;
             }
-            index += size;
+            index += Math.max(size, 1);
         }
         return longestIndex;
+    }
+
+    private static int zeroRun(int[] pieces, int start) {
+        var size = 0;
+        while (start + size < pieces.length && pieces[start + size] == 0) {
+            size++;
+        }
+        return size;
     }
 }

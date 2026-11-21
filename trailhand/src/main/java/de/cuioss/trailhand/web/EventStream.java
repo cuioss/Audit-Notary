@@ -40,6 +40,8 @@ import java.util.concurrent.atomic.AtomicReference;
 @ApplicationScoped
 public class EventStream {
 
+    private static final String STATUS_EVENT = "status";
+
     private final RepositoryService repositories;
     private final String version;
     private final ObjectMapper mapper = new ObjectMapper();
@@ -100,9 +102,9 @@ public class EventStream {
             current.broadcaster().register(sink);
             var status = statusJson();
             if (status.equals(lastStatus.getAndSet(status))) {
-                sink.send(sseFactory.newEventBuilder().name("status").data(status).build());
+                sink.send(sseFactory.newEventBuilder().name(STATUS_EVENT).data(status).build());
             } else {
-                current.broadcaster().broadcast(current.sse().newEventBuilder().name("status").data(status).build());
+                current.broadcaster().broadcast(current.sse().newEventBuilder().name(STATUS_EVENT).data(status).build());
             }
         }
     }
@@ -113,7 +115,7 @@ public class EventStream {
             var previous = lastStatus.getAndSet(status);
             var current = channel.get();
             if (!status.equals(previous) && current != null) {
-                current.broadcaster().broadcast(current.sse().newEventBuilder().name("status").data(status).build());
+                current.broadcaster().broadcast(current.sse().newEventBuilder().name(STATUS_EVENT).data(status).build());
             }
         }
     }
