@@ -23,9 +23,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The server-side login transactions (TRH-AUTH-1): {@code state}, {@code nonce} and PKCE verifier (Token Sheriff's
@@ -33,7 +34,8 @@ import java.util.concurrent.atomic.AtomicReference;
  * A transaction lives ten minutes and is taken once.
  * <p>
  * The login is reachable without a session, so the store is bounded: at most {@value #MAX_PENDING} transactions are
- * pending, and the expired ones are swept at most once per {@link #SWEEP_INTERVAL}, not on every start.
+ * pending. Every transaction lives {@link #LIFETIME}, so the order of the starts is the order of expiry: a queue in
+ * that order lets each start drop the expired and the taken transactions at its head, without scanning the store.
  */
 @ApplicationScoped
 public class LoginTransactions {
@@ -44,12 +46,11 @@ public class LoginTransactions {
     /** The most transactions pending at once; a start beyond it is refused. */
     public static final int MAX_PENDING = 10_000;
 
-    /** The shortest time between two sweeps of the expired transactions. */
-    static final Duration SWEEP_INTERVAL = Duration.ofMinutes(1);
-
     private final Map<String, Transaction> transactions = new ConcurrentHashMap<>();
+    /** The references in the order of their start, which is the order of their expiry. */
+    private final Queue<String> byExpiry = new ConcurrentLinkedQueue<>();
+    private final AtomicInteger queued = new AtomicInteger();
     private final AtomicInteger pending = new AtomicInteger();
-    private final AtomicReference<Instant> lastSweep = new AtomicReference<>(Instant.MIN);
     private final Clock clock;
     private final int maxPending;
 
@@ -74,13 +75,17 @@ public class LoginTransactions {
      */
     public Optional<String> begin(FlowContext context, String returnAddress) {
         var now = clock.instant();
-        sweep(now, pending.get() >= maxPending);
+        dropExpired(now);
         if (pending.incrementAndGet() > maxPending) {
             pending.decrementAndGet();
             return Optional.empty();
         }
         var reference = SessionStore.randomToken();
         transactions.put(reference, new Transaction(context, returnAddress, now.plus(LIFETIME)));
+        byExpiry.add(reference);
+        if (queued.incrementAndGet() > 2 * Math.max(maxPending, 1)) {
+            compact();
+        }
         return Optional.of(reference);
     }
 
@@ -100,22 +105,39 @@ public class LoginTransactions {
     }
 
     /**
-     * Removes the expired transactions, at most once per {@link #SWEEP_INTERVAL} unless the store is full.
+     * Drops the transactions at the head of the queue that are taken or expired; it stops at the first live one, so
+     * its cost is the number of transactions it drops.
      *
-     * @param now   the current time
-     * @param force whether to sweep regardless of the interval
+     * @param now the current time
      */
-    private void sweep(Instant now, boolean force) {
-        var last = lastSweep.get();
-        var recent = !last.equals(Instant.MIN) && last.plus(SWEEP_INTERVAL).isAfter(now);
-        if ((recent && !force) || !lastSweep.compareAndSet(last, now)) {
-            return;
-        }
-        for (var entry : transactions.entrySet()) {
-            if (entry.getValue().expires().isBefore(now) && transactions.remove(entry.getKey(), entry.getValue())) {
-                pending.decrementAndGet();
+    private void dropExpired(Instant now) {
+        for (String head = byExpiry.peek(); head != null; head = byExpiry.peek()) {
+            var transaction = transactions.get(head);
+            if (transaction != null && !transaction.expires().isBefore(now)) {
+                return;
+            }
+            if (byExpiry.remove(head)) {
+                queued.decrementAndGet();
+                if (transaction != null && transactions.remove(head, transaction)) {
+                    pending.decrementAndGet();
+                }
             }
         }
+    }
+
+    /**
+     * Drops the references of taken transactions from the queue. It runs when the queue holds twice the limit, which
+     * only starts that are taken again soon can cause; after it the queue holds at most the pending transactions, so
+     * its cost is spread over the starts that filled it.
+     */
+    private void compact() {
+        byExpiry.removeIf(reference -> {
+            if (transactions.containsKey(reference)) {
+                return false;
+            }
+            queued.decrementAndGet();
+            return true;
+        });
     }
 
     /**

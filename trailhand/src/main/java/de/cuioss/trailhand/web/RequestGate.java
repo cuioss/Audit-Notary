@@ -57,7 +57,7 @@ public class RequestGate {
 
     /** The requests answered without a session; each path is the constant its resource declares itself under. */
     private static final Set<String> PUBLIC_GET = Set.of(StatusResource.PATH, MessagesResource.PATH,
-            AuthResource.PATH + AuthResource.LOGIN, AuthResource.PATH + AuthResource.CALLBACK);
+            AuthResource.PATH + AuthResource.LOGIN_PATH, AuthResource.PATH + AuthResource.CALLBACK_PATH);
     private static final String STATIC_ROOT = "META-INF/resources";
 
     private final SessionStore sessions;

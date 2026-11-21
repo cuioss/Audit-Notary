@@ -136,7 +136,17 @@ public class LoginService {
         var redirect = flow.authorize(metadataNow);
         var reference = transactions.begin(redirect.context(), returnAddresses.check(requestedReturn))
                 .orElseThrow(TooManyLoginsException::new);
-        return new LoginStart(authorizationAddress(metadataNow, redirect.authorizationUrl()), reference);
+        var started = false;
+        try {
+            var start = new LoginStart(authorizationAddress(metadataNow, redirect.authorizationUrl()), reference);
+            started = true;
+            return start;
+        } finally {
+            if (!started) {
+                // The reference never reaches the browser: free its place at once instead of waiting for its expiry.
+                transactions.take(reference);
+            }
+        }
     }
 
     /**

@@ -23,7 +23,7 @@ APP_DIR="$REPO_ROOT/trailhand"
 RUNNER="$(ls "$APP_DIR"/target/*-runner 2>/dev/null | head -n1 || true)"
 if [ -z "$RUNNER" ] || [ -n "$(find "$APP_DIR/src/main" "$APP_DIR/pom.xml" "$REPO_ROOT/web-app/src" -newer "$RUNNER" -type f -print -quit)" ]; then
     echo "building the native runner"
-    (cd "$REPO_ROOT" && ./mvnw -q package -Pnative -pl trailhand -am -DskipTests)
+    (cd "$REPO_ROOT" && ./mvnw -q package -Pnative -pl trailhand -am)
 else
     echo "native runner is current: $RUNNER"
 fi

@@ -201,8 +201,23 @@
                 <quarkus.native.enabled>true</quarkus.native.enabled>
                 <quarkus.native.container-build>true</quarkus.native.container-build>
                 <quarkus.ssl.native>true</quarkus.ssl.native>
-                <skipTests>true</skipTests>
             </properties>
+            <build>
+                <plugins>
+                    <!-- A native build runs only the check of the native registrations against the resolved JARs, so
+                         an image is never packaged with stale registrations; the other tests belong to the JVM
+                         build. -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/NativeRegistrationTest.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>
