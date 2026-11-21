@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -41,6 +42,9 @@ final class Stack {
 
     /** The management interface. */
     static final String MANAGEMENT = System.getProperty("trailhand.it.management", "http://localhost:19000");
+
+    /** Keycloak as the browser reaches it. */
+    static final String KEYCLOAK = System.getProperty("trailhand.it.keycloak", "https://localhost:1443");
 
     /** The session cookie. */
     static final String SESSION_COOKIE = "__Host-trailhand-session";
@@ -87,12 +91,23 @@ final class Stack {
         var transaction = start.getCookie(LOGIN_COOKIE);
         assertNotNull(transaction, "login-transaction cookie");
         var authorization = start.header("Location");
-        assertTrue(authorization.contains("response_mode=query"), authorization);
-        assertTrue(authorization.contains("code_challenge_method=S256"), authorization);
+        // Keycloak offers PAR: the parameters (PKCE, state, nonce, response_mode=query) went over the back channel,
+        // and the browser carries only client_id and request_uri.
+        assertTrue(authorization.contains("?client_id=trailhand-web&request_uri=urn"), authorization);
+        assertFalse(authorization.contains("code_challenge") || authorization.contains("state="), authorization);
 
+        // With PAR, Keycloak answers the authorization request with a redirect to its login action; follow it within
+        // Keycloak, keeping its cookies, as a browser does.
+        Map<String, String> keycloakCookies = new HashMap<>();
         var page = request().get(authorization);
+        for (int hop = 0; page.statusCode() == 302 && hop < 3; hop++) {
+            keycloakCookies.putAll(page.getCookies());
+            var next = page.header("Location");
+            assertTrue(next.startsWith(KEYCLOAK + "/"), next);
+            page = request().cookies(keycloakCookies).get(next);
+        }
         assertEquals(200, page.statusCode());
-        Map<String, String> keycloakCookies = new HashMap<>(page.getCookies());
+        keycloakCookies.putAll(page.getCookies());
         var matcher = FORM_ACTION.matcher(page.asString());
         assertTrue(matcher.find(), "Keycloak login form");
         var action = matcher.group(1).replace("&amp;", "&");
