@@ -55,8 +55,10 @@ https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/git-as-
 == Specification
 
 Each specification document states its requirements as numbered sections (`TRH-<GROUP>-<n>`): first the rules that
-must hold, then the design that realises them. The application is not built yet: the concepts and specifications
-describe its planned design, including every check and CI job they name.
+must hold, then the design that realises them. The application is in its bootstrap: the concepts and specifications
+describe its full design, including every check and CI job they name, and the modules built so far are listed in
+xref:specification/architecture-and-modules.adoc#_maven_modules[Architecture and Modules]. Each module documents its
+layout and commands in its own `README.adoc`.
 
 [cols="1,1,3"]
 |===
