@@ -21,5 +21,8 @@ jobs:
       report-name: integration-tests
       maven-args-input: verify -Pintegration-tests -pl integration-tests -am
       reports-folder: integration-tests/target/failsafe-reports
-      report-logs: integration-tests/target/*.log
+      report-logs: |
+        integration-tests/target/compose.log
+        integration-tests/target/invalid-config-validate.log
+        integration-tests/target/invalid-config-boot.log
       timeout-minutes: 45
