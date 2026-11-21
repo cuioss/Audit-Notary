@@ -19,6 +19,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.cuioss.sheriff.token.client.discovery.ProviderMetadata;
 import de.cuioss.trailhand.security.TokenClientNativeRegistration;
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import io.smallrye.config.PropertiesConfigSource;
+import io.smallrye.config.SmallRyeConfigBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -85,6 +87,20 @@ class NativeRegistrationTest {
 
         assertTrue(expected.size() > 1, "the JGit JAR holds enums");
         assertEquals(expected, reflectConfigNames());
+    }
+
+    @Test
+    @DisplayName("the native build arguments keep the comma inside --enable-url-protocols")
+    void buildArguments() throws Exception {
+        var properties = NativeRegistrationTest.class.getClassLoader().getResource("application.properties");
+        assertNotNull(properties, "application.properties is on the class path");
+        var config = new SmallRyeConfigBuilder().withSources(new PropertiesConfigSource(properties)).build();
+
+        var arguments = config.getValues("quarkus.native.additional-build-args", String.class);
+
+        assertTrue(arguments.contains("--enable-url-protocols=https,http"), arguments.toString());
+        assertTrue(arguments.contains("--initialize-at-run-time=org.eclipse.jgit"), arguments.toString());
+        assertTrue(arguments.stream().noneMatch("http"::equals), arguments.toString());
     }
 
     private static boolean isEnum(String name, ClassLoader loader) {
