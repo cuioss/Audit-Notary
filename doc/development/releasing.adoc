@@ -1,0 +1,33 @@
+= TrailHand -- Releasing
+:toc: left
+:toclevels: 2
+:toc-title: Table of Contents
+:source-highlighter: highlight.js
+
+xref:../README.adoc[TrailHand documentation] » xref:README.adoc[Development] » Releasing
+
+== Credentials
+
+All secrets (GPG, Sonatype, Sonar, Release App) are managed at the
+https://github.com/cuioss/cuioss-organization[cuioss organization level]. The caller workflows pass them explicitly to
+the reusable workflows; pass only the secrets a reusable workflow declares, an undeclared one makes every run end in
+`startup_failure`. No repo-level secrets need to be configured.
+
+[#releasing]
+== Releasing
+
+Merging a change of `release.current-version` in `.github/project.yml` *is* a release: the central
+guard in `reusable-maven-release.yml` publishes to Maven Central whenever that value differs from the
+merge commit's first parent and no tag for it exists. Maven Central releases cannot be withdrawn.
+Every other `project.yml` edit reaches the release workflow too and is refused by the guard.
+
+* `current-version: 0.1.0` is declared together with `0.1.0-SNAPSHOT` in the POM. Do not touch it in an ordinary PR.
+  The first release is a deliberate `workflow_dispatch` from `main`, and only once there is something to release.
+* Every later release goes through the runbook `.claude/skills/release/SKILL.md`: a dedicated
+  `chore/release_<version>` PR that changes nothing but the version, merged only after the pre-cut
+  checks.
+* Do not rewrite the `cuioss/cui-java-module-template` literal in `.github/workflows/release.yml`; it only excludes the
+  template repository itself.
+* `maven-build.enable-snapshot-deploy` is `true`: every push to `main` deploys the `0.1.0-SNAPSHOT` modules to the
+  Sonatype snapshot repository. This is not a release.
+* There is no Maven site and no GitHub Pages (`pages.deploy-at-release: false`).

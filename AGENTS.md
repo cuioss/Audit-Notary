@@ -39,6 +39,9 @@ by absolute address.
 ./mvnw -Ppre-commit clean verify -DskipTests
 ```
 
+The modules, the full set of commands and the CI workflows are in
+[`doc/development/README.adoc`](doc/development/README.adoc).
+
 Always build and test through Maven and JUnit; do not call `javac` directly and do not add ad-hoc debug or
 verification classes outside JUnit. The target is Java 25; CI builds on Java 25 and 27
 (`maven-build.java-versions` in `.github/project.yml`).
@@ -72,6 +75,9 @@ verification classes outside JUnit. The target is Java 25; CI builds on Java 25 
 7. Afterwards: `git checkout main && git pull`.
 
 ## Releases
+
+The credentials and the release background are in [`doc/development/releasing.adoc`](doc/development/releasing.adoc);
+the rules below stay binding here.
 
 Merging a change of `release.current-version` in `.github/project.yml` **is** a Maven Central release: the
 central version-changed guard of `reusable-maven-release.yml` publishes whenever the value differs from the

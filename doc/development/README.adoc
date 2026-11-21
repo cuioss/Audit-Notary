@@ -1,0 +1,75 @@
+= TrailHand -- Development
+:toc: left
+:toclevels: 2
+:toc-title: Table of Contents
+:source-highlighter: highlight.js
+
+xref:../README.adoc[TrailHand documentation] » Development
+
+How to build, test and work on TrailHand. The release runbook and the credentials are in
+xref:releasing.adoc[Releasing]; the design is in the xref:../README.adoc[documentation index].
+
+== Modules
+
+The modules of xref:../specification/architecture-and-modules.adoc[Architecture and Modules] are added as they are
+built, each with its own README:
+
+* link:../../web-app/README.adoc[`web-app`]: the Svelte web app
+* link:../../web-mock/README.adoc[`web-mock`]: the mock server of its requests, for development and tests only
+* link:../../trailhand/README.adoc[`trailhand`]: the Quarkus application
+* link:../../web-e2e/README.adoc[`web-e2e`]: the end-to-end suite (Playwright and axe-core)
+* link:../../integration-tests/README.adoc[`integration-tests`]: the native image with Keycloak
+
+== Build and Test
+
+The target is Java 25; CI builds on Java 25 and 27. Always build and test through Maven and JUnit.
+
+[source,bash]
+----
+./mvnw clean verify                                           # build and test everything
+./mvnw test -Dtest=ClassName                                  # one test class
+./mvnw test -Dtest=ClassName#methodName                       # one test method
+./mvnw verify -Pe2e -pl web-e2e -am                           # end-to-end suite
+./mvnw verify -Pintegration-tests -pl integration-tests -am   # native image + Keycloak, Docker required
+./mvnw package -Pnative -pl trailhand -am                     # native runner (Mandrel in a container)
+docker build -f trailhand/src/main/docker/Dockerfile.native -t trailhand:dev trailhand
+./mvnw -Ppre-commit clean verify -DskipTests                  # license headers, OpenRewrite recipes
+----
+
+The profile `pre-commit` auto-fixes license headers and every configured OpenRewrite recipe (modernisation, not only
+formatting). Review every resulting diff and commit it.
+
+== Working on the Web App
+
+The web app runs in the Vite dev server against the mock server, which answers its requests from a test profile
+(link:../../web-mock/README.adoc[web-mock]):
+
+[source,bash]
+----
+web-mock/start.sh -s workshop        # profiles: workshop, first-login, read-only, degraded, empty
+cd web-app && npm run dev            # http://127.0.0.1:5173, /api and /mock go to the mock
+web-mock/stop.sh
+----
+
+The mock signs in by itself; switch the profile while the app runs with
+`curl -X POST http://127.0.0.1:7420/mock/scenario -d '{"scenario":"first-login"}'`.
+
+== Continuous Integration
+
+[cols="1,3"]
+|===
+|Workflow |What it does
+
+|`maven.yml` (Maven Build)
+|Builds and tests on Java 25 and 27, runs Sonar and deploys the SNAPSHOT modules from `main`
+
+|`integration-tests.yml` (Integration Tests)
+|Runs `./mvnw verify -Pintegration-tests -pl integration-tests -am`: the native image with Keycloak, on push to `main`,
+on pull requests and in the merge queue. It publishes no report pages.
+
+|`release.yml`
+|The Maven Central release; see xref:releasing.adoc[Releasing]
+|===
+
+`main` is protected. Changes go through a pull request from a branch with a CI-recognised prefix (`feature/`, `fix/`,
+`chore/`, `docs/`); the repository's `AGENTS.md` has the workflow.

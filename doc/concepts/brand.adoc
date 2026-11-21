@@ -207,6 +207,12 @@ says "versioned document" without a star, a shield or a padlock, the three symbo
 |Drawn by hand as SVG during the bootstrap of the web app, after the sketch above
 |No: provisional, replaced before the first release
 |Apache License 2.0, as the repository
+
+|Provisional mascot of the README (`resources/brand/mascot-provisional.svg`)
+|Drawn by hand as SVG, not AI-made, to the character of <<_the_mascot>>
+|No: provisional, not shipped in the web app, replaced by the AI-made poses with recorded provenance before the first
+release
+|Apache License 2.0, as the repository
 |===
 
 == The Mascot
