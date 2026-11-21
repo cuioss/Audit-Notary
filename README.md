@@ -1,6 +1,6 @@
 # TrailHand
 
-<img align="right" width="260" src="doc/resources/brand/mascot-provisional.svg" alt="The TrailHand ranch-hand bear, a provisional drawing">
+<img align="right" width="260" src="doc/resources/brand/mascot-welcome.png" alt="The TrailHand mascot: a bear in a cowboy hat and neckerchief waves and holds a tally book">
 
 [![Maven Build](https://github.com/cuioss/TrailHand/actions/workflows/maven.yml/badge.svg)](https://github.com/cuioss/TrailHand/actions/workflows/maven.yml)
 [![Integration Tests](https://github.com/cuioss/TrailHand/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/cuioss/TrailHand/actions/workflows/integration-tests.yml)
