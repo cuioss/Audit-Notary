@@ -136,3 +136,12 @@ layout and commands in its own `README.adoc`.
 |UI tests run against a scenario mock server
 |Accepted
 |===
+
+[#_development]
+== Development
+
+How to build, test and work on the repository, and how a release is made:
+
+* xref:development/README.adoc[Development] -- modules, build and test commands, working on the web app, the CI
+  workflows
+* xref:development/releasing.adoc[Releasing] -- credentials, the release runbook, what merging `project.yml` does
