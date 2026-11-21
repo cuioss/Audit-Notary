@@ -226,19 +226,23 @@ owner's acceptance in a table like the one in `brand-mark-mascot.adoc` of `pm-mc
 Apache-2.0 release of the existing family images does not cover new poses automatically; the owner states the licence
 of each new one.
 
+The origin and the licence of the AI-made images are stated once, in
+link:../resources/brand/image-provenance.adoc[Image Provenance and Licensing]; the table records each pose.
+
 [cols="1,2,1,1"]
 |===
 |Image |Made by |Accepted |Licence
 
 |*Welcome* (`resources/brand/mascot-welcome.png`, used in the README)
-|ChatGPT image generation, 2026-11-21, with the style of the family's detective and quality-control bears attached as
-references and the prompt below. The shipped file is the source image reduced to 520 × 780 pixels; the source is not
-in the repository.
+|ChatGPT image generation (OpenAI), 2026, from the prompt below and refined with follow-up instructions. The shipped
+file is the source image reduced to 520 × 780 pixels; the source is not in the repository.
 |Yes, by the owner, 2026-11-21. Not shipped in the web app yet.
-|To be stated by the owner
+|Apache License 2.0, as stated in the image provenance notice
 |===
 
-The prompt of the base character, with the pose of *welcome*:
+The starting prompt of the base character, with the pose of *welcome*; the final image came out of follow-up
+instructions. The prompt asks for the family's own bears as style references; the provenance notice records that no
+third-party image was supplied.
 
 ....
 Create a cartoon mascot illustration in exactly the same style as the two attached reference images: a friendly

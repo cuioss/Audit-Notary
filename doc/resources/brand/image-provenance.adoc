@@ -1,0 +1,62 @@
+= Image Provenance and Licensing
+:author: cuioss
+:revdate: 2026-11-21
+:revnumber: 1.0
+:doctype: article
+
+== Scope
+
+This notice applies to the AI-generated mascot illustrations distributed in this repository, including the ranch-hand/bookkeeper bear and the project's other bear character variants.
+
+The illustrations are visual assets. They are not source code, and this notice documents their origin and the terms under which cuioss makes them available.
+
+== Provenance
+
+* **Provided by:** cuioss
+* **Generated with:** ChatGPT image generation by OpenAI
+* **Generation process:** Created from text prompts and iteratively refined through follow-up instructions.
+* **Generation date:** 2026
+* **Third-party source material:** No third-party image was intentionally supplied as a visual reference for the ranch-hand/bookkeeper illustration.
+* **Modifications:** The images may be resized, cropped, converted, background-removed, or otherwise adapted for use in the project.
+
+== License
+
+The project makes these illustrations available under the
+link:https://www.apache.org/licenses/LICENSE-2.0[Apache License, Version 2.0]
+(SPDX identifier: `Apache-2.0`), to the extent that cuioss holds rights that can be licensed and applicable law permits.
+
+You may use, reproduce, modify, and redistribute the illustrations under the terms of Apache-2.0. A copy of the license is available in the repository's `LICENSE` file and at the link above.
+
+This asset-specific notice does not change the license of the software project or grant rights that cuioss does not hold.
+
+== AI-generation and rights note
+
+Under OpenAI's Terms of Use, as between the user and OpenAI and to the extent permitted by applicable law, the user owns the output and OpenAI assigns to the user any rights it may have in that output. OpenAI also notes that generated output may not be unique and that other users may receive similar output.
+
+See the current
+link:https://openai.com/policies/terms-of-use/[OpenAI Terms of Use]
+(or the applicable regional terms).
+
+AI-generated output may not qualify for copyright protection in every jurisdiction. The availability and scope of any rights therefore depend on applicable law. The Apache-2.0 notice above should not be read as a representation that copyright necessarily subsists in every generated image.
+
+== Attribution
+
+Attribution is not required by Apache-2.0. For provenance and transparency, the following acknowledgement is welcome:
+
+[source,text]
+----
+Mascot illustrations provided by cuioss.
+Generated with ChatGPT image generation by OpenAI.
+Distributed under the Apache License 2.0, to the extent applicable.
+----
+
+== Disclaimer
+
+The illustrations are provided on an "AS IS" basis, without warranties or conditions of any kind, to the extent permitted by applicable law.
+
+Before redistributing an illustration, users should independently check that their particular use does not infringe third-party rights, including trademark, publicity, or other rights. No endorsement by or affiliation with OpenAI is implied.
+
+== References
+
+* link:https://openai.com/policies/terms-of-use/[OpenAI Terms of Use]
+* link:https://www.apache.org/licenses/LICENSE-2.0[Apache License, Version 2.0]

@@ -57,4 +57,5 @@ document operations of the four categories, the MCP server and the directory fol
 
 ## License
 
-[Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.html)
+[Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.html). The mascot illustrations are AI-generated; their
+origin and terms are in [Image Provenance and Licensing](doc/resources/brand/image-provenance.adoc).
