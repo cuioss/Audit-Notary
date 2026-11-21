@@ -11,22 +11,20 @@ xref:releasing.adoc[Releasing]; the design is in the xref:../README.adoc[documen
 
 == Modules
 
-The modules of xref:../specification/architecture-and-modules.adoc[Architecture and Modules] are added as they are
-built, each with its own README:
-
-* link:../../web-app/README.adoc[`web-app`]: the Svelte web app
-* link:../../web-mock/README.adoc[`web-mock`]: the mock server of its requests, for development and tests only
-* link:../../trailhand/README.adoc[`trailhand`]: the Quarkus application
-* link:../../web-e2e/README.adoc[`web-e2e`]: the end-to-end suite (Playwright and axe-core)
-* link:../../integration-tests/README.adoc[`integration-tests`]: the native image with Keycloak
+The modules of the root `pom.xml` are described in xref:../specification/architecture-and-modules.adoc[Architecture and
+Modules], which also names the planned ones and the order in which they are added. Each module directory has a
+`README.adoc` with its layout and commands.
 
 == Build and Test
 
 The target is Java 25; CI builds on Java 25 and 27. Always build and test through Maven and JUnit.
 
+`./mvnw clean verify` builds every module and runs the unit tests. The end-to-end suite and the integration tests
+need the profiles `e2e` and `integration-tests`.
+
 [source,bash]
 ----
-./mvnw clean verify                                           # build and test everything
+./mvnw clean verify                                           # build and unit tests
 ./mvnw test -Dtest=ClassName                                  # one test class
 ./mvnw test -Dtest=ClassName#methodName                       # one test method
 ./mvnw verify -Pe2e -pl web-e2e -am                           # end-to-end suite
@@ -42,12 +40,13 @@ formatting). Review every resulting diff and commit it.
 == Working on the Web App
 
 The web app runs in the Vite dev server against the mock server, which answers its requests from a test profile
-(link:../../web-mock/README.adoc[web-mock]):
+(link:../../web-mock/README.adoc[web-mock], which lists the profiles):
 
 [source,bash]
 ----
-web-mock/start.sh -s workshop        # profiles: workshop, first-login, read-only, degraded, empty
-cd web-app && npm run dev            # http://127.0.0.1:5173, /api and /mock go to the mock
+(cd web-app && npm ci)               # once per checkout; Node >= 22.17 and npm >= 10 (engines of web-app/package.json)
+web-mock/start.sh -s workshop        # a profile of the mock, see its README
+(cd web-app && npm run dev)          # http://127.0.0.1:5173, /api and /mock go to the mock
 web-mock/stop.sh
 ----
 
@@ -69,6 +68,15 @@ on pull requests and in the merge queue. It publishes no report pages.
 
 |`release.yml`
 |The Maven Central release; see xref:releasing.adoc[Releasing]
+
+|`dependency-review.yml`
+|Fails a pull request that adds a dependency with a known vulnerability of high severity or worse
+
+|`scorecards.yml`
+|The OpenSSF Scorecard supply-chain check
+
+|`dependabot-auto-merge.yml`
+|Marks the pull requests of Dependabot as eligible for auto-merge; the central sweeper of the organisation merges them
 |===
 
 `main` is protected. Changes go through a pull request from a branch with a CI-recognised prefix (`feature/`, `fix/`,

@@ -24,7 +24,8 @@ its own backup, and none of them knows the others.
 **OWASP SAMM assessments, threat models, incident response reports and ISMS documents** as versioned documents on the
 **Git server it already runs**. No client holds a clone and no additional database is needed.
 
-It has two interfaces: a **web app** for people and an **MCP server** for AI agents acting for a user. It is built on
+It is designed with two interfaces: a **web app** for people (built) and an **MCP server** for AI agents acting for a
+user (planned). It is built on
 the libraries of [`git-document-repository`](https://github.com/cuioss/git-document-repository) and on
 [Token Sheriff](https://github.com/cuioss/TokenSheriff), and runs as a Quarkus native application on Java 25.
 
@@ -32,8 +33,8 @@ the libraries of [`git-document-repository`](https://github.com/cuioss/git-docum
 
 Git is the record. Every change to a document is a commit, so the history of an assessment or a report, with who
 changed what and when, is the history of the Git server and not a table in a database of its own. The categories share one shape: a schema per kind of document, YAML data with AsciiDoc free text, generated
-output, review and approval, deadlines and typed links. Both interfaces call the same application services, so what a
-user may do is decided once, in the server.
+output, review and approval, deadlines and typed links. By design both interfaces call the same application services,
+so what a user may do is decided once, in the server.
 
 The reasoning is in the [Overview](doc/concepts/trailhand-overview.adoc), the
 [SAMM concept](doc/concepts/category-samm.adoc) and

@@ -49,7 +49,8 @@ verification classes outside JUnit. The target is Java 25; CI builds on Java 25 
 ## Conventions
 
 - **Never add a dependency without the owner's approval.**
-- Documentation is AsciiDoc; Javadoc on every public type and method.
+- Documentation is AsciiDoc, except the root `README.md`, which is Markdown so that the mascot sits beside the badges on
+  GitHub (owner's decision); Javadoc on every public type and method.
 - Every source file carries the license header; `-Ppre-commit` maintains it. `inceptionYear` in the root pom
   must stay set, otherwise every run restamps all headers.
 - The conventions for code (null safety, logging, results instead of exceptions, tests) are those of the libraries;
