@@ -59,12 +59,15 @@ option for organisations that run API Sheriff anyway.
 
 === Properties of the design
 
-* No token reaches the browser.
+* No token reaches the browser, except the ID token as `id_token_hint` in the address of the RP-initiated logout,
+  after the held tokens are revoked (TRH-AUTH-1).
 * One authentication component serves the web app and the MCP server.
 
 === Accepted costs
 
 * Sessions are lost on restart. Users log in again.
+* The logout address shows the browser the ID token of the ended session, so the provider can end its own session
+  without a confirmation page.
 * The application runs as one instance; a second instance would need a shared session store.
 
 === When this is revisited

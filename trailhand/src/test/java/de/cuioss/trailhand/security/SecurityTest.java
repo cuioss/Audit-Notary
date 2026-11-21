@@ -46,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SecurityTest {
 
     private static final Instant START = Instant.parse("2026-11-20T08:00:00Z");
+    private static final String CALLBACK = "https://trailhand.example.org/api/v1/auth/callback";
 
     /** A clock the test moves. */
     private static final class MovableClock extends Clock {
@@ -95,7 +96,8 @@ class SecurityTest {
             assertTrue(store.use(first.id()).isPresent(), "use renews the idle time");
             clock.advance(Duration.ofMinutes(31));
             assertTrue(store.use(first.id()).isEmpty());
-            assertEquals(List.of(second.id()), store.evictExpired());
+            assertEquals(Set.of(first.id(), second.id()), Set.copyOf(store.evictExpired()),
+                    "the session found expired by the request is handed on as well");
             assertFalse(second.toString().contains(second.csrfToken()));
         }
 
@@ -113,6 +115,38 @@ class SecurityTest {
             assertTrue(store.use(session.id()).isEmpty());
             assertTrue(store.close(session.id()).isEmpty());
             assertTrue(store.use("unknown").isEmpty());
+        }
+
+        @Test
+        @DisplayName("hands a session that a request found expired to the next eviction, so its tokens are dropped")
+        void expiredOnUse() {
+            var clock = new MovableClock();
+            var store = new SessionStore(Duration.ofMinutes(30), Duration.ofHours(8), clock);
+            var seen = store.open(identity());
+            var idle = store.open(identity());
+            clock.advance(Duration.ofMinutes(31));
+
+            assertTrue(store.use(seen.id()).isEmpty());
+
+            assertEquals(Set.of(seen.id(), idle.id()), Set.copyOf(store.evictExpired()));
+            assertTrue(store.evictExpired().isEmpty(), "each id is handed on once");
+        }
+
+        @Test
+        @DisplayName("does not bring a closed session back and keeps a session renewed before the eviction")
+        void closedStaysClosed() {
+            var clock = new MovableClock();
+            var store = new SessionStore(Duration.ofMinutes(30), Duration.ofHours(8), clock);
+            var session = store.open(identity());
+            store.close(session.id());
+            assertTrue(store.use(session.id()).isEmpty());
+
+            var renewed = store.open(identity());
+            clock.advance(Duration.ofMinutes(29));
+            assertTrue(store.use(renewed.id()).isPresent());
+            clock.advance(Duration.ofMinutes(2));
+            assertTrue(store.evictExpired().isEmpty(), "the renewed session is not expired");
+            assertTrue(store.use(renewed.id()).isPresent());
         }
     }
 
@@ -184,18 +218,36 @@ class SecurityTest {
         @DisplayName("hand a transaction out once and only within ten minutes")
         void once() {
             var clock = new MovableClock();
-            var transactions = new LoginTransactions(clock);
-            var context = FlowContext.create("https://trailhand.example.org/api/v1/auth/callback");
-            var reference = transactions.begin(context, "/samm");
+            var transactions = new LoginTransactions(clock, LoginTransactions.MAX_PENDING);
+            var context = FlowContext.create(CALLBACK);
+            var reference = transactions.begin(context, "/samm").orElseThrow();
 
             var taken = transactions.take(reference);
             assertTrue(taken.isPresent());
             assertEquals("/samm", taken.get().returnAddress());
             assertTrue(transactions.take(reference).isEmpty());
 
-            var late = transactions.begin(context, "/");
+            var late = transactions.begin(context, "/").orElseThrow();
             clock.advance(LoginTransactions.LIFETIME.plusSeconds(1));
             assertTrue(transactions.take(late).isEmpty());
+        }
+
+        @Test
+        @DisplayName("refuse a start beyond the limit until a pending login is taken or expires")
+        void bounded() {
+            var clock = new MovableClock();
+            var transactions = new LoginTransactions(clock, 2);
+            var context = FlowContext.create(CALLBACK);
+            var first = transactions.begin(context, "/").orElseThrow();
+            assertTrue(transactions.begin(context, "/").isPresent());
+
+            assertTrue(transactions.begin(context, "/").isEmpty(), "the third pending login is refused");
+            transactions.take(first);
+            assertTrue(transactions.begin(context, "/").isPresent(), "a taken login frees its place");
+            assertTrue(transactions.begin(context, "/").isEmpty());
+
+            clock.advance(LoginTransactions.LIFETIME.plusSeconds(1));
+            assertTrue(transactions.begin(context, "/").isPresent(), "a full store sweeps the expired logins");
         }
     }
 }

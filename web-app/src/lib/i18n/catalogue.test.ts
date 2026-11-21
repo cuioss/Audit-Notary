@@ -2,10 +2,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadMessages } from '../../test/catalogue-fixture';
+import { LOCALES } from './index';
 
 /**
- * The catalogue (TRH-WEB-7): both languages hold the same keys, no text is empty, and every key the
- * sources name exists.
+ * The catalogue (TRH-WEB-7): the languages are its files, both languages hold the same keys, no text
+ * is empty, and every key the sources name exists.
  */
 const en = loadMessages('en');
 const de = loadMessages('de');
@@ -20,7 +21,17 @@ function sources(dir: string): string[] {
   });
 }
 
+const MESSAGES_DIR = path.resolve(__dirname, '../../main/resources/META-INF/trailhand/messages');
+
 describe('the message catalogue', () => {
+  it('offers exactly the languages that have a catalogue file', () => {
+    // The server serves every language with a file; the app's language list must name the same ones.
+    const files = fs
+      .readdirSync(MESSAGES_DIR)
+      .flatMap((name) => /^messages_([a-z]{2})\.properties$/.exec(name)?.[1] ?? []);
+    expect([...LOCALES].sort()).toEqual(files.sort());
+  });
+
   it('holds the same keys in English and German', () => {
     expect(Object.keys(de).sort()).toEqual(Object.keys(en).sort());
   });

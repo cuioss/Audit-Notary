@@ -132,16 +132,25 @@ public class TokenSheriffConfigSourceFactory implements ConfigSourceFactory {
         keys.put(issuer + "jwks.http.url", jwksUrl);
     }
 
+    static String withoutTrailingLineBreak(String content) {
+        if (content.endsWith("\r\n")) {
+            return content.substring(0, content.length() - 2);
+        }
+        if (content.endsWith("\n") || content.endsWith("\r")) {
+            return content.substring(0, content.length() - 1);
+        }
+        return content;
+    }
+
     private static String stripSlash(String issuer) {
         return issuer.endsWith("/") ? issuer.substring(0, issuer.length() - 1) : issuer;
     }
 
     /**
-     * Resolves a {@code file:} reference. A {@code vault:} reference is resolved with the Vault adapter, which is not
-     * built yet; such a configuration has no client secret, and the login fails.
+     * Resolves a {@code file:} reference, the only form the loader accepts until the Vault adapter is built.
      *
      * @param reference the reference
-     * @return the secret, without a trailing line break
+     * @return the secret: the file's content without one trailing line break; every other character is kept
      */
     static Optional<String> readSecret(String reference) {
         if (!reference.startsWith("file:")) {
@@ -149,7 +158,7 @@ public class TokenSheriffConfigSourceFactory implements ConfigSourceFactory {
         }
         try {
             var content = Files.readString(Path.of(reference.substring("file:".length())));
-            return Optional.of(content.strip());
+            return Optional.of(withoutTrailingLineBreak(content));
         } catch (IOException e) {
             return Optional.empty();
         }

@@ -39,8 +39,9 @@ public class RepositoriesHealthCheck implements HealthCheck {
 
     @Override
     public HealthCheckResponse call() {
-        var builder = HealthCheckResponse.named("repositories").status(repositories.allPresent());
-        for (RepositoryState state : repositories.states()) {
+        var snapshot = repositories.states();
+        var builder = HealthCheckResponse.named("repositories").status(RepositoryService.allPresent(snapshot));
+        for (RepositoryState state : snapshot) {
             builder.withData(state.alias(), describe(state));
         }
         return builder.build();

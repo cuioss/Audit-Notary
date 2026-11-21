@@ -15,11 +15,14 @@
  */
 package de.cuioss.trailhand.security;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.cuioss.sheriff.token.client.auth.ClientAuthentication;
 import de.cuioss.sheriff.token.client.discovery.DiscoveryResolver;
 import de.cuioss.sheriff.token.client.discovery.ProviderMetadata;
 import de.cuioss.sheriff.token.client.flow.AuthorizationCodeFlow;
 import de.cuioss.sheriff.token.client.flow.CallbackParameters;
+import de.cuioss.sheriff.token.client.flow.ParClient;
 import de.cuioss.sheriff.token.client.lifecycle.RevocationClient;
 import de.cuioss.sheriff.token.client.lifecycle.StoredToken;
 import de.cuioss.sheriff.token.client.lifecycle.TokenLifecycleManager;
@@ -34,9 +37,16 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Named;
 import org.jspecify.annotations.Nullable;
 
+import java.io.IOException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -46,7 +56,8 @@ import static de.cuioss.trailhand.TrailhandLogMessages.WARN;
 
 /**
  * The web login of TRH-AUTH-1 on Token Sheriff's confidential client (ADR-0001): authorization code with PKCE
- * {@code S256}, session-bound {@code state} and {@code nonce}, issuer check; tokens stay in Token Sheriff's token
+ * {@code S256}, session-bound {@code state} and {@code nonce}, issuer check, and PAR (RFC 9126) when the provider
+ * offers it; tokens stay in Token Sheriff's token
  * store under the session id, the browser gets only the session cookie. Logout revokes the held tokens and ends the
  * session at the provider (RP-initiated).
  */
@@ -54,9 +65,11 @@ import static de.cuioss.trailhand.TrailhandLogMessages.WARN;
 public class LoginService {
 
     private static final CuiLogger LOGGER = new CuiLogger(LoginService.class);
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     private final DiscoveryResolver discovery;
     private final AuthorizationCodeFlow flow;
+    private final ParClient par;
     private final ClientAuthentication clientAuthentication;
     private final TokenLifecycleManager tokens;
     private final RevocationClient revocation;
@@ -69,6 +82,7 @@ public class LoginService {
     /**
      * @param discovery            Token Sheriff's discovery
      * @param flow                 the authorization code flow
+     * @param par                  the client of the pushed-authorization-request endpoint
      * @param clientAuthentication the client authentication
      * @param tokens               the token store of the sessions
      * @param revocation           the revocation client
@@ -79,11 +93,12 @@ public class LoginService {
      */
     @SuppressWarnings("java:S107") // the collaborators of the flow; grouping them would only hide them
     public LoginService(DiscoveryResolver discovery, @Named(LoginFlowProducer.WEB_LOGIN) AuthorizationCodeFlow flow,
-            ClientAuthentication clientAuthentication, TokenLifecycleManager tokens, RevocationClient revocation,
+            ParClient par, ClientAuthentication clientAuthentication, TokenLifecycleManager tokens, RevocationClient revocation,
             SessionStore sessions, LoginTransactions transactions, ReturnAddresses returnAddresses,
             TrailhandConfiguration configuration) {
         this.discovery = discovery;
         this.flow = flow;
+        this.par = par;
         this.clientAuthentication = clientAuthentication;
         this.tokens = tokens;
         this.revocation = revocation;
@@ -108,16 +123,59 @@ public class LoginService {
     }
 
     /**
-     * Starts a login.
+     * Starts a login. When the provider offers PAR, the authorization parameters are pushed to it and the browser
+     * goes to the provider with {@code client_id} and {@code request_uri} only.
      *
      * @param requestedReturn the {@code return} of the request
      * @return the authorization address and the transaction reference for the cookie
-     * @throws TokenSheriffException if the provider cannot be reached or refuses the flow
+     * @throws TokenSheriffException     if the provider cannot be reached or refuses the flow
+     * @throws TooManyLoginsException    if {@value LoginTransactions#MAX_PENDING} logins are pending
      */
     public LoginStart start(@Nullable String requestedReturn) {
-        var redirect = flow.authorize(metadata());
-        var reference = transactions.begin(redirect.context(), returnAddresses.check(requestedReturn));
-        return new LoginStart(redirect.authorizationUrl(), reference);
+        var metadataNow = metadata();
+        var redirect = flow.authorize(metadataNow);
+        var reference = transactions.begin(redirect.context(), returnAddresses.check(requestedReturn))
+                .orElseThrow(TooManyLoginsException::new);
+        return new LoginStart(authorizationAddress(metadataNow, redirect.authorizationUrl()), reference);
+    }
+
+    /**
+     * @param metadataNow the provider's metadata
+     * @param direct      the authorization address with every parameter in its query
+     * @return the direct address, or with PAR the authorization endpoint with {@code client_id} and
+     *         {@code request_uri}
+     */
+    String authorizationAddress(ProviderMetadata metadataNow, String direct) {
+        var endpoint = metadataNow.getPushedAuthorizationRequestEndpoint();
+        var queryStart = direct.indexOf('?');
+        if (endpoint.isEmpty() || queryStart < 0) {
+            return direct;
+        }
+        var parameters = queryParameters(direct.substring(queryStart + 1));
+        var clientId = parameters.get("client_id");
+        var requestUri = par.pushAuthorizationRequest(endpoint.get(), parameters, clientAuthentication).getRequestUri()
+                .orElseThrow(() -> new IllegalStateException("PAR answer without request_uri"));
+        return direct.substring(0, queryStart) + "?client_id=" + encode(clientId == null ? "" : clientId)
+                + "&request_uri=" + encode(requestUri);
+    }
+
+    static Map<String, String> queryParameters(String query) {
+        var parameters = new LinkedHashMap<String, String>();
+        for (String pair : query.split("&")) {
+            if (pair.isEmpty()) {
+                continue;
+            }
+            var separator = pair.indexOf('=');
+            var name = separator < 0 ? pair : pair.substring(0, separator);
+            var value = separator < 0 ? "" : pair.substring(separator + 1);
+            parameters.put(URLDecoder.decode(name, StandardCharsets.UTF_8),
+                    URLDecoder.decode(value, StandardCharsets.UTF_8));
+        }
+        return parameters;
+    }
+
+    private static String encode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
     /**
@@ -156,7 +214,7 @@ public class LoginService {
     private LoginIdentity identity(IdTokenContent idToken) {
         var subject = idToken.getSubject().orElseThrow(() -> new IllegalStateException("ID token without sub"));
         var claims = idToken.getClaims();
-        var groups = groups(claims.get(configuration.oidc().groupsClaim()));
+        var groups = groups(idToken.getRawToken(), configuration.oidc().groupsClaim());
         var authTime = Optional.ofNullable(claims.get("auth_time")).map(ClaimValue::getOriginalString)
                 .flatMap(LoginService::epochSeconds).orElse(null);
         var acr = Optional.ofNullable(claims.get("acr")).map(ClaimValue::getOriginalString).orElse(null);
@@ -164,20 +222,45 @@ public class LoginService {
         return new LoginIdentity(idToken.getIssuer(), subject, name, groups, authTime, acr);
     }
 
-    static List<String> groups(@Nullable ClaimValue value) {
+    /**
+     * Reads the groups from the JSON payload of the validated ID token: an array yields its strings, a single string
+     * one group, anything else none. The claim is read as the provider wrote it, so a group name that contains a comma
+     * stays one group.
+     *
+     * @param rawToken the validated ID token (a JWS)
+     * @param claim    the name of the group claim
+     * @return the groups, empty when the claim is missing or the token cannot be read
+     */
+    static List<String> groups(String rawToken, String claim) {
+        var parts = rawToken.split("\\.");
+        if (parts.length != 3) {
+            return List.of();
+        }
+        try {
+            var value = JSON.readTree(Base64.getUrlDecoder().decode(parts[1])).get(claim);
+            return groups(value);
+        } catch (IOException | IllegalArgumentException e) {
+            LOGGER.warn(WARN.LOGIN_FAILED, "unreadable group claim");
+            return List.of();
+        }
+    }
+
+    private static List<String> groups(@Nullable JsonNode value) {
         if (value == null) {
             return List.of();
         }
-        var list = value.getAsList();
-        if (list != null && !list.isEmpty()) {
-            return List.copyOf(list);
+        if (value.isTextual()) {
+            return value.asText().isBlank() ? List.of() : List.of(value.asText());
         }
-        var text = value.getOriginalString();
-        if (text == null || text.isBlank()) {
-            return List.of();
+        var groups = new ArrayList<String>();
+        if (value.isArray()) {
+            value.forEach(entry -> {
+                if (entry.isTextual() && !entry.asText().isBlank()) {
+                    groups.add(entry.asText());
+                }
+            });
         }
-        return Arrays.stream(text.replace("[", "").replace("]", "").split(",")).map(String::trim)
-                .filter(entry -> !entry.isEmpty()).toList();
+        return List.copyOf(groups);
     }
 
     static Optional<Instant> epochSeconds(@Nullable String text) {
@@ -243,5 +326,15 @@ public class LoginService {
      * @param returnAddress the checked return address
      */
     public record LoginCompletion(UserSession session, String returnAddress) {
+    }
+
+    /** Thrown when the login cannot start because {@value LoginTransactions#MAX_PENDING} logins are pending. */
+    public static final class TooManyLoginsException extends RuntimeException {
+
+        private static final long serialVersionUID = 1L;
+
+        TooManyLoginsException() {
+            super("too many pending logins");
+        }
     }
 }

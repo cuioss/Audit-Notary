@@ -26,12 +26,15 @@ import java.util.regex.Pattern;
 
 /**
  * Resolves {@code ${NAME}} and {@code ${NAME:-default}} in string values from the environment, before validation
- * (TRH-CONF-1).
+ * (TRH-CONF-1). {@code NAME} is an environment variable name (letters, digits and underscores, not starting with a
+ * digit). Any other {@code ${...}} is reported like an unresolved placeholder, so it can never pass as a literal value.
  */
 @UtilityClass
 public class Placeholders {
 
-    private static final Pattern PLACEHOLDER = Pattern.compile("\\$\\{([A-Z0-9_]+)(?::-([^}]*))?}");
+    private static final Pattern PLACEHOLDER = Pattern.compile("\\$\\{([^}]*)}");
+    private static final Pattern NAME = Pattern.compile("[A-Za-z_]\\w*");
+    private static final String DEFAULT_SEPARATOR = ":-";
 
     /**
      * Resolves every placeholder of a string.
@@ -45,10 +48,15 @@ public class Placeholders {
         Matcher matcher = PLACEHOLDER.matcher(value);
         var result = new StringBuilder();
         while (matcher.find()) {
-            String name = matcher.group(1);
-            String replacement = environment.apply(name);
-            if (replacement == null) {
-                replacement = matcher.group(2);
+            String body = matcher.group(1);
+            int separator = body.indexOf(DEFAULT_SEPARATOR);
+            String name = separator < 0 ? body : body.substring(0, separator);
+            String replacement = null;
+            if (NAME.matcher(name).matches()) {
+                replacement = environment.apply(name);
+                if (replacement == null && separator >= 0) {
+                    replacement = body.substring(separator + DEFAULT_SEPARATOR.length());
+                }
             }
             if (replacement == null) {
                 unresolved.add(name);

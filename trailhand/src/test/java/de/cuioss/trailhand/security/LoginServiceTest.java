@@ -21,6 +21,8 @@ import de.cuioss.sheriff.token.client.discovery.ProviderMetadata;
 import de.cuioss.sheriff.token.client.flow.AuthorizationCodeFlow;
 import de.cuioss.sheriff.token.client.flow.CallbackParameters;
 import de.cuioss.sheriff.token.client.flow.FlowContext;
+import de.cuioss.sheriff.token.client.flow.ParClient;
+import de.cuioss.sheriff.token.client.flow.ParResponse;
 import de.cuioss.sheriff.token.client.lifecycle.InMemoryTokenStore;
 import de.cuioss.sheriff.token.client.lifecycle.RefreshScheduler;
 import de.cuioss.sheriff.token.client.lifecycle.RevocationClient;
@@ -42,10 +44,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,6 +62,7 @@ import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @EnableTestLogger
@@ -69,6 +75,7 @@ class LoginServiceTest {
 
     private DiscoveryResolver discovery;
     private AuthorizationCodeFlow flow;
+    private ParClient par;
     private RevocationClient revocation;
     private ProviderMetadata metadata;
     private ClientAuthentication clientAuthentication;
@@ -81,17 +88,29 @@ class LoginServiceTest {
     void setUp() {
         discovery = EasyMock.createMock(DiscoveryResolver.class);
         flow = EasyMock.createMock(AuthorizationCodeFlow.class);
+        par = EasyMock.createMock(ParClient.class);
         revocation = EasyMock.createMock(RevocationClient.class);
         metadata = EasyMock.createNiceMock(ProviderMetadata.class);
         clientAuthentication = EasyMock.createNiceMock(ClientAuthentication.class);
         tokens = new TokenLifecycleManager(new InMemoryTokenStore(), new RefreshScheduler());
         sessions = new SessionStore(Duration.ofMinutes(30), Duration.ofHours(8), Clock.systemUTC());
         transactions = new LoginTransactions();
+        service = service(transactions);
+    }
+
+    private LoginService service(LoginTransactions pending) {
         var configuration = new TrailhandConfiguration(List.of(), Map.of(),
                 new OidcSettings(ISSUER, "trailhand-web", "file:/x", "groups"),
                 new WebSettings(URI.create(ORIGIN), Duration.ofMinutes(30), Duration.ofHours(8)), Duration.ofMinutes(5));
-        service = new LoginService(discovery, flow, clientAuthentication, tokens, revocation, sessions, transactions,
+        return new LoginService(discovery, flow, par, clientAuthentication, tokens, revocation, sessions, pending,
                 new ReturnAddresses(), configuration);
+    }
+
+    /** A JWS-shaped token with the given payload; the signature is irrelevant, Token Sheriff validated it. */
+    private static String jws(String payloadJson) {
+        var encoder = Base64.getUrlEncoder().withoutPadding();
+        return encoder.encodeToString("{\"alg\":\"RS256\"}".getBytes(StandardCharsets.UTF_8)) + "."
+                + encoder.encodeToString(payloadJson.getBytes(StandardCharsets.UTF_8)) + ".c2ln";
     }
 
     private static IdTokenContent idToken() {
@@ -99,7 +118,7 @@ class LoginServiceTest {
                         "name", ClaimValue.forPlainString("Alex Example"),
                         "groups", ClaimValue.forList("[\"assessors\",\"approvers\"]", List.of("assessors", "approvers")),
                         "auth_time", ClaimValue.forPlainString("1795161600"), "acr", ClaimValue.forPlainString("1")),
-                "id-token");
+                jws("{\"sub\":\"sub-7\",\"groups\":[\"assessors\",\"approvers\"]}"));
     }
 
     private static AccessTokenContent accessToken() {
@@ -113,9 +132,10 @@ class LoginServiceTest {
     void start() {
         var context = FlowContext.create(CALLBACK);
         expect(discovery.resolve()).andReturn(metadata).once();
+        expect(metadata.getPushedAuthorizationRequestEndpoint()).andReturn(Optional.empty()).anyTimes();
         expect(flow.authorize(metadata))
                 .andReturn(new AuthorizationCodeFlow.AuthorizationRedirect("https://idp/auth?x", context)).times(2);
-        replay(discovery, flow);
+        replay(discovery, flow, metadata);
 
         var first = service.start("/samm/payments");
         service.start("//evil.example");
@@ -126,10 +146,51 @@ class LoginServiceTest {
     }
 
     @Test
+    @DisplayName("pushes the authorization parameters when the provider offers PAR and sends only the request_uri")
+    void startWithPar() {
+        var context = FlowContext.create(CALLBACK);
+        expect(discovery.resolve()).andReturn(metadata);
+        expect(metadata.getPushedAuthorizationRequestEndpoint()).andReturn(Optional.of("https://idp/par")).anyTimes();
+        expect(flow.authorize(metadata)).andReturn(new AuthorizationCodeFlow.AuthorizationRedirect(
+                "https://idp/auth?client_id=trailhand-web&state=s%201&response_mode=query&flag", context));
+        var pushed = new LinkedHashMap<String, String>();
+        pushed.put("client_id", "trailhand-web");
+        pushed.put("state", "s 1");
+        pushed.put("response_mode", "query");
+        pushed.put("flag", "");
+        var answer = new ParResponse();
+        answer.requestUri = "urn:ietf:params:oauth:request_uri:abc";
+        expect(par.pushAuthorizationRequest("https://idp/par", pushed, clientAuthentication)).andReturn(answer);
+        replay(discovery, flow, metadata, par);
+
+        var started = service.start("/");
+
+        assertEquals("https://idp/auth?client_id=trailhand-web&request_uri=urn%3Aietf%3Aparams%3Aoauth%3Arequest_uri%3Aabc",
+                started.authorizationUrl());
+        verify(par);
+    }
+
+    @Test
+    @DisplayName("refuses a PAR answer without request_uri and a start while too many logins are pending")
+    void startRefusals() {
+        var context = FlowContext.create(CALLBACK);
+        expect(discovery.resolve()).andReturn(metadata).times(2);
+        expect(metadata.getPushedAuthorizationRequestEndpoint()).andReturn(Optional.of("https://idp/par")).anyTimes();
+        expect(flow.authorize(metadata)).andReturn(
+                new AuthorizationCodeFlow.AuthorizationRedirect("https://idp/auth?client_id=c", context)).times(2);
+        expect(par.pushAuthorizationRequest(anyObject(), anyObject(), anyObject())).andReturn(new ParResponse());
+        replay(discovery, flow, metadata, par);
+
+        assertThrows(IllegalStateException.class, () -> service.start("/"));
+        var full = service(new LoginTransactions(Clock.systemUTC(), 0));
+        assertThrows(LoginService.TooManyLoginsException.class, () -> full.start("/"));
+    }
+
+    @Test
     @DisplayName("completes a login into a session with the identity values and keeps the tokens server-side")
     void complete() {
         var context = FlowContext.create(CALLBACK);
-        var reference = transactions.begin(context, "/incidents");
+        var reference = transactions.begin(context, "/incidents").orElseThrow();
         expect(discovery.resolve()).andReturn(metadata);
         expect(flow.exchange(eq(metadata), eq(context), anyObject(CallbackParameters.class), eq(clientAuthentication)))
                 .andReturn(new AuthorizationCodeFlow.AuthenticationResult(accessToken(), idToken(), "refresh-token"));
@@ -154,7 +215,7 @@ class LoginServiceTest {
     @DisplayName("refuses a callback without cookie, with an unknown transaction or with a refused exchange")
     void refusals() {
         var context = FlowContext.create(CALLBACK);
-        var reference = transactions.begin(context, "/");
+        var reference = transactions.begin(context, "/").orElseThrow();
         expect(discovery.resolve()).andReturn(metadata);
         expect(flow.exchange(anyObject(), anyObject(), anyObject(), anyObject()))
                 .andThrow(new ClientProtocolException("state mismatch"));
@@ -198,11 +259,31 @@ class LoginServiceTest {
     }
 
     @Test
-    @DisplayName("reads groups from a list or a text claim, and auth_time as epoch seconds")
-    void claims() {
-        assertEquals(List.of("a", "b"), LoginService.groups(ClaimValue.forPlainString("[a, b]")));
-        assertEquals(List.of(), LoginService.groups(null));
+    @DisplayName("reads the groups as the provider wrote them: a comma inside a group name keeps it one group")
+    void groups() {
+        assertEquals(List.of("auditors,admins", "readers"),
+                LoginService.groups(jws("{\"memberOf\":[\"auditors,admins\",\"readers\",7,\" \"]}"), "memberOf"));
+        assertEquals(List.of("auditors,admins"), LoginService.groups(jws("{\"memberOf\":\"auditors,admins\"}"), "memberOf"));
+        assertEquals(List.of(), LoginService.groups(jws("{\"memberOf\":{\"a\":1}}"), "memberOf"));
+        assertEquals(List.of(), LoginService.groups(jws("{\"memberOf\":\" \"}"), "memberOf"));
+        assertEquals(List.of(), LoginService.groups(jws("{}"), "memberOf"));
+    }
+
+    @Test
+    @DisplayName("grants no group from a token it cannot read")
+    void unreadableGroups() {
+        assertEquals(List.of(), LoginService.groups("not-a-jws", "groups"));
+        assertEquals(List.of(), LoginService.groups("a.%%%.c", "groups"));
+        assertEquals(List.of(), LoginService.groups("a." + Base64.getUrlEncoder().encodeToString("[".getBytes(
+                StandardCharsets.UTF_8)) + ".c", "groups"));
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "TRAILHAND-103");
+    }
+
+    @Test
+    @DisplayName("reads auth_time as epoch seconds and splits a query into its decoded parameters")
+    void parsing() {
         assertEquals(Optional.empty(), LoginService.epochSeconds("not a number"));
         assertEquals(Optional.empty(), LoginService.epochSeconds(null));
+        assertEquals(Map.of("a", "1 2", "b", ""), LoginService.queryParameters("a=1+2&&b"));
     }
 }

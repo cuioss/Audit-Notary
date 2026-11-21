@@ -55,6 +55,19 @@ class PlaceholdersTest {
     }
 
     @Test
+    @DisplayName("resolves a lowercase environment name and reports a placeholder that names no environment variable")
+    void names() {
+        var unresolved = new ArrayList<String>();
+
+        assertEquals("id", Placeholders.resolve("${client_id}", Map.of("client_id", "id")::get, unresolved));
+        assertEquals("", Placeholders.resolve("${client.id:-x}", name -> "never", unresolved));
+        assertEquals("", Placeholders.resolve("${1A}", name -> "never", unresolved));
+        assertEquals("", Placeholders.resolve("${}", name -> "never", unresolved));
+
+        assertEquals(List.of("client.id", "1A", ""), unresolved);
+    }
+
+    @Test
     @DisplayName("resolves every string of a tree and keeps the other values")
     void resolvesTree() {
         var tree = Map.of("list", List.of("${X}", 3), "nested", Map.of("flag", true, "text", "${X}"));

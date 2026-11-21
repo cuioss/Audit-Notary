@@ -40,8 +40,9 @@ public class GitRemoteHealthCheck implements HealthCheck {
 
     @Override
     public HealthCheckResponse call() {
-        var builder = HealthCheckResponse.named("git-remote").status(!repositories.degraded());
-        for (RepositoryState state : repositories.states()) {
+        var snapshot = repositories.states();
+        var builder = HealthCheckResponse.named("git-remote").status(!RepositoryService.degraded(snapshot));
+        for (RepositoryState state : snapshot) {
             builder.withData(state.alias(), state.fetchUp() ? "UP" : "DOWN");
         }
         return builder.build();

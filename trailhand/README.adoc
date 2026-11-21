@@ -58,8 +58,9 @@ taken from the built `index.html`); `MessageCatalogue` (the catalogue of `web-ap
 |The application status (version, degraded state); the catalogue of `en` or `de`, `400` otherwise
 
 |`GET /api/v1/auth/login?return=`
-|`302` to the identity provider (code flow with PKCE, `response_mode=query`; the reasoning is in
-`doc/specification/authentication.adoc`); `502 IDENTITY_PROVIDER_UNAVAILABLE` when its discovery fails
+|`302` to the identity provider (code flow with PKCE, `response_mode=query`, PAR when the provider offers it; the
+reasoning is in `doc/specification/authentication.adoc`); `502 IDENTITY_PROVIDER_UNAVAILABLE` when its discovery
+fails, `503 TOO_MANY_LOGINS` while 10,000 logins are pending
 
 |`GET /api/v1/auth/callback`
 |Completes the login and sets the session cookie; a same-origin page leads on to the checked `return` address (the
@@ -125,8 +126,9 @@ enum it reads; without them a clone fails
 answers
 |===
 
-The enum list belongs to the JGit version on the class path (7.8.0) and is regenerated when JGit changes; this lists every
-enum of the JAR:
+`NativeRegistrationTest` compares both lists with the resolved JARs: every converter of the Token Sheriff client and
+every enum of JGit must be registered, and nothing else. A dependency update that changes them fails there; this lists
+every enum of the JGit JAR for `reflect-config.json`:
 
 [source,bash]
 ----

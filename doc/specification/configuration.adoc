@@ -167,8 +167,9 @@ Every key ending in `-ref` accepts one of three reference forms; no key accepts 
   `anchor.signed-key-ref`).
 * `vault:<path>`: a secret of Vault's key-value engine; accepted by every key except the signing keys.
 
-Placeholders: `${NAME}` and `${NAME:-default}` in any string value, resolved from the environment before validation;
-an unresolved placeholder without default is a boot error.
+Placeholders: `${NAME}` and `${NAME:-default}` in any string value, resolved from the environment before validation.
+`NAME` is an environment variable name (letters, digits and underscores, not starting with a digit). An unresolved
+placeholder without default is a boot error, and so is any other `${...}`, so it never passes as a literal value.
 
 === Boot Validation
 
@@ -178,6 +179,12 @@ alias, a `rights` entry or `directory.persons.repository` naming an unknown alia
 does not accept, an `anchor.signed-key-ref` equal to `signing.key-ref`, an `mcp.canonical-uri` that is not an
 absolute HTTPS URI without fragment, and a `web.origin` that is no HTTPS origin or a `web.session.idle-timeout` longer
 than `web.session.max-lifetime`. `--validate-config <dir>` runs the same rules offline.
+
+The bootstrap enforces the rules of the keys it reads: `repositories`, `rights`, `oidc`, `web` and `fetch`, the
+placeholders, and `web.origin` and the session lifetimes. Until the Vault adapter is built, `file:` is the only
+reference form it accepts; `vault:` and `kms:` are refused at boot. The JSON Schema and the rules of `signing`,
+`anchor`, `mcp` and `directory`, with the per-key reference forms, apply once their modules are built; until then a
+value under those keys is not checked.
 
 [#TRH-CONF-2]
 == TRH-CONF-2: Repositories and Refresh

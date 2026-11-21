@@ -43,8 +43,17 @@ import java.util.Map;
  * {@code <meta http-equiv="refresh">}, not a redirect: the navigation it starts is same-site and carries the
  * {@code SameSite=Strict} session cookie (TRH-AUTH-1, TRH-WEB-9).
  */
-@Path("/api/v1/auth")
+@Path(AuthResource.PATH)
 public class AuthResource {
+
+    /** The root of the login requests. */
+    public static final String PATH = "/api/v1/auth";
+
+    /** The start of the login, below {@link #PATH}; public. */
+    public static final String LOGIN = "/login";
+
+    /** The provider's return, below {@link #PATH}; public. */
+    public static final String CALLBACK = "/callback";
 
     private static final String SET_COOKIE = "Set-Cookie";
     private static final String CACHE_CONTROL = "Cache-Control";
@@ -66,17 +75,20 @@ public class AuthResource {
      * Starts the login.
      *
      * @param returnAddress the address to return to
-     * @return a redirect to the provider with the login-transaction cookie, or {@code 502} when the provider cannot
-     *         be used
+     * @return a redirect to the provider with the login-transaction cookie, {@code 502} when the provider cannot be
+     *         used, or {@code 503} when too many logins are pending
      */
     @GET
-    @Path("/login")
+    @Path(LOGIN)
     public Response start(@QueryParam("return") @Nullable String returnAddress) {
         try {
             var started = login.start(returnAddress);
             return Response.status(302).location(URI.create(started.authorizationUrl()))
                     .header(SET_COOKIE, Cookies.loginCookie(started.transactionReference(), LoginTransactions.LIFETIME))
                     .header(CACHE_CONTROL, NO_STORE).build();
+        } catch (LoginService.TooManyLoginsException e) {
+            return Response.status(503).type(MediaType.APPLICATION_JSON).header("Retry-After", "60")
+                    .header(CACHE_CONTROL, NO_STORE).entity(Map.of("outcome", "TOO_MANY_LOGINS")).build();
         } catch (TokenSheriffException | IllegalArgumentException | IllegalStateException e) {
             return Response.status(502).type(MediaType.APPLICATION_JSON)
                     .entity(Map.of("outcome", "IDENTITY_PROVIDER_UNAVAILABLE")).build();
@@ -92,7 +104,7 @@ public class AuthResource {
      *         login
      */
     @GET
-    @Path("/callback")
+    @Path(CALLBACK)
     @Produces(MediaType.TEXT_HTML)
     public Response callback(@CookieParam(Cookies.LOGIN) @Nullable String transaction, @Context UriInfo uriInfo) {
         var query = uriInfo.getRequestUri().getRawQuery();

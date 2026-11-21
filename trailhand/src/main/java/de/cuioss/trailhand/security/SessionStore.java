@@ -23,11 +23,15 @@ import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The web sessions, held in memory (TRH-AUTH-1, TRH-GEN-3: sessions are lost on restart; ADR-0001: one instance).
@@ -39,6 +43,8 @@ public class SessionStore {
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final Map<String, UserSession> sessions = new ConcurrentHashMap<>();
+    /** The ids of sessions {@link #use(String)} found expired, until {@link #evictExpired()} hands them on. */
+    private final Queue<String> ended = new ConcurrentLinkedQueue<>();
     private final Duration idleTimeout;
     private final Duration maxLifetime;
     private final Clock clock;
@@ -86,24 +92,24 @@ public class SessionStore {
     }
 
     /**
-     * Finds a live session and records the access; an expired one is removed.
+     * Finds a live session and records the access; an expired one is removed, and its id is kept for
+     * {@link #evictExpired()}, which hands it on so its tokens are dropped. Check and renewal are one atomic step: a
+     * session closed meanwhile is not brought back.
      *
      * @param id the session id from the cookie
      * @return the session, or empty when unknown or expired
      */
     public Optional<UserSession> use(String id) {
-        var session = sessions.get(id);
-        if (session == null) {
-            return Optional.empty();
-        }
         var now = clock.instant();
-        if (expired(session, now)) {
-            sessions.remove(id);
-            return Optional.empty();
+        var found = new AtomicBoolean();
+        var touched = sessions.computeIfPresent(id, (key, session) -> {
+            found.set(true);
+            return expired(session, now) ? null : session.touched(now);
+        });
+        if (touched == null && found.get()) {
+            ended.add(id);
         }
-        var touched = session.touched(now);
-        sessions.put(id, touched);
-        return Optional.of(touched);
+        return Optional.ofNullable(touched);
     }
 
     /**
@@ -115,16 +121,23 @@ public class SessionStore {
     }
 
     /**
-     * Removes every expired session.
+     * Removes every expired session. A session is removed only as it was found expired: one renewed meanwhile stays.
      *
-     * @return the ids of the removed sessions, so their tokens can be dropped
+     * @return the ids of the sessions removed here or found expired by {@link #use(String)} since the last call, so
+     *         their tokens can be dropped
      */
     public List<String> evictExpired() {
         var now = clock.instant();
-        var expired = sessions.values().stream().filter(session -> expired(session, now)).map(UserSession::id)
-                .toList();
-        expired.forEach(sessions::remove);
-        return expired;
+        var removed = new ArrayList<String>();
+        for (UserSession session : sessions.values()) {
+            if (expired(session, now) && sessions.remove(session.id(), session)) {
+                removed.add(session.id());
+            }
+        }
+        for (String id = ended.poll(); id != null; id = ended.poll()) {
+            removed.add(id);
+        }
+        return removed;
     }
 
     private boolean expired(UserSession session, Instant now) {

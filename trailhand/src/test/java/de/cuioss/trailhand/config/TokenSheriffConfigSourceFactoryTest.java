@@ -72,6 +72,17 @@ class TokenSheriffConfigSourceFactoryTest {
     }
 
     @Test
+    @DisplayName("reads a secret file without one trailing line break and keeps every other character")
+    void secretFile(@TempDir Path directory) throws Exception {
+        var file = directory.resolve("secret");
+        Files.writeString(file, " s3cret \n");
+        assertEquals(" s3cret ", TokenSheriffConfigSourceFactory.readSecret("file:" + file).orElseThrow());
+        assertEquals("s\n", TokenSheriffConfigSourceFactory.withoutTrailingLineBreak("s\n\r\n"));
+        assertEquals("s", TokenSheriffConfigSourceFactory.withoutTrailingLineBreak("s\r"));
+        assertEquals("s", TokenSheriffConfigSourceFactory.withoutTrailingLineBreak("s"));
+    }
+
+    @Test
     @DisplayName("derives nothing from a missing or invalid file, and no secret from a vault reference")
     void nothing(@TempDir Path directory) throws Exception {
         assertTrue(TokenSheriffConfigSourceFactory.derive(directory, name -> null).isEmpty());

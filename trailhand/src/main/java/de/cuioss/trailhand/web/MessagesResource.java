@@ -30,8 +30,11 @@ import java.util.Map;
  * {@code GET /api/v1/messages?lang=en|de} (TRH-WEB-7): the catalogue as one JSON object; a missing {@code lang} answers
  * English, any other value {@code 400}.
  */
-@Path("/api/v1/messages")
+@Path(MessagesResource.PATH)
 public class MessagesResource {
+
+    /** The address of the request; public. */
+    public static final String PATH = "/api/v1/messages";
 
     private final MessageCatalogue catalogue;
 

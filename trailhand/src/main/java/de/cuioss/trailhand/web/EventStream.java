@@ -46,6 +46,8 @@ public class EventStream {
     /** The SSE factory and the broadcaster, created with the first connection. */
     private final AtomicReference<@Nullable Channel> channel = new AtomicReference<>();
     private final AtomicReference<String> lastStatus = new AtomicReference<>("");
+    /** Orders the initial status of a connection with the status broadcasts. */
+    private final Object statusLock = new Object();
     private @Nullable ScheduledExecutorService scheduler;
 
     /**
@@ -92,16 +94,21 @@ public class EventStream {
     void register(SseEventSink sink, Sse sseFactory) {
         var current = channel.updateAndGet(
                 existing -> existing != null ? existing : new Channel(sseFactory, sseFactory.newBroadcaster()));
-        current.broadcaster().register(sink);
-        sink.send(sseFactory.newEventBuilder().name("status").data(statusJson()).build());
+        // One lock with tick(): a status broadcast cannot overtake the initial status of a new connection.
+        synchronized (statusLock) {
+            current.broadcaster().register(sink);
+            sink.send(sseFactory.newEventBuilder().name("status").data(statusJson()).build());
+        }
     }
 
     void tick() {
-        var status = statusJson();
-        var previous = lastStatus.getAndSet(status);
-        var current = channel.get();
-        if (!status.equals(previous) && current != null) {
-            current.broadcaster().broadcast(current.sse().newEventBuilder().name("status").data(status).build());
+        synchronized (statusLock) {
+            var status = statusJson();
+            var previous = lastStatus.getAndSet(status);
+            var current = channel.get();
+            if (!status.equals(previous) && current != null) {
+                current.broadcaster().broadcast(current.sse().newEventBuilder().name("status").data(status).build());
+            }
         }
     }
 
