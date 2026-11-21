@@ -235,7 +235,8 @@ link:../resources/brand/image-provenance.adoc[Image Provenance and Licensing]; t
 
 |*Welcome* (`resources/brand/mascot-welcome.png`, used in the README)
 |ChatGPT image generation (OpenAI), 2026, from the prompt below and refined with follow-up instructions. The shipped
-file is the source image reduced to 520 × 780 pixels; the source is not in the repository.
+file is the source image cleaned of the generated glow and stray pixels outside the outline, cropped to the figure and
+reduced to 520 × 811 pixels; the source is not in the repository.
 |Yes, by the owner, 2026-11-21. Not shipped in the web app yet.
 |Apache License 2.0, as stated in the image provenance notice
 |===
