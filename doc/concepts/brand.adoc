@@ -207,12 +207,6 @@ says "versioned document" without a star, a shield or a padlock, the three symbo
 |Drawn by hand as SVG during the bootstrap of the web app, after the sketch above
 |No: provisional, replaced before the first release
 |Apache License 2.0, as the repository
-
-|Provisional mascot of the README (`resources/brand/mascot-provisional.svg`)
-|Drawn by hand as SVG, not AI-made, to the character of <<_the_mascot>>
-|No: provisional, not shipped in the web app, replaced by the AI-made poses with recorded provenance before the first
-release
-|Apache License 2.0, as the repository
 |===
 
 == The Mascot
@@ -231,6 +225,47 @@ the source image.
 owner's acceptance in a table like the one in `brand-mark-mascot.adoc` of `pm-mcp-clients`, before the pose ships. The
 Apache-2.0 release of the existing family images does not cover new poses automatically; the owner states the licence
 of each new one.
+
+The origin and the licence of the AI-made images are stated once, in
+link:../resources/brand/image-provenance.adoc[Image Provenance and Licensing]; the table records each pose.
+
+[cols="1,2,1,1"]
+|===
+|Image |Made by |Accepted |Licence
+
+|*Welcome* (`resources/brand/mascot-welcome.png`, used in the README)
+|ChatGPT image generation (OpenAI), 2026, from the prompt below and refined with follow-up instructions. The shipped
+file is the source image reduced to 520 × 780 pixels; the source is not in the repository.
+|Yes, by the owner, 2026-11-21. Not shipped in the web app yet.
+|Apache License 2.0, as stated in the image provenance notice
+|===
+
+The starting prompt of the base character, with the pose of *welcome*; the final image came out of follow-up
+instructions. The prompt asks for the family's own bears as style references; the provenance notice records that no
+third-party image was supplied.
+
+....
+Create a cartoon mascot illustration in exactly the same style as the two attached reference images: a friendly
+bear character, thick dark-brown outline (#2A1A10) of even weight, flat colours with soft shading and a subtle
+paper-grain texture, big round eyes with small highlights, a cream muzzle, a small soft ground shadow, and a plain
+background. Full body, standing, front three-quarter view, portrait format 2:3, centred, with margin around the
+figure. No text, no watermark, no border.
+
+Character: a RANCH HAND bear who keeps the books. Orange-brown fur (#E17512), cream muzzle and belly (#F6DDB0). He
+wears a worn, wide-brimmed brown hat (#A0602E) with a gold band (#F2B630) and a gold neckerchief (#F2B630) knotted at
+the front. A yellow pencil sits behind one ear. Under one arm he carries a brown tally book (#A0602E) with a stitched
+spine; the cover shows a small emblem: a cream document page with a folded top-right corner and a winding trail
+across it through three round nodes (the last node gold, the others brown). The emblem is the only graphic on the
+book. The other paw waves in a relaxed, friendly way.
+
+Mood: calm, warm, trustworthy, a colleague who keeps good notes. He is clearly UNARMED: no badge, no star, no
+holster, no gun, no shield, no padlock. He is not a sheriff and not a detective.
+
+Keep the proportions, line weight and rendering identical to the references so the three characters look like one
+family.
+....
+
+The poses *at work* and *done* are still to be made; each gets its own row.
 
 == Voice
 
