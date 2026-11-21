@@ -55,8 +55,10 @@ https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/git-as-
 == Specification
 
 Each specification document states its requirements as numbered sections (`TRH-<GROUP>-<n>`): first the rules that
-must hold, then the design that realises them. The application is not built yet: the concepts and specifications
-describe its planned design, including every check and CI job they name.
+must hold, then the design that realises them. The application is in its bootstrap: the concepts and specifications
+describe its full design, including every check and CI job they name, and the modules built so far are listed in
+xref:specification/architecture-and-modules.adoc#_maven_modules[Architecture and Modules]. Each module documents its
+layout and commands in its own `README.adoc`.
 
 [cols="1,1,3"]
 |===
@@ -111,8 +113,8 @@ describe its planned design, including every check and CI job they name.
 |Repository cut, references, erasure, retention, personal details, read-access events
 
 |xref:specification/testing.adoc[Testing]
-|`TRH-NFR`
-|Test lanes, index size, save latency, concurrency, security tests, native image
+|`TRH-TEST`, `TRH-NFR`
+|Test lanes, mock server, index size, save latency, concurrency, security tests, native image
 |===
 
 [#_decisions]
@@ -129,4 +131,8 @@ describe its planned design, including every check and CI job they name.
 |xref:adr/0002-A_local_gateway_base_project_holds_the_user_tokens_for_MCP_agents.adoc[ADR-0002]
 |A local gateway base project holds the user's tokens for MCP agents
 |Proposed
+
+|xref:adr/0003-UI_tests_run_against_a_scenario_mock_server.adoc[ADR-0003]
+|UI tests run against a scenario mock server
+|Accepted
 |===

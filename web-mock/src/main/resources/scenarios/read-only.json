@@ -1,0 +1,145 @@
+{
+  "format_version": 1,
+  "name": "read-only",
+  "description": "A reader: the right read on every repository, nothing else.",
+  "user": {
+    "pseudonym": "p-71d0c3",
+    "name": "Kim Reader",
+    "groups": [
+      "readers"
+    ]
+  },
+  "rights": [
+    {
+      "repository": "samm-assessments",
+      "actions": [
+        "read"
+      ]
+    },
+    {
+      "repository": "threat-models",
+      "actions": [
+        "read"
+      ]
+    },
+    {
+      "repository": "isms-register",
+      "actions": [
+        "read"
+      ]
+    }
+  ],
+  "first_login_required": false,
+  "start": "ready",
+  "routes": {
+    "GET /api/v1/status": {
+      "status": 200,
+      "body": {
+        "version": "0.1.0-SNAPSHOT",
+        "degraded": false,
+        "repositories": [
+          {
+            "alias": "samm-assessments",
+            "fetch": "UP"
+          },
+          {
+            "alias": "threat-models",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-register",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-incidents-2026",
+            "fetch": "UP"
+          },
+          {
+            "alias": "directory",
+            "fetch": "UP"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/catalogs/team": {
+      "status": 200,
+      "body": {
+        "entries": [
+          {
+            "id": "payments",
+            "name": "Payments"
+          },
+          {
+            "id": "identity",
+            "name": "Identity Platform"
+          },
+          {
+            "id": "mobile",
+            "name": "Mobile Apps"
+          },
+          {
+            "id": "security-office",
+            "name": "Security Office"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/catalogs/role": {
+      "status": 200,
+      "body": {
+        "entries": [
+          {
+            "id": "developer",
+            "name": "Developer"
+          },
+          {
+            "id": "product-owner",
+            "name": "Product Owner"
+          },
+          {
+            "id": "security-champion",
+            "name": "Security Champion"
+          },
+          {
+            "id": "ciso",
+            "name": "Chief Information Security Officer"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/due": {
+      "status": 200,
+      "body": {
+        "items": [
+          {
+            "kind": "release",
+            "lens": "samm",
+            "title": "Payments 2026-Q4 assessment",
+            "address": "/samm/payments/2026-q4/release",
+            "due": "2026-12-04"
+          },
+          {
+            "kind": "review",
+            "lens": "isms",
+            "title": "Risk R-012: supplier access to production",
+            "address": "/isms/risks/r-012",
+            "due": "2026-12-15"
+          }
+        ]
+      }
+    }
+  },
+  "states": {
+    "ready": {
+      "description": "Everything is fetched; edits are refused.",
+      "routes": {
+        "PUT /api/v1/directory/me": {
+          "status": 403,
+          "body": {
+            "outcome": "FORBIDDEN"
+          }
+        }
+      }
+    }
+  }
+}

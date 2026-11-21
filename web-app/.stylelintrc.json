@@ -1,0 +1,27 @@
+{
+  "customSyntax": "postcss-html",
+  "rules": {
+    "color-no-hex": true,
+    "color-named": "never",
+    "function-disallowed-list": ["rgb", "rgba", "hsl", "hsla", "hwb", "lab", "lch", "oklab", "oklch"],
+    "declaration-property-value-disallowed-list": {
+      "outline": ["none"]
+    },
+    "no-duplicate-selectors": true,
+    "block-no-empty": true
+  },
+  "overrides": [
+    {
+      "files": ["src/styles/tokens.css"],
+      "customSyntax": null,
+      "rules": {
+        "color-no-hex": null,
+        "function-disallowed-list": null
+      }
+    },
+    {
+      "files": ["**/*.css"],
+      "customSyntax": null
+    }
+  ]
+}

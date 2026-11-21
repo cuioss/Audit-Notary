@@ -1,0 +1,85 @@
+= TrailHand Web E2E
+:toc: left
+:toclevels: 2
+
+The end-to-end suite of the web app: Playwright and axe-core against the Vite dev server of `web-app`, whose `/api`
+and `/mock` go to `web-mock` (`doc/specification/testing.adoc`, TRH-TEST-1; the reasoning is ADR-0003). The global
+setup starts the mock through `web-mock/start.sh` (profile `workshop`, timing `ordered`) unless one already answers,
+and the tests switch profiles through its control routes.
+
+== Running
+
+[source,bash]
+----
+./mvnw verify -Pe2e -pl web-e2e -am     # through Maven: npm ci, lint, playwright install chromium, playwright test
+cd web-e2e && npx playwright test       # directly, after npm ci
+npx playwright test tests/login.spec.js # one spec
+npx playwright show-report target/playwright-report   # the HTML report of the last direct run
+----
+
+Without the profile `e2e` the module only installs and lints; Maven runs the suite with the `list` reporter only.
+The suite runs with one worker: every spec changes the state of the one mock server.
+
+Ports: `TRAILHAND_WEB_PORT` (5173) and `TRAILHAND_MOCK_PORT` (7420), named only in `tests/helpers/ports.js`
+(`scripts/guard-ports.js`).
+
+== Layout
+
+[cols="1,3"]
+|===
+|Path |Content
+
+|`global-setup.js`
+|Starts `web-mock` (or uses the one that answers) before the Vite dev server of `playwright.config.js`
+
+|`tests/helpers/mock.js`
+|The control routes: `useScenario` (profile, optionally `name#state`), `gotoState`, `broadcast` (an event on the
+stream)
+
+|`tests/helpers/login.js`
+|The login through the mock, which signs in without a form
+
+|`tests/helpers/a11y.js`
+|The axe-core audit; it fails on violations of impact `serious` or `critical`
+|===
+
+== Specs
+
+[cols="1,3"]
+|===
+|Spec |What it checks
+
+|`login.spec.js`
+|A deep link without a session returns to the same address after the login; the session cookie is `HttpOnly` and
+`SameSite=Strict`; a return address that is no canonical address leads to the start page; signing out ends the
+session
+
+|`navigation.spec.js`
+|The rail offers the eight lenses and marks the current one; the search opens a view; the Due list leads to the
+document address; an unknown address answers with the not-found view
+
+|`first-login.spec.js`
+|Every address leads to the first-login form until the entry is saved; a refused team is shown at its field
+
+|`csrf.spec.js`
+|A request without the anti-CSRF header, or from a foreign origin, is refused; the app sends the header itself
+
+|`live.spec.js`
+|The live indicator follows the event stream; an unreachable Git server is shown and its recovery clears the notice,
+without a reload
+
+|`i18n.spec.js`
+|Switching to German shows every text in German and keeps the choice; the catalogue refuses another language
+
+|`theme-readability.spec.js`
+|The axe-core audit of every view in both themes
+
+|`fonts.spec.js`
+|Every request stays on the own origin, and Inter is loaded
+
+|`mobile.spec.js`
+|On a narrow screen the bottom bar replaces the rail, and "More" holds the other lenses
+|===
+
+A new view gets its address in `navigation.spec.js` and its audit in `theme-readability.spec.js`; a new profile of
+`web-mock` gets the spec of the flow it exists for.

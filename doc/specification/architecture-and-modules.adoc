@@ -58,6 +58,11 @@ Root: `de.cuioss:trailhand-parent` (working coordinates). Parent `de.cuioss:cui-
 |jar
 |Svelte build output under `META-INF/resources`
 
+|`web-mock`
+|jar (not deployed)
+|Mock server of the `/api/v1` requests of the web app with test profiles
+(xref:testing.adoc#TRH-TEST-1[TRH-TEST-1]); development and tests only
+
 |`trailhand`
 |jar (Quarkus)
 |The application; profile `native`
@@ -76,7 +81,9 @@ xref:testing.adoc#TRH-NFR-1[TRH-NFR-1] and xref:testing.adoc#TRH-NFR-2[TRH-NFR-2
 |Compose sample; profile `compose-sample`
 |===
 
-Reactor order: `categories`, `web-app`, `trailhand`, `web-e2e`, `integration-tests`, `deployment`.
+Reactor order: `categories`, `web-app`, `web-mock`, `trailhand`, `web-e2e`, `integration-tests`, `deployment`. The
+modules are added as they are built: the bootstrap has `web-app`, `web-mock`, `trailhand`, `web-e2e` and
+`integration-tests`; `categories` and `deployment` follow.
 
 [#TRH-GEN-1]
 == TRH-GEN-1: Categories as Configuration

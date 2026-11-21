@@ -1,0 +1,95 @@
+= ADR-0003: UI tests run against a scenario mock server
+:toc: left
+:toclevels: 3
+:toc-title: Table of Contents
+:sectnums:
+:source-highlighter: highlight.js
+
+// adr-metadata
+// summary: The web unit tests, the end-to-end suite and manual UI work run against web-mock, a small plain-Java server that answers the web app's /api/v1 requests from scenario files (profiles), emulates session cookie, anti-CSRF header and Origin check, and serves the real message catalogue; the application with identity provider and Git server is exercised only by the integration tests.
+// tags: testing, web-app, mock, e2e
+// affects: web-app, web-mock, web-e2e
+// supersedes:
+// end-adr-metadata
+
+== Status
+
+Accepted
+
+== Context
+
+The web app is tested on three levels: unit tests beside the components, an end-to-end suite in a browser, and manual
+work on views. All three need answers to the requests of
+xref:../specification/web-app.adoc#TRH-WEB-9[TRH-WEB-9], in well-defined states: a user before the first login, a
+read-only user, a Git server that cannot be reached, a document another user has just saved.
+
+Against the application itself, every such state needs an identity provider with prepared users, Git repositories with
+prepared content, and a way to make the Git server unreachable on demand. The suite would then depend on the start
+time of a native image and of Keycloak, and a view could only be built once its server side exists. A state that is
+hard to reach on purpose, an event arriving at a given moment for example, would need a hook in production code.
+
+== Decision
+
+*The web app is tested against a mock server whose test states are data.*
+
+* The module `web-mock` is a plain Java server (the JDK's HTTP server and Jackson, no framework). It answers the
+  requests of the web app and is not deployed.
+* A *profile* is one scenario file: a state machine whose states carry the answers, whose links move to the next state
+  when the web app sends the matching request, and whose events are pushed over the event stream. A profile is chosen
+  at start and switched at run time through loopback-only control requests.
+* The mock emulates what the browser sees of the real session: the session cookie, the anti-CSRF header and the
+  `Origin` check (xref:../specification/web-app.adoc#TRH-WEB-8[TRH-WEB-8]). The web app's handling of them is
+  therefore tested end to end; the mock does not emulate the identity provider.
+* The mock serves the real message catalogue from the `web-app` JAR, so a missing text shows in the end-to-end suite.
+* The web unit tests read the same scenario files. Unit tests, end-to-end tests and manual runs see the same data.
+
+The application is tested against Keycloak and a Git repository in the integration tests
+(xref:../specification/testing.adoc[Testing]).
+
+== Consequences
+
+=== Positive
+
+* The end-to-end suite starts in seconds and reaches every state by a request, without a hook in production code.
+* A view can be built and reviewed before its server side exists.
+* The scenario files document the wire contract by example.
+
+=== Negative
+
+* The answers of the mock and of the application can drift apart. The contract is the specification
+  (xref:../specification/web-app.adoc#TRH-WEB-9[TRH-WEB-9]); the integration tests check the application against it,
+  and the mock's own tests check the scenario files.
+* The login against the identity provider is not part of the end-to-end suite; the integration tests cover it.
+
+=== Risks
+
+* A scenario that is never updated keeps a test green that the application would fail. Every change of the contract
+  changes the specification, the scenario files and the integration tests together.
+
+== Alternatives Considered
+
+=== End-to-end tests against the application with Keycloak and Gitea
+
+*Rejected because* every state needs prepared users and repositories, an unreachable Git server needs control over
+the network, and the suite waits for a native build and an identity provider. The integration tests take this role for
+the server side.
+
+=== Request interception in the browser only (Playwright routes, Vitest stubs)
+
+*Rejected because* the stubs would live in each test, so unit tests, end-to-end tests and manual runs would not share
+states, and manual work on a view would have no server at all. Interception stays available for a single targeted
+answer.
+
+=== A mock built on Quarkus or a third-party mock server
+
+*Rejected because* the mock needs state machines, an event stream and a control interface of its own; a framework adds
+start time and dependencies without providing them. The plain-Java form is the one `pm-mock-runtime` of
+`pm-mcp-clients` proved for `pm-web-app`.
+
+== References
+
+* xref:0001-Authentication_is_delegated_to_Token_Sheriff_with_a_server-side_session_for_the_web_app.adoc[ADR-0001]
+  -- the session the mock emulates
+* xref:../specification/testing.adoc#TRH-TEST-1[Testing, TRH-TEST-1] -- the mock server
+* xref:../specification/web-app.adoc[Web App] -- the requests it answers
+* `pm-mcp-clients/pm-mock-runtime` -- the reference implementation of a scenario mock

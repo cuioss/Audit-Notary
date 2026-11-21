@@ -194,6 +194,20 @@ says "versioned document" without a star, a shield or a padlock, the three symbo
   asset to ship.
 * *Distance from the sheriff badge:* the mark has no star and no ball tips, so it is not mistaken for the sign of
   plan-marshall or Token Sheriff beside which it will sit in a user's tool list.
+* *Provisional drawing in the web app.* Until the final mark is delivered and accepted, the web app carries a
+  provisional drawing of the same idea (`web-app/src/lib/brand/BrandMark.svelte`, favicon
+  `web-app/static/brand-mark.svg` with two nodes); `MARK_IS_PROVISIONAL` in `web-app/src/lib/brand/brand.ts` marks it.
+  It must be replaced before the first release.
+
+[cols="1,1,1,1"]
+|===
+|Drawing |Made by |Accepted |Licence
+
+|Provisional mark and favicon of the web app
+|Drawn by hand as SVG during the bootstrap of the web app, after the sketch above
+|No: provisional, replaced before the first release
+|Apache License 2.0, as the repository
+|===
 
 == The Mascot
 

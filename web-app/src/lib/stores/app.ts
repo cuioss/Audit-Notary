@@ -1,0 +1,102 @@
+/**
+ * The state the shell shares: the session, the application status and the state of the event stream.
+ */
+import { writable, type Readable } from 'svelte/store';
+import { apiClient, type ApiClient, type StreamState } from '../api/client';
+import { isApiError } from '../api/errors';
+import type { Session, Status } from '../api/types';
+import { initI18n } from '../i18n';
+
+/** The session; `null` until it is read. */
+export const session = writable<Session | null>(null);
+
+/** The application status; `null` until it is read or when it cannot be read. */
+export const status = writable<Status | null>(null);
+
+/** The state of the shared event stream. */
+export const streamState = writable<StreamState>('offline');
+
+/** The phases of the start. */
+export type BootPhase = 'starting' | 'ready' | 'signing-in' | 'failed';
+
+/** Where the start is. */
+export const bootPhase = writable<BootPhase>('starting');
+
+/** The result of {@link boot}. */
+export interface BootResult {
+  /** Whether the user must save the own directory entry first (TRH-DIR-2). */
+  firstLoginRequired: boolean;
+  /** Ends the subscriptions the start opened. */
+  stop: () => void;
+}
+
+/**
+ * Starts the app: status, texts, session, event stream (TRH-WEB-9).
+ *
+ * The status and the texts need no login, so the login screen of a `401` is never without texts.
+ *
+ * @param client the client, {@link apiClient} by default
+ * @returns what the shell needs to route the first view
+ */
+export async function boot(client: ApiClient = apiClient): Promise<BootResult> {
+  bootPhase.set('starting');
+  let version: string | null = null;
+  try {
+    const current = await client.getStatus();
+    status.set(current);
+    version = current.version;
+  } catch {
+    status.set(null);
+  }
+  await initI18n(version);
+  try {
+    const current = await client.getSession();
+    session.set(current);
+  } catch (error) {
+    bootPhase.set(
+      isApiError(error) && error.outcome === 'UNAUTHENTICATED' ? 'signing-in' : 'failed',
+    );
+    return { firstLoginRequired: false, stop: () => {} };
+  }
+  const stopState = client.subscribeStreamState((state) => streamState.set(state));
+  const stopEvents = client.subscribeEvents((event, data) => {
+    if (event === 'status' && data && typeof data === 'object') {
+      status.set(data as Status);
+    }
+  });
+  bootPhase.set('ready');
+  let firstLoginRequired = false;
+  session.subscribe((value) => {
+    firstLoginRequired = value?.firstLoginRequired ?? false;
+  })();
+  return {
+    firstLoginRequired,
+    stop: () => {
+      stopEvents();
+      stopState();
+    },
+  };
+}
+
+/**
+ * Marks the first login as done after the own entry was saved.
+ *
+ * @param pseudonym the pseudonym of the saved entry
+ */
+export function completeFirstLogin(pseudonym: string): void {
+  session.update((value) =>
+    value ? { ...value, firstLoginRequired: false, user: { ...value.user, pseudonym } } : value,
+  );
+}
+
+/**
+ * @param store a store
+ * @returns its current value
+ */
+export function peek<T>(store: Readable<T>): T {
+  let value!: T;
+  store.subscribe((current) => {
+    value = current;
+  })();
+  return value;
+}

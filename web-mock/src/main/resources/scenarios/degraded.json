@@ -1,0 +1,234 @@
+{
+  "format_version": 1,
+  "name": "degraded",
+  "description": "The Git server of samm-assessments is unreachable: reads come from the last fetch, saves fail.",
+  "user": {
+    "pseudonym": "p-4c1a9e",
+    "name": "Alex Example",
+    "groups": [
+      "samm-assessors",
+      "threat-modelers",
+      "isms-readers"
+    ]
+  },
+  "rights": [
+    {
+      "repository": "samm-assessments",
+      "actions": [
+        "read",
+        "edit"
+      ]
+    },
+    {
+      "repository": "threat-models",
+      "actions": [
+        "read",
+        "edit"
+      ]
+    },
+    {
+      "repository": "isms-register",
+      "actions": [
+        "read"
+      ]
+    }
+  ],
+  "first_login_required": false,
+  "start": "unreachable",
+  "routes": {
+    "GET /api/v1/status": {
+      "status": 200,
+      "body": {
+        "version": "0.1.0-SNAPSHOT",
+        "degraded": false,
+        "repositories": [
+          {
+            "alias": "samm-assessments",
+            "fetch": "UP"
+          },
+          {
+            "alias": "threat-models",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-register",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-incidents-2026",
+            "fetch": "UP"
+          },
+          {
+            "alias": "directory",
+            "fetch": "UP"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/catalogs/team": {
+      "status": 200,
+      "body": {
+        "entries": [
+          {
+            "id": "payments",
+            "name": "Payments"
+          },
+          {
+            "id": "identity",
+            "name": "Identity Platform"
+          },
+          {
+            "id": "mobile",
+            "name": "Mobile Apps"
+          },
+          {
+            "id": "security-office",
+            "name": "Security Office"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/catalogs/role": {
+      "status": 200,
+      "body": {
+        "entries": [
+          {
+            "id": "developer",
+            "name": "Developer"
+          },
+          {
+            "id": "product-owner",
+            "name": "Product Owner"
+          },
+          {
+            "id": "security-champion",
+            "name": "Security Champion"
+          },
+          {
+            "id": "ciso",
+            "name": "Chief Information Security Officer"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/due": {
+      "status": 200,
+      "body": {
+        "items": [
+          {
+            "kind": "review",
+            "lens": "samm",
+            "title": "Payments 2026-Q4: Strategy & Metrics",
+            "address": "/samm/payments/2026-q4/sm",
+            "due": "2026-11-27"
+          },
+          {
+            "kind": "release",
+            "lens": "samm",
+            "title": "Payments 2026-Q4 assessment",
+            "address": "/samm/payments/2026-q4/release",
+            "due": "2026-12-04"
+          },
+          {
+            "kind": "review",
+            "lens": "threat-models",
+            "title": "Payment gateway: checkout flow",
+            "address": "/threat-models/payment-gateway/checkout-flow",
+            "due": "2026-12-01"
+          },
+          {
+            "kind": "deadline",
+            "lens": "incidents",
+            "title": "INC-0007 card data exposure: notification to the authority",
+            "address": "/incidents/2026/inc-0007",
+            "due": "2026-11-22"
+          },
+          {
+            "kind": "review",
+            "lens": "isms",
+            "title": "Risk R-012: supplier access to production",
+            "address": "/isms/risks/r-012",
+            "due": "2026-12-15"
+          }
+        ]
+      }
+    }
+  },
+  "states": {
+    "unreachable": {
+      "description": "The fetch of samm-assessments fails.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": true,
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "DOWN"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              }
+            ]
+          }
+        },
+        "PUT /api/v1/directory/me": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        }
+      }
+    },
+    "recovered": {
+      "description": "The Git server is reachable again.",
+      "events": [
+        {
+          "after_ms": 0,
+          "event": "status",
+          "data": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": false,
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "format_version": 1,
+  "name": "empty",
+  "description": "A fresh installation: no documents, nothing due.",
+  "user": {
+    "pseudonym": "p-0a11ce",
+    "name": "Sam Firstuser",
+    "groups": [
+      "security-office"
+    ]
+  },
+  "rights": [
+    {
+      "repository": "samm-assessments",
+      "actions": [
+        "read",
+        "edit",
+        "approve",
+        "administer-catalogs"
+      ]
+    },
+    {
+      "repository": "threat-models",
+      "actions": [
+        "read",
+        "edit",
+        "approve",
+        "administer-catalogs"
+      ]
+    },
+    {
+      "repository": "isms-register",
+      "actions": [
+        "read",
+        "edit",
+        "approve",
+        "administer-catalogs"
+      ]
+    },
+    {
+      "repository": "directory",
+      "actions": [
+        "read",
+        "edit",
+        "approve",
+        "administer-catalogs"
+      ]
+    }
+  ],
+  "first_login_required": false,
+  "start": "ready",
+  "routes": {
+    "GET /api/v1/status": {
+      "status": 200,
+      "body": {
+        "version": "0.1.0-SNAPSHOT",
+        "degraded": false,
+        "repositories": [
+          {
+            "alias": "samm-assessments",
+            "fetch": "UP"
+          },
+          {
+            "alias": "threat-models",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-register",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-incidents-2026",
+            "fetch": "UP"
+          },
+          {
+            "alias": "directory",
+            "fetch": "UP"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/catalogs/team": {
+      "status": 200,
+      "body": {
+        "entries": [
+          {
+            "id": "payments",
+            "name": "Payments"
+          },
+          {
+            "id": "identity",
+            "name": "Identity Platform"
+          },
+          {
+            "id": "mobile",
+            "name": "Mobile Apps"
+          },
+          {
+            "id": "security-office",
+            "name": "Security Office"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/catalogs/role": {
+      "status": 200,
+      "body": {
+        "entries": [
+          {
+            "id": "developer",
+            "name": "Developer"
+          },
+          {
+            "id": "product-owner",
+            "name": "Product Owner"
+          },
+          {
+            "id": "security-champion",
+            "name": "Security Champion"
+          },
+          {
+            "id": "ciso",
+            "name": "Chief Information Security Officer"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/due": {
+      "status": 200,
+      "body": {
+        "items": []
+      }
+    }
+  },
+  "states": {
+    "ready": {
+      "description": "Nothing is there yet."
+    }
+  }
+}

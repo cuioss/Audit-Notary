@@ -1,0 +1,167 @@
+{
+  "format_version": 1,
+  "name": "first-login",
+  "description": "A user without a directory entry: every view except the first-login form is refused.",
+  "user": {
+    "pseudonym": null,
+    "name": "Robin Newcomer",
+    "groups": [
+      "payments-developers"
+    ]
+  },
+  "rights": [
+    {
+      "repository": "samm-assessments",
+      "actions": [
+        "read",
+        "edit"
+      ]
+    }
+  ],
+  "first_login_required": true,
+  "start": "form",
+  "routes": {
+    "GET /api/v1/status": {
+      "status": 200,
+      "body": {
+        "version": "0.1.0-SNAPSHOT",
+        "degraded": false,
+        "repositories": [
+          {
+            "alias": "samm-assessments",
+            "fetch": "UP"
+          },
+          {
+            "alias": "threat-models",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-register",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-incidents-2026",
+            "fetch": "UP"
+          },
+          {
+            "alias": "directory",
+            "fetch": "UP"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/catalogs/team": {
+      "status": 200,
+      "body": {
+        "entries": [
+          {
+            "id": "payments",
+            "name": "Payments"
+          },
+          {
+            "id": "identity",
+            "name": "Identity Platform"
+          },
+          {
+            "id": "mobile",
+            "name": "Mobile Apps"
+          },
+          {
+            "id": "security-office",
+            "name": "Security Office"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/catalogs/role": {
+      "status": 200,
+      "body": {
+        "entries": [
+          {
+            "id": "developer",
+            "name": "Developer"
+          },
+          {
+            "id": "product-owner",
+            "name": "Product Owner"
+          },
+          {
+            "id": "security-champion",
+            "name": "Security Champion"
+          },
+          {
+            "id": "ciso",
+            "name": "Chief Information Security Officer"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/directory/me": {
+      "status": 200,
+      "body": {
+        "name": "Robin Newcomer",
+        "teams": [
+          "payments"
+        ],
+        "informationText": "TrailHand stores your name, team and role in the person directory of your organisation so that documents can name who worked on them. Documents carry only a pseudonym; the directory maps it to your entry. Controller: the security office of your organisation. Legal basis: Art. 6(1)(b) and (f) GDPR. You can change your entry at any time in Settings; erasure is done by the catalog administrators. (Information under Art. 13 GDPR.)"
+      }
+    }
+  },
+  "states": {
+    "form": {
+      "description": "The first-login form is shown; saving creates the entry.",
+      "links": {
+        "save-entry": {
+          "method": "PUT",
+          "path": "/api/v1/directory/me",
+          "next": "registered",
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "pseudonym": "p-9b7e21"
+          }
+        }
+      }
+    },
+    "invalid-team": {
+      "description": "Saving is refused: the team is not in the catalog.",
+      "links": {
+        "save-entry": {
+          "method": "PUT",
+          "path": "/api/v1/directory/me",
+          "next": "invalid-team",
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/team",
+                "code": "REFERENCE_NOT_FOUND"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "registered": {
+      "description": "The entry is saved; the user works like any other.",
+      "first_login_required": false,
+      "routes": {
+        "GET /api/v1/due": {
+          "status": 200,
+          "body": {
+            "items": [
+              {
+                "kind": "review",
+                "lens": "samm",
+                "title": "Payments 2026-Q4: Strategy & Metrics",
+                "address": "/samm/payments/2026-q4/sm",
+                "due": "2026-11-27"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

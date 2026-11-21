@@ -1,0 +1,71 @@
+= Web Mock: Log Messages
+:toc: left
+:toclevels: 2
+
+The log records of `web-mock`, defined in `de.cuioss.trailhand.mock.WebMockLogMessages`. Prefix `WEB_MOCK`; CUI
+ranges: INFO 1-99, WARN 100-199, ERROR 200-299. No record carries a session id or an anti-CSRF token.
+
+[cols="1,1,3,2,3"]
+|===
+|Identifier |Level |Template |Parameters |Trigger
+
+|`WEB_MOCK-1`
+|INFO
+|Web mock listening on %s with scenario %s, timing %s
+|base address, `name#state`, timing
+|The mock started
+
+|`WEB_MOCK-2`
+|INFO
+|Switched to scenario %s in state %s
+|scenario, state
+|`POST /mock/scenario`
+
+|`WEB_MOCK-4`
+|INFO
+|%s
+|usage text
+|`--help`, or invalid arguments (after `WEB_MOCK-202`)
+
+|`WEB_MOCK-3`
+|INFO
+|Web mock stopped
+|—
+|The mock stopped
+
+|`WEB_MOCK-100`
+|WARN
+|Unknown scenario or state: %s
+|reference
+|`POST /mock/scenario` or `POST /mock/goto/{state}` with an unknown name
+
+|`WEB_MOCK-101`
+|WARN
+|Request body of %s %s is no valid JSON
+|method, path
+|A state-changing or control request with a body that is no JSON; recorded as text
+
+|`WEB_MOCK-102`
+|WARN
+|Closed an event stream after a write failure, %s left
+|subscriber count
+|A client of `GET /api/v1/events` went away
+
+|`WEB_MOCK-200`
+|ERROR
+|Request %s %s failed
+|method, path
+|An unexpected fault while answering; the answer is `500 MOCK_FAULT`
+
+|`WEB_MOCK-201`
+|ERROR
+|Scenario %s is invalid: %s
+|reference, detail
+|`POST /mock/scenario` names a file that breaks the scenario format
+
+|`WEB_MOCK-202`
+|ERROR
+|Invalid arguments: %s
+|reason
+|The command line of `WebMockCli` is invalid; the usage follows on standard output
+|===

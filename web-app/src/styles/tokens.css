@@ -1,0 +1,275 @@
+/*
+ * The design tokens of TrailHand: both themes (doc/specification/web-app.adoc, TRH-WEB-2).
+ *
+ * Adopted from pm-mcp-clients, pm-web-app/src/styles/tokens.css, at commit
+ * 05e6c68333cdd33b030b25f76123b4a4c641da3c (design rules: pm-mcp-clients/doc/design/web-app). A change of
+ * that token contract is taken over deliberately, with this commit id.
+ *
+ * Deviations: the kind colours name the TrailHand categories (`--color-kind-samm`,
+ * `--color-kind-threat-model`, `--color-kind-incident`, `--color-kind-isms`); the aliases of the old
+ * pm-web-app token names are not taken over.
+ *
+ * `:root` carries what every theme shares and the light palette as the default; the system-dark media
+ * block, `[data-theme='light']` and `[data-theme='dark']` override the palette. Only this file holds
+ * colour literals (stylelint, tokens.test.ts).
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Typeface: Inter, self-hosted; the system stack carries the page until the file is available. */
+  --font-sans:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --font-feature-settings: 'tnum' 1, 'cv11' 1;
+
+  /* type scale: size (px), line height (px), weight */
+  --text-xs: 0.75rem; /* 12px */
+  --line-height-xs: 1rem; /* 16px */
+  --text-sm: 0.8125rem; /* 13px */
+  --line-height-sm: 1.125rem; /* 18px */
+  --text-base: 0.875rem; /* 14px */
+  --line-height-base: 1.25rem; /* 20px */
+  --text-md: 1rem; /* 16px */
+  --line-height-md: 1.5rem; /* 24px */
+  --text-lg: 1.125rem; /* 18px */
+  --line-height-lg: 1.625rem; /* 26px */
+  --text-xl: 1.375rem; /* 22px */
+  --line-height-xl: 1.75rem; /* 28px */
+  --text-2xl: 1.75rem; /* 28px */
+  --line-height-2xl: 2.125rem; /* 34px */
+  --text-3xl: 2.25rem; /* 36px */
+  --line-height-3xl: 2.625rem; /* 42px */
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+
+  /* spacing: the 4 px scale plus 48 px and 64 px */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-8: 2rem; /* 32px */
+  --space-10: 2.5rem; /* 40px */
+  --space-12: 3rem; /* 48px */
+  --space-16: 4rem; /* 64px */
+
+  /* radius */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Control tokens (pm-web-app components-fields.adoc) */
+  --control-height: 34px;
+  --control-radius: var(--radius-md);
+  --control-bg: var(--color-bg-surface);
+  --control-border: var(--color-border-strong);
+  --state-slot-width: 8.5rem;
+
+  /* motion; the reduced-motion block below turns it off */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* breakpoints: phone below 768 px, tablet 768–1279 px, desktop from 1280 px */
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1280px;
+
+  /* Layer tokens (pm-web-app components.adoc, Layers; mirrored in layers.ts) */
+  --layer-sticky: 1;
+  --layer-bar: 20;
+  --layer-menu: 30;
+  --layer-toast: 90;
+  --layer-dialog: 100;
+
+  /* colour palette, light (the default) */
+  --color-bg-app: #f7f7f5;
+  --color-bg-rail: #efefeb;
+  --color-bg-surface: #ffffff;
+  --color-bg-raised: #ffffff;
+  --color-bg-subtle: #f0f0ec;
+  --color-border: #e3e3de;
+  --color-border-strong: #cfcfc8;
+  --color-text-primary: #16181d;
+  --color-text-secondary: #3e4450;
+  --color-text-muted: #5f6672;
+  --color-brand: #5b4bdb;
+  --color-brand-hover: #4a3bc4;
+  --color-brand-subtle: #eeebff;
+  --color-attention: #b86e00;
+  --color-attention-subtle: #fff4e0;
+  --color-attention-text: #8a5200;
+  --color-running: #1f5fbf;
+  --color-danger: #c0362f;
+  --color-danger-subtle: #fdecea;
+  --color-success: #1e7a4e;
+  --color-success-subtle: #e9f6ee;
+  --color-diff-removed: #fbe3e1;
+  --color-diff-added: #ddf2e5;
+  --color-neutral: #7a808b;
+  --color-kind-samm: #606700;
+  --color-kind-threat-model: #bb2d8c;
+  --color-kind-incident: #a3361f;
+  --color-kind-isms: #007785;
+  --color-on-brand: #ffffff;
+  --color-overlay: rgb(15 23 42 / 0.5);
+
+  /*
+   * The brand palette of the mascot (doc/concepts/brand.adoc, The Brand Family): declared once
+   * here and overridden by no theme block, so both themes resolve the same values.
+   */
+  --color-mascot-fur: #e17512;
+  --color-mascot-gold: #f2b630;
+  --color-mascot-hat: #a0602e;
+  --color-mascot-cream: #f6ddb0;
+  --color-mascot-outline: #2a1a10;
+
+  /* elevation */
+  --shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.06);
+  --shadow-2: 0 4px 12px -2px rgb(0 0 0 / 0.12), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+  --shadow-overlay: 0 24px 48px -12px rgb(0 0 0 / 0.25);
+
+  --focus-ring: 0 0 0 2px var(--color-bg-surface), 0 0 0 4px var(--color-brand);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --color-bg-app: #0e1116;
+    --color-bg-rail: #12161d;
+    --color-bg-surface: #161b22;
+    --color-bg-raised: #1c2230;
+    --color-bg-subtle: #1e2433;
+    --color-border: #2a3140;
+    --color-border-strong: #3a4356;
+    --color-text-primary: #e6eaf2;
+    --color-text-secondary: #aeb6c4;
+    --color-text-muted: #8b95a7;
+    --color-brand: #8b7ef9;
+    --color-brand-hover: #a093fb;
+    --color-brand-subtle: #1e2240;
+    --color-attention: #f2a93b;
+    --color-attention-subtle: #2a2112;
+    --color-attention-text: #f6c46b;
+    --color-running: #4c9aff;
+    --color-danger: #f25f5c;
+    --color-danger-subtle: #2c1517;
+    --color-success: #3fb37f;
+    --color-success-subtle: #15271d;
+    --color-diff-removed: #3d1f24;
+    --color-diff-added: #132e22;
+    --color-neutral: #8b95a7;
+    --color-kind-samm: #adcd4a;
+    --color-kind-threat-model: #ef8bc5;
+    --color-kind-incident: #ff9c85;
+    --color-kind-isms: #3bcddc;
+    --color-on-brand: #0e1116;
+    --color-overlay: rgb(0 0 0 / 0.7);
+
+    --shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.45);
+    --shadow-2: 0 4px 12px -2px rgb(0 0 0 / 0.55);
+    --shadow-overlay: 0 24px 48px -12px rgb(0 0 0 / 0.7);
+
+    --focus-ring: 0 0 0 2px var(--color-bg-surface), 0 0 0 4px var(--color-brand);
+  }
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+
+  --color-bg-app: #f7f7f5;
+  --color-bg-rail: #efefeb;
+  --color-bg-surface: #ffffff;
+  --color-bg-raised: #ffffff;
+  --color-bg-subtle: #f0f0ec;
+  --color-border: #e3e3de;
+  --color-border-strong: #cfcfc8;
+  --color-text-primary: #16181d;
+  --color-text-secondary: #3e4450;
+  --color-text-muted: #5f6672;
+  --color-brand: #5b4bdb;
+  --color-brand-hover: #4a3bc4;
+  --color-brand-subtle: #eeebff;
+  --color-attention: #b86e00;
+  --color-attention-subtle: #fff4e0;
+  --color-attention-text: #8a5200;
+  --color-running: #1f5fbf;
+  --color-danger: #c0362f;
+  --color-danger-subtle: #fdecea;
+  --color-success: #1e7a4e;
+  --color-success-subtle: #e9f6ee;
+  --color-diff-removed: #fbe3e1;
+  --color-diff-added: #ddf2e5;
+  --color-neutral: #7a808b;
+  --color-kind-samm: #606700;
+  --color-kind-threat-model: #bb2d8c;
+  --color-kind-incident: #a3361f;
+  --color-kind-isms: #007785;
+  --color-on-brand: #ffffff;
+  --color-overlay: rgb(15 23 42 / 0.5);
+
+  --shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.06);
+  --shadow-2: 0 4px 12px -2px rgb(0 0 0 / 0.12), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+  --shadow-overlay: 0 24px 48px -12px rgb(0 0 0 / 0.25);
+
+  --focus-ring: 0 0 0 2px var(--color-bg-surface), 0 0 0 4px var(--color-brand);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg-app: #0e1116;
+  --color-bg-rail: #12161d;
+  --color-bg-surface: #161b22;
+  --color-bg-raised: #1c2230;
+  --color-bg-subtle: #1e2433;
+  --color-border: #2a3140;
+  --color-border-strong: #3a4356;
+  --color-text-primary: #e6eaf2;
+  --color-text-secondary: #aeb6c4;
+  --color-text-muted: #8b95a7;
+  --color-brand: #8b7ef9;
+  --color-brand-hover: #a093fb;
+  --color-brand-subtle: #1e2240;
+  --color-attention: #f2a93b;
+  --color-attention-subtle: #2a2112;
+  --color-attention-text: #f6c46b;
+  --color-running: #4c9aff;
+  --color-danger: #f25f5c;
+  --color-danger-subtle: #2c1517;
+  --color-success: #3fb37f;
+  --color-success-subtle: #15271d;
+  --color-diff-removed: #3d1f24;
+  --color-diff-added: #132e22;
+  --color-neutral: #8b95a7;
+  --color-kind-samm: #adcd4a;
+  --color-kind-threat-model: #ef8bc5;
+  --color-kind-incident: #ff9c85;
+  --color-kind-isms: #3bcddc;
+  --color-on-brand: #0e1116;
+  --color-overlay: rgb(0 0 0 / 0.7);
+
+  --shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.45);
+  --shadow-2: 0 4px 12px -2px rgb(0 0 0 / 0.55);
+  --shadow-overlay: 0 24px 48px -12px rgb(0 0 0 / 0.7);
+
+  --focus-ring: 0 0 0 2px var(--color-bg-surface), 0 0 0 4px var(--color-brand);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --control-height: 44px;
+  }
+}
