@@ -72,7 +72,7 @@ Root: `de.cuioss:trailhand-parent` (working coordinates). Parent `de.cuioss:cui-
 |Playwright and axe-core suite; profile `e2e`
 
 |`integration-tests`
-|pom
+|jar (not deployed)
 |Native image, distroless container, compose stack, failsafe `*IT`; profile `integration-tests`; the measurements of
 xref:testing.adoc#TRH-NFR-1[TRH-NFR-1] and xref:testing.adoc#TRH-NFR-2[TRH-NFR-2] in the profile `benchmarks`
 

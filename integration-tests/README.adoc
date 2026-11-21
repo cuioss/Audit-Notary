@@ -1,0 +1,123 @@
+= TrailHand Integration Tests
+:toc: left
+:toclevels: 2
+
+The integration lane of `doc/specification/testing.adoc`: the native image of `trailhand` in its distroless container,
+with a Keycloak, in one compose stack. The tests talk to it over HTTPS as a browser would, including the login form of
+Keycloak. Gitea joins with the Git round trip (TRH-NFR-5); until then the repositories are local bare repositories
+mounted as `file:` remotes (TRH-CONF-2). The module deploys nothing, and CI does not run the profile yet.
+
+== Running
+
+Docker with compose is required.
+
+[source,bash]
+----
+./mvnw verify -Pintegration-tests -pl integration-tests -am
+----
+
+Without the profile the module only compiles. With it, Maven:
+
+. before the tests: stops a leftover stack, generates the certificates, seeds the remotes, builds the native runner
+  and the image `trailhand:it` when they are missing or older than the sources of `trailhand` and `web-app`, and
+  starts the stack (`scripts/start-integration-stack.sh` waits for Keycloak and for the container's health check);
+. runs every `*IT` with failsafe;
+. afterwards: checks that an invalid configuration stops the boot and fails `--validate-config`
+  (`scripts/verify-invalid-config-fails.sh`, TRH-NFR-5), writes the container logs to `target/compose.log` and removes
+  the stack with its volume.
+
+The native build runs Mandrel in a container and takes minutes; a later run reuses the runner while its sources are
+unchanged.
+
+=== Against a Running Stack
+
+To look at the stack in a browser or to repeat the tests without restarting it, run the scripts by hand. `-pl
+integration-tests` without `-am` takes `trailhand` from the local repository, so install it once
+(`./mvnw install -DskipTests -pl trailhand -am`).
+
+From the repository root:
+
+[source,bash]
+----
+S=integration-tests/scripts
+$S/generate-certificates.sh && $S/seed-remotes.sh && $S/build-native-if-needed.sh && $S/start-integration-stack.sh
+./mvnw test-compile failsafe:integration-test failsafe:verify -Pintegration-tests -pl integration-tests
+$S/stop-integration-stack.sh --clean    # logs to target/compose.log; without --clean the data volume stays
+----
+
+While it runs, the application is at https://localhost:10443 (the certificate is self-signed) and signs in with a user
+of the realm below.
+
+== The Stack
+
+[cols="1,1,3"]
+|===
+|Service |Host ports |Notes
+
+|`keycloak`
+|1443 (HTTPS), 1090 (management)
+|Keycloak 26.8.1, pinned by digest; realm `trailhand` imported from `src/main/docker/keycloak/trailhand-realm.json`;
+admin `admin`/`admin`
+
+|`trailhand`
+|10443 (HTTPS), 19000 (management)
+|The image `trailhand:it`, read-only root file system, all capabilities dropped, `no-new-privileges`; configuration
+`src/main/docker/trailhand-config/`, client secret `src/main/docker/secrets/`, data in the volume `trailhand-data`
+|===
+
+The browser reaches Keycloak as `https://localhost:1443`, the application as `https://keycloak:8443` on the compose
+network. Keycloak mints every issuer and redirect address from the browser-facing name (`KC_HOSTNAME`); the
+application reaches it through `SHERIFF_CLIENT_BACK_CHANNEL_ORIGIN` and `TRAILHAND_OIDC_JWKS_URL`.
+
+The scripts generate into `target/` (never committed): `certificates/`, one self-signed PEM pair for `localhost`,
+`keycloak` and `trailhand` plus the PKCS#12 trust store with which the application trusts Keycloak, and `remotes/`, the
+bare repositories `samm-assessments.git` and `directory.git`.
+
+=== Realm
+
+[cols="1,1,2"]
+|===
+|User |Group |Rights in `trailhand.yaml`
+
+|`alex-assessor` |`assessors` |`samm-assessments`: read, edit
+|`ana-approver` |`approvers` |`samm-assessments`: read, approve
+|`cara-catalog` |`catalog-admins` |`directory`: read, administer catalogs
+|`rudi-reader` |`readers` |`samm-assessments`: read
+|===
+
+Each password is `<user>-password`. The confidential client `trailhand-web` (secret `trailhand-it-client-secret`)
+admits only `https://localhost:10443/api/v1/auth/callback`; the client `trailhand-mcp-agent` is registered for the MCP
+server and not used yet. All of it is test data of this stack only.
+
+== Tests
+
+[cols="1,3"]
+|===
+|Class |What it checks
+
+|`HealthIT`
+|Liveness and readiness are `UP` once the repositories are cloned; the `git-remote` group and the metrics are on the
+management port, not on 8443; the status answers without login and is not degraded
+
+|`WebAppServingIT`
+|Every canonical address answers the start page with the page security headers; the files of the web app come from
+the application; the catalogue answers both languages
+
+|`WebLoginIT`
+|The login through Keycloak sets `HttpOnly` `Secure` cookies, ends at the return address and gives no token to the
+browser; the session carries the rights mapped from the groups; a group without mapping grants nothing; a callback
+without the login transaction opens no session
+
+|`ReturnAddressIT`
+|Only a canonical address is returned to; anything else becomes `/`
+
+|`CsrfIT`
+|Without a session `401` with the login address; a state-changing request without the anti-CSRF header, with a wrong
+one or from a foreign origin is refused
+
+|`LogoutIT`
+|The logout ends the session, revokes the tokens and leads to Keycloak's end-session address
+|===
+
+`Stack` holds the addresses (system properties `trailhand.it.base`, `trailhand.it.management`, `trailhand.it.keycloak`)
+and the browser-like login: no automatic redirects, cookies per site, the Keycloak form filled in.
