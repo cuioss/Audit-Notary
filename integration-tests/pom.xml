@@ -86,6 +86,17 @@
                                 </configuration>
                             </execution>
                             <execution>
+                                <id>verify-clean-log</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${project.basedir}/scripts/verify-clean-log.sh</executable>
+                                    <workingDirectory>${project.basedir}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
                                 <id>invalid-config</id>
                                 <phase>post-integration-test</phase>
                                 <goals>

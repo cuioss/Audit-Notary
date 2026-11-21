@@ -78,7 +78,12 @@ Readiness checks, all required for `UP`: `repositories`, `persons`, `index`. A r
 is unreachable.
 
 Volume: `/app/data` holds the local repositories and the drafts. It is mounted from a persistent volume; the image
-declares no volume.
+declares no volume. `/app/data/config` (`XDG_CONFIG_HOME` of the image) holds the user config of JGit, which caches the
+file-time resolution of the file store there; the root file system is read-only, so the cache lives on the volume and
+survives restarts. The image seeds the file with `gc.auto = 0` and `gc.autoDetach = false`: the bare repositories are
+fetched, never worked in, and a background gc on a fresh clone would race with the move of the clone out of its staging
+directory. The
+application sets no other value there.
 
 == Secrets
 

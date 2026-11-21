@@ -19,9 +19,16 @@ set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 mkdir -p "$TARGET_DIR"
-compose logs --no-color > "$TARGET_DIR/compose.log" 2>&1 || true
+# The stack is removed in every case; a failed log collection is reported afterwards, so a partial log is never read
+# as a complete one by verify-clean-log.sh.
+logs_status=0
+compose logs --no-color > "$TARGET_DIR/compose.log" 2>&1 || logs_status=$?
 if [ "${1:-}" = "--clean" ]; then
     compose down --remove-orphans --volumes
 else
     compose down --remove-orphans
+fi
+if [ "$logs_status" -ne 0 ]; then
+    echo "collecting the container logs failed with exit code $logs_status" >&2
+    exit "$logs_status"
 fi
