@@ -182,7 +182,8 @@ public class RepositoryService {
     }
 
     private void fetch(StoreRepository repository, Path gitDir) {
-        var result = operations.fetch(new RepositoryOperations.FetchInput(gitDir, "origin", FETCH_SPECS, null));
+        // prune false: a reference the remote no longer advertises stays in the local copy, as before.
+        var result = operations.fetch(new RepositoryOperations.FetchInput(gitDir, "origin", FETCH_SPECS, null, false));
         boolean up = result.outcome() == GitOutcome.OK;
         if (!up) {
             LOGGER.warn(WARN.FETCH_FAILED, repository.alias(), result.outcome(), result.detail());

@@ -1,0 +1,196 @@
+{
+  "realm": "trailhand",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 28800,
+  "groups": [
+    {
+      "name": "assessors",
+      "path": "/assessors"
+    },
+    {
+      "name": "approvers",
+      "path": "/approvers"
+    },
+    {
+      "name": "catalog-admins",
+      "path": "/catalog-admins"
+    },
+    {
+      "name": "readers",
+      "path": "/readers"
+    },
+    {
+      "name": "auditors",
+      "path": "/auditors"
+    }
+  ],
+  "users": [
+    {
+      "username": "alex-assessor",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Alex",
+      "lastName": "Assessor",
+      "email": "alex-assessor@trailhand.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "alex-assessor-password",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/assessors"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "ana-approver",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Ana",
+      "lastName": "Approver",
+      "email": "ana-approver@trailhand.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ana-approver-password",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/approvers"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "cara-catalog",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Cara",
+      "lastName": "Catalog",
+      "email": "cara-catalog@trailhand.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "cara-catalog-password",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/catalog-admins"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "rudi-reader",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Rudi",
+      "lastName": "Reader",
+      "email": "rudi-reader@trailhand.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "rudi-reader-password",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/readers"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "otto-outsider",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Otto",
+      "lastName": "Outsider",
+      "email": "otto-outsider@trailhand.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "otto-outsider-password",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/auditors"
+      ],
+      "requiredActions": []
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "trailhand-web",
+      "name": "TrailHand web login",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "trailhand-it-client-secret",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "https://localhost:10443/api/v1/auth/callback"
+      ],
+      "webOrigins": [
+        "https://localhost:10443"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "https://localhost:10443/"
+      },
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "claim.name": "groups"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "trailhand-mcp-agent",
+      "name": "TrailHand MCP agent (registered for the MCP server, not used yet)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://127.0.0.1/*"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "claim.name": "groups"
+          }
+        }
+      ]
+    }
+  ]
+}
