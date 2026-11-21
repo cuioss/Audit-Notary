@@ -64,7 +64,9 @@ class PlaceholdersTest {
         assertEquals("", Placeholders.resolve("${1A}", name -> "never", unresolved));
         assertEquals("", Placeholders.resolve("${}", name -> "never", unresolved));
 
-        assertEquals(List.of("client.id", "1A", ""), unresolved);
+        Placeholders.resolve("${MISSING:-${OTHER}}", name -> null, unresolved);
+
+        assertEquals(List.of("client.id", "1A", "", "MISSING"), unresolved);
     }
 
     @Test

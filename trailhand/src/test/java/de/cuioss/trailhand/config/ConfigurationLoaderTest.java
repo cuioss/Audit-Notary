@@ -118,6 +118,19 @@ class ConfigurationLoaderTest {
         assertEquals("https://trailhand.example.org", result.configuration().web().originHeaderValue());
         var custom = validate(VALID.replace("origin: https://trailhand.example.org", "origin: https://Example.org:8443"));
         assertEquals("https://example.org:8443", custom.configuration().web().originHeaderValue());
+        var ipv6 = validate(VALID.replace("origin: https://trailhand.example.org",
+                "origin: 'https://[0:0:0:0:0:0:0:1]:443'"));
+        assertEquals("https://[::1]", ipv6.configuration().web().originHeaderValue());
+    }
+
+    @ParameterizedTest(name = "{0} -> {1}")
+    @CsvSource({"[0:0:0:0:0:0:0:1],[::1]", "[2001:DB8:0:0:1:0:0:1],[2001:db8::1:0:0:1]",
+            "[2001:db8:0:1:1:1:1:1],[2001:db8:0:1:1:1:1:1]", "[::],[::]", "[1:0:0:0:0:0:0:0],[1::]",
+            "[0:0:1:0:0:0:2:3],[0:0:1::2:3]", "[::ffff:192.0.2.1],[::ffff:c000:201]", "Example.ORG,example.org",
+            "192.0.2.1,192.0.2.1"})
+    @DisplayName("writes a host as the browser serializes it (URL Standard, IPv6 serializer)")
+    void browserHost(String host, String expected) {
+        assertEquals(expected, WebSettings.browserHost(host));
     }
 
     @Test

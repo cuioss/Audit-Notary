@@ -40,6 +40,8 @@ import java.util.concurrent.atomic.AtomicReference;
 @ApplicationScoped
 public class EventStream {
 
+    private static final String STATUS_EVENT = "status";
+
     private final RepositoryService repositories;
     private final String version;
     private final ObjectMapper mapper = new ObjectMapper();
@@ -94,10 +96,16 @@ public class EventStream {
     void register(SseEventSink sink, Sse sseFactory) {
         var current = channel.updateAndGet(
                 existing -> existing != null ? existing : new Channel(sseFactory, sseFactory.newBroadcaster()));
-        // One lock with tick(): a status broadcast cannot overtake the initial status of a new connection.
+        // One lock with tick(): a status broadcast cannot overtake the initial status of a new connection. A status
+        // that changed since the last tick goes to every connection, so no connection keeps a status the others missed.
         synchronized (statusLock) {
             current.broadcaster().register(sink);
-            sink.send(sseFactory.newEventBuilder().name("status").data(statusJson()).build());
+            var status = statusJson();
+            if (status.equals(lastStatus.getAndSet(status))) {
+                sink.send(sseFactory.newEventBuilder().name(STATUS_EVENT).data(status).build());
+            } else {
+                current.broadcaster().broadcast(current.sse().newEventBuilder().name(STATUS_EVENT).data(status).build());
+            }
         }
     }
 
@@ -107,7 +115,7 @@ public class EventStream {
             var previous = lastStatus.getAndSet(status);
             var current = channel.get();
             if (!status.equals(previous) && current != null) {
-                current.broadcaster().broadcast(current.sse().newEventBuilder().name("status").data(status).build());
+                current.broadcaster().broadcast(current.sse().newEventBuilder().name(STATUS_EVENT).data(status).build());
             }
         }
     }

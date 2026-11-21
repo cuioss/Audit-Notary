@@ -73,6 +73,12 @@ class RepositoryServiceTest {
         assertTrue(service.degraded());
         assertEquals(List.of(new RepositoryState("samm", true, false)), service.states());
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "TRAILHAND-100");
+
+        var restarted = RepositoryService.create(List.of(local("samm", "file:" + remoteDir)), data).value();
+        assertNotNull(restarted);
+        restarted.refresh();
+        assertEquals(List.of(new RepositoryState("samm", true, false)), restarted.states(),
+                "a copy kept on the volume is present at once but fetch-UP only after a fetch succeeds");
     }
 
     @Test

@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -50,6 +51,7 @@ public class LoginTransactions {
     /** The references in the order of their start, which is the order of their expiry. */
     private final Queue<String> byExpiry = new ConcurrentLinkedQueue<>();
     private final AtomicInteger queued = new AtomicInteger();
+    private final AtomicBoolean compacting = new AtomicBoolean();
     private final AtomicInteger pending = new AtomicInteger();
     private final Clock clock;
     private final int maxPending;
@@ -81,8 +83,11 @@ public class LoginTransactions {
             return Optional.empty();
         }
         var reference = SessionStore.randomToken();
-        transactions.put(reference, new Transaction(context, returnAddress, now.plus(LIFETIME)));
-        byExpiry.add(reference);
+        // The expiry is taken and queued in one step, so the queue order is the expiry order across threads.
+        synchronized (byExpiry) {
+            transactions.put(reference, new Transaction(context, returnAddress, clock.instant().plus(LIFETIME)));
+            byExpiry.add(reference);
+        }
         if (queued.incrementAndGet() > 2 * Math.max(maxPending, 1)) {
             compact();
         }
@@ -131,13 +136,15 @@ public class LoginTransactions {
      * its cost is spread over the starts that filled it.
      */
     private void compact() {
-        byExpiry.removeIf(reference -> {
-            if (transactions.containsKey(reference)) {
-                return false;
-            }
-            queued.decrementAndGet();
-            return true;
-        });
+        if (!compacting.compareAndSet(false, true)) {
+            return;
+        }
+        try {
+            byExpiry.removeIf(reference -> !transactions.containsKey(reference));
+            queued.set(byExpiry.size());
+        } finally {
+            compacting.set(false);
+        }
     }
 
     /**

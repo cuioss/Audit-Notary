@@ -26,6 +26,7 @@ import de.cuioss.trailhand.config.RepositorySettings;
 import org.jspecify.annotations.Nullable;
 
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -165,12 +166,14 @@ public class RepositoryService {
     }
 
     private void cloneOrOpen(StoreRepository repository, Path gitDir) {
+        var existed = Files.isDirectory(gitDir);
         var result = operations.cloneIfMissing(
                 new RepositoryOperations.CloneInput(gitDir, repository.remote(), PUSH_SPECS, null));
         if (result.outcome() == GitOutcome.OK) {
             LOGGER.info(INFO.REPOSITORY_READY, repository.alias());
-            recordState(new RepositoryState(repository.alias(), true, true));
-            // An existing clone is opened without contacting the remote; the fetch brings it up to date.
+            // A fresh clone has reached the remote; an existing one is opened without it, so its fetch state stays
+            // DOWN until the fetch below succeeds.
+            recordState(new RepositoryState(repository.alias(), true, !existed));
             fetch(repository, gitDir);
         } else {
             LOGGER.warn(WARN.CLONE_FAILED, repository.alias(), result.outcome(), result.detail());
