@@ -131,10 +131,15 @@ asks for it. The compare-and-swap of the library still keeps concurrent saves of
 == Native Image
 
 The native image follows API Sheriff: Mandrel builder on the JDK 25 line, distroless runtime image, a health probe
-built into the binary. JGit in a native image is the open risk of this architecture: its reflection, resource and
-service-loader use has to be registered, and the transport is restricted to HTTPS, which avoids the SSH stack. The
-first integration test builds the native image and runs a fetch, a save and a push against a local Git server before
-anything else depends on it.
+built into the binary. JGit in a native image was the open risk of this architecture: its reflection, resource and
+service-loader use has to be registered, and the transport is restricted to HTTPS, which avoids the SSH stack.
+
+The bootstrap settled the first half. Clone and fetch of `file:` remotes run in the native image, with no JVM fallback,
+once JGit is initialised at run time (it holds random generators in static fields) and its message bundle and enums
+are registered for reflection; Token Sheriff's flow package needs the same run-time initialisation. The registrations
+and their reasons are listed in the README of the `trailhand` module. HTTPS transport, in-core writing and notes
+follow with the Git round trip, whose integration test (TRH-NFR-5) runs a fetch, a save, a release and a push against
+a local Git server.
 
 == Testing
 
@@ -145,7 +150,8 @@ specified in xref:../specification/testing.adoc[Testing].
 
 == Open Questions
 
-. Verify that JGit (HTTPS transport, in-core writing, notes) runs in the native image without the JVM fallback.
+. Verify that the rest of JGit (HTTPS transport, in-core writing, notes) runs in the native image without the JVM
+  fallback; clone and fetch are verified.
 . Whether the categories module ships inside the application or as an overridable directory mounted at run time.
 
 == Related
