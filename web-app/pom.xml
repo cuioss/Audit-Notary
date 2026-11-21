@@ -123,8 +123,11 @@
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
+                        <!-- process-classes: after npm-build (compile) wrote build/, and before the test phase, so a
+                             reactor run that stops at test (./mvnw test -pl trailhand -am) already finds the web app
+                             in target/classes. process-resources would run before build/ exists. -->
                         <id>copy-spa-resources</id>
-                        <phase>prepare-package</phase>
+                        <phase>process-classes</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>

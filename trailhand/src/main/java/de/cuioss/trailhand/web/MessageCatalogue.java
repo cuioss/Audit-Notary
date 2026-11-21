@@ -26,31 +26,33 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 /**
- * The message catalogue of TRH-WEB-7, read once from {@code META-INF/trailhand/messages/messages_<lang>.properties} of
- * the {@code web-app} JAR (UTF-8).
+ * The message catalogue of TRH-WEB-7, read from {@code META-INF/trailhand/messages/messages_<lang>.properties} of the
+ * {@code web-app} JAR (UTF-8). The languages are the catalogue files: a language is served when its file exists, so a
+ * new language needs no list here. Each file is read once.
  */
 @ApplicationScoped
 public class MessageCatalogue {
 
     private static final String LOCATION = "META-INF/trailhand/messages/messages_%s.properties";
+    /** A language code as the catalogue files name it; anything else is never looked up. */
+    private static final Pattern LANGUAGE = Pattern.compile("[a-z]{2}");
+    private static final String ENGLISH = "en";
 
-    private final Map<String, Map<String, String>> catalogues = new TreeMap<>();
-
-    /** Reads English and German. */
-    public MessageCatalogue() {
-        for (String language : new String[]{"en", "de"}) {
-            catalogues.put(language, read(language));
-        }
-    }
+    private final Map<String, Optional<Map<String, String>>> catalogues = new ConcurrentHashMap<>();
 
     /**
-     * @param language {@code en} or {@code de}
-     * @return the catalogue, or empty for another language
+     * @param language a language code, such as {@code en} or {@code de}
+     * @return the catalogue, or empty when no catalogue file exists for the language
      */
     public Optional<Map<String, String>> catalogue(String language) {
-        return Optional.ofNullable(catalogues.get(language));
+        if (!LANGUAGE.matcher(language).matches()) {
+            return Optional.empty();
+        }
+        return catalogues.computeIfAbsent(language, MessageCatalogue::read);
     }
 
     /**
@@ -58,20 +60,20 @@ public class MessageCatalogue {
      * @return the English text, or the key when the catalogue lacks it
      */
     public String english(String key) {
-        return catalogues.get("en").getOrDefault(key, key);
+        return catalogue(ENGLISH).map(messages -> messages.getOrDefault(key, key)).orElse(key);
     }
 
-    private static Map<String, String> read(String language) {
+    private static Optional<Map<String, String>> read(String language) {
         var resource = LOCATION.formatted(language);
         try (InputStream in = MessageCatalogue.class.getClassLoader().getResourceAsStream(resource)) {
             if (in == null) {
-                return Map.of();
+                return Optional.empty();
             }
             var properties = new Properties();
             properties.load(new InputStreamReader(in, StandardCharsets.UTF_8));
             var result = new TreeMap<String, String>();
             properties.stringPropertyNames().forEach(key -> result.put(key, properties.getProperty(key)));
-            return Map.copyOf(result);
+            return Optional.of(Map.copyOf(result));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

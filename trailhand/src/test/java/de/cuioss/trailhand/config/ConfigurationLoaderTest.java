@@ -66,7 +66,7 @@ class ConfigurationLoaderTest {
             oidc:
               issuer: ${IDP_ISSUER:-https://idp.example.org/realms/trailhand}
               client-id: ${CLIENT_ID}
-              client-credential-ref: vault:secret/trailhand/oidc
+              client-credential-ref: file:/run/secrets/oidc/client-secret
             web:
               origin: https://trailhand.example.org
             """;
@@ -109,6 +109,18 @@ class ConfigurationLoaderTest {
     }
 
     @Test
+    @DisplayName("writes the own origin as the browser sends it: lower case, without the default port")
+    void originForm() throws Exception {
+        var result = validate(VALID.replace("origin: https://trailhand.example.org",
+                "origin: HTTPS://TrailHand.Example.org:443"));
+
+        assertTrue(result.isValid(), result.violations().toString());
+        assertEquals("https://trailhand.example.org", result.configuration().web().originHeaderValue());
+        var custom = validate(VALID.replace("origin: https://trailhand.example.org", "origin: https://Example.org:8443"));
+        assertEquals("https://example.org:8443", custom.configuration().web().originHeaderValue());
+    }
+
+    @Test
     @DisplayName("an unresolved placeholder without default is a violation")
     void unresolvedPlaceholder() throws Exception {
         var result = new ConfigurationLoader(name -> null).validate(yaml(VALID));
@@ -133,7 +145,9 @@ class ConfigurationLoaderTest {
                 "a right on an unknown repository|- repository: samm-assessments|- repository: nowhere|rights.assessors[0].repository",
                 "an unknown action|actions: [read, edit]|actions: [read, delete]|rights.assessors[0].actions",
                 "an issuer that is no https URI|issuer: ${IDP_ISSUER:-https://idp.example.org/realms/trailhand}|issuer: http://idp|oidc.issuer",
-                "an origin with a path|origin: https://trailhand.example.org|origin: https://trailhand.example.org/app|web.origin"})
+                "an origin with a path|origin: https://trailhand.example.org|origin: https://trailhand.example.org/app|web.origin",
+                "a vault reference before the Vault adapter|client-credential-ref: file:/run/secrets/oidc/client-secret|client-credential-ref: vault:secret/trailhand/oidc|oidc.client-credential-ref",
+                "a placeholder that names no environment variable|client-id: ${CLIENT_ID}|client-id: ${client.id}|${client.id}"})
         void rule(String name, String original, String replacement, String key) throws Exception {
             assertTrue(VALID.contains(original), name);
 

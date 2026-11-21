@@ -32,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static de.cuioss.trailhand.TrailhandLogMessages.INFO;
 import static de.cuioss.trailhand.TrailhandLogMessages.WARN;
@@ -58,7 +59,10 @@ public class RepositoryService {
     private final RepositoryRegistry registry;
     private final RepositoryOperations operations;
     private final Path repositoriesDir;
+    /** The fetch state per alias; guarded by the monitor of this service, which is never held during Git transport. */
     private final Map<String, RepositoryState> states = new LinkedHashMap<>();
+    /** Keeps refreshes one at a time without blocking the readers of the state. */
+    private final ReentrantLock refreshLock = new ReentrantLock();
 
     /**
      * @param registry      the validated repositories
@@ -132,18 +136,32 @@ public class RepositoryService {
 
     /**
      * Makes sure every repository has a local copy: an existing one is opened, a missing one is cloned. A repository
-     * whose clone fails stays absent; the next refresh tries again.
+     * whose clone fails stays absent; the next refresh tries again. Refreshes run one at a time; the state stays
+     * readable while a clone or fetch waits for the remote.
      */
-    public synchronized void refresh() {
-        for (StoreRepository repository : registry.repositories()) {
-            var gitDir = repositoriesDir.resolve(repository.alias() + ".git");
-            var known = states.get(repository.alias());
-            if (known != null && known.present()) {
-                fetch(repository, gitDir);
-            } else {
-                cloneOrOpen(repository, gitDir);
+    public void refresh() {
+        refreshLock.lock();
+        try {
+            for (StoreRepository repository : registry.repositories()) {
+                var gitDir = repositoriesDir.resolve(repository.alias() + ".git");
+                if (isPresent(repository.alias())) {
+                    fetch(repository, gitDir);
+                } else {
+                    cloneOrOpen(repository, gitDir);
+                }
             }
+        } finally {
+            refreshLock.unlock();
         }
+    }
+
+    private synchronized boolean isPresent(String alias) {
+        var known = states.get(alias);
+        return known != null && known.present();
+    }
+
+    private synchronized void record(RepositoryState state) {
+        states.put(state.alias(), state);
     }
 
     private void cloneOrOpen(StoreRepository repository, Path gitDir) {
@@ -151,12 +169,12 @@ public class RepositoryService {
                 new RepositoryOperations.CloneInput(gitDir, repository.remote(), PUSH_SPECS, null));
         if (result.outcome() == GitOutcome.OK) {
             LOGGER.info(INFO.REPOSITORY_READY, repository.alias());
-            states.put(repository.alias(), new RepositoryState(repository.alias(), true, true));
+            record(new RepositoryState(repository.alias(), true, true));
             // An existing clone is opened without contacting the remote; the fetch brings it up to date.
             fetch(repository, gitDir);
         } else {
             LOGGER.warn(WARN.CLONE_FAILED, repository.alias(), result.outcome(), result.detail());
-            states.put(repository.alias(), new RepositoryState(repository.alias(), false, false));
+            record(new RepositoryState(repository.alias(), false, false));
         }
     }
 
@@ -166,7 +184,7 @@ public class RepositoryService {
         if (!up) {
             LOGGER.warn(WARN.FETCH_FAILED, repository.alias(), result.outcome(), result.detail());
         }
-        states.put(repository.alias(), new RepositoryState(repository.alias(), true, up));
+        record(new RepositoryState(repository.alias(), true, up));
     }
 
     /**
@@ -179,15 +197,31 @@ public class RepositoryService {
     /**
      * @return whether every repository has a local copy (the readiness check {@code repositories})
      */
-    public synchronized boolean allPresent() {
-        return states.values().stream().allMatch(RepositoryState::present);
+    public boolean allPresent() {
+        return allPresent(states());
     }
 
     /**
      * @return whether a repository's last fetch failed (the degraded state of TRH-GEN-6)
      */
-    public synchronized boolean degraded() {
-        return states.values().stream().anyMatch(state -> !state.fetchUp());
+    public boolean degraded() {
+        return degraded(states());
+    }
+
+    /**
+     * @param snapshot the states from one call of {@link #states()}
+     * @return whether every repository of the snapshot has a local copy
+     */
+    public static boolean allPresent(List<RepositoryState> snapshot) {
+        return snapshot.stream().allMatch(RepositoryState::present);
+    }
+
+    /**
+     * @param snapshot the states from one call of {@link #states()}
+     * @return whether a repository of the snapshot failed its last fetch
+     */
+    public static boolean degraded(List<RepositoryState> snapshot) {
+        return snapshot.stream().anyMatch(state -> !state.fetchUp());
     }
 
     /**

@@ -28,8 +28,11 @@ import java.util.List;
  * {@code GET /api/v1/status} (TRH-WEB-9): the application version and the degraded state; no login needed and no
  * personal data.
  */
-@Path("/api/v1/status")
+@Path(StatusResource.PATH)
 public class StatusResource {
+
+    /** The address of the request; public. */
+    public static final String PATH = "/api/v1/status";
 
     private final RepositoryService repositories;
     private final String version;
@@ -59,9 +62,10 @@ public class StatusResource {
      * @return the status as the request and the event {@code status} carry it
      */
     static Status current(RepositoryService repositories, String version) {
-        var states = repositories.states().stream()
+        var snapshot = repositories.states();
+        var states = snapshot.stream()
                 .map(state -> new RepositoryStatus(state.alias(), state.fetchUp() ? "UP" : "DOWN")).toList();
-        return new Status(version, repositories.degraded(), states);
+        return new Status(version, RepositoryService.degraded(snapshot), states);
     }
 
     /**

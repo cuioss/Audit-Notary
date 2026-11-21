@@ -59,7 +59,8 @@ public class ConfigurationLoader {
 
     private static final Pattern ALIAS = Pattern.compile("[a-z0-9-]+");
     private static final Set<String> CONFIDENTIALITY = Set.of("public-internal", "restricted", "strongly-restricted");
-    private static final List<String> REFERENCE_FORMS = List.of("file:", "vault:");
+    /** The reference forms that can be resolved; {@code vault:} joins with the Vault adapter. */
+    private static final List<String> REFERENCE_FORMS = List.of("file:");
     private static final String MUST_BE_MAPPING = "must be a mapping";
     private static final String ALIAS_KEY = ".alias";
     private static final String CREDENTIAL_KEY = ".credential-ref";
@@ -270,7 +271,9 @@ public class ConfigurationLoader {
 
         private void reference(@Nullable String reference, String path) {
             if (reference != null && REFERENCE_FORMS.stream().noneMatch(reference::startsWith)) {
-                violations.add(new Violation(path, "must be a reference: file:<path> or vault:<path>"));
+                violations.add(new Violation(path, reference.startsWith("vault:")
+                        ? "vault: references are not supported yet (the Vault adapter is not built); use file:<path>"
+                        : "must be a reference: file:<path>"));
             }
         }
 
@@ -372,7 +375,8 @@ public class ConfigurationLoader {
         private static URI httpsUri(String text, boolean originOnly) {
             try {
                 var uri = new URI(text);
-                if (!"https".equals(uri.getScheme()) || uri.getHost() == null || uri.getFragment() != null
+                // The scheme is case-insensitive (RFC 3986, section 3.1); WebSettings writes the origin in lower case.
+                if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null || uri.getFragment() != null
                         || uri.getUserInfo() != null) {
                     return null;
                 }

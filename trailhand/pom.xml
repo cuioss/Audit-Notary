@@ -82,6 +82,13 @@
             <artifactId>quarkus-junit</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Records the coverage of the @QuarkusTest classes: without it the JaCoCo agent reports 0 % for the beans
+             only they exercise. Its own report is off (application.properties); the agent's report stays the one. -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jacoco</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
