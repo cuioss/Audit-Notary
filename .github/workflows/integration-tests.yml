@@ -1,0 +1,25 @@
+# Integration lane (doc/specification/testing.adoc): the native image with Keycloak in a compose stack.
+# Configuration is read from .github/project.yml where the reusable workflow needs it.
+name: Integration Tests
+
+on:
+  merge_group:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration-tests:
+    uses: cuioss/cuioss-organization/.github/workflows/reusable-maven-integration-tests.yml@a7e76c841bc9bf8bb91be66c979762724956016c # v0.46.0
+    with:
+      deploy-reports: false
+      report-name: integration-tests
+      maven-args-input: verify -Pintegration-tests -pl integration-tests -am
+      reports-folder: integration-tests/target/failsafe-reports
+      report-logs: integration-tests/target/*.log
+      timeout-minutes: 45

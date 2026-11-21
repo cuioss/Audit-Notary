@@ -25,6 +25,11 @@ COPY --chmod=0755 target/*-runner /app/application
 # volume. The distroless base has no shell to create it, so a placeholder directory is copied.
 COPY --chown=65532:65532 --chmod=0750 src/main/docker/data/ /app/data/
 
+# JGit writes its user config (file-time resolution cache) below XDG_CONFIG_HOME; the default under the home of nonroot
+# is not writable with a read-only root file system, so it moves to the data volume (TRH-OPS-2). The seed
+# data/config/jgit/config sets gc.auto=0 and gc.autoDetach=false.
+ENV XDG_CONFIG_HOME=/app/data/config
+
 # 8443 HTTPS (web app, /api/v1, /mcp), 8080 redirect to HTTPS, 9000 management (health, metrics) - TRH-OPS-2.
 EXPOSE 8080 8443 9000
 

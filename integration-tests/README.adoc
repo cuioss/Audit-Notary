@@ -5,7 +5,8 @@
 The integration lane of `doc/specification/testing.adoc`: the native image of `trailhand` in its distroless container,
 with a Keycloak, in one compose stack. The tests talk to it over HTTPS as a browser would, including the login form of
 Keycloak. Gitea joins with the Git round trip (TRH-NFR-5); until then the repositories are local bare repositories
-mounted as `file:` remotes (TRH-CONF-2). The module deploys nothing, and CI does not run the profile yet.
+mounted as `file:` remotes (TRH-CONF-2). The module deploys nothing. CI runs the profile in the workflow `.github/workflows/integration-tests.yml` (on push to
+`main`, on pull requests and in the merge queue); it publishes no report pages.
 
 == Running
 
@@ -24,8 +25,10 @@ Without the profile the module only compiles. With it, Maven:
   reported healthy; a start that fails stops the stack again);
 . runs every `*IT` with failsafe;
 . afterwards: writes the container logs to `target/compose.log` and removes the stack with its volume, then checks
-  that an invalid configuration fails `--validate-config` and stops the boot with exactly the `TRAILHAND-200` records
-  `--validate-config` reports, one per violation (`scripts/verify-invalid-config-fails.sh`, TRH-NFR-5).
+  that the `trailhand` container logged no `ERROR` or `SEVERE` record (`scripts/verify-clean-log.sh`; one such record
+  is, for example, JGit failing to write its user config, which is why the image sets `XDG_CONFIG_HOME` to the data
+  volume), and then checks that an invalid configuration fails `--validate-config` and stops the boot with exactly
+  the `TRAILHAND-200` records `--validate-config` reports, one per violation (`scripts/verify-invalid-config-fails.sh`, TRH-NFR-5).
 
 The native build runs Mandrel in a container and takes minutes. A later run reuses the runner while its inputs are
 unchanged: `scripts/build-native-if-needed.sh` fingerprints the reactor's build files, the sources of `trailhand` and
