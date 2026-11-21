@@ -40,5 +40,11 @@ fi
 case "$status" in
     "exited 0" | running* | "") echo "the boot with an invalid configuration did not fail: $status" >&2; exit 1 ;;
 esac
-grep -q "TRAILHAND-200" "$TARGET_DIR/invalid-config-boot.log" || { echo "no TRAILHAND-200 record in the boot log" >&2; exit 1; }
+# One record per violation of the fixture: each key must have its own TRAILHAND-200 record, not just the exception.
+for key in 'repositories[0].alias' 'repositories[0].remote' 'repositories[0].confidentiality' \
+        'repositories[0].retention' 'rights.assessors[0].repository' 'rights.assessors[0].actions' 'oidc.issuer' \
+        'oidc.client-credential-ref' 'web.origin'; do
+    grep -qF "TRAILHAND-200: Invalid configuration at $key: " "$TARGET_DIR/invalid-config-boot.log" \
+        || { echo "no TRAILHAND-200 record for $key in the boot log" >&2; exit 1; }
+done
 echo "an invalid configuration stops the boot ($status) and fails --validate-config"

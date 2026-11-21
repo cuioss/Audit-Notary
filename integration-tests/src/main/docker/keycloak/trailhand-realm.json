@@ -22,6 +22,10 @@
     {
       "name": "readers",
       "path": "/readers"
+    },
+    {
+      "name": "auditors",
+      "path": "/auditors"
     }
   ],
   "users": [
@@ -98,6 +102,25 @@
       ],
       "groups": [
         "/readers"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "otto-outsider",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Otto",
+      "lastName": "Outsider",
+      "email": "otto-outsider@trailhand.invalid",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "otto-outsider-password",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/auditors"
       ],
       "requiredActions": []
     }

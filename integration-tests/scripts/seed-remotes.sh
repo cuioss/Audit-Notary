@@ -15,25 +15,32 @@
 # limitations under the License.
 #
 # Creates the bare repositories the stack uses as file: remotes (TRH-CONF-2, a single-server setup) in
-# target/remotes, each with one initial commit on main.
+# target/remotes, each with one initial commit on main. The aliases are the file:/srv/remotes/<alias>.git remotes of the
+# stack's trailhand.yaml. A repository is built in a temporary directory and moved into place only once its main
+# branch is pushed, so a run that stops halfway leaves nothing that a later run would take as complete.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 REMOTES="$TARGET_DIR/remotes"
+CONFIG="$MODULE_DIR/src/main/docker/trailhand-config/trailhand.yaml"
+ALIASES="$(sed -n 's#^[[:space:]]*remote:[[:space:]]*file:/srv/remotes/\([a-z0-9-]*\)\.git[[:space:]]*$#\1#p' "$CONFIG")"
+[ -n "$ALIASES" ] || { echo "no file:/srv/remotes/ remote in $CONFIG" >&2; exit 1; }
 mkdir -p "$REMOTES"
-for alias in samm-assessments directory; do
+for alias in $ALIASES; do
     bare="$REMOTES/$alias.git"
-    if [ -d "$bare" ]; then
+    if git --git-dir="$bare" rev-parse -q --verify refs/heads/main >/dev/null 2>&1; then
         continue
     fi
-    git init -q --bare -b main "$bare"
+    rm -rf "$bare" "$bare.partial"
+    git init -q --bare -b main "$bare.partial"
     work="$(mktemp -d)"
     git -C "$work" init -q -b main
     printf 'Repository %s of the TrailHand integration tests.\n' "$alias" > "$work/README.adoc"
     git -C "$work" add README.adoc
     git -C "$work" -c user.name=trailhand-it -c user.email=it@trailhand.invalid commit -q -m "Initial commit"
-    git -C "$work" push -q "$bare" main
+    git -C "$work" push -q "$bare.partial" main
     rm -rf "$work"
+    mv "$bare.partial" "$bare"
 done
 chmod -R a+rX "$REMOTES"
 echo "remotes in $REMOTES"

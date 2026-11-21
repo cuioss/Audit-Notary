@@ -74,7 +74,12 @@ class WebLoginIT {
         var rights = Stack.request().cookie(Stack.SESSION_COOKIE, login.sessionId()).get(Stack.BASE + "/api/v1/session")
                 .jsonPath().getList("rights.repository");
 
-        assertEquals(List.of("directory"), rights);
+        assertEquals(List.of("directory"), rights, "a mapped group grants only its own repository");
+
+        var outsider = Stack.login("otto-outsider", "/");
+        var none = Stack.request().cookie(Stack.SESSION_COOKIE, outsider.sessionId())
+                .get(Stack.BASE + "/api/v1/session").jsonPath().getList("rights");
+        assertEquals(List.of(), none, "a group without mapping grants nothing");
     }
 
     @Test

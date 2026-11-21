@@ -17,7 +17,10 @@ package de.cuioss.trailhand.integration;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -43,10 +46,17 @@ class WebAppServingIT {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/theme-init.js", "/fonts/InterVariable.woff2", "/brand-mark.svg"})
-    @DisplayName("the files of the web app come from the application itself")
-    void files(String path) {
-        assertEquals(200, Stack.request().get(Stack.BASE + path).statusCode());
+    @CsvSource({"/theme-init.js,javascript,trailhand_theme", "/brand-mark.svg,image/svg+xml,<svg",
+            "/fonts/InterVariable.woff2,font/woff2,wOF2"})
+    @DisplayName("the files of the web app come from the application itself, not the start-page fallback")
+    void files(String path, String mediaType, String signature) {
+        var file = Stack.request().get(Stack.BASE + path);
+
+        assertEquals(200, file.statusCode());
+        assertTrue(file.contentType().contains(mediaType), path + ": " + file.contentType());
+        var head = new String(file.asByteArray(), 0, Math.min(file.asByteArray().length, 4096), StandardCharsets.ISO_8859_1);
+        assertTrue(head.contains(signature), path + " does not start like the file it names");
+        assertFalse(head.contains("<!doctype html") || head.contains("<!DOCTYPE html"), path + " answered the start page");
     }
 
     @ParameterizedTest

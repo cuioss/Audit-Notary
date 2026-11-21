@@ -21,7 +21,8 @@ set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 CERT_DIR="$TARGET_DIR/certificates"
-if [ -f "$CERT_DIR/tls.crt" ] && [ -f "$CERT_DIR/truststore.p12" ]; then
+# A complete set is reused; a missing file regenerates all of them, so key, certificate and trust store match.
+if [ -f "$CERT_DIR/tls.key" ] && [ -f "$CERT_DIR/tls.crt" ] && [ -f "$CERT_DIR/truststore.p12" ]; then
     echo "certificates present in $CERT_DIR"
     exit 0
 fi

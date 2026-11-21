@@ -69,17 +69,8 @@
                                     <workingDirectory>${project.basedir}</workingDirectory>
                                 </configuration>
                             </execution>
-                            <execution>
-                                <id>invalid-config</id>
-                                <phase>post-integration-test</phase>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                                <configuration>
-                                    <executable>${project.basedir}/scripts/verify-invalid-config-fails.sh</executable>
-                                    <workingDirectory>${project.basedir}</workingDirectory>
-                                </configuration>
-                            </execution>
+                            <!-- The stack stops first, so a failing invalid-config check cannot leave it running;
+                                 that check needs only the image. -->
                             <execution>
                                 <id>stop-stack</id>
                                 <phase>post-integration-test</phase>
@@ -91,6 +82,17 @@
                                     <arguments>
                                         <argument>--clean</argument>
                                     </arguments>
+                                    <workingDirectory>${project.basedir}</workingDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>invalid-config</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${project.basedir}/scripts/verify-invalid-config-fails.sh</executable>
                                     <workingDirectory>${project.basedir}</workingDirectory>
                                 </configuration>
                             </execution>

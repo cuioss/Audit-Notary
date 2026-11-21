@@ -19,15 +19,18 @@ Docker with compose is required.
 Without the profile the module only compiles. With it, Maven:
 
 . before the tests: stops a leftover stack, generates the certificates, seeds the remotes, builds the native runner
-  and the image `trailhand:it` when they are missing or older than the sources of `trailhand` and `web-app`, and
-  starts the stack (`scripts/start-integration-stack.sh` waits for Keycloak and for the container's health check);
+  and the image `trailhand:it` when they are missing or built from other inputs, and starts the stack
+  (`scripts/start-integration-stack.sh` waits until Keycloak is ready and the TrailHand container is ready and
+  reported healthy; a start that fails stops the stack again);
 . runs every `*IT` with failsafe;
-. afterwards: checks that an invalid configuration stops the boot and fails `--validate-config`
-  (`scripts/verify-invalid-config-fails.sh`, TRH-NFR-5), writes the container logs to `target/compose.log` and removes
-  the stack with its volume.
+. afterwards: writes the container logs to `target/compose.log` and removes the stack with its volume, then checks
+  that an invalid configuration stops the boot with one `TRAILHAND-200` record per violation and fails
+  `--validate-config` (`scripts/verify-invalid-config-fails.sh`, TRH-NFR-5).
 
-The native build runs Mandrel in a container and takes minutes; a later run reuses the runner while its sources are
-unchanged.
+The native build runs Mandrel in a container and takes minutes. A later run reuses the runner while its inputs are
+unchanged: `scripts/build-native-if-needed.sh` fingerprints the reactor's build files, the sources of `trailhand` and
+`web-app` and the web app's package lock by path and content (`trailhand/target/native-inputs.sha256`), so a changed
+dependency version or a deleted file rebuilds it.
 
 === Against a Running Stack
 
@@ -65,7 +68,7 @@ admin `admin`/`admin`
 `src/main/docker/trailhand-config/`, client secret `src/main/docker/secrets/`, data in the volume `trailhand-data`
 |===
 
-The browser reaches Keycloak as `https://localhost:1443`, the application as `https://keycloak:8443` on the compose
+Every port is published on `127.0.0.1` only. The browser reaches Keycloak as `https://localhost:1443`, the application as `https://keycloak:8443` on the compose
 network. Keycloak mints every issuer and redirect address from the browser-facing name (`KC_HOSTNAME`); the
 application reaches it through `SHERIFF_CLIENT_BACK_CHANNEL_ORIGIN` and `TRAILHAND_OIDC_JWKS_URL`.
 
@@ -83,6 +86,7 @@ bare repositories `samm-assessments.git` and `directory.git`.
 |`ana-approver` |`approvers` |`samm-assessments`: read, approve
 |`cara-catalog` |`catalog-admins` |`directory`: read, administer catalogs
 |`rudi-reader` |`readers` |`samm-assessments`: read
+|`otto-outsider` |`auditors` |none: the group has no mapping (deny by default)
 |===
 
 Each password is `<user>-password`. The confidential client `trailhand-web` (secret `trailhand-it-client-secret`)

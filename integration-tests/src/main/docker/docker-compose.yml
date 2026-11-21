@@ -21,9 +21,10 @@ services:
       # One identity, the browser-facing one: every issuer and redirect is minted from it. TrailHand reaches the
       # same server as https://keycloak:8443 (SHERIFF_CLIENT_BACK_CHANNEL_ORIGIN below).
       KC_HOSTNAME: https://localhost:1443
+    # Published on loopback only: the stack is for this host, and Keycloak's admin account is admin/admin.
     ports:
-      - "1443:8443"
-      - "1090:9000"
+      - "127.0.0.1:1443:8443"
+      - "127.0.0.1:1090:9000"
     volumes:
       - ./keycloak:/opt/keycloak/data/import:ro
       - ${TRAILHAND_IT_TARGET:-../../../target}/certificates:/opt/keycloak/certificates:ro
@@ -47,8 +48,8 @@ services:
       SHERIFF_TOKEN_ISSUERS_TRAILHAND_JWKS_HTTP_ALLOWED_EGRESS_HOSTS: keycloak
       TRAILHAND_OIDC_JWKS_URL: https://keycloak:8443/realms/trailhand/protocol/openid-connect/certs
     ports:
-      - "10443:8443"
-      - "19000:9000"
+      - "127.0.0.1:10443:8443"
+      - "127.0.0.1:19000:9000"
     volumes:
       - ./trailhand-config:/app/config:ro
       - ./secrets:/app/secrets:ro
