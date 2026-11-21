@@ -27,7 +27,8 @@ import java.util.regex.Pattern;
 /**
  * Resolves {@code ${NAME}} and {@code ${NAME:-default}} in string values from the environment, before validation
  * (TRH-CONF-1). {@code NAME} is an environment variable name (letters, digits and underscores, not starting with a
- * digit). Any other {@code ${...}} is reported like an unresolved placeholder, so it can never pass as a literal value.
+ * digit). Any other {@code ${...}}, a nested one in a default included, is reported like an unresolved placeholder, so
+ * it can never pass as a literal value.
  */
 @UtilityClass
 public class Placeholders {
@@ -52,7 +53,8 @@ public class Placeholders {
             int separator = body.indexOf(DEFAULT_SEPARATOR);
             String name = separator < 0 ? body : body.substring(0, separator);
             String replacement = null;
-            if (NAME.matcher(name).matches()) {
+            // A nested ${...} in a default is not resolved; it is refused like an unresolved placeholder.
+            if (NAME.matcher(name).matches() && !body.contains("${")) {
                 replacement = environment.apply(name);
                 if (replacement == null && separator >= 0) {
                     replacement = body.substring(separator + DEFAULT_SEPARATOR.length());

@@ -100,10 +100,11 @@ public class SessionStore {
      * @return the session, or empty when unknown or expired
      */
     public Optional<UserSession> use(String id) {
-        var now = clock.instant();
         var found = new AtomicBoolean();
         var touched = sessions.computeIfPresent(id, (key, session) -> {
             found.set(true);
+            // The clock is read inside the atomic step: an older request cannot undo a newer renewal.
+            var now = clock.instant();
             return expired(session, now) ? null : session.touched(now);
         });
         if (touched == null && found.get()) {

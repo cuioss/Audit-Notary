@@ -94,10 +94,16 @@ public class EventStream {
     void register(SseEventSink sink, Sse sseFactory) {
         var current = channel.updateAndGet(
                 existing -> existing != null ? existing : new Channel(sseFactory, sseFactory.newBroadcaster()));
-        // One lock with tick(): a status broadcast cannot overtake the initial status of a new connection.
+        // One lock with tick(): a status broadcast cannot overtake the initial status of a new connection. A status
+        // that changed since the last tick goes to every connection, so no connection keeps a status the others missed.
         synchronized (statusLock) {
             current.broadcaster().register(sink);
-            sink.send(sseFactory.newEventBuilder().name("status").data(statusJson()).build());
+            var status = statusJson();
+            if (status.equals(lastStatus.getAndSet(status))) {
+                sink.send(sseFactory.newEventBuilder().name("status").data(status).build());
+            } else {
+                current.broadcaster().broadcast(current.sse().newEventBuilder().name("status").data(status).build());
+            }
         }
     }
 
