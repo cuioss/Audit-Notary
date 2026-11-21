@@ -21,7 +21,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 INVALID="$MODULE_DIR/src/main/docker/trailhand-config-invalid"
 set +e
-docker run --rm -v "$INVALID:/cfg:ro" trailhand:it --validate-config /cfg
+docker run --rm -v "$INVALID:/cfg:ro" trailhand:it --validate-config /cfg > "$TARGET_DIR/invalid-config-validate.log" 2>&1
 validate=$?
 container="$(docker run -d -v "$INVALID:/app/config:ro" trailhand:it)"
 status=""
@@ -40,11 +40,22 @@ fi
 case "$status" in
     "exited 0" | running* | "") echo "the boot with an invalid configuration did not fail: $status" >&2; exit 1 ;;
 esac
-# One record per violation of the fixture: each key must have its own TRAILHAND-200 record, not just the exception.
+# One record per violation: the boot must log exactly the violations --validate-config reports for the fixture, as a
+# multiset of "key: rule" records, so an added violation of the fixture is expected without a list here.
+records() { grep -o 'TRAILHAND-200: Invalid configuration at .*' "$1" | LC_ALL=C sort; }
+expected="$(records "$TARGET_DIR/invalid-config-validate.log")"
+actual="$(records "$TARGET_DIR/invalid-config-boot.log")"
+[ -n "$expected" ] || { echo "--validate-config reported no TRAILHAND-200 record" >&2; exit 1; }
+if [ "$expected" != "$actual" ]; then
+    echo "the boot logged other violations than --validate-config reports:" >&2
+    diff <(echo "$expected") <(echo "$actual") >&2 || true
+    exit 1
+fi
+# The fixture covers every rule group of the bootstrap; each of these keys must be among the records.
 for key in 'repositories[0].alias' 'repositories[0].remote' 'repositories[0].confidentiality' \
         'repositories[0].retention' 'rights.assessors[0].repository' 'rights.assessors[0].actions' 'oidc.issuer' \
         'oidc.client-credential-ref' 'web.origin'; do
-    grep -qF "TRAILHAND-200: Invalid configuration at $key: " "$TARGET_DIR/invalid-config-boot.log" \
-        || { echo "no TRAILHAND-200 record for $key in the boot log" >&2; exit 1; }
+    grep -qF "Invalid configuration at $key: " <<< "$expected" \
+        || { echo "the fixture no longer produces a violation of $key" >&2; exit 1; }
 done
 echo "an invalid configuration stops the boot ($status) and fails --validate-config"
