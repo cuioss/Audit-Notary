@@ -1,8 +1,8 @@
 @import './tokens.css';
 
 /*
- * Inter, self-hosted (TRH-WEB-2): the file ships with the app under `static/fonts/`, so the browser never
- * asks a font service for it (TRH-WEB-1). The licence travels beside it as `OFL.txt`.
+ * Inter, self-hosted (AUN-WEB-2): the file ships with the app under `static/fonts/`, so the browser never
+ * asks a font service for it (AUN-WEB-1). The licence travels beside it as `OFL.txt`.
  */
 @font-face {
   font-family: Inter;

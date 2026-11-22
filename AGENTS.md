@@ -5,15 +5,15 @@ Claude Code specifics.
 
 ## Project
 
-TrailHand is the server application in which a development organisation maintains its OWASP SAMM assessments, threat
+Audit Notary is the server application in which a development organisation maintains its OWASP SAMM assessments, threat
 models, incident response reports and ISMS documents as versioned documents on its Git server. It is built on the
 libraries of `cuioss/git-document-repository` and on Token Sheriff, runs as a Quarkus native application on Java 25,
 and has a web app and an MCP server.
 
 **Current state:** bootstrap. The documentation index is [`doc/README.adoc`](doc/README.adoc): concepts in
 `doc/concepts/`, decisions in `doc/adr/`, and the specification in `doc/specification/`, which states the requirements
-(prefix `TRH`) together with their design. Read the concepts before changing the architecture. The modules of the root
-POM (`de.cuioss:trailhand-parent`) are added as they are built; the planned modules, their order and the ones built so
+(prefix `AUN`) together with their design. Read the concepts before changing the architecture. The modules of the root
+POM (`de.cuioss.notary.audit:audit-notary-parent`) are added as they are built; the planned modules, their order and the ones built so
 far are in `doc/specification/architecture-and-modules.adoc`, and each module has a `README.adoc`. The specification
 describes the full design: a check or CI job it names may not exist yet.
 
@@ -23,9 +23,10 @@ by absolute address.
 
 ## Naming
 
-*TrailHand* in prose and headings, `trailhand` in every identifier (repository slug excepted: `TrailHand`),
-`TRAILHAND_` for environment variables, `TRH` for requirement identifiers. The reasoning is in
-[`doc/concepts/brand.adoc`](doc/concepts/brand.adoc). The old working title `CISOs-Friend` appears only there.
+*Audit Notary* in prose and headings, `audit-notary` in every identifier, `de.cuioss.notary.audit` for the Maven group
+and the Java packages, `AuditNotary` for the repository, `AUDIT_NOTARY_` for environment variables, `AUN` for
+requirement identifiers. The reasoning is in
+[`doc/concepts/brand.adoc`](doc/concepts/brand.adoc). The earlier names `CISOs-Friend` and `TrailHand` appear only there.
 
 ## Build
 
@@ -62,10 +63,10 @@ verification classes outside JUnit. The target is Java 25; CI builds on Java 25 
 
 1. Create a branch with a CI-recognised prefix: `git checkout -b feature/<name>` (or `fix/`, `chore/`).
 2. Commit, then `git push -u origin <branch>`.
-3. Open the PR: `gh pr create --repo cuioss/TrailHand --head <branch> --base main --title "<title>" --body "<body>"`.
+3. Open the PR: `gh pr create --repo cuioss/AuditNotary --head <branch> --base main --title "<title>" --body "<body>"`.
    Add the label `skip-bot-review` only when the review bots are not wanted.
 4. Wait for the checks: `gh pr checks --watch`.
-5. Handle every review comment: fetch with `gh api repos/cuioss/TrailHand/pulls/<n>/comments`.
+5. Handle every review comment: fetch with `gh api repos/cuioss/AuditNotary/pulls/<n>/comments`.
    - Clearly valid and fixable: fix, commit, push, reply with the fix, resolve.
    - Disagree or out of scope: reply with the reason, resolve.
    - Not 100% sure: ask the user first.

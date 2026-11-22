@@ -4,7 +4,7 @@ import { login } from './helpers/login.js';
 import { BASE_URL } from './helpers/ports.js';
 
 /**
- * TRH-WEB-1 and TRH-WEB-2: no resource from a third-party origin; Inter comes from the app itself.
+ * AUN-WEB-1 and AUN-WEB-2: no resource from a third-party origin; Inter comes from the app itself.
  */
 test('every request stays on the own origin and Inter is loaded', async ({ page, request }) => {
   await useScenario(request, 'workshop');

@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect } from '@playwright/test';
 
-/** The rule sets of the audit: WCAG 2.1 A and AA (TRH-WEB-2). */
+/** The rule sets of the audit: WCAG 2.1 A and AA (AUN-WEB-2). */
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 
 /** The impacts that fail the audit; moderate and minor findings are reported only. */
@@ -37,7 +37,7 @@ export async function expectNoSeriousViolations(page, view) {
  * @param theme `light` or `dark`
  */
 export async function useTheme(page, theme) {
-  await page.evaluate((value) => window.localStorage.setItem('trailhand_theme', value), theme);
+  await page.evaluate((value) => window.localStorage.setItem('audit_notary_theme', value), theme);
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
 }

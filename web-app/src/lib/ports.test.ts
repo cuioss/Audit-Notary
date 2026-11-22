@@ -12,16 +12,16 @@ describe('ports', () => {
   });
 
   it('reads the environment and refuses a value that is no port', () => {
-    expect(resolvePorts({ TRAILHAND_WEB_PORT: '6000', TRAILHAND_MOCK_PORT: '8000' })).toMatchObject(
+    expect(resolvePorts({ AUDIT_NOTARY_WEB_PORT: '6000', AUDIT_NOTARY_MOCK_PORT: '8000' })).toMatchObject(
       {
         webPort: 6000,
         mockPort: 8000,
       },
     );
-    expect(holdsAssignedPort({ TRAILHAND_WEB_PORT: '6000' })).toBe(true);
-    expect(() => resolvePorts({ TRAILHAND_WEB_PORT: 'abc' })).toThrow('Invalid TRAILHAND_WEB_PORT');
-    expect(() => resolvePorts({ TRAILHAND_MOCK_PORT: '70000' })).toThrow(
-      'Invalid TRAILHAND_MOCK_PORT',
+    expect(holdsAssignedPort({ AUDIT_NOTARY_WEB_PORT: '6000' })).toBe(true);
+    expect(() => resolvePorts({ AUDIT_NOTARY_WEB_PORT: 'abc' })).toThrow('Invalid AUDIT_NOTARY_WEB_PORT');
+    expect(() => resolvePorts({ AUDIT_NOTARY_MOCK_PORT: '70000' })).toThrow(
+      'Invalid AUDIT_NOTARY_MOCK_PORT',
     );
   });
 });

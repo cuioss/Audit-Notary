@@ -1,7 +1,7 @@
 /**
  * The theme a person chose, and the theme the document shows.
  *
- * The choice belongs to the browser, not to the session: it is stored under `trailhand_theme` (TRH-WEB-2) and read
+ * The choice belongs to the browser, not to the session: it is stored under `audit_notary_theme` (AUN-WEB-2) and read
  * again on every load, so a reload, a new tab or a restart keeps it. `system` is the third choice
  * the control offers; it follows `prefers-color-scheme`, and it is also what a browser with no
  * choice, no readable storage, or a stored value that names no theme gets.
@@ -17,7 +17,7 @@ export type ThemeChoice = (typeof THEME_CHOICES)[number];
 export type ResolvedTheme = 'light' | 'dark';
 
 /** The storage key of the chosen theme. */
-export const THEME_STORAGE_KEY = 'trailhand_theme';
+export const THEME_STORAGE_KEY = 'audit_notary_theme';
 
 /** The media query the `system` choice follows. */
 const DARK_MEDIA_QUERY = '(prefers-color-scheme: dark)';

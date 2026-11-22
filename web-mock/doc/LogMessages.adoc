@@ -2,7 +2,7 @@
 :toc: left
 :toclevels: 2
 
-The log records of `web-mock`, defined in `de.cuioss.trailhand.mock.WebMockLogMessages`. Prefix `WEB_MOCK`; CUI
+The log records of `web-mock`, defined in `de.cuioss.notary.audit.mock.WebMockLogMessages`. Prefix `WEB_MOCK`; CUI
 ranges: INFO 1-99, WARN 100-199, ERROR 200-299. No record carries a session id or an anti-CSRF token.
 
 [cols="1,1,3,2,3"]

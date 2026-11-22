@@ -6,7 +6,7 @@
 (function () {
   var choice = 'system';
   try {
-    choice = window.localStorage.getItem('trailhand_theme') || 'system';
+    choice = window.localStorage.getItem('audit_notary_theme') || 'system';
   } catch (error) {
     choice = 'system';
   }

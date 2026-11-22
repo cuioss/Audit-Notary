@@ -3,7 +3,7 @@ import { broadcast, gotoState, useScenario } from './helpers/mock.js';
 import { login } from './helpers/login.js';
 
 /**
- * The event stream (TRH-WEB-5, TRH-WEB-9) and the degraded state (TRH-GEN-6).
+ * The event stream (AUN-WEB-5, AUN-WEB-9) and the degraded state (AUN-GEN-6).
  */
 test('the live indicator reports the connected stream', async ({ page, request }) => {
   await useScenario(request, 'workshop');

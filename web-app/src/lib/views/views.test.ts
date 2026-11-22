@@ -133,7 +133,7 @@ describe('SettingsView', () => {
     render(SettingsView);
     await fireEvent.change(screen.getByTestId('theme-dark'));
     expect(document.documentElement.dataset.theme).toBe('dark');
-    expect(localStorage.getItem('trailhand_theme')).toBe('dark');
+    expect(localStorage.getItem('audit_notary_theme')).toBe('dark');
     await fireEvent.change(screen.getByTestId('language-de'));
     await vi.waitFor(() => expect(get(currentLocale)).toBe('de'));
     expect(getMessages).toHaveBeenCalledWith('de');

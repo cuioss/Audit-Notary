@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 /**
- * An in-memory `fetch` over the scenario files of `web-mock` (TRH-TEST-1, "Shared fixtures"): unit tests,
+ * An in-memory `fetch` over the scenario files of `web-mock` (AUN-TEST-1, "Shared fixtures"): unit tests,
  * end-to-end tests and manual runs see the same data. It answers the routes and links of the current
  * state and the session; login, CSRF and the event stream are the mock server's business and are not
  * emulated here.

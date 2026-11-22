@@ -5,7 +5,7 @@ import { loadMessages } from '../../test/catalogue-fixture';
 import { LOCALES } from './index';
 
 /**
- * The catalogue (TRH-WEB-7): the languages are its files, both languages hold the same keys, no text
+ * The catalogue (AUN-WEB-7): the languages are its files, both languages hold the same keys, no text
  * is empty, and every key the sources name exists.
  */
 const en = loadMessages('en');
@@ -21,7 +21,7 @@ function sources(dir: string): string[] {
   });
 }
 
-const MESSAGES_DIR = path.resolve(__dirname, '../../main/resources/META-INF/trailhand/messages');
+const MESSAGES_DIR = path.resolve(__dirname, '../../main/resources/META-INF/audit-notary/messages');
 
 describe('the message catalogue', () => {
   it('offers exactly the languages that have a catalogue file', () => {

@@ -1,0 +1,16 @@
+# An invalid audit-notary.yaml: the boot must stop with one AUDIT-NOTARY-200 record per violation (AUN-CONF-1, AUN-NFR-5).
+repositories:
+  - alias: Not_An_Alias
+    remote: ssh://git@example.org/x.git
+    confidentiality: secret
+    retention: forever
+rights:
+  assessors:
+    - repository: nowhere
+      actions: [delete]
+oidc:
+  issuer: http://insecure.example.org
+  client-id: audit-notary-web
+  client-credential-ref: hunter2
+web:
+  origin: https://audit-notary.example.org/path

@@ -1,10 +1,10 @@
-= TrailHand: Testing
+= Audit Notary: Testing
 :toc: left
 :toclevels: 2
 :toc-title: Table of Contents
 :source-highlighter: highlight.js
 
-xref:../README.adoc[TrailHand documentation] » Specification
+xref:../README.adoc[Audit Notary documentation] » Specification
 
 Test lanes, tools and the measurable checks behind the non-functional requirements. Reasoning:
 xref:../concepts/application-architecture.adoc#_testing[Application Architecture, Testing].
@@ -26,30 +26,30 @@ xref:../concepts/application-architecture.adoc#_testing[Application Architecture
 
 |Mock server
 |`web-mock` build (surefire)
-|JUnit 5, `cui-test-generator`, `cui-test-juli-logger`; the scenario files themselves (<<TRH-TEST-1>>)
+|JUnit 5, `cui-test-generator`, `cui-test-juli-logger`; the scenario files themselves (<<AUN-TEST-1>>)
 
 |End-to-end
 |Profile `e2e`
-|Playwright, axe-core against the Vite dev server of `web-app` and the mock server `web-mock` (<<TRH-TEST-1>>)
+|Playwright, axe-core against the Vite dev server of `web-app` and the mock server `web-mock` (<<AUN-TEST-1>>)
 
 |Integration
 |Profile `integration-tests` (failsafe `*IT`)
 |Native image, distroless container, compose stack with Keycloak and Gitea; until the Git round trip
-(<<TRH-NFR-5>>) is built, the repositories are local bare repositories mounted as `file:` remotes (TRH-CONF-2) and
+(<<AUN-NFR-5>>) is built, the repositories are local bare repositories mounted as `file:` remotes (AUN-CONF-2) and
 Gitea is not started
 
 |Benchmarks
 |Profile `benchmarks` of the `integration-tests` module, in a CI job of its own
-|The fixture and measurements of <<TRH-NFR-1>> and <<TRH-NFR-2>>; reports, does not gate
+|The fixture and measurements of <<AUN-NFR-1>> and <<AUN-NFR-2>>; reports, does not gate
 |===
 
-[#TRH-TEST-1]
-== TRH-TEST-1: Mock Server for the Web App
+[#AUN-TEST-1]
+== AUN-TEST-1: Mock Server for the Web App
 
 * The web unit tests and the end-to-end suite must run without the application, the identity provider and a Git
-  server, against a mock server that answers the requests of the web app (xref:web-app.adoc#TRH-WEB-9[TRH-WEB-9]).
+  server, against a mock server that answers the requests of the web app (xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]).
 * The mock server must emulate the session cookie, the anti-CSRF header and the `Origin` check of
-  xref:web-app.adoc#TRH-WEB-8[TRH-WEB-8], so the end-to-end suite exercises them.
+  xref:web-app.adoc#AUN-WEB-8[AUN-WEB-8], so the end-to-end suite exercises them.
 * Test scenarios must be data: each profile a scenario file, selectable at start and switchable at run time.
 
 [cols="1,3"]
@@ -74,21 +74,21 @@ xref:../adr/0003-UI_tests_run_against_a_scenario_mock_server.adoc[ADR-0003]
 `GET /mock/acts`; the Vite dev server forwards `/mock` for loopback clients only
 
 |Texts
-|The catalogue from the `web-app` JAR (xref:web-app.adoc#TRH-WEB-7[TRH-WEB-7])
+|The catalogue from the `web-app` JAR (xref:web-app.adoc#AUN-WEB-7[AUN-WEB-7])
 
 |Shared fixtures
 |The web unit tests read the scenario files directly, so unit tests, end-to-end tests and manual runs see the same
 data
 |===
 
-[#TRH-NFR-1]
-== TRH-NFR-1: Index Size and Start Time
+[#AUN-NFR-1]
+== AUN-NFR-1: Index Size and Start Time
 
 * With 1,000 SAMM assessments of 90 answers each, the in-memory index must stay below 100 MB of heap, and the native
   application must become ready within 60 seconds after the repositories are present locally.
 
-[#TRH-NFR-2]
-== TRH-NFR-2: Save Latency
+[#AUN-NFR-2]
+== AUN-NFR-2: Save Latency
 
 * The application's share of a save (the save duration minus the measured fetch and push time) must stay within
   500 ms at the 95th percentile.
@@ -97,13 +97,13 @@ Fixture for both: a generated `samm-assessments` repository with 1,000 assessmen
 (`cui-test-generator`). Index size: heap histogram after start, attributed to the index classes. Start: time from
 process start to readiness `UP` with local repositories present. Save latency: 1,000 sequential saves against the
 Gitea of the integration stack; the save service records the time spent in fetch and push per save (timer
-`trailhand_save_git_seconds`).
+`audit_notary_save_git_seconds`).
 
-The checks of TRH-NFR-1 and TRH-NFR-2 run in the `benchmarks` lane. It reports each measured value against its
+The checks of AUN-NFR-1 and AUN-NFR-2 run in the `benchmarks` lane. It reports each measured value against its
 target and does not fail the build.
 
-[#TRH-NFR-3]
-== TRH-NFR-3: Concurrent Workshop
+[#AUN-NFR-3]
+== AUN-NFR-3: Concurrent Workshop
 
 * Fifteen users saving the fifteen different practices of one assessment concurrently, ten saves each, must lose no
   save.
@@ -111,8 +111,8 @@ target and does not fail the build.
 Fifteen virtual users, each saving ten times to its own practice of one assessment, in parallel; afterwards all 150
 changes must be present on the working branch and every save result must be `SAVED` after the library's retries.
 
-[#TRH-NFR-4]
-== TRH-NFR-4: Inbound Input Security
+[#AUN-NFR-4]
+== AUN-NFR-4: Inbound Input Security
 
 * Every path segment, query parameter and header read by the REST API and the MCP endpoint must pass a
   `de.cuioss.http.security` validation pipeline before use; the adversarial attack-database tests must pass.
@@ -124,17 +124,17 @@ Tests:
   reaching a service.
 * MCP token tests: foreign audience, expired, wrong issuer, query-string token, missing scope; each with the specified
   status and `WWW-Authenticate`.
-* Credential leak scan: see xref:mcp-server.adoc#TRH-MCP-5[MCP Server, TRH-MCP-5].
+* Credential leak scan: see xref:mcp-server.adoc#AUN-MCP-5[MCP Server, AUN-MCP-5].
 * Web: CSRF header missing, wrong `Origin`, CSP present on every HTML response
-  (xref:web-app.adoc#TRH-WEB-8[Web App, TRH-WEB-8]).
+  (xref:web-app.adoc#AUN-WEB-8[Web App, AUN-WEB-8]).
 
-[#TRH-NFR-5]
-== TRH-NFR-5: Native Image Verification
+[#AUN-NFR-5]
+== AUN-NFR-5: Native Image Verification
 
 * The integration suite must run a fetch, a save, a release and a push against a local Git server with the native
   image before any other integration test.
 * A boot of the native image with an invalid configuration must fail
-  (xref:configuration.adoc#TRH-CONF-1[Configuration, TRH-CONF-1]).
+  (xref:configuration.adoc#AUN-CONF-1[Configuration, AUN-CONF-1]).
 
 The first test class, `NativeGitRoundTripIT`, runs fetch, save, release and push against Gitea and verifies tag and
 signature. It runs in its own failsafe execution `native-round-trip`, declared before the execution of the remaining

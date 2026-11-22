@@ -7,7 +7,7 @@
   import WelcomeView from './WelcomeView.svelte';
 
   /**
-   * Chooses the view of an address (TRH-WEB-3). The route files are stubs that render this component.
+   * Chooses the view of an address (AUN-WEB-3). The route files are stubs that render this component.
    */
   interface Props {
     /** The path of the current location. */

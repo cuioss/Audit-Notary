@@ -3,7 +3,7 @@ import { useScenario } from './helpers/mock.js';
 import { login } from './helpers/login.js';
 
 /**
- * TRH-WEB-3: the eight lenses on the rail, one canonical address per view, and a reload restores it.
+ * AUN-WEB-3: the eight lenses on the rail, one canonical address per view, and a reload restores it.
  */
 const ADDRESSES = [
   ['/', 'due-view', 'Due'],
@@ -31,7 +31,7 @@ for (const [address, view, title] of ADDRESSES) {
     await page.reload();
     await expect(page).toHaveURL(address);
     await expect(page.getByTestId(view)).toBeVisible();
-    await expect(page).toHaveTitle(`${title} – TrailHand`);
+    await expect(page).toHaveTitle(`${title} – Audit Notary`);
   });
 }
 
@@ -39,7 +39,7 @@ test('the rail offers the eight lenses and marks the current one', async ({ page
   await login(page, '/');
   const rail = page.getByRole('navigation', { name: 'Main navigation' });
   await expect(rail.getByRole('link')).toHaveText([
-    'TrailHand',
+    'Audit Notary',
     'Due',
     'SAMM',
     'Threat models',

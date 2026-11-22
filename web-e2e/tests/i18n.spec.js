@@ -3,7 +3,7 @@ import { useScenario } from './helpers/mock.js';
 import { login } from './helpers/login.js';
 
 /**
- * TRH-WEB-7: every text comes from the server's catalogue in English and German; the choice of language
+ * AUN-WEB-7: every text comes from the server's catalogue in English and German; the choice of language
  * is kept by the browser.
  */
 test('switching to German shows every text in German and keeps the choice', async ({

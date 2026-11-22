@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 
 /**
- * Signs in at the mock (TRH-AUTH-1 emulated) and waits for the shell at the returned address.
+ * Signs in at the mock (AUN-AUTH-1 emulated) and waits for the shell at the returned address.
  *
  * @param page the page
  * @param address the canonical address to return to

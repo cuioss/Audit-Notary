@@ -5,7 +5,7 @@ import { LAYER_TOKENS } from './layers';
 import { contrastRatio } from '../test/colourMetrics';
 
 /**
- * The token contract of `tokens.css` (TRH-WEB-2).
+ * The token contract of `tokens.css` (AUN-WEB-2).
  *
  * The file is read as text: a token that is renamed or dropped fails here instead of falling back
  * silently in the browser. Every text/background pair the views render is audited for WCAG 2.1 AA in
@@ -152,7 +152,7 @@ describe('colour literals', () => {
   const files = sourceFiles(SRC).filter((file) => file !== TOKENS_PATH);
   const declared = new Set(Object.keys(rootBlock));
 
-  it('appear in no view or component (TRH-WEB-2)', () => {
+  it('appear in no view or component (AUN-WEB-2)', () => {
     const offenders: string[] = [];
     for (const file of files) {
       const text = fs.readFileSync(file, 'utf8');

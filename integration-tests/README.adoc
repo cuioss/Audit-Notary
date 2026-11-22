@@ -1,11 +1,11 @@
-= TrailHand Integration Tests
+= Audit Notary Integration Tests
 :toc: left
 :toclevels: 2
 
-The integration lane of `doc/specification/testing.adoc`: the native image of `trailhand` in its distroless container,
+The integration lane of `doc/specification/testing.adoc`: the native image of `audit-notary` in its distroless container,
 with a Keycloak, in one compose stack. The tests talk to it over HTTPS as a browser would, including the login form of
-Keycloak. Gitea joins with the Git round trip (TRH-NFR-5); until then the repositories are local bare repositories
-mounted as `file:` remotes (TRH-CONF-2). The module deploys nothing. CI runs the profile in the workflow `.github/workflows/integration-tests.yml` (on push to
+Keycloak. Gitea joins with the Git round trip (AUN-NFR-5); until then the repositories are local bare repositories
+mounted as `file:` remotes (AUN-CONF-2). The module deploys nothing. CI runs the profile in the workflow `.github/workflows/integration-tests.yml` (on push to
 `main`, on pull requests and in the merge queue); it publishes no report pages.
 
 == Running
@@ -20,26 +20,26 @@ Docker with compose is required.
 Without the profile the module only compiles. With it, Maven:
 
 . before the tests: stops a leftover stack, generates the certificates, seeds the remotes, builds the native runner
-  and the image `trailhand:it` when they are missing or built from other inputs, and starts the stack
-  (`scripts/start-integration-stack.sh` waits until Keycloak is ready and the TrailHand container is ready and
+  and the image `audit-notary:it` when they are missing or built from other inputs, and starts the stack
+  (`scripts/start-integration-stack.sh` waits until Keycloak is ready and the Audit Notary container is ready and
   reported healthy; a start that fails stops the stack again);
 . runs every `*IT` with failsafe;
 . afterwards: writes the container logs to `target/compose.log` and removes the stack with its volume, then checks
-  that the `trailhand` container logged no `ERROR` or `SEVERE` record (`scripts/verify-clean-log.sh`; one such record
+  that the `audit-notary` container logged no `ERROR` or `SEVERE` record (`scripts/verify-clean-log.sh`; one such record
   is, for example, JGit failing to write its user config, which is why the image sets `XDG_CONFIG_HOME` to the data
   volume), and then checks that an invalid configuration fails `--validate-config` and stops the boot with exactly
-  the `TRAILHAND-200` records `--validate-config` reports, one per violation (`scripts/verify-invalid-config-fails.sh`, TRH-NFR-5).
+  the `AUDIT-NOTARY-200` records `--validate-config` reports, one per violation (`scripts/verify-invalid-config-fails.sh`, AUN-NFR-5).
 
 The native build runs Mandrel in a container and takes minutes. A later run reuses the runner while its inputs are
-unchanged: `scripts/build-native-if-needed.sh` fingerprints the reactor's build files, the sources of `trailhand` and
-`web-app` and the web app's package lock by path and content (`trailhand/target/native-inputs.sha256`), so a changed
+unchanged: `scripts/build-native-if-needed.sh` fingerprints the reactor's build files, the sources of `audit-notary` and
+`web-app` and the web app's package lock by path and content (`audit-notary/target/native-inputs.sha256`), so a changed
 dependency version or a deleted file rebuilds it.
 
 === Against a Running Stack
 
 To look at the stack in a browser or to repeat the tests without restarting it, run the scripts by hand. `-pl
-integration-tests` without `-am` takes `trailhand` from the local repository, so install it once
-(`./mvnw install -DskipTests -pl trailhand -am`).
+integration-tests` without `-am` takes `audit-notary` from the local repository, so install it once
+(`./mvnw install -DskipTests -pl audit-notary -am`).
 
 From the repository root:
 
@@ -62,28 +62,28 @@ of the realm below.
 
 |`keycloak`
 |1443 (HTTPS), 1090 (management)
-|Keycloak 26.8.1, pinned by digest; realm `trailhand` imported from `src/main/docker/keycloak/trailhand-realm.json`;
+|Keycloak 26.8.1, pinned by digest; realm `audit-notary` imported from `src/main/docker/keycloak/audit-notary-realm.json`;
 admin `admin`/`admin`
 
-|`trailhand`
+|`audit-notary`
 |10443 (HTTPS), 19000 (management)
-|The image `trailhand:it`, read-only root file system, all capabilities dropped, `no-new-privileges`; configuration
-`src/main/docker/trailhand-config/`, client secret `src/main/docker/secrets/`, data in the volume `trailhand-data`
+|The image `audit-notary:it`, read-only root file system, all capabilities dropped, `no-new-privileges`; configuration
+`src/main/docker/audit-notary-config/`, client secret `src/main/docker/secrets/`, data in the volume `audit-notary-data`
 |===
 
 Every port is published on `127.0.0.1` only. The browser reaches Keycloak as `https://localhost:1443`, the application as `https://keycloak:8443` on the compose
 network. Keycloak mints every issuer and redirect address from the browser-facing name (`KC_HOSTNAME`); the
-application reaches it through `SHERIFF_CLIENT_BACK_CHANNEL_ORIGIN` and `TRAILHAND_OIDC_JWKS_URL`.
+application reaches it through `SHERIFF_CLIENT_BACK_CHANNEL_ORIGIN` and `AUDIT_NOTARY_OIDC_JWKS_URL`.
 
 The scripts generate into `target/` (never committed): `certificates/`, one self-signed PEM pair for `localhost`,
-`keycloak` and `trailhand` plus the PKCS#12 trust store with which the application trusts Keycloak, and `remotes/`, the
+`keycloak` and `audit-notary` plus the PKCS#12 trust store with which the application trusts Keycloak, and `remotes/`, the
 bare repositories `samm-assessments.git` and `directory.git`.
 
 === Realm
 
 [cols="1,1,2"]
 |===
-|User |Group |Rights in `trailhand.yaml`
+|User |Group |Rights in `audit-notary.yaml`
 
 |`alex-assessor` |`assessors` |`samm-assessments`: read, edit
 |`ana-approver` |`approvers` |`samm-assessments`: read, approve
@@ -92,8 +92,8 @@ bare repositories `samm-assessments.git` and `directory.git`.
 |`otto-outsider` |`auditors` |none: the group has no mapping (deny by default)
 |===
 
-Each password is `<user>-password`. The confidential client `trailhand-web` (secret `trailhand-it-client-secret`)
-admits only `https://localhost:10443/api/v1/auth/callback`; the client `trailhand-mcp-agent` is registered for the MCP
+Each password is `<user>-password`. The confidential client `audit-notary-web` (secret `audit-notary-it-client-secret`)
+admits only `https://localhost:10443/api/v1/auth/callback`; the client `audit-notary-mcp-agent` is registered for the MCP
 server and not used yet. All of it is test data of this stack only.
 
 == Tests
@@ -126,5 +126,5 @@ one or from a foreign origin is refused
 |The logout ends the session, revokes the tokens and leads to Keycloak's end-session address
 |===
 
-`Stack` holds the addresses (system properties `trailhand.it.base`, `trailhand.it.management`, `trailhand.it.keycloak`)
+`Stack` holds the addresses (system properties `audit-notary.it.base`, `audit-notary.it.management`, `audit-notary.it.keycloak`)
 and the browser-like login: no automatic redirects, cookies per site, the Keycloak form filled in.

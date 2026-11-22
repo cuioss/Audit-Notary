@@ -1,17 +1,17 @@
-= TrailHand: Configuration
+= Audit Notary: Configuration
 :toc: left
 :toclevels: 2
 :toc-title: Table of Contents
 :source-highlighter: highlight.js
 
-xref:../README.adoc[TrailHand documentation] » Specification
+xref:../README.adoc[Audit Notary documentation] » Specification
 
-Two sources: `application.properties` for Quarkus runtime settings, and `trailhand.yaml` for the policy of the
+Two sources: `application.properties` for Quarkus runtime settings, and `audit-notary.yaml` for the policy of the
 application. Reasoning: xref:../concepts/application-architecture.adoc#_configuration[Application Architecture,
 Configuration].
 
-[#TRH-CONF-1]
-== TRH-CONF-1: Configuration
+[#AUN-CONF-1]
+== AUN-CONF-1: Configuration
 
 * Policy configuration must be one YAML document validated against a bundled JSON Schema; `${NAME:-default}`
   placeholders must be resolved from the environment.
@@ -45,11 +45,11 @@ The application sets these values; the column shows the application's value, not
 |`/run/secrets/tls/tls.crt`, `/run/secrets/tls/tls.key`
 |TLS certificate chain and private key (PEM), mounted as a secret
 
-|`trailhand.config.dir`
+|`audit-notary.config.dir`
 |`config`
-|Directory holding `trailhand.yaml`
+|Directory holding `audit-notary.yaml`
 
-|`trailhand.oidc.jwks-url`
+|`audit-notary.oidc.jwks-url`
 |not set
 |The address of the provider's keys, set only when the application reaches the provider under another origin than
 its issuer (split horizon, as in the compose stack); otherwise the keys are found through the issuer's well-known
@@ -57,15 +57,15 @@ document
 |===
 
 Token Sheriff reads its own keys (`sheriff.client.*`, `sheriff.token.issuers.*`); the application derives them from
-`trailhand.yaml` → `oidc` and `web.origin` with an ordinal above `application.properties` and below the environment.
+`audit-notary.yaml` → `oidc` and `web.origin` with an ordinal above `application.properties` and below the environment.
 Settings of the deployment's network stay in the environment, among them `SHERIFF_CLIENT_BACK_CHANNEL_ORIGIN` (the
 origin the client dials instead of the issuer's), `SHERIFF_CLIENT_ALLOWED_EGRESS_HOSTS` and
-`SHERIFF_TOKEN_ISSUERS_TRAILHAND_JWKS_HTTP_ALLOWED_EGRESS_HOSTS` (hosts on private addresses that the egress guard
+`SHERIFF_TOKEN_ISSUERS_AUDITNOTARY_JWKS_HTTP_ALLOWED_EGRESS_HOSTS` (hosts on private addresses that the egress guard
 admits).
 
-=== trailhand.yaml
+=== audit-notary.yaml
 
-Validated against `schema/trailhand.schema.json` (bundled). Top-level keys:
+Validated against `schema/audit-notary.schema.json` (bundled). Top-level keys:
 
 [cols="1,1,3"]
 |===
@@ -73,7 +73,7 @@ Validated against `schema/trailhand.schema.json` (bundled). Top-level keys:
 
 |`repositories`
 |yes
-|List of repositories (<<TRH-CONF-2>>)
+|List of repositories (<<AUN-CONF-2>>)
 
 |`rights`
 |yes
@@ -89,14 +89,14 @@ for `private_key_jwt`), `groups-claim` (default `groups`)
 |yes
 |List of the enabled categories (`samm`, `threat-models`, `incident-reports`, `isms`); their behaviour comes from
 their definitions in the `categories` module and the named extension points
-(xref:architecture-and-modules.adoc#TRH-GEN-1[TRH-GEN-1])
+(xref:architecture-and-modules.adoc#AUN-GEN-1[AUN-GEN-1])
 
 |`step-up`
 |yes
 |`acr` (list of `acr` values that state multi-factor authentication), `amr` (list of `amr` values accepted instead,
 default `mfa`, the value for multiple-factor authentication; a single method such as `otp`, one-time password, is not
 multi-factor; values as registered in link:https://www.rfc-editor.org/rfc/rfc8176#section-2[RFC 8176, §2]),
-`max-age` (default `PT5M`) (xref:authentication.adoc#TRH-AUTH-4[Authentication, TRH-AUTH-4])
+`max-age` (default `PT5M`) (xref:authentication.adoc#AUN-AUTH-4[Authentication, AUN-AUTH-4])
 
 |`signing`
 |yes
@@ -117,7 +117,7 @@ rejected (https://github.com/cuioss/git-document-repository/blob/main/doc/specif
 |`fetch`
 |no
 |`interval`: ISO 8601 duration of the periodic fetch, one value for all repositories, default `PT5M`
-(<<TRH-CONF-2>>)
+(<<AUN-CONF-2>>)
 
 |`anchor`
 |yes
@@ -139,14 +139,14 @@ https://github.com/cuioss/git-document-repository/blob/main/doc/specification/gi
 |`web`
 |yes
 |`origin` (the application's own origin, an absolute `https` URI without path: the `Origin` check of
-xref:web-app.adoc#TRH-WEB-8[TRH-WEB-8] compares with it, and the login callback is `<origin>/api/v1/auth/callback`),
+xref:web-app.adoc#AUN-WEB-8[AUN-WEB-8] compares with it, and the login callback is `<origin>/api/v1/auth/callback`),
 `session.idle-timeout` (default `PT30M`), `session.max-lifetime` (default `PT8H`), `information-text-ref`
 
 |`directory`
 |no
-|The person directory (xref:directory.adoc#TRH-DIR-1[Directory, TRH-DIR-1]): `persons.provider` (default `git`),
+|The person directory (xref:directory.adoc#AUN-DIR-1[Directory, AUN-DIR-1]): `persons.provider` (default `git`),
 `persons.repository` (default `directory`), `confirmation-interval` (default `P12M`), `backstage` (the import of
-xref:directory.adoc#TRH-DIR-6[TRH-DIR-6])
+xref:directory.adoc#AUN-DIR-6[AUN-DIR-6])
 |===
 
 The library settings of https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc#store-configuration[`git-store`, Configuration] come
@@ -188,8 +188,8 @@ reference form it accepts for the references it reads, `repositories[].credentia
 `anchor`, `mcp` and `directory`, with the per-key reference forms, apply once their modules are built; until then a
 value under those keys is not checked.
 
-[#TRH-CONF-2]
-== TRH-CONF-2: Repositories and Refresh
+[#AUN-CONF-2]
+== AUN-CONF-2: Repositories and Refresh
 
 * Every repository must have a remote; a single-server setup uses a local bare repository as its remote.
 * Every repository must declare its confidentiality class and its retention period, and nothing else may declare a

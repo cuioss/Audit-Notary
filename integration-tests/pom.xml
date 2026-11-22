@@ -2,20 +2,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>de.cuioss</groupId>
-        <artifactId>trailhand-parent</artifactId>
+        <groupId>de.cuioss.notary.audit</groupId>
+        <artifactId>audit-notary-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>trailhand-integration-tests</artifactId>
+    <artifactId>audit-notary-integration-tests</artifactId>
     <packaging>jar</packaging>
-    <name>TrailHand Integration Tests</name>
+    <name>Audit Notary Integration Tests</name>
     <description>The integration lane (doc/specification/testing.adoc): the native image in its distroless container with
         Keycloak, driven over HTTPS by failsafe *IT classes. Runs with the profile integration-tests.
     </description>
 
     <properties>
-        <maven.jar.plugin.automatic.module.name>de.cuioss.trailhand.integration</maven.jar.plugin.automatic.module.name>
+        <maven.jar.plugin.automatic.module.name>de.cuioss.notary.audit.integration</maven.jar.plugin.automatic.module.name>
         <maven.deploy.skip>true</maven.deploy.skip>
         <maven.install.skip>true</maven.install.skip>
         <sonar.skip>true</sonar.skip>
@@ -23,10 +23,10 @@
     </properties>
 
     <dependencies>
-        <!-- Reactor order only: the native runner of trailhand is built by the scripts of this module. -->
+        <!-- Reactor order only: the native runner of audit-notary is built by the scripts of this module. -->
         <dependency>
-            <groupId>de.cuioss</groupId>
-            <artifactId>trailhand</artifactId>
+            <groupId>de.cuioss.notary.audit</groupId>
+            <artifactId>audit-notary</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -119,9 +119,9 @@
                                 <include>**/*IT.java</include>
                             </includes>
                             <systemPropertyVariables>
-                                <trailhand.it.base>https://localhost:10443</trailhand.it.base>
-                                <trailhand.it.management>http://localhost:19000</trailhand.it.management>
-                                <trailhand.it.keycloak>https://localhost:1443</trailhand.it.keycloak>
+                                <audit-notary.it.base>https://localhost:10443</audit-notary.it.base>
+                                <audit-notary.it.management>http://localhost:19000</audit-notary.it.management>
+                                <audit-notary.it.keycloak>https://localhost:1443</audit-notary.it.keycloak>
                             </systemPropertyVariables>
                         </configuration>
                         <executions>

@@ -3,8 +3,8 @@
  * Checks the build output (run by `npm run build`):
  *
  * - `build/index.html` exists and carries SvelteKit's Content Security Policy `<meta>` with the hash of the
- *   bootstrap script and without `unsafe-inline` (TRH-WEB-8);
- * - no HTML or CSS file loads a resource from another origin (TRH-WEB-1);
+ *   bootstrap script and without `unsafe-inline` (AUN-WEB-8);
+ * - no HTML or CSS file loads a resource from another origin (AUN-WEB-1);
  * - `build/_app/immutable` holds the bundle.
  */
 import fs from 'node:fs';

@@ -9,29 +9,30 @@
         <version>1.7.7</version>
         <relativePath/>
     </parent>
-    <artifactId>trailhand-parent</artifactId>
+    <groupId>de.cuioss.notary.audit</groupId>
+    <artifactId>audit-notary-parent</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <!-- Must be declared: <inceptionYear> is inherited, and the license plugin binds the
          copyright ${year} to it. Without this, a new project reports cui-parent-pom's 2022
          and every -Ppre-commit run restamps every header. customize.sh sets this. -->
     <inceptionYear>2026</inceptionYear>
-    <name>TrailHand</name>
-    <description>TrailHand, the CISO's friend: security documents as versioned Git documents on the Git server you already run. Quarkus native, with a web app and an MCP server for AI agents.
+    <name>Audit Notary</name>
+    <description>Audit Notary: security documents on the Git server you already run. Every change signed, every version on record. Quarkus native, with a web app and an MCP server for AI agents.
     </description>
-    <url>https://github.com/cuioss/TrailHand/</url>
+    <url>https://github.com/cuioss/AuditNotary/</url>
     <scm>
-        <url>https://github.com/cuioss/TrailHand/</url>
+        <url>https://github.com/cuioss/AuditNotary/</url>
         <connection>
-            scm:git:https://github.com/cuioss/TrailHand.git
+            scm:git:https://github.com/cuioss/AuditNotary.git
         </connection>
         <developerConnection>
-            scm:git:https://github.com/cuioss/TrailHand/
+            scm:git:https://github.com/cuioss/AuditNotary/
         </developerConnection>
         <tag>HEAD</tag>
     </scm>
     <issueManagement>
-        <url>https://github.com/cuioss/TrailHand/issues</url>
+        <url>https://github.com/cuioss/AuditNotary/issues</url>
         <system>GitHub Issues</system>
     </issueManagement>
     <properties>
@@ -40,7 +41,7 @@
         <!-- Token Sheriff: the OIDC confidential-client engine and the bearer validation (ADR-0001). -->
         <version.token-sheriff>0.9.9</version.token-sheriff>
         <!-- The git-document-repository libraries have no release yet; their snapshots come from the
-             Sonatype snapshot repository declared below. A release of TrailHand needs a release of them. -->
+             Sonatype snapshot repository declared below. A release of Audit Notary needs a release of them. -->
         <version.git-document-repository>0.1.0-SNAPSHOT</version.git-document-repository>
     </properties>
     <!-- The modules of doc/specification/architecture-and-modules.adoc, in reactor order; categories and
@@ -48,7 +49,7 @@
     <modules>
         <module>web-app</module>
         <module>web-mock</module>
-        <module>trailhand</module>
+        <module>audit-notary</module>
         <module>web-e2e</module>
         <module>integration-tests</module>
     </modules>
@@ -86,8 +87,8 @@
                 <version>${version.git-document-repository}</version>
             </dependency>
             <dependency>
-                <groupId>de.cuioss</groupId>
-                <artifactId>trailhand-web-app</artifactId>
+                <groupId>de.cuioss.notary.audit</groupId>
+                <artifactId>audit-notary-web-app</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

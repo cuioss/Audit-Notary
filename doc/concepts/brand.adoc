@@ -5,13 +5,13 @@
 :sectnums:
 :source-highlighter: highlight.js
 
-xref:../README.adoc[TrailHand documentation] » Concepts
+xref:../README.adoc[Audit Notary documentation] » Concepts
 
 Status: *the name is decided: Audit Notary* (owner's decision of 2026-11-22). It replaces *TrailHand*, decided on
 2026-11-20, because a reader whose first language is not English cannot tell from that name what the application is
-(<<_why_trailhand_was_dropped>>). The rename is planned, not done: until the sweep of <<_the_rename>> is merged, the
-rest of the documentation, the code, the artifacts and the repository still say TrailHand. The mark and the mascot are
-proposals; the trademark search of <<_open_decisions>> is still to be done.
+(<<_why_trailhand_was_dropped>>). The rename was made in one sweep on 2026-11-22 (<<_the_rename>>); only the key of
+the SonarCloud project still says TrailHand until it is renamed there. The mark and the mascot are proposals; the
+trademark search of <<_open_decisions>> is still to be done.
 
 This page records what was checked, why the working title *CISOs-Friend* and then *TrailHand* were dropped, and what
 each rename changes.
@@ -25,7 +25,7 @@ each rename changes.
   Security, 14 January 2026]). "CISOs-Friend" and "CISO Assistant" would be confused in a search and in a
   conversation, in the same field.
 * *Narrower than the audience.* The application serves development teams that fill in assessments, incident responders
-  and AI agents as well as CISOs (xref:trailhand-overview.adoc#_audience[Overview, Audience]). A name built on one
+  and AI agents as well as CISOs (xref:audit-notary-overview.adoc#_audience[Overview, Audience]). A name built on one
   of the roles describes the buyer, not the work.
 * *Hard to say and to type.* The possessive and the hyphen give an identifier no one can predict (`cisos-friend`,
   `CISOs-Friend`, `CISO's Friend`).
@@ -298,10 +298,10 @@ the evidential value of a notarial deed. The wording is _signed_, _dated_, _attr
 [#_the_rename]
 === The Rename
 
-==== From TrailHand to Audit Notary (planned)
+==== From TrailHand to Audit Notary (2026-11-22)
 
-To be done in one sweep before the first release, because scopes, file names and coordinates are public interfaces once
-it is out. Requirement numbers and groups stay unchanged; only the prefix changes.
+Done in one sweep before the first release, because scopes, file names and coordinates are public interfaces once it is
+out. Requirement numbers and groups stay unchanged; only the prefix changes.
 
 [cols="2,2"]
 |===
@@ -337,15 +337,22 @@ it is out. Requirement numbers and groups stay unchanged; only the prefix change
 |Image `ghcr.io/cuioss/trailhand`
 |`ghcr.io/cuioss/audit-notary`
 
-|Cookies `+__Host-trailhand-*+`, environment `TRAILHAND_*`, browser storage `trailhand_theme`, example host
-`trailhand.example.org`, test realm `trailhand`
-|`+__Host-audit-notary-*+`, `AUDIT_NOTARY_*`, `audit_notary_theme`, `audit-notary.example.org`, `audit-notary`
+|Cookies `+__Host-trailhand-*+`, environment `TRAILHAND_*`, browser storage `trailhand_*`, metrics `trailhand_*`,
+example host `trailhand.example.org`, test realm and Compose service `trailhand`
+|`+__Host-audit-notary-*+`, `AUDIT_NOTARY_*`, `audit_notary_*`, `audit_notary_*`, `audit-notary.example.org`,
+`audit-notary`
+
+|Issuer of the login in the Token Sheriff configuration, `sheriff.token.issuers.trailhand.*`
+|`sheriff.token.issuers.auditnotary.*`: a key of a map that is also set from an environment variable
+(`SHERIFF_TOKEN_ISSUERS_AUDITNOTARY_…`), so it carries no hyphen
 
 |`concepts/trailhand-overview.adoc`, `resources/diagrams/trailhand-system-context.svg`
 |`concepts/audit-notary-overview.adoc`, `resources/diagrams/audit-notary-system-context.svg`
 |===
 
-After the sweep, the word TrailHand appears only on this page, as the CISOs-Friend working title did before.
+Since the sweep, the word TrailHand appears only on this page and in the naming rule of `AGENTS.md`, as the
+CISOs-Friend working title did before, and in the SonarCloud key `cuioss_TrailHand` until that project is renamed (the
+badges of the README and `sonar.project-key` of `.github/project.yml` follow it then).
 
 ==== From CISOs-Friend to TrailHand (done 2026-11-20)
 
@@ -538,14 +545,14 @@ at stake. The words _notarised_ and _certified_ are not used for what the applic
 . *Clearance of the name.* Decided, but not yet cleared: a trademark search for _Audit Notary_ at the DPMA register and
   in https://www.tmdn.org/tmview/[TMview] (EUIPO) in the relevant classes, the registration of a domain, and the
   repository name `cuioss/AuditNotary`. If the search finds a conflict, the rename is repeated with the same mapping.
-. *The rename sweep* of <<_the_rename>>, including the renaming of the repository and of the SonarCloud project, which
-  need the owner's rights.
+. *The SonarCloud project key* `cuioss_TrailHand`: renamed in SonarCloud by its administrator, then in
+  `.github/project.yml` and the README badges.
 . *Who draws the final mark and who makes the poses,* and under which licence.
 . *The name of the local gateway* (xref:local-mcp-gateway.adoc[Local MCP Gateway]), which is a base project of its own
   and may carry a name in the Sheriff family: it builds on Token Sheriff.
 
 == Related
 
-* xref:trailhand-overview.adoc[Overview]
+* xref:audit-notary-overview.adoc[Overview]
 * xref:web-app.adoc[Web App] -- takes its visual language from `pm-web-app`
 * xref:local-mcp-gateway.adoc[Local MCP Gateway]

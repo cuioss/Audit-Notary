@@ -14,16 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# TRH-NFR-5, second half: the native image must refuse to boot with an invalid configuration, and
+# AUN-NFR-5, second half: the native image must refuse to boot with an invalid configuration, and
 # --validate-config must report it with exit code 1.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-INVALID="$MODULE_DIR/src/main/docker/trailhand-config-invalid"
+INVALID="$MODULE_DIR/src/main/docker/audit-notary-config-invalid"
 set +e
-docker run --rm -v "$INVALID:/cfg:ro" trailhand:it --validate-config /cfg > "$TARGET_DIR/invalid-config-validate.log" 2>&1
+docker run --rm -v "$INVALID:/cfg:ro" audit-notary:it --validate-config /cfg > "$TARGET_DIR/invalid-config-validate.log" 2>&1
 validate=$?
-container="$(docker run -d -v "$INVALID:/app/config:ro" trailhand:it)"
+container="$(docker run -d -v "$INVALID:/app/config:ro" audit-notary:it)"
 status=""
 for _ in $(seq 1 30); do
     status="$(docker inspect --format '{{.State.Status}} {{.State.ExitCode}}' "$container")"
@@ -42,10 +42,10 @@ case "$status" in
 esac
 # One record per violation: the boot must log exactly the violations --validate-config reports for the fixture, as a
 # multiset of "key: rule" records, so an added violation of the fixture is expected without a list here.
-records() { grep -o 'TRAILHAND-200: Invalid configuration at .*' "$1" | LC_ALL=C sort; }
+records() { grep -o 'AUDIT-NOTARY-200: Invalid configuration at .*' "$1" | LC_ALL=C sort; }
 expected="$(records "$TARGET_DIR/invalid-config-validate.log")"
 actual="$(records "$TARGET_DIR/invalid-config-boot.log")"
-[ -n "$expected" ] || { echo "--validate-config reported no TRAILHAND-200 record" >&2; exit 1; }
+[ -n "$expected" ] || { echo "--validate-config reported no AUDIT-NOTARY-200 record" >&2; exit 1; }
 if [ "$expected" != "$actual" ]; then
     echo "the boot logged other violations than --validate-config reports:" >&2
     diff <(echo "$expected") <(echo "$actual") >&2 || true

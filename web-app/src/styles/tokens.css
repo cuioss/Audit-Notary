@@ -1,11 +1,11 @@
 /*
- * The design tokens of TrailHand: both themes (doc/specification/web-app.adoc, TRH-WEB-2).
+ * The design tokens of Audit Notary: both themes (doc/specification/web-app.adoc, AUN-WEB-2).
  *
  * Adopted from pm-mcp-clients, pm-web-app/src/styles/tokens.css, at commit
  * 05e6c68333cdd33b030b25f76123b4a4c641da3c (design rules: pm-mcp-clients/doc/design/web-app). A change of
  * that token contract is taken over deliberately, with this commit id.
  *
- * Deviations: the kind colours name the TrailHand categories (`--color-kind-samm`,
+ * Deviations: the kind colours name the Audit Notary categories (`--color-kind-samm`,
  * `--color-kind-threat-model`, `--color-kind-incident`, `--color-kind-isms`); the aliases of the old
  * pm-web-app token names are not taken over.
  *

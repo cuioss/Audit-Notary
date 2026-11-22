@@ -1,0 +1,85 @@
+= Audit Notary: Log Messages
+:toc: left
+:toclevels: 2
+
+The log records of the application (doc/specification/architecture-and-modules.adoc, AUN-GEN-5), defined in
+`de.cuioss.notary.audit.AuditNotaryLogMessages`. Prefix `AUDIT-NOTARY`; CUI ranges: INFO 1-99, WARN 100-199, ERROR 200-299.
+No record carries a token, a session id, an anti-CSRF token, a secret, a credential or a person's name; a
+remote appears only without user information.
+
+[cols="1,1,3,2,3"]
+|===
+|Identifier |Level |Template |Parameters |Trigger
+
+|`AUDIT-NOTARY-1`
+|INFO
+|Configuration loaded from %s with %s repositories
+|directory, count
+|`audit-notary.yaml` passed the boot rules
+
+|`AUDIT-NOTARY-2`
+|INFO
+|Repository %s is present locally
+|alias
+|A clone was made or an existing one opened
+
+|`AUDIT-NOTARY-3`
+|INFO
+|Login completed for a user of issuer %s
+|issuer
+|The login callback opened a session
+
+|`AUDIT-NOTARY-4`
+|INFO
+|Logout completed
+|—
+|A session ended with RP-initiated logout at the provider
+
+|`AUDIT-NOTARY-100`
+|WARN
+|Fetch of repository %s failed: %s (%s)
+|alias, library outcome, library detail (the remote without user information, GDR-NFR-3)
+|A periodic fetch failed (AUN-GEN-6); the last fetched state is served
+
+|`AUDIT-NOTARY-101`
+|WARN
+|Clone of repository %s failed: %s (%s)
+|alias, library outcome, library detail (the remote without user information, GDR-NFR-3)
+|The first clone failed; readiness stays `DOWN` until it succeeds
+
+|`AUDIT-NOTARY-102`
+|WARN
+|Refused %s %s: anti-CSRF token or Origin not valid
+|method, path
+|A state-changing request without valid `X-CSRF-Token` or from a foreign `Origin` (AUN-WEB-8)
+
+|`AUDIT-NOTARY-103`
+|WARN
+|Login could not be completed: %s
+|reason (no value of the request)
+|A callback without or with an unknown transaction, or a refused code exchange
+
+|`AUDIT-NOTARY-104`
+|WARN
+|Token revocation at logout failed: %s
+|exception type
+|The provider refused or could not be reached for the revocation
+
+|`AUDIT-NOTARY-105`
+|WARN
+|Refresh of the repositories failed: %s
+|exception type and message
+|A refresh ended with an unexpected failure; the next refresh runs as planned
+
+|`AUDIT-NOTARY-200`
+|ERROR
+|Invalid configuration at %s: %s
+|key, rule
+|One violation of `audit-notary.yaml` (AUN-CONF-1), at boot and with `--validate-config`
+
+|`AUDIT-NOTARY-201`
+|ERROR
+|Boot stopped: the configuration has %s violation(s)
+|count
+|The boot stops on an invalid configuration
+|===

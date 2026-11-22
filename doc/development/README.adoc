@@ -1,12 +1,12 @@
-= TrailHand -- Development
+= Audit Notary -- Development
 :toc: left
 :toclevels: 2
 :toc-title: Table of Contents
 :source-highlighter: highlight.js
 
-xref:../README.adoc[TrailHand documentation] » Development
+xref:../README.adoc[Audit Notary documentation] » Development
 
-How to build, test and work on TrailHand. The release runbook and the credentials are in
+How to build, test and work on Audit Notary. The release runbook and the credentials are in
 xref:releasing.adoc[Releasing]; the design is in the xref:../README.adoc[documentation index].
 
 == Modules
@@ -29,8 +29,8 @@ need the profiles `e2e` and `integration-tests`.
 ./mvnw test -Dtest=ClassName#methodName                       # one test method
 ./mvnw verify -Pe2e -pl web-e2e -am                           # end-to-end suite
 ./mvnw verify -Pintegration-tests -pl integration-tests -am   # native image + Keycloak, Docker required
-./mvnw package -Pnative -pl trailhand -am                     # native runner (Mandrel in a container)
-docker build -f trailhand/src/main/docker/Dockerfile.native -t trailhand:dev trailhand
+./mvnw package -Pnative -pl audit-notary -am                     # native runner (Mandrel in a container)
+docker build -f audit-notary/src/main/docker/Dockerfile.native -t audit-notary:dev audit-notary
 ./mvnw -Ppre-commit clean verify -DskipTests                  # license headers, OpenRewrite recipes
 ----
 

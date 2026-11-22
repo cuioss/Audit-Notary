@@ -1,0 +1,42 @@
+# Audit Notary native image (doc/specification/deployment.adoc, AUN-OPS-1).
+#
+# Build the native executable first:  ./mvnw package -Pnative -pl audit-notary -am
+# then, from the audit-notary module:    docker build -f src/main/docker/Dockerfile.native -t audit-notary:dev .
+#
+# Single stage: the runner is built by Maven (Mandrel builder image, quarkus.native.builder-image) and copied
+# into the distroless base. The base image digest is pinned and updated by the dependency bot.
+FROM quay.io/quarkus/quarkus-distroless-image:2.0@sha256:f8cbe79d903703e741b84eca9d321e286e7537da87cb414832d7c71cd0c5063a
+
+ARG APP_VERSION=dev
+ARG APP_REVISION=dev
+
+LABEL org.opencontainers.image.title="Audit Notary" \
+      org.opencontainers.image.description="Security documents on the Git server you already run" \
+      org.opencontainers.image.version="${APP_VERSION}" \
+      org.opencontainers.image.revision="${APP_REVISION}" \
+      org.opencontainers.image.vendor="CUIoss" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.source="https://github.com/cuioss/AuditNotary" \
+      org.opencontainers.image.base.name="quay.io/quarkus/quarkus-distroless-image:2.0"
+
+WORKDIR /app
+COPY --chmod=0755 target/*-runner /app/application
+# /app/data (AUN-OPS-2): owned by nonroot, so a new named volume mounted there is writable; the image declares no
+# volume. The distroless base has no shell to create it, so a placeholder directory is copied.
+COPY --chown=65532:65532 --chmod=0750 src/main/docker/data/ /app/data/
+
+# JGit writes its user config (file-time resolution cache) below XDG_CONFIG_HOME; the default under the home of nonroot
+# is not writable with a read-only root file system, so it moves to the data volume (AUN-OPS-2). The seed
+# data/config/jgit/config sets gc.auto=0 and gc.autoDetach=false.
+ENV XDG_CONFIG_HOME=/app/data/config
+
+# 8443 HTTPS (web app, /api/v1, /mcp), 8080 redirect to HTTPS, 9000 management (health, metrics) - AUN-OPS-2.
+EXPOSE 8080 8443 9000
+
+# The distroless image has no shell: the binary probes its own management port (AuditNotaryApplication).
+HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=3 \
+    CMD ["/app/application", "--health-probe"]
+
+# nonroot of the distroless base (65532:65532 in its /etc/passwd), numeric so the host can resolve it.
+USER 65532:65532
+ENTRYPOINT ["/app/application", "-Dquarkus.http.host=0.0.0.0"]

@@ -1,9 +1,9 @@
-= TrailHand Web E2E
+= Audit Notary Web E2E
 :toc: left
 :toclevels: 2
 
 The end-to-end suite of the web app: Playwright and axe-core against the Vite dev server of `web-app`, whose `/api`
-and `/mock` go to `web-mock` (`doc/specification/testing.adoc`, TRH-TEST-1; the reasoning is ADR-0003). The global
+and `/mock` go to `web-mock` (`doc/specification/testing.adoc`, AUN-TEST-1; the reasoning is ADR-0003). The global
 setup starts the mock through `web-mock/start.sh` (profile `workshop`, timing `ordered`) unless one already answers,
 and the tests switch profiles through its control routes.
 
@@ -20,7 +20,7 @@ npx playwright show-report target/playwright-report   # the HTML report of the l
 Without the profile `e2e` the module only installs and lints; Maven runs the suite with the `list` reporter only.
 The suite runs with one worker: every spec changes the state of the one mock server.
 
-Ports: `TRAILHAND_WEB_PORT` (5173) and `TRAILHAND_MOCK_PORT` (7420), named only in `tests/helpers/ports.js`
+Ports: `AUDIT_NOTARY_WEB_PORT` (5173) and `AUDIT_NOTARY_MOCK_PORT` (7420), named only in `tests/helpers/ports.js`
 (`scripts/guard-ports.js`).
 
 == Layout

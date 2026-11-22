@@ -3,13 +3,13 @@ import path from 'node:path';
 
 /**
  * The catalogue of the unit tests: the same properties files the server and the mock serve
- * (TRH-WEB-7). Production code never imports this module.
+ * (AUN-WEB-7). Production code never imports this module.
  */
 
 /** The directory of the catalogue. */
 export const MESSAGES_DIR = path.resolve(
   __dirname,
-  '../main/resources/META-INF/trailhand/messages',
+  '../main/resources/META-INF/audit-notary/messages',
 );
 
 /**

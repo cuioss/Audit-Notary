@@ -1,8 +1,8 @@
 /**
- * The wire types of the shell requests (doc/specification/web-app.adoc, TRH-WEB-9).
+ * The wire types of the shell requests (doc/specification/web-app.adoc, AUN-WEB-9).
  */
 
-/** The actions a right names (TRH-AUTH-2). */
+/** The actions a right names (AUN-AUTH-2). */
 export type Action = 'read' | 'edit' | 'approve' | 'administer-catalogs';
 
 /** One mapped right: the actions the user may take on one repository. */
@@ -46,7 +46,7 @@ export interface DueList {
   items: DueItem[];
 }
 
-/** `GET /api/v1/directory/me`: the prefill of the first-login form (TRH-DIR-2). */
+/** `GET /api/v1/directory/me`: the prefill of the first-login form (AUN-DIR-2). */
 export interface DirectoryPrefill {
   name: string;
   teams: string[];
@@ -82,7 +82,7 @@ export interface LogoutAnswer {
   redirect: string;
 }
 
-/** `document-saved` on the event stream (TRH-WEB-5). */
+/** `document-saved` on the event stream (AUN-WEB-5). */
 export interface DocumentSavedEvent {
   repository: string;
   id: string;

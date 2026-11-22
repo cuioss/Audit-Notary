@@ -1,0 +1,31 @@
+# audit-notary.yaml of the integration stack.
+repositories:
+  - alias: samm-assessments
+    remote: file:/srv/remotes/samm-assessments.git
+    confidentiality: restricted
+    retention: unlimited
+  - alias: directory
+    remote: file:/srv/remotes/directory.git
+    confidentiality: strongly-restricted
+    retention: unlimited
+rights:
+  assessors:
+    - repository: samm-assessments
+      actions: [read, edit]
+  approvers:
+    - repository: samm-assessments
+      actions: [read, approve]
+  catalog-admins:
+    - repository: directory
+      actions: [read, administer-catalogs]
+  readers:
+    - repository: samm-assessments
+      actions: [read]
+oidc:
+  issuer: ${AUDIT_NOTARY_OIDC_ISSUER:-https://localhost:1443/realms/audit-notary}
+  client-id: audit-notary-web
+  client-credential-ref: file:/app/secrets/client-secret
+web:
+  origin: https://localhost:10443
+fetch:
+  interval: PT1M

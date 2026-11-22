@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { useScenario } from './helpers/mock.js';
 
 /**
- * TRH-AUTH-1 as the browser sees it, with the mock in place of the identity provider: a 401 sends the user
+ * AUN-AUTH-1 as the browser sees it, with the mock in place of the identity provider: a 401 sends the user
  * through the login and back to the same canonical address; logout ends the session.
  */
 test.beforeEach(async ({ request }) => {
@@ -25,7 +25,7 @@ test('the browser holds the session cookie only, HttpOnly and SameSite=Strict', 
   await page.goto('/');
   await expect(page.getByTestId('due-view')).toBeVisible();
   const cookies = await context.cookies();
-  expect(cookies.map((cookie) => cookie.name)).toEqual(['trailhand-mock-session']);
+  expect(cookies.map((cookie) => cookie.name)).toEqual(['audit-notary-mock-session']);
   expect(cookies[0]).toMatchObject({ httpOnly: true, sameSite: 'Strict' });
   expect(await page.evaluate(() => document.cookie)).toBe('');
 });

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Starts Keycloak and TrailHand (docker-compose.yml) and waits until Keycloak is ready and the TrailHand container
+# Starts Keycloak and Audit Notary (docker-compose.yml) and waits until Keycloak is ready and the Audit Notary container
 # is ready on its management port and reported healthy by the image's binary health check. A start that fails stops
 # the stack again (logs in target/compose.log); a successful one leaves it running for the tests.
 set -euo pipefail
@@ -40,17 +40,17 @@ done
 probe -k https://localhost:1090/health/ready || { echo "Keycloak did not become ready" >&2; exit 1; }
 echo "Keycloak is ready"
 
-compose up -d trailhand
-container="$(compose ps -q trailhand)"
+compose up -d audit-notary
+container="$(compose ps -q audit-notary)"
 for _ in $(seq 1 120); do
     health="$(docker inspect --format '{{.State.Health.Status}}' "$container" 2>/dev/null || true)"
     if [ "$health" = healthy ] && probe http://localhost:19000/q/health/ready; then
         started=true
-        echo "TrailHand is ready and healthy"
+        echo "Audit Notary is ready and healthy"
         exit 0
     fi
     sleep 1
 done
-echo "TrailHand did not become ready and healthy (health: ${health:-unknown}):" >&2
+echo "Audit Notary did not become ready and healthy (health: ${health:-unknown}):" >&2
 curl -s --max-time 5 http://localhost:19000/q/health/ready >&2 || true
 exit 1

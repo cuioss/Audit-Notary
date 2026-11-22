@@ -23,14 +23,14 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 LOG="$TARGET_DIR/compose.log"
 [ -s "$LOG" ] || { echo "$LOG is missing or empty: the stack log was not written" >&2; exit 1; }
-# Compose prefixes each record with the container name (trailhand-1, trailhand_1 with the legacy docker-compose); a
+# Compose prefixes each record with the container name (audit-notary-1, audit-notary_1 with the legacy docker-compose); a
 # record starts with date, time and level.
 # Stack-trace lines and the logs of other services do not match.
-errors="$(grep -E '^trailhand[-_]1 +\| [0-9-]+ [0-9:,]+ (ERROR|SEVERE) ' "$LOG" || true)"
+errors="$(grep -E '^audit-notary[-_]1 +\| [0-9-]+ [0-9:,]+ (ERROR|SEVERE) ' "$LOG" || true)"
 if [ -n "$errors" ]; then
-    echo "the trailhand container logged ERROR/SEVERE records:" >&2
+    echo "the audit-notary container logged ERROR/SEVERE records:" >&2
     echo "$errors" >&2
     exit 1
 fi
-grep -qE '^trailhand[-_]1 +\| ' "$LOG" || { echo "$LOG holds no record of the trailhand container" >&2; exit 1; }
-echo "the trailhand container logged no ERROR or SEVERE record"
+grep -qE '^audit-notary[-_]1 +\| ' "$LOG" || { echo "$LOG holds no record of the audit-notary container" >&2; exit 1; }
+echo "the audit-notary container logged no ERROR or SEVERE record"
