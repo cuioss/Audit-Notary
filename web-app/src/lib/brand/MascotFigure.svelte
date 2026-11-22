@@ -6,11 +6,13 @@
 </script>
 
 <script lang="ts">
+  import notary from './mascot-notary.png';
+
   /**
    * The place of the mascot on calm surfaces: login, empty states, a finished release.
    *
-   * No pose is delivered yet (brand.adoc: the poses need the owner's acceptance and licence before they
-   * ship), so the figure renders nothing; views already place it where a pose belongs.
+   * The notary bear, accepted by the owner (brand.adoc, The Mascot), serves every pose until pose-specific images
+   * are made. The image is decorative: the surface around it carries the words.
    */
   interface Props {
     /** The pose. */
@@ -19,8 +21,8 @@
 
   let { pose }: Props = $props();
 
-  /** The delivered images per pose; empty until a pose is accepted. */
-  const DELIVERED: Partial<Record<MascotPose, string>> = {};
+  /** The delivered images per pose; one accepted image for all of them so far. */
+  const DELIVERED: Partial<Record<MascotPose, string>> = { welcome: notary, 'at-work': notary, done: notary };
 
   let source = $derived(DELIVERED[pose]);
 </script>

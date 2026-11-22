@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/svelte';
 import { describe, expect, it } from 'vitest';
 import BrandMark from './BrandMark.svelte';
-import MascotFigure from './MascotFigure.svelte';
+import MascotFigure, { MASCOT_POSES } from './MascotFigure.svelte';
 import Wordmark from './Wordmark.svelte';
 import { MARK_IS_PROVISIONAL } from './brand';
 
@@ -32,9 +32,15 @@ describe('brand', () => {
     expect(screen.getByRole('img', { name: 'regular' })).toHaveAttribute('data-variant', 'page');
   });
 
-  it('ships no mascot pose before one is accepted, and records the mark as provisional', () => {
-    const { container } = render(MascotFigure, { pose: 'welcome' });
-    expect(container.querySelector('img')).toBeNull();
+  it('shows the accepted notary in every pose, decorative, and records the mark as provisional', () => {
+    for (const pose of MASCOT_POSES) {
+      const { container, unmount } = render(MascotFigure, { pose });
+      const image = container.querySelector('img');
+      expect(image).not.toBeNull();
+      expect(image).toHaveAttribute('alt', '');
+      expect(image).toHaveAttribute('data-pose', pose);
+      unmount();
+    }
     expect(MARK_IS_PROVISIONAL).toBe(true);
   });
 });

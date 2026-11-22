@@ -1,12 +1,16 @@
 = Image Provenance and Licensing
 :author: cuioss
-:revdate: 2026-11-21
-:revnumber: 1.0
+:revdate: 2026-11-22
+:revnumber: 1.1
 :doctype: article
 
 == Scope
 
-This notice applies to the AI-generated mascot illustrations distributed in this repository, including the ranch-hand/bookkeeper bear and the project's other bear character variants.
+This notice applies to the AI-generated mascot illustrations distributed in this repository: the notary bear
+(`mascot-notary-source.png`, an unchanged copy of `doc/images/Quality-Control.png` of
+https://github.com/cuioss/cuioss-parent-pom/tree/main/doc/images[cuioss-parent-pom], and its derivatives) and any
+further variant of the cuioss family character. The character was first drawn as a guinea pig and is now drawn as a
+bear.
 
 The illustrations are visual assets. They are not source code, and this notice documents their origin and the terms under which cuioss makes them available.
 
@@ -16,7 +20,9 @@ The illustrations are visual assets. They are not source code, and this notice d
 * **Generated with:** ChatGPT image generation by OpenAI
 * **Generation process:** Created from text prompts and iteratively refined through follow-up instructions.
 * **Generation date:** 2026
-* **Third-party source material:** No third-party image was intentionally supplied as a visual reference for the ranch-hand/bookkeeper illustration.
+* **Third-party source material:** No third-party image was intentionally supplied as a visual reference; the notary
+  bear is one of the cuioss family images, released under Apache License 2.0 by
+  https://github.com/cuioss/cuioss-parent-pom/blob/main/doc/images/image-license.adoc[their licence notice].
 * **Modifications:** The images may be resized, cropped, converted, background-removed, or otherwise adapted for use in the project.
 
 == License
