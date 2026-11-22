@@ -20,19 +20,19 @@
     <name>Audit Notary</name>
     <description>Audit Notary: security documents on the Git server you already run. Every change signed, every version on record. Quarkus native, with a web app and an MCP server for AI agents.
     </description>
-    <url>https://github.com/cuioss/AuditNotary/</url>
+    <url>https://github.com/cuioss/Audit-Notary/</url>
     <scm>
-        <url>https://github.com/cuioss/AuditNotary/</url>
+        <url>https://github.com/cuioss/Audit-Notary/</url>
         <connection>
-            scm:git:https://github.com/cuioss/AuditNotary.git
+            scm:git:https://github.com/cuioss/Audit-Notary.git
         </connection>
         <developerConnection>
-            scm:git:https://github.com/cuioss/AuditNotary/
+            scm:git:https://github.com/cuioss/Audit-Notary/
         </developerConnection>
         <tag>HEAD</tag>
     </scm>
     <issueManagement>
-        <url>https://github.com/cuioss/AuditNotary/issues</url>
+        <url>https://github.com/cuioss/Audit-Notary/issues</url>
         <system>GitHub Issues</system>
     </issueManagement>
     <properties>

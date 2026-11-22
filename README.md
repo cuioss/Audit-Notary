@@ -2,8 +2,8 @@
 
 <img align="right" width="260" src="doc/resources/brand/mascot-welcome.png" alt="Provisional mascot: a bear in a cowboy hat and neckerchief waves and holds a tally book">
 
-[![Maven Build](https://github.com/cuioss/AuditNotary/actions/workflows/maven.yml/badge.svg)](https://github.com/cuioss/AuditNotary/actions/workflows/maven.yml)
-[![Integration Tests](https://github.com/cuioss/AuditNotary/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/cuioss/AuditNotary/actions/workflows/integration-tests.yml)
+[![Maven Build](https://github.com/cuioss/Audit-Notary/actions/workflows/maven.yml/badge.svg)](https://github.com/cuioss/Audit-Notary/actions/workflows/maven.yml)
+[![Integration Tests](https://github.com/cuioss/Audit-Notary/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/cuioss/Audit-Notary/actions/workflows/integration-tests.yml)
 [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=cuioss_TrailHand&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=cuioss_TrailHand)

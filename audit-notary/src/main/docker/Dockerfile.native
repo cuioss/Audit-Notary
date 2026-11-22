@@ -16,7 +16,7 @@ LABEL org.opencontainers.image.title="Audit Notary" \
       org.opencontainers.image.revision="${APP_REVISION}" \
       org.opencontainers.image.vendor="CUIoss" \
       org.opencontainers.image.licenses="Apache-2.0" \
-      org.opencontainers.image.source="https://github.com/cuioss/AuditNotary" \
+      org.opencontainers.image.source="https://github.com/cuioss/Audit-Notary" \
       org.opencontainers.image.base.name="quay.io/quarkus/quarkus-distroless-image:2.0"
 
 WORKDIR /app

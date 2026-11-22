@@ -24,7 +24,7 @@ by absolute address.
 ## Naming
 
 *Audit Notary* in prose and headings, `audit-notary` in every identifier, `de.cuioss.notary.audit` for the Maven group
-and the Java packages, `AuditNotary` for the repository, `AUDIT_NOTARY_` for environment variables, `AUN` for
+and the Java packages, `Audit-Notary` for the repository, `AUDIT_NOTARY_` for environment variables, `AUN` for
 requirement identifiers. The reasoning is in
 [`doc/concepts/brand.adoc`](doc/concepts/brand.adoc). The earlier names `CISOs-Friend` and `TrailHand` appear only there.
 
@@ -63,10 +63,10 @@ verification classes outside JUnit. The target is Java 25; CI builds on Java 25 
 
 1. Create a branch with a CI-recognised prefix: `git checkout -b feature/<name>` (or `fix/`, `chore/`).
 2. Commit, then `git push -u origin <branch>`.
-3. Open the PR: `gh pr create --repo cuioss/AuditNotary --head <branch> --base main --title "<title>" --body "<body>"`.
+3. Open the PR: `gh pr create --repo cuioss/Audit-Notary --head <branch> --base main --title "<title>" --body "<body>"`.
    Add the label `skip-bot-review` only when the review bots are not wanted.
 4. Wait for the checks: `gh pr checks --watch`.
-5. Handle every review comment: fetch with `gh api repos/cuioss/AuditNotary/pulls/<n>/comments`.
+5. Handle every review comment: fetch with `gh api repos/cuioss/Audit-Notary/pulls/<n>/comments`.
    - Clearly valid and fixable: fix, commit, push, reply with the fix, resolve.
    - Disagree or out of scope: reply with the reason, resolve.
    - Not 100% sure: ask the user first.
