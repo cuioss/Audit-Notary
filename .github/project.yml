@@ -20,7 +20,7 @@ maven-build:
   npm-cache: false
 
 sonar:
-  project-key: cuioss_TrailHand
+  project-key: cuioss_Audit-Notary
   enabled: true
   skip-on-dependabot: true
 

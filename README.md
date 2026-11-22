@@ -6,9 +6,9 @@
 [![Integration Tests](https://github.com/cuioss/Audit-Notary/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/cuioss/Audit-Notary/actions/workflows/integration-tests.yml)
 [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=cuioss_TrailHand&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=cuioss_TrailHand)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=cuioss_TrailHand&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=cuioss_TrailHand)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=cuioss_TrailHand&metric=coverage)](https://sonarcloud.io/summary/new_code?id=cuioss_TrailHand)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=cuioss_Audit-Notary&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=cuioss_Audit-Notary)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=cuioss_Audit-Notary&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=cuioss_Audit-Notary)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=cuioss_Audit-Notary&metric=coverage)](https://sonarcloud.io/summary/new_code?id=cuioss_Audit-Notary)
 
 **Bootstrap.** The concepts, specifications and decisions are written; the web app, its mock server, its end-to-end
 suite and the application with its login, configuration and repository handling are built. The document operations
