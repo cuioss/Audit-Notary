@@ -46,7 +46,7 @@ In reading order:
 . xref:concepts/deployment.adoc[Deployment] -- what runs where, image, secrets, compose sample, operating duties
 . xref:concepts/local-mcp-gateway.adoc[Local MCP Gateway] -- proposal: a reusable local base project that logs the user
   in and holds the token for agents
-. xref:concepts/brand.adoc[Name and Brand] -- the name Audit Notary (decided, rename planned); mark and mascot proposed
+. xref:concepts/brand.adoc[Name and Brand] -- the name Audit Notary, the provisional mark and the mascot, the notary bear
 
 The library concepts these build on start with
 https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/git-as-document-persistence.adoc[Git as the Persistence of Versioned Documents].

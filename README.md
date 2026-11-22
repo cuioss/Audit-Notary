@@ -1,6 +1,6 @@
 # Audit Notary
 
-<img align="right" width="260" src="doc/resources/brand/mascot-welcome.png" alt="Provisional mascot: a bear in a cowboy hat and neckerchief waves and holds a tally book">
+<img align="right" width="260" src="doc/resources/brand/mascot-notary.png" alt="The Audit Notary mascot: a bear in a dark suit and tie, with round spectacles">
 
 [![Maven Build](https://github.com/cuioss/Audit-Notary/actions/workflows/maven.yml/badge.svg)](https://github.com/cuioss/Audit-Notary/actions/workflows/maven.yml)
 [![Integration Tests](https://github.com/cuioss/Audit-Notary/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/cuioss/Audit-Notary/actions/workflows/integration-tests.yml)

@@ -35,7 +35,8 @@ The strength of the working title is that it says in three words what the applic
 == The Brand Family
 
 The libraries and tools of the author share one brand language: a cartoon character in an outfit that says the role of
-the project. The family images are in
+the project. The character started as a guinea pig and is now drawn as a bear; this documentation calls it the
+family's bear. The family images are in
 https://github.com/cuioss/cuioss-parent-pom/tree/main/doc/images[`cuioss-parent-pom/doc/images`] (a sheriff, a
 detective, a quality controller with a tape measure, a craftsman, among others); their licence file
 (https://github.com/cuioss/cuioss-parent-pom/blob/main/doc/images/image-license.adoc[`image-license.adoc`]) states that
@@ -459,75 +460,60 @@ the provisional drawing of the TrailHand idea.
 
 == The Mascot
 
-The character is the family's bear. A *notary of the frontier town*: a green eyeshade visor, round spectacles, a
-waistcoat with sleeve garters over a cream shirt, a quill or pencil behind the ear. One paw holds a brass seal stamp,
-the other a bound register whose cover carries the mark. He is friendly where the sheriff is stern, and he is unarmed:
-the product stands for care, not enforcement. The family has a stern sheriff and a smiling detective; the notary
-stands next to them as the one who keeps and signs the record.
+The character is the family's bear as the *notary*: a dark suit with a white shirt and a brown tie, round spectacles,
+calm and smiling. The suit says what a notary looks like to a European reader: a professional of the office who signs
+and keeps the record. He is friendly where the sheriff is stern, and he is unarmed: the product stands for care, not
+enforcement. The family has a stern sheriff and a smiling detective; the notary stands next to them as the one who keeps
+and signs the record.
 
-A small closed set of poses, in the manner of the plan-marshall web app: *welcome* (login, first run: the stamp raised
-in greeting), *at work* (the register open, the stamp over the page; empty states), *done* (the register closed with
-the seal on the cover, after a release). No pose shows a person's data or a score. The raster images follow the asset
-rules of the family: only derived, size-reduced files are shipped with the application, never the source image. The
-sources are kept in `resources/brand/` as the masters of the derivatives; the documentation is not part of the
-application.
+*The image is a family image.* The owner chose the quality controller of
+https://github.com/cuioss/cuioss-parent-pom/tree/main/doc/images[`cuioss-parent-pom/doc/images`]
+(`Quality-Control.png`) as the notary on 2026-11-22; no other project uses it as its mascot. Its prop, a tape measure,
+belongs to its first role. A later edit may replace it with the notary's seal stamp and register (the prompt is below);
+until then the image is used as it is.
 
-*Provenance:* the family's images were made with an AI image tool. For each pose, record the tool, the prompt and the
-owner's acceptance in a table like the one in `brand-mark-mascot.adoc` of `pm-mcp-clients`, before the pose ships. The
-Apache-2.0 release of the existing family images does not cover new poses automatically; the owner states the licence
-of each new one.
+The poses of the web app (*welcome* on the first-run page, *at work* in the empty states, *done* after a release) all
+show this one image until pose-specific images are made. No pose shows a person's data or a score. The raster images
+follow the asset rules of the family: only derived, size-reduced files are shipped, never the source image. The source
+is kept in `resources/brand/` as the master of the derivatives; the documentation is not part of the application.
+
+*Provenance:* the family's images were made with an AI image tool. For each image, record the tool, the prompt and the
+owner's acceptance in the table below before it ships. The Apache-2.0 release of the existing family images does not
+cover new images automatically; the owner states the licence of each new one.
 
 The origin and the licence of the AI-made images are stated once, in
-link:../resources/brand/image-provenance.adoc[Image Provenance and Licensing]; the table records each pose.
+link:../resources/brand/image-provenance.adoc[Image Provenance and Licensing]; the table records each image.
 
 [cols="1,2,1,1"]
 |===
 |Image |Made by |Accepted |Licence
 
-|*Welcome, ranch hand* (TrailHand; `resources/brand/mascot-welcome.png`, used in the README; master
-`resources/brand/mascot-welcome-source.png`)
-|ChatGPT image generation (OpenAI), 2026, from the ranch-hand prompt of the TrailHand decision, refined with follow-up
-instructions. The shipped file is the source image cleaned of the generated glow and stray pixels outside the outline,
-cropped to the figure and reduced to 520 × 811 pixels. The master is the unchanged generated image (1024 × 1536
-pixels).
-|Accepted by the owner on 2026-11-21; *superseded* by the rename on 2026-11-22. Never shipped in the web app; it leaves
-the README when the notary's welcome pose is accepted.
-|Apache License 2.0, as stated in the image provenance notice
+|*Notary* (`resources/brand/mascot-notary-source.png`, the master; `resources/brand/mascot-notary.png`, used in the
+README; `web-app/src/lib/brand/mascot-notary.png`, shipped in the web app for every pose)
+|ChatGPT image generation (OpenAI, DALL·E) for the cuioss family images, 2026. The master is an unchanged copy of
+`doc/images/Quality-Control.png` of `cuioss-parent-pom` (1024 × 1536 pixels). The derivatives have the paper-white
+background removed, are cropped to the figure and reduced to 520 × 779 (README) and 384 × 576 pixels (web app).
+|Yes, by the owner, 2026-11-22
+|Apache License 2.0, as stated in the
+https://github.com/cuioss/cuioss-parent-pom/blob/main/doc/images/image-license.adoc[licence notice of the family
+images]
 
-|*Welcome, notary*
-|To be made from the prompt below.
-|Open
-|Open
+|*Ranch hand* (TrailHand)
+|ChatGPT image generation (OpenAI), 2026, from the ranch-hand prompt of the TrailHand decision (in the Git history of this page).
+|Accepted on 2026-11-21, superseded on 2026-11-22. Removed from the repository with the notary; the files remain in the
+Git history (`doc/resources/brand/mascot-welcome.png` and `mascot-welcome-source.png`).
+|Apache License 2.0
 |===
 
-The starting prompt of the notary, with the pose of *welcome*. Attach two of the family's own bears (the sheriff and
-the detective of `cuioss-parent-pom/doc/images`) as style references; record in the provenance notice that no
-third-party image was supplied.
+The edit that would give the notary his own prop, for an image tool, with the master attached:
 
 ....
-Create a cartoon mascot illustration in exactly the same style as the two attached reference images: a friendly
-bear character, thick dark-brown outline (#2A1A10) of even weight, flat colours with soft shading and a subtle
-paper-grain texture, big round eyes with small highlights, a cream muzzle, a small soft ground shadow, and a plain
-background. Full body, standing, front three-quarter view, portrait format 2:3, centred, with margin around the
-figure. No text, no watermark, no border.
-
-Character: a NOTARY bear of an old western frontier town, the one who signs, dates and keeps the town's records.
-Orange-brown fur (#E17512), cream muzzle and belly (#F6DDB0). He wears a green eyeshade visor, small round
-spectacles, a cream shirt with sleeve garters, and a brown waistcoat (#A0602E) with a gold watch chain (#F2B630).
-A yellow pencil sits behind one ear. One paw holds a brass seal stamp (#F2B630) with a round, wavy-edged seal face,
-raised in a friendly greeting. Under the other arm he carries a thick brown register book (#A0602E) with a stitched
-spine; the cover shows a small emblem: a cream document page with a folded top-right corner and a round gold seal
-with a wavy rosette edge on its lower half. The emblem is the only graphic on the book.
-
-Mood: calm, precise, warm and trustworthy, a colleague who keeps good records. He is clearly UNARMED: no badge, no
-star, no holster, no gun, no shield, no padlock, no cowboy hat. He is not a sheriff, not a cowboy and not a
-detective.
-
-Keep the proportions, line weight and rendering identical to the references so the three characters look like one
-family.
+Edit the attached image. Keep the character, pose, proportions, outline, colours, suit, tie, glasses and rendering
+exactly as they are. Replace only the tape measure: in one paw he holds a brass seal stamp with a round seal face
+with a scalloped edge; under the other arm he carries a thick brown register book (#A0602E) with a stitched spine,
+whose cover shows a cream document page with a folded corner and a round gold seal with a scalloped edge. No text,
+no numbers, no badge, no star.
 ....
-
-The poses *at work* and *done* are still to be made; each gets its own row.
 
 [#_voice]
 == Voice

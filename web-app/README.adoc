@@ -17,7 +17,8 @@ resource JAR that the application serves. Specification: `doc/specification/web-
 `tokens.test.ts` checks both themes for WCAG 2.1 AA
 
 |`src/lib/brand/`
-|Branding: name and descriptor keys, the mark (provisional, `doc/concepts/brand.adoc`), the wordmark, the mascot place
+|Branding: name and descriptor keys, the mark (provisional, `doc/concepts/brand.adoc`), the wordmark, the mascot
+(the notary bear, `mascot-notary.png`, a derivative of `doc/resources/brand/mascot-notary-source.png`)
 
 |`src/lib/i18n/`
 |Texts: the catalogue of `GET /api/v1/messages`, cached per application version; the ICU subset in `format.ts`
