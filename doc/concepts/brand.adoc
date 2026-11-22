@@ -218,8 +218,9 @@ hand stands next to them as the one who keeps the books.
 
 A small closed set of poses, in the manner of the plan-marshall web app: *welcome* (login, first run), *at work* (the
 tally book open, empty states), *done* (the book closed with a tick, after a release). No pose shows a person's data or
-a score. The raster images follow the asset rules of the family: only derived, size-reduced files are shipped, never
-the source image.
+a score. The raster images follow the asset rules of the family: only derived, size-reduced files are shipped with the
+application, never the source image. The sources are kept in `resources/brand/` as the masters of the derivatives; the
+documentation is not part of the application.
 
 *Provenance:* the family's images were made with an AI image tool. For each pose, record the tool, the prompt and the
 owner's acceptance in a table like the one in `brand-mark-mascot.adoc` of `pm-mcp-clients`, before the pose ships. The
@@ -233,10 +234,10 @@ link:../resources/brand/image-provenance.adoc[Image Provenance and Licensing]; t
 |===
 |Image |Made by |Accepted |Licence
 
-|*Welcome* (`resources/brand/mascot-welcome.png`, used in the README)
+|*Welcome* (`resources/brand/mascot-welcome.png`, used in the README; master `resources/brand/mascot-welcome-source.png`)
 |ChatGPT image generation (OpenAI), 2026, from the prompt below and refined with follow-up instructions. The shipped
 file is the source image cleaned of the generated glow and stray pixels outside the outline, cropped to the figure and
-reduced to 520 × 811 pixels; the source is not in the repository.
+reduced to 520 × 811 pixels. The master is the unchanged generated image (1024 × 1536 pixels).
 |Yes, by the owner, 2026-11-21. Not shipped in the web app yet.
 |Apache License 2.0, as stated in the image provenance notice
 |===
