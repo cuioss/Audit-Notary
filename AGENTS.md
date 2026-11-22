@@ -11,9 +11,8 @@ libraries of `cuioss/git-document-repository` and on Token Sheriff, runs as a Qu
 and has a web app and an MCP server.
 
 **Current state:** bootstrap. The documentation index is [`doc/README.adoc`](doc/README.adoc): concepts in
-`doc/concepts/`, decisions in `doc/adr/`, the use cases in `doc/UseCases.adoc` with one module per area in
-`doc/use-cases/` (prefix `UC`, the backlog and its order), and the specification in `doc/specification/`, which states
-the requirements (prefix `AUN`) together with their design. Read the concepts before changing the architecture. The modules of the root
+`doc/concepts/`, decisions in `doc/adr/`, and the specification in `doc/specification/`, which states the requirements
+(prefix `AUN`) together with their design. Read the concepts before changing the architecture. The modules of the root
 POM (`de.cuioss.notary.audit:audit-notary-parent`) are added as they are built; the planned modules, their order and the ones built so
 far are in `doc/specification/architecture-and-modules.adoc`, and each module has a `README.adoc`. The specification
 describes the full design: a check or CI job it names may not exist yet.

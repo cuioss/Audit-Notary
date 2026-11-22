@@ -20,8 +20,7 @@ links into the library documentation, by absolute address, only to the library c
 ====
 
 New readers start with the xref:concepts/audit-notary-overview.adoc[Overview]; operators with
-xref:concepts/deployment.adoc[Deployment] and xref:specification/configuration.adoc[Configuration]; whoever implements
-the next feature with the xref:UseCases.adoc[Use Cases] and their order.
+xref:concepts/deployment.adoc[Deployment] and xref:specification/configuration.adoc[Configuration].
 
 [#_concepts]
 == Concepts
@@ -51,14 +50,6 @@ In reading order:
 
 The library concepts these build on start with
 https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/git-as-document-persistence.adoc[Git as the Persistence of Versioned Documents].
-
-[#_use_cases]
-== Use Cases
-
-xref:UseCases.adoc[Use Cases] describe what a person does with the application and what they get out of it, one module
-per area (`use-cases/NN-<area>.adoc`, identifiers `UC-<AREA>-<n>`). They name the requirements that serve them, list
-the changes of the specification they still need, and give the order in which they are implemented. Every use case is
-`DRAFT` until the owner agrees to it.
 
 [#_specification]
 == Specification
