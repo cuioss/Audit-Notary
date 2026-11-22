@@ -70,6 +70,7 @@ Requirements:: xref:../specification/authentication.adoc#AUN-AUTH-1[AUN-AUTH-1] 
 pending logins), xref:../specification/authentication.adoc#AUN-AUTH-2[AUN-AUTH-2] (rights from groups),
 xref:../specification/web-app.adoc#AUN-WEB-9[AUN-WEB-9] (the shell's requests and the refusals),
 xref:../specification/web-app.adoc#AUN-WEB-3[AUN-WEB-3] (canonical addresses).
+Changes:: <<change-auth-2>>.
 Design:: xref:../concepts/web-app.adoc#_authentication[Web App, Authentication].
 
 [#UC-ACC-2]
@@ -228,3 +229,14 @@ Variations::
 Outcome:: the entry is current and its confirmation date is recent.
 Requirements:: xref:../specification/directory.adoc#AUN-DIR-3[AUN-DIR-3] (changing and confirming the entry).
 Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Settings*).
+
+[#changes-to-the-specification]
+== Changes to the Specification
+
+Each change is the fix of a gap these use cases need; it is written into the specification once they are `AGREED`.
+
+[[change-auth-2]]AUN-AUTH-2, the requests a right guards:: Gap: "a request without a mapped right must be refused"
+reads as every request, which would also refuse the shell's own requests and the first login that
+xref:../specification/directory.adoc#AUN-DIR-2[AUN-DIR-2] grants a user without any mapped right. Fix: a request on a
+repository without a mapped right is refused (deny by default); requests that act on no repository, the shell's own and
+those on the first-login allow-list of AUN-DIR-2, are checked by their own rules.

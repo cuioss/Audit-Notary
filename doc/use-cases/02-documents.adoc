@@ -149,7 +149,7 @@ Flow::
        │                       reference resolved
        ├── field errors ──────► done, the errors per field, among them
        │                        REFERENCE_NOT_FOUND; the draft stays
-       ├── document released ─► done, DOCUMENT_RELEASED; the draft stays
+       ├── frozen document ───► done, DOCUMENT_RELEASED; the draft stays
        ▼
   [S] save.apply               the draft applied onto the tip of the
        │                       working branch as one signed commit, by
@@ -175,6 +175,9 @@ Variations::
 * *Generated output* takes no part in the conflict check; each save regenerates it in the same commit.
 * *Step-up*: a save needs none under the delivered workflows; where a workflow asks for it, the save returns
   `STEP_UP_REQUIRED` (xref:01-access.adoc#UC-ACC-3[UC-ACC-3]).
+* *Released, not frozen*: the first save after a release of a document type released more than once is applied
+  like any other; it starts the next version in the workflow's first state (<<change-reopen>>). Only a frozen
+  document (a released SAMM assessment) answers `DOCUMENT_RELEASED`.
 * *Through an agent*: `save` with the blob ids it loaded; the same outcomes, a conflict per file with both values.
 Outcome:: the document holds the user's changes on its working branch, signed in the user's name; nothing anyone saved
 meanwhile was lost.
@@ -186,6 +189,7 @@ xref:../specification/authentication.adoc#AUN-AUTH-3[AUN-AUTH-3] (signed commit,
 xref:../specification/authentication.adoc#AUN-AUTH-5[AUN-AUTH-5] (technical user, `REJECTED`),
 xref:../specification/testing.adoc#AUN-NFR-2[AUN-NFR-2] (save latency); library:
 https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc[`git-store`].
+Changes:: <<change-reopen>>.
 Design:: xref:../concepts/web-app.adoc#_drafts_saving_and_conflicts[Web App, Drafts, Saving and Conflicts].
 
 [#UC-DOC-5]
