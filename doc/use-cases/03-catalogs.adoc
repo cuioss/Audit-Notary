@@ -1,0 +1,192 @@
+= Use Cases: Catalogs and Persons (UC-CAT)
+:toc: left
+:toclevels: 2
+:nofooter:
+
+xref:../UseCases.adoc[Use Cases] » Catalogs and Persons
+
+The categories hang together through master data: the catalogs of roles, teams, services, systems and external
+parties, and the person directory. A catalog administrator keeps them; every document refers to their entries by
+stable id instead of by free text (xref:../concepts/service-catalog.adoc[Service Catalog]). With the default person
+directory, persons are entries under pseudonyms in Git, which the administrator can prepare and erase
+(xref:../concepts/data-protection-and-repository-layout.adoc[Data Protection and Repository Layout]).
+
+[#principles]
+== Principles
+
+[#retire-never-delete]
+Retire, never delete:: A catalog entry is retired, never deleted; documents that refer to it keep their reference and
+show it as retired (xref:../specification/directory.adoc#AUN-DIR-4[AUN-DIR-4]).
+[#no-person-in-catalogs]
+No person in the catalogs:: Responsibility runs through team and role; the catalogs hold no personal data.
+
+[#UC-CAT-1]
+== UC-CAT-1: Maintain Catalog Entries
+
+Status:: `DRAFT`
+Actor:: a catalog administrator (`administer-catalogs`), in the web app (lens *Catalogs*).
+Goal:: keep the roles, teams, systems and external parties the documents pick from, current and unambiguous.
+Trigger:: a team, role, system or supplier is added, renamed or no longer in use.
+Preconditions:: the user has `administer-catalogs`.
+Flow::
++
+[source,text]
+----
+  [U] catalog.edit             create or change an entry of a catalog,
+       │                       in the form of the catalog's schema
+       ▼
+  [S] catalog.save             validated, saved in the directory
+       │                       repository, signed
+       ├── field errors ─► catalog.edit
+       ▼
+  done
+  [U] catalog.retire           retire an entry
+       ▼
+  [S] catalog.save             retired: true; references stay valid
+----
+Variations::
+* *Every user* reads the catalogs; an agent reads them with `read_catalog`, and never changes them.
+* *Teams and roles* are the library's catalogs; services, systems and external parties are the application's.
+Outcome:: the catalog holds the entry, or marks it retired; documents pick from the current entries.
+Requirements:: xref:../specification/directory.adoc#AUN-DIR-4[AUN-DIR-4] (catalogs, the right, retiring),
+xref:../specification/mcp-server.adoc#AUN-MCP-6[AUN-MCP-6] (`read_catalog`); library:
+https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-directory.adoc[`git-directory`].
+Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Catalogs*).
+
+[#UC-CAT-2]
+== UC-CAT-2: Maintain a Service and Its Protection Needs
+
+Status:: `DRAFT`
+Actor:: a catalog administrator, in the web app; every user reads the result.
+Goal:: describe a service with its owner, dependencies and protection needs, and see the protection needs it
+effectively has through what it depends on.
+Trigger:: a service is added or changes, or a threat model or an incident needs its protection needs.
+Preconditions:: the user has `administer-catalogs` to change; `read` on the directory to view.
+Flow::
++
+[source,text]
+----
+  [U] service.edit             name, description, system, lifecycle,
+       │                       owner (team and role), repositories,
+       │                       dependsOn, protection needs, data classes
+       ▼
+  [S] service.save             validated against the catalogs, saved
+       ├── field errors ─► service.edit
+       ▼
+  [S] service.effective        per dimension the maximum over the
+       │                       service and everything it depends on,
+       │                       transitively
+       ├── cycle in dependsOn ─► the services on the cycle are named
+       ▼
+  done
+----
+Variations::
+* *Used elsewhere*: the effective protection needs set the review interval of a threat model
+  (xref:05-threat-models.adoc#UC-TM-2[UC-TM-2]) and the protection needs of an incident
+  (xref:06-incidents.adoc#UC-IR-1[UC-IR-1]).
+Outcome:: the service entry is current, and its effective protection needs are known.
+Open points:: whether protection needs also flow to the services a service depends on, as BSI-Standard 200-2
+derives them; whether a change of protection needs needs a confirmation by the information security officer; whether
+services are also imported from a CMDB (xref:../concepts/service-catalog.adoc#_open_questions[Service Catalog, Open
+Questions]).
+Requirements:: xref:../specification/directory.adoc#AUN-DIR-5[AUN-DIR-5] (fields, effective protection needs, cycles).
+Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Catalogs*).
+
+[#UC-CAT-3]
+== UC-CAT-3: Import from Backstage
+
+Status:: `DRAFT`
+Actor:: a catalog administrator, in the web app.
+Goal:: take the components, systems and groups the organisation already keeps in Backstage, without typing them
+again and without losing what only Audit Notary knows.
+Trigger:: the catalog is set up for the first time, or Backstage changed.
+Preconditions:: the user has `administer-catalogs` and the descriptor documents at hand; the application fetches
+nothing from Backstage.
+Flow::
++
+[source,text]
+----
+  [U] import.upload            the descriptor documents
+       ▼
+  [S] import.map               Component to service, System to system,
+       │                       Group to team, matched by metadata.name;
+       │                       lifecycle by the configured mapping; new
+       │                       services take the configured defaults
+       ▼
+  [S] import.save              changed entries updated, new ones created;
+       │                       nothing duplicated, nothing deleted
+       ▼
+  done                         the result: created, updated, and what was
+                               left out with the reason
+----
+Variations::
+* *Left out and reported*: another namespace, a reference of another kind, an unmapped lifecycle of a new service, a
+  new service without the defaults for owner role and protection needs.
+* *Repeated*: an import again updates, never duplicates; the fields Backstage does not know are kept.
+Outcome:: the catalogs reflect Backstage, with the protection needs, data classes and owning roles kept.
+Requirements:: xref:../specification/directory.adoc#AUN-DIR-6[AUN-DIR-6] (the import and its mapping).
+Design:: none yet.
+
+[#UC-CAT-4]
+== UC-CAT-4: Prefill Person Entries
+
+Status:: `DRAFT`
+Actor:: a catalog administrator, in the web app, with the default person directory.
+Goal:: name the people of a workshop or a team before they ever log in, so assessments and documents can pick them.
+Trigger:: a workshop or a new team is prepared.
+Preconditions:: the user has `administer-catalogs`; the person directory provider is `git`.
+Flow::
++
+[source,text]
+----
+  [U] persons.enter            a list of entries, each with name and at
+       │                       least one membership (team and role)
+       ▼
+  [S] persons.save             memberships validated against the
+       │                       catalogs; the entries saved unbound in
+       │                       one commit
+       ├── field errors ─► persons.enter
+       ▼
+  done                         the pseudonyms of the new entries
+----
+Variations::
+* *Picking an unbound entry*: wherever a person is picked, an unbound entry can be chosen and is marked as not yet
+  bound.
+* *Binding*: happens only at the person's first login (xref:01-access.adoc#UC-ACC-4[UC-ACC-4]).
+Outcome:: unbound person entries exist and can be referred to before the persons log in.
+Requirements:: xref:../specification/directory.adoc#AUN-DIR-8[AUN-DIR-8] (prefilled entries); library:
+https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-directory.adoc#GDR-DIR-7[GDR-DIR-7].
+Design:: none yet.
+
+[#UC-CAT-5]
+== UC-CAT-5: Erase a Person
+
+Status:: `DRAFT`
+Actor:: a catalog administrator, in the web app, with the default person directory.
+Goal:: erase a person's entry on request or on leaving, at once and with evidence, without rewriting history.
+Trigger:: a person asks for erasure, or leaves the organisation.
+Preconditions:: the user has `administer-catalogs`.
+Flow::
++
+[source,text]
+----
+  [U] erasure.request          the pseudonym to erase
+       ▼
+  [S] erasure.write            one commit deletes the entry and records
+       │                       pseudonym and date, never the person
+       ├── provider is the organisation's source ─► done,
+       │                       managed-by-source; nothing erased here
+       ▼
+  done                         effective at once; the next checkpoint
+                               anchors the commit
+----
+Variations::
+* *Documents afterwards* show the pseudonym as "former" with the role and team the person held, or "former member".
+* *With the organisation's own source*: the person is erased there; once the source no longer knows the person,
+  documents show the same marker.
+Outcome:: the person's entry is gone from the current directory, the erasure is on record, and documents stay
+understandable.
+Requirements:: xref:../specification/data-protection.adoc#AUN-DP-3[AUN-DP-3] (erasure),
+xref:../specification/directory.adoc#AUN-DIR-7[AUN-DIR-7] (former members); library:
+https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-directory.adoc#GDR-DIR-6[GDR-DIR-6].
+Design:: none yet.

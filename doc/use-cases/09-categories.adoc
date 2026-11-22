@@ -1,0 +1,299 @@
+= Use Cases: Categories and Their Schemas (UC-KND)
+:toc: left
+:toclevels: 2
+:nofooter:
+
+xref:../UseCases.adoc[Use Cases] » Categories
+
+A category is configuration, not code: one or more kinds of documents, each a JSON Schema, a workflow, a template
+where the kind has generated output, and the repository it lives in
+(xref:../specification/architecture-and-modules.adoc#AUN-GEN-1[AUN-GEN-1]). Audit Notary delivers four categories
+with the application. An organisation needs further ones, an exception approval, a supplier assessment, an access
+review, and it should not need a release of the application for them. So categories come from two places: the
+*delivered* categories inside the application, and the *custom* categories of the organisation from a directory
+mounted at run time. A category administrator creates and changes the custom ones in an editor in the web app; an
+operator can also supply them as files.
+
+[#principles]
+== Principles
+
+[#delivery-apart-from-custom]
+Delivery apart from custom:: The delivered categories ship in the `categories` module and are read-only in the
+application; they change only with a release of the application. The custom categories live in the categories
+directory of the deployment, and only they can be created and changed at run time.
+[#add-never-override]
+A custom category adds, never overrides:: A custom category has its own id and its own kind ids; it never replaces or
+patches a delivered one. To start from a delivered category, it is copied under a new id (<<UC-KND-2>>). This keeps
+the one rule of the configuration concept: there is no second layer of overrides
+(xref:../concepts/application-architecture.adoc#_configuration[Application Architecture, Configuration]).
+[#configuration-never-code]
+Configuration, never code:: A custom category consists of files only; it uses the generic document use cases and
+cannot bring an extension point of its own. Whatever its schema cannot express it does not have.
+[#same-layout]
+One layout for both:: A custom category has the layout of a delivered one, so that a copied delivered category is a
+valid custom category as it is.
+[#documents-survive]
+Documents survive a change of their schema:: A change of a schema never rewrites a document; a released document stays
+as it was released, and a change that would make saved documents invalid is shown before it is activated
+(<<UC-KND-4>>).
+
+[#layout]
+== Layout of a Category
+
+The layout is the same in the `categories` module (`categories/<category>/`) and in the categories directory
+(`<categories-dir>/<category>/`):
+
+[source,text]
+----
+<categories-dir>/                 the categories directory of the deployment,
+                                  audit-notary.yaml → categories-dir;
+                                  default /app/data/categories on the
+                                  persistent volume
+  <category-id>/                  one directory per custom category; the id
+                                  differs from every delivered category id
+    kinds.yaml                    the library's kinds configuration: per kind
+                                  its id, repository alias (one of
+                                  repositories), collection, optional
+                                  numbering, and its three files below
+    <kind>/schema.json            JSON Schema of the kind's documents, with
+                                  the markers the form knows: x-person,
+                                  x-catalog, x-asciidoc, x-free-text, and
+                                  format gdr-link for references
+    <kind>/workflow.yaml          states, transitions, step-up, deadlines
+    <kind>/template.adoc          the template of the generated output;
+                                  optional for a numbered kind
+    recipes/<id>.yaml             optional recipes that guide the filling in
+    messages_en.properties        the category's texts: names of the
+    messages_de.properties        category, its kinds, fields and states;
+                                  both languages hold the same keys
+  .drafts/<category-id>/          the editor's unactivated changes, in the
+                                  same layout (UC-KND-3, UC-KND-4)
+----
+
+[#UC-KND-1]
+== UC-KND-1: Supply a Custom Category at Run Time
+
+Status:: `DRAFT`
+Actor:: the operator.
+Goal:: add a category the organisation wrote or received as files, without a new release of the application.
+Trigger:: the organisation needs a kind of document the delivered categories do not have.
+Preconditions:: the repository each of its kinds names is configured in `repositories`; the application creates no
+repository (xref:../specification/data-protection.adoc#AUN-DP-1[AUN-DP-1]).
+Flow::
++
+[source,text]
+----
+  [O] category.place           the operator places the category's
+       │                       directory in the categories directory
+       ▼
+  [O] config.validate          the operator validates offline:
+       │                       --validate-config also checks the
+       │                       categories directory
+       ├── violations ─► one record per violation; exit 1
+       ▼
+  [S] boot.load                at start: the delivered categories enabled
+       │                       in audit-notary.yaml, then every custom
+       │                       category of the directory, each validated
+       ├── a category invalid ─► the boot stops, one record per violation
+       ▼
+  [S] categories.ready         the kinds are known to the index, the
+       ▼                       forms, the workflows and the MCP tools
+  done
+----
+Variations::
+* *What is checked*: every file against its meta-schema; an id that clashes with a delivered or another custom
+  category or kind; a repository alias that is not configured; a reference marker naming an unknown catalog; messages
+  missing in one of the two languages; a template that does not parse.
+* *A file changed on disk* while the application runs takes effect at the next start; changes in the running
+  application go through the editor (<<UC-KND-4>>).
+* *No categories directory*: the application runs with the delivered categories only.
+Outcome:: the custom category is active beside the delivered ones, and its documents are created, saved and released
+like any other (xref:02-documents.adoc[UC-DOC]).
+Changes:: <<change-gen-1>>, <<change-conf-1>>, <<change-modules>>.
+Requirements:: xref:../specification/architecture-and-modules.adoc#AUN-GEN-1[AUN-GEN-1] (categories as
+configuration, the test category from resources only), xref:../specification/configuration.adoc#AUN-CONF-1[AUN-CONF-1]
+(boot validation, `--validate-config`); the categories directory: none yet; library:
+https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-1[GDR-FORMS-1]
+(kinds as configuration, in a directory chosen by the application).
+Design:: none; an operator works with files.
+
+[#UC-KND-2]
+== UC-KND-2: Inspect the Categories and Copy One
+
+Status:: `DRAFT`
+Actor:: a category administrator (`administer-categories`), in the web app.
+Goal:: see how a category is defined, its kinds with their schema, workflow, template and recipes, and start a custom
+category from it.
+Trigger:: the administrator wants to understand a category, or to build a similar one.
+Preconditions:: the user has `administer-categories`.
+Flow::
+. *The categories*: delivered and custom, each marked as such, with its kinds, the repository of each kind and the
+  number of its documents.
+. *A kind*: its `schema.json`, `workflow.yaml` and `template.adoc`, read-only for a delivered category, with the form
+  the schema generates.
+. *Copy*: a category is copied under a new id; every kind id gets the new id's prefix, and the copy opens in the
+  editor as an unactivated custom category (<<UC-KND-3>>).
+Variations::
+* *A delivered category* can be read and copied, never changed.
+Outcome:: the administrator knows the category's definition, or holds an unactivated copy of it.
+Changes:: <<change-auth-2>>, <<change-web-3>>.
+Requirements:: none yet.
+Design:: none yet.
+
+[#UC-KND-3]
+== UC-KND-3: Create a Custom Category in the Editor
+
+Status:: `DRAFT`
+Actor:: a category administrator (`administer-categories`), in the web app.
+Goal:: write a new category, its kinds with their schemas, workflows and templates, and its texts, and see the form
+and the output it produces before anyone uses it.
+Trigger:: the organisation needs a new kind of document.
+Preconditions:: the user has `administer-categories`; the repositories its kinds will name are configured.
+Flow::
++
+[source,text]
+----
+  [U] category.new             blank, with a minimal kind, or a copy
+       │                       (UC-KND-2); the id
+       ├── id taken ─► category.new
+       ▼
+  [U] editor.edit              kinds.yaml, per kind schema.json,
+       │                       workflow.yaml, template.adoc, the recipes
+       │                       and the messages, as text
+       ▼
+  [S] editor.check             while typing: each file against its
+       │                       meta-schema, the ids, the repository
+       │                       aliases, the catalogs named, the messages
+       │                       of both languages; errors at their line
+       ▼
+  [S] editor.preview           the form generated from the schema, with
+       │                       sample data the administrator types into
+       │                       it; the output generated from the sample
+       │                       data and the template, rendered by the
+       │                       server
+       ▼
+  [U] editor.keep              the unactivated change kept in .drafts
+       ├── go on later ─► done, nothing active
+       ▼ activate
+  ↳ UC-KND-4                   activation
+       ▼
+  done
+----
+Variations::
+* *Sample data* lives only in the preview; it is never saved as a document.
+* *The workflow*: states, transitions, which transition requires step-up and the deadline rules are data; the
+  editor checks them against the library's workflow format.
+* *An agent* cannot create or change a category.
+Outcome:: a new custom category, checked and previewed, waits for activation in the editor's drafts, or is active.
+Open points:: <<open-points>>.
+Changes:: <<change-auth-2>>, <<change-web-3>>, <<change-web-7>>, <<change-gen-3>>.
+Requirements:: xref:../specification/web-app.adoc#AUN-WEB-4[AUN-WEB-4] (the form generated from the schema, the same
+validation in browser and server), xref:../specification/web-app.adoc#AUN-WEB-8[AUN-WEB-8] (output rendered and
+sanitised by the server); the editor: none yet.
+Design:: none yet.
+
+[#UC-KND-4]
+== UC-KND-4: Change and Activate a Custom Category
+
+Status:: `DRAFT`
+Actor:: a category administrator (`administer-categories`), in the web app.
+Goal:: change a custom category that is in use, its schema above all, and know before activating it what the change
+does to the documents that exist.
+Trigger:: a field is added, renamed or removed, a workflow or a template changes, or a new category is ready
+(<<UC-KND-3>>).
+Preconditions:: the user has `administer-categories`; the category is custom.
+Flow::
++
+[source,text]
+----
+  [U] editor.edit              the change, in the editor of UC-KND-3,
+       │                       with its checks and preview
+       ▼
+  [S] change.compatibility     every saved document of each changed kind
+       │                       validated against the new schema
+       │                       (required excepted, as a save does);
+       │                       released documents listed apart, never
+       │                       changed
+       ▼
+  [U] change.review            the diff of the category's files against
+       │                       the active version, and the documents
+       │                       that would fail, with the fields
+       ├── back ─► editor.edit
+       ▼ activate
+  ↳ UC-ACC-3                   step-up
+       ├── not confirmed ─► done, nothing activated
+       ▼
+  [S] change.activate          the files moved from .drafts into place
+       │                       at once; the kinds reloaded without a
+       │                       restart; one audit record with pseudonym,
+       │                       category and the files changed
+       ├── invalid by now ─► done, nothing activated, the violations
+       ▼
+  done                         new forms and saves use the new schema
+----
+Variations::
+* *A document that fails the new schema* stays as it is; its next save asks for the fields the new schema needs.
+* *An open draft* of a changed kind is validated against the new schema at its next save.
+* *A kind with documents* cannot be removed; a category is retired instead: no new documents, the existing ones stay
+  readable and releasable.
+* *A delivered category* cannot be changed; copy it (<<UC-KND-2>>).
+Outcome:: the new version of the category is active, the change is on record, and no document was rewritten.
+Open points:: <<open-points>>.
+Changes:: <<change-auth-2>>, <<change-gen-1>>, <<change-gen-3>>.
+Requirements:: xref:../specification/authentication.adoc#AUN-AUTH-4[AUN-AUTH-4] (step-up, when a workflow declares it;
+here asked of an activation, which no requirement names yet), xref:../specification/architecture-and-modules.adoc#AUN-GEN-5[AUN-GEN-5]
+(the audit record); the compatibility check and the activation: none yet.
+Design:: none yet.
+
+[#open-points]
+== Open Points
+
+. *Durable state outside Git.* The editor writes the categories directory on the volume, which is durable state that
+  is not in Git; xref:../specification/architecture-and-modules.adoc#AUN-GEN-3[AUN-GEN-3] allows none. Either the
+  categories directory is accepted as configuration the operator backs up with the volume, or it is kept as a
+  repository of its own (`categories`), whose activations are signed commits with the administrator in the trailers
+  and whose history is the history of the category. To be decided in an ADR.
+. *Schema evolution.* Documents saved under an earlier version of their schema, released ones above all, which are
+  immutable. Whether each document records the version or checksum of the schema it was saved with, so that it can
+  be shown and validated against that version, is open; the library has no notion of either.
+. *Where a custom category is shown.* xref:../specification/web-app.adoc#AUN-WEB-3[AUN-WEB-3] has a fixed list of
+  lenses and canonical addresses; a custom category needs a generic lens (for example *Documents*, category › kind ›
+  document) and an address of its own.
+. *What an agent may read.* Agents work on documents of custom kinds through the generic tools; whether they may also
+  read a category's definition (a tool `read_category`) is open. They never change one.
+. *Blocking or confirming.* Whether a change that would make saved, unreleased documents invalid is refused, or
+  activated after an explicit confirmation, as <<UC-KND-4>> proposes.
+. *Template engine and schema dialect.* The editor checks templates and schemas with the engine and dialect the
+  library has not chosen yet
+  (https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/schema-driven-documents.adoc#_open_questions[Schema-Driven
+  Documents, Open Questions]).
+
+[#changes-to-the-specification]
+== Changes to the Specification
+
+Each change is the fix of a gap these use cases need; it is written into the specification once they are `AGREED`.
+
+[[change-gen-1]]AUN-GEN-1, categories from two places:: Gap: a category comes only from the `categories` module.
+Fix: a category comes from the `categories` module (delivered, read-only) or from the categories directory (custom);
+a custom category has its own ids, never overrides a delivered one, and has no extension point; the test category
+`test-note` also passes from the categories directory.
+[[change-conf-1]]AUN-CONF-1, the categories directory:: Gap: no key names a categories directory, and the boot
+validation does not check categories. Fix: `categories-dir` (default `/app/data/categories`); `categories` lists the
+enabled delivered categories, every valid custom category in the directory is enabled; the boot validation and
+`--validate-config` check every category with the rules of <<UC-KND-1>>.
+[[change-auth-2]]AUN-AUTH-2, a right for categories:: Gap: no action permits changing a category. Fix: the action
+`administer-categories`, not bound to a repository; with a repository for categories (<<open-points>>, point 1),
+bound to that repository.
+[[change-web-3]]AUN-WEB-3, a lens for custom categories:: Gap: the lenses are fixed. Fix: a lens for the documents of
+custom categories, and the canonical addresses `/categories/<category>` (the definition and the editor) and the
+documents' addresses (<<open-points>>, point 3).
+[[change-web-7]]AUN-WEB-7, texts of custom categories:: Gap: the message catalogue has one source, the `web-app`
+JAR (xref:../specification/web-app.adoc#AUN-WEB-7[AUN-WEB-7]). Fix: the catalogue merges the messages of each active custom category under its own key prefix
+(`category.<id>.`); both languages hold the same keys.
+[[change-gen-3]]AUN-GEN-3, the categories directory as state:: Gap: durable state only in Git. Fix: as decided in
+<<open-points>>, point 1: either the categories directory is named as the one durable state outside Git, backed up
+with the volume, or the custom categories live in a repository of their own.
+[[change-modules]]Architecture and Modules, the run-time directory:: Gap: the open question of
+xref:../concepts/application-architecture.adoc#_open_questions[Application Architecture] whether the categories ship
+inside the application or as a mounted directory. Fix: both; the delivered ones inside, the custom ones mounted, as in
+<<layout>>.

@@ -1,0 +1,229 @@
+= Use Cases: OWASP SAMM Assessments (UC-SAMM)
+:toc: left
+:toclevels: 2
+:nofooter:
+
+xref:../UseCases.adoc[Use Cases] » SAMM
+
+A team assesses its software assurance maturity with OWASP SAMM, together in a workshop, against targets it set for
+itself; a security officer releases the assessment as evidence and follows the trend from one assessment to the next.
+SAMM is the core category of Audit Notary (xref:../concepts/category-samm.adoc[SAMM]). Its documents follow the
+xref:02-documents.adoc[document use cases]; this module names only what SAMM adds.
+
+[#UC-SAMM-1]
+== UC-SAMM-1: Define a Scope and Its Targets
+
+Status:: `DRAFT`
+Actor:: a security officer or a team lead with `edit` on `samm-assessments`, in the web app.
+Goal:: say what is assessed, a team, a service or the whole organisation, and which maturity it aims for per
+practice.
+Trigger:: a team or a service starts with SAMM, or the targets are revised.
+Preconditions:: the subject exists in the catalogs (a team or a service), unless it is the organisation.
+Flow::
++
+[source,text]
+----
+  [U] scope.edit               title and subject: team, service or
+       │                       organisation; per practice the target
+       │                       maturity and an optional due date
+       ▼
+  ↳ UC-DOC-4                   saved; the subject reference must resolve
+       ▼
+  done
+----
+Variations::
+* *An unresolved subject* is refused with a validation error naming the reference.
+* *Targets change later*: the roadmap is edited like any document; the gaps follow it
+  (<<UC-SAMM-6>>).
+Outcome:: a scope with its targets exists and assessments can be started for it.
+Requirements:: xref:../specification/category-samm.adoc#AUN-SAMM-2[AUN-SAMM-2] (scope and subject),
+xref:../specification/category-samm.adoc#AUN-SAMM-6[AUN-SAMM-6] (targets),
+xref:../specification/category-samm.adoc#AUN-SAMM-1[AUN-SAMM-1] (layout).
+Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *SAMM*, scope ›
+assessment › practice).
+
+[#UC-SAMM-2]
+== UC-SAMM-2: Start an Assessment
+
+Status:: `DRAFT`
+Actor:: a team member with `edit` on `samm-assessments`, in the web app.
+Goal:: open a new assessment for a scope, at a date, with the SAMM model version it is taken with, and name the
+assessors.
+Trigger:: a workshop is planned.
+Preconditions:: the scope exists (<<UC-SAMM-1>>); the model version is pinned in `samm.yaml` (<<UC-SAMM-7>>).
+Flow::
++
+[source,text]
+----
+  [U] assessment.create        scope, title, date, model version,
+       │                       assessors (picked from the directory)
+       ▼
+  ↳ UC-DOC-4                   saved on the working branch of the new
+       ▼                       assessment; state draft
+  done
+----
+Variations::
+* *Assessors not yet logged in* are picked from prefilled entries (xref:03-catalogs.adoc#UC-CAT-4[UC-CAT-4]).
+* *A model version not pinned* cannot be chosen.
+Outcome:: an empty assessment, one answer file per practice, waits for the workshop.
+Open points:: the schemas of the kinds `scope` and `assessment`
+(xref:../concepts/category-samm.adoc#_open_questions[SAMM, Open Questions]).
+Requirements:: xref:../specification/category-samm.adoc#AUN-SAMM-1[AUN-SAMM-1] (layout, model version),
+xref:../specification/category-samm.adoc#AUN-SAMM-2[AUN-SAMM-2] (scope reference),
+xref:../specification/data-protection.adoc#AUN-DP-5[AUN-DP-5] (assessors as pseudonyms).
+Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App].
+
+[#UC-SAMM-3]
+== UC-SAMM-3: Fill In an Assessment in a Workshop
+
+Status:: `DRAFT`
+Actor:: the assessors of a team, several at once, each in the web app.
+Goal:: answer the questions of the model together, practice by practice, with comments and evidence, without
+overwriting each other.
+Trigger:: the workshop starts.
+Preconditions:: the assessment is in `draft` or `in-review`; each assessor has `edit`.
+Flow::
++
+[source,text]
+----
+  [U] practice.open            an assessor opens a practice
+       ▼
+  [U] practice.answer          per question an answer of the model's
+       │                       answer set, an optional comment; evidence
+       │                       as titled HTTPS links
+       ▼
+  ↳ UC-DOC-3                   draft kept while typing
+       ▼
+  ↳ UC-DOC-4                   "save often": each save is a small commit
+       │                       on the assessment's working branch
+       ├── another assessor, other practice ─► saved, no conflict; the
+       │                       others see it within 5 s
+       ├── same practice changed meanwhile ──► the differing questions
+       │                       with both values; the assessors decide
+       ▼
+  done
+----
+Variations::
+* *No not-applicable answer*: the answer sets of the model contain none, so the scores stay comparable.
+* *No file upload*: evidence is a link, never a file.
+Outcome:: every practice holds the answers the workshop agreed, each saved in the name of the assessor who saved it.
+Requirements:: xref:../specification/category-samm.adoc#AUN-SAMM-3[AUN-SAMM-3] (joint editing, 5 s),
+xref:../specification/category-samm.adoc#AUN-SAMM-7[AUN-SAMM-7] (evidence as links),
+xref:../specification/testing.adoc#AUN-NFR-3[AUN-NFR-3] (fifteen concurrent assessors).
+Design:: xref:../concepts/category-samm.adoc#_workshop_mode_save_often[SAMM, Workshop Mode: Save Often],
+xref:../concepts/web-app.adoc#_drafts_saving_and_conflicts[Web App, Drafts, Saving and Conflicts].
+
+[#UC-SAMM-4]
+== UC-SAMM-4: Submit and Release an Assessment
+
+Status:: `DRAFT`
+Actor:: a team member submits; an approver with `approve` releases, in the web app.
+Goal:: freeze the assessment once, as evidence of the team's maturity at that date.
+Trigger:: the workshop is complete.
+Preconditions:: every required answer is given.
+Flow::
++
+[source,text]
+----
+  ↳ UC-DOC-6                   samm.submit: draft to in-review
+       ▼
+  ↳ UC-DOC-7                   samm.release: in-review to released, with
+       │                       step-up; tag assessments/<ulid>/v1
+       ▼
+  [S] assessment.frozen        every later save answers DOCUMENT_RELEASED
+       ▼
+  done
+----
+Variations::
+* *A change after release*: a new assessment is started (<<UC-SAMM-2>>); a released one is never changed.
+* *Through an agent*: an agent may fill in answers and request the release (xref:02-documents.adoc#UC-DOC-8[UC-DOC-8]).
+Outcome:: the assessment is released under the tag `assessments/<ulid>/v1`, and its scores are computed.
+Requirements:: xref:../specification/category-samm.adoc#AUN-SAMM-4[AUN-SAMM-4] (release once, then frozen),
+xref:../specification/category-samm.adoc#AUN-SAMM-3[AUN-SAMM-3] (`samm.submit`).
+Design:: xref:../specification/web-app.adoc#AUN-WEB-6[AUN-WEB-6].
+
+[#UC-SAMM-5]
+== UC-SAMM-5: See Scores, Compare and Follow the Trend
+
+Status:: `DRAFT`
+Actor:: a security officer or a team, with `read` on `samm-assessments`, in the web app (lenses *SAMM* and
+*Reports*).
+Goal:: see the maturity scores of a released assessment, what changed since the previous one, and how scopes develop
+over time.
+Trigger:: an assessment is released, or a report is prepared.
+Preconditions:: at least one released assessment of the scope.
+Flow::
+. *Scores*: per stream, practice, business function and overall, computed as the OWASP SAMM toolbox computes them,
+  without rounding.
+. *Comparison*: two released assessments of one scope and the same model version, with the difference per business
+  function, practice and stream.
+. *Trend*: the scores of the released assessments of a scope, or of several scopes, over time.
+Variations::
+* *Different model versions* are refused with `MODEL_VERSIONS_DIFFER`; a comparison across model versions is
+  deferred.
+Outcome:: the reader knows the maturity at each date and where it moved.
+Open points:: what the *Reports* lens shows besides SAMM trends; the comparison across model versions (deferred,
+xref:../concepts/category-samm.adoc#_open_questions[SAMM, Open Questions]).
+Requirements:: xref:../specification/category-samm.adoc#AUN-SAMM-5[AUN-SAMM-5] (scores, comparison); the trend: none
+yet.
+Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Reports*).
+
+[#UC-SAMM-6]
+== UC-SAMM-6: Turn Gaps into Risks
+
+Status:: `DRAFT`
+Actor:: a security officer, in the web app; reading needs `read` on `samm-assessments`, creating a risk `edit` on
+`isms-register`.
+Goal:: see every practice whose released score is below its target, and carry a gap into the risk register.
+Trigger:: an assessment is released, or the scope is reviewed.
+Preconditions:: a released assessment and targets of its scope.
+Flow::
++
+[source,text]
+----
+  [S] gaps.list                the practices of the latest released
+       │                       assessment below their target
+       ▼
+  [U] gaps.choose              create a risk for a gap, or none
+       ├── none ─► done
+       ▼
+  [S] risk.draft               a new draft risk in isms-register with
+       │                       the reference to the assessment's
+       │                       practice
+       ▼
+  ↳ UC-ISMS-2                  the risk completed and saved
+       ▼
+  done
+----
+Outcome:: the gap is known, and where chosen it is a risk of the register that refers to the assessment.
+Requirements:: xref:../specification/category-samm.adoc#AUN-SAMM-6[AUN-SAMM-6] (gaps, create risk),
+xref:../specification/data-protection.adoc#AUN-DP-2[AUN-DP-2] (the reference).
+Design:: xref:../concepts/category-isms.adoc#_the_bridge_to_samm[ISMS, The Bridge to SAMM].
+
+[#UC-SAMM-7]
+== UC-SAMM-7: Pin a SAMM Model Version
+
+Status:: `DRAFT`
+Actor:: an operator, or a user with `edit` on `samm-assessments`.
+Goal:: make a published SAMM model version available for new assessments, with its source and checksum.
+Trigger:: OWASP publishes a new model version, or the application is set up.
+Preconditions:: none.
+Flow::
++
+[source,text]
+----
+  [U] model.add                the model version, its source, its
+       │                       checksum, in samm.yaml
+       ▼
+  [S] model.verify             the model files match the checksum
+       ├── mismatch ─► done, refused
+       ▼
+  done                         the version can be chosen for new
+                               assessments; existing ones keep theirs
+----
+Outcome:: the pinned versions are listed in `samm.yaml`; each assessment keeps the version it was taken with.
+Open points:: whether the model is a vendored copy in the repository or a fetched release, and who pins it
+(xref:../concepts/category-samm.adoc#_open_questions[SAMM, Open Questions]).
+Requirements:: xref:../specification/category-samm.adoc#AUN-SAMM-1[AUN-SAMM-1] (`samm.yaml` pins the versions); the
+flow of pinning: none yet.
+Design:: none yet.
