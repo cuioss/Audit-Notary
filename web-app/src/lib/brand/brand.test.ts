@@ -25,6 +25,13 @@ describe('brand', () => {
     expect(screen.getByRole('img', { name: 'Audit Notary mark' })).toHaveAttribute('width', '16');
   });
 
+  it('reduces to the seal alone at 16 pixels and keeps the page above', () => {
+    render(BrandMark, { size: 16, label: 'small' });
+    render(BrandMark, { size: 24, label: 'regular' });
+    expect(screen.getByRole('img', { name: 'small' })).toHaveAttribute('data-variant', 'seal');
+    expect(screen.getByRole('img', { name: 'regular' })).toHaveAttribute('data-variant', 'page');
+  });
+
   it('ships no mascot pose before one is accepted, and records the mark as provisional', () => {
     const { container } = render(MascotFigure, { pose: 'welcome' });
     expect(container.querySelector('img')).toBeNull();
