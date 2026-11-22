@@ -426,28 +426,33 @@ established learning platform of another vendor; that concern ends with the rena
 == The Mark
 
 *Idea:* a document page with a folded corner and a *round seal* on its lower half, the notary's seal on the record. The
-seal has a wavy, rosette edge, a plain centre and the gold of the palette. It says "a signed record" without a star, a
-shield or a padlock, the three symbols every security product carries.
+seal has a scalloped edge of many small rounded lobes, a plain centre and the gold of the palette. It says "a signed
+record" without a star, a shield or a padlock, the three symbols every security product carries.
 
 * *Drawing rules* are those of the family (<<_the_brand_family>>): `24 × 24` grid, hand-drawn, solid fills with the dark
   outline, a one-colour rendering with the seal cut out, no text in the drawing.
 * *Small sizes.* At `16` px the mark reduces to the seal alone, which stays legible where the page with its folded
   corner does not.
-* *Distance from the sheriff badge:* the seal is round with a wavy edge and has no points and no ball tips, so it is not
-  mistaken for the sign of plan-marshall or Token Sheriff beside which it will sit in a user's tool list.
+* *Distance from the sheriff badge:* the seal is round with a scalloped edge and has no points and no ball tips, so it is
+  not mistaken for the sign of plan-marshall or Token Sheriff beside which it will sit in a user's tool list.
+* *Distance from the gear:* few, large lobes turn the seal into a gear, the common symbol for settings; the first trial
+  with twelve lobes read that way. The lobes stay small and many (twenty in the provisional drawing).
+* *No ribbons:* a seal with ribbon tails reads as an award or a certificate, which is a claim the application does not
+  make (<<_decision>>).
 * *The earlier sketch is superseded.* `resources/brand/mark-sketch.svg` shows the TrailHand idea (a page with a trail of
   three commit nodes). It stays as a record of that idea and is not an asset to ship.
 * *Provisional drawing in the web app.* Until the final mark is delivered and accepted, the web app carries a
-  provisional drawing of the TrailHand idea (`web-app/src/lib/brand/BrandMark.svelte`, favicon
-  `web-app/static/brand-mark.svg`); `MARK_IS_PROVISIONAL` in `web-app/src/lib/brand/brand.ts` marks it. It must be
-  replaced by the seal before the first release.
+  provisional drawing of the seal idea (`web-app/src/lib/brand/BrandMark.svelte`, the seal alone at `16` px and in the
+  favicon `web-app/static/brand-mark.svg`); `MARK_IS_PROVISIONAL` in `web-app/src/lib/brand/brand.ts` marks it. It must
+  be replaced by the accepted final mark before the first release.
 
 [cols="1,1,1,1"]
 |===
 |Drawing |Made by |Accepted |Licence
 
-|Provisional mark and favicon of the web app (TrailHand idea)
-|Drawn by hand as SVG during the bootstrap of the web app, after the superseded sketch
+|Provisional mark and favicon of the web app (seal idea)
+|Drawn as SVG on the `24 × 24` grid on 2026-11-22; the scalloped edge is computed (twenty lobes, rounded). It replaced
+the provisional drawing of the TrailHand idea.
 |No: provisional, replaced before the first release
 |Apache License 2.0, as the repository
 |===
