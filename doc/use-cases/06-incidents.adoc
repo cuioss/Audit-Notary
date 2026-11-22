@@ -47,7 +47,7 @@ Variations::
 * *Personal details*: data subjects only as categories and approximate numbers; persons as pseudonyms; the free-text
   fields carry the hint that details belong in the ticket.
 Outcome:: a saved report in the incident repository of the year, its deadlines computed (<<UC-IR-2>>).
-Open points:: the schema of the report; how the one kind `incident` addresses a repository per year
+Open points:: the schema of the report; how the one document type `incident` addresses a repository per year
 (xref:../concepts/data-protection-and-repository-layout.adoc#_open_questions[Data Protection and Repository Layout,
 Open Questions]); importing the timeline and proposing further affected services are deferred
 (xref:../concepts/category-incident-reports.adoc#_open_questions[Incident Reports, Open Questions]).

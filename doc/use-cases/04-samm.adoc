@@ -66,7 +66,7 @@ Variations::
 * *Assessors not yet logged in* are picked from prefilled entries (xref:03-catalogs.adoc#UC-CAT-4[UC-CAT-4]).
 * *A model version not pinned* cannot be chosen.
 Outcome:: an empty assessment, one answer file per practice, waits for the workshop.
-Open points:: the schemas of the kinds `scope` and `assessment`
+Open points:: the schemas of the document types `scope` and `assessment`
 (xref:../concepts/category-samm.adoc#_open_questions[SAMM, Open Questions]).
 Requirements:: xref:../specification/category-samm.adoc#AUN-SAMM-1[AUN-SAMM-1] (layout, model version),
 xref:../specification/category-samm.adoc#AUN-SAMM-2[AUN-SAMM-2] (scope reference),

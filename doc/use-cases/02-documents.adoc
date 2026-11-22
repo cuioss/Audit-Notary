@@ -85,13 +85,14 @@ Design:: xref:../concepts/web-app.adoc#_security_of_the_page[Web App, Security o
 Status:: `DRAFT`
 Actor:: a team member with `edit`, in the web app; an AI agent for the user.
 Goal:: create a document or change one in a form that keeps my work as I type and shows me what others save.
-Trigger:: the user creates a document of a kind, or opens one to edit it.
-Preconditions:: the user has `edit` on the kind's repository; the document is not released.
+Trigger:: the user creates a document of a document type, or opens one to edit it.
+Preconditions:: the user has `edit` on the document type's repository; the document is not released.
 Flow::
 +
 [source,text]
 ----
-  [S] form.open                the form generated from the kind's schema;
+  [S] form.open                the form generated from the document
+       │                       type's schema;
        │                       the blob ids loaded are remembered; an
        │                       existing draft of the user is restored
        ▼
@@ -318,7 +319,7 @@ Variations::
 * *Not approved*: the request stays pending; the document can be edited further.
 Outcome:: the release, if it happens, is a human act with step-up; the request and its comment are on record.
 Open points:: how a release request is stored in Git: as a field of the document on its working branch, or as a
-document of a kind of its own, and in which repository
+document of a document type of its own, and in which repository
 (xref:../concepts/mcp-server.adoc#_open_questions[MCP Server, Open Questions]); whether a pending request is also shown
 to the approvers, not only to the requesting user.
 Requirements:: xref:../specification/mcp-server.adoc#AUN-MCP-6[AUN-MCP-6] (human-bound releases),
@@ -341,7 +342,7 @@ Flow::
 . *Releases*: pending release requests (xref:#UC-DOC-8[UC-DOC-8]).
 . *Repositories*: for a catalog administrator, repositories whose retention period has ended
   (xref:10-operations.adoc#UC-OPS-4[UC-OPS-4]).
-. *Each item* names its kind, lens, title and due date and opens its canonical address.
+. *Each item* names its kind (deadline, review or release), lens, title and due date and opens its canonical address.
 Variations::
 * *Through an agent*: `list_due`.
 * *Reminders* are recomputed from the index every minute; they are run-time state, not persistence.

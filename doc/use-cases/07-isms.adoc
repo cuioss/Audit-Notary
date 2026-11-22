@@ -23,7 +23,8 @@ Flow::
 +
 [source,text]
 ----
-  [U] document.create          one of the kinds policy, isms-scope,
+  [U] document.create          one of the document types policy,
+       │                       isms-scope,
        │                       audit-report, management-review
        ▼
   ↳ UC-DOC-3, UC-DOC-4         edited and saved

@@ -64,6 +64,10 @@ same-origin (xref:specification/web-app.adoc#AUN-WEB-1[AUN-WEB-1]), its visual l
 * [[changes]]*Changes*: a use case states what it needs. While it is `DRAFT`, the changes of the specification it
   needs are written in a _Changes to the Specification_ part of its module, each the fix of a gap, and named in its
   _Changes_; once it is `AGREED`, they are written into the concepts and specifications, and the part is removed.
+* *Terms*: a *category* (SAMM, ISMS, a custom one) is the unit that is switched on and shown as a lens; a *document
+  type* (`kind` in identifiers and files, the library's term) is one kind of document of a category, with its schema,
+  workflow and template; a schema is a file of a document type, not a level of its own
+  (xref:use-cases/09-categories.adoc[Categories]).
 * *Sources*: a use case states no fact about an external product, standard or law of its own; it links the concept or
   specification that cites the source (`AGENTS.md`).
 * *Shape*: each use case has the parts of the template below; a part that does not apply is left out, never filled
@@ -173,8 +177,9 @@ date.
 
 |`UC-KND`
 |xref:use-cases/09-categories.adoc[09-categories.adoc]
-|Categories as configuration: supplying a custom category at run time, inspecting the delivered ones, and creating and
-changing the schemas, workflows and templates of custom categories in the editor.
+|Categories and their document types as configuration: supplying a custom category at run time, inspecting and copying
+categories, creating and changing the schemas, workflows and templates of custom categories in the editor, and
+switching categories and document types on or off.
 
 |`UC-OPS`
 |xref:use-cases/10-operations.adoc[10-operations.adoc]
@@ -227,7 +232,7 @@ that needs it.
 |The extension; the register receives the risks of SAMM gaps, threats and incidents.
 
 |M9 Custom categories
-|UC-KND-1 to UC-KND-4
+|UC-KND-1 to UC-KND-5
 |Needs the delivered categories as examples and the generated forms of M2.
 |===
 
@@ -255,8 +260,8 @@ in the concept's _Open Questions_. This section lists every one of them; it hold
   of the review (xref:use-cases/05-threat-models.adoc#UC-TM-1[UC-TM-1],
   xref:use-cases/05-threat-models.adoc#UC-TM-2[UC-TM-2];
   xref:concepts/category-threat-models.adoc#_open_questions[Threat Models, Open Questions]).
-* `UC-IR`: the schema of the report, the deadline rules the library still lacks, and how one kind addresses a
-  repository per year (xref:use-cases/06-incidents.adoc#UC-IR-1[UC-IR-1],
+* `UC-IR`: the schema of the report, the deadline rules the library still lacks, and how one document type
+  addresses a repository per year (xref:use-cases/06-incidents.adoc#UC-IR-1[UC-IR-1],
   xref:use-cases/06-incidents.adoc#UC-IR-2[UC-IR-2]).
 * `UC-ISMS`: the measurement of the index at register size before the register is built
   (xref:use-cases/07-isms.adoc#UC-ISMS-2[UC-ISMS-2]; xref:concepts/category-isms.adoc[ISMS]).
@@ -264,7 +269,8 @@ in the concept's _Open Questions_. This section lists every one of them; it hold
   whether recipes are offered as MCP prompts (xref:use-cases/08-agents.adoc#UC-AGT-1[UC-AGT-1];
   xref:concepts/mcp-server.adoc#_open_questions[MCP Server, Open Questions]).
 * `UC-KND`: durable state on the volume against xref:specification/architecture-and-modules.adoc#AUN-GEN-3[AUN-GEN-3],
-  schema evolution of existing documents, the lens of a custom category, and what an agent may read of a category
+  schema evolution of existing documents, the lens of a custom category, what an agent may read of a category, whether
+  a change that invalidates documents is refused or confirmed, and whether categories are switched in the application
   (xref:use-cases/09-categories.adoc#open-points[Categories, Open Points]).
 * `UC-OPS`: the rest of JGit in the native image (xref:use-cases/10-operations.adoc#UC-OPS-1[UC-OPS-1];
   xref:concepts/application-architecture.adoc#_open_questions[Application Architecture, Open Questions]).

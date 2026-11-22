@@ -26,7 +26,8 @@ Flow::
 [source,text]
 ----
   [O] config.write             audit-notary.yaml: repositories, rights,
-       │                       oidc, categories, step-up, signing,
+       │                       oidc, the enabled categories and their
+       │                       document types, step-up, signing,
        │                       anchor, mcp, web, directory; secrets only
        │                       as references
        ▼
@@ -44,6 +45,8 @@ Variations::
 * *Already built*: the bootstrap reads and validates `repositories`, `rights`, `oidc`, `web` and `fetch`, the
   placeholders, `file:` references, and runs the native image in the integration tests; the other keys are not
   checked yet (xref:../specification/configuration.adoc#_boot_validation[Configuration, Boot Validation]).
+* *Categories*: which categories and document types are on is part of this configuration
+  (xref:09-categories.adoc#UC-KND-5[UC-KND-5]).
 * *Compose sample*: a sample with Keycloak and Gitea and a check script shows a working setup.
 Outcome:: the application runs with a valid configuration and is ready.
 Open points:: whether the rest of JGit (HTTPS transport, in-core writing, notes) runs in the native image
@@ -81,7 +84,7 @@ Flow::
 Variations::
 * *One retention period, one confidentiality class* per repository; data with different periods never share one.
 Outcome:: the repository is part of the application, with its rights, class and retention period.
-Open points:: how the one kind `incident` addresses a repository per year
+Open points:: how the one document type `incident` addresses a repository per year
 (xref:../concepts/data-protection-and-repository-layout.adoc#_open_questions[Data Protection and Repository Layout,
 Open Questions]).
 Requirements:: xref:../specification/configuration.adoc#AUN-CONF-2[AUN-CONF-2] (repositories),
