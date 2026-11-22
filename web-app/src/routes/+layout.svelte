@@ -14,7 +14,7 @@
 
   /**
    * The root of the app: theme, start (status, texts, session, event stream), the first-login rule
-   * (TRH-DIR-2) and the shell around every view.
+   * (AUN-DIR-2) and the shell around every view.
    */
   let { children }: { children: Snippet } = $props();
 
@@ -42,7 +42,7 @@
     };
   });
 
-  // Until the own entry is saved, the first-login form is the only view (TRH-DIR-2).
+  // Until the own entry is saved, the first-login form is the only view (AUN-DIR-2).
   $effect(() => {
     if ($bootPhase === 'ready' && $session?.firstLoginRequired && route !== 'welcome') {
       void goto('/welcome', { replaceState: true });

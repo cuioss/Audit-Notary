@@ -5,7 +5,7 @@
    * One icon of the set, painted through its alpha mask in the current text colour.
    *
    * Decorative wherever a visible label carries the meaning; `label` names it where it stands alone. The
-   * size and the mask are set through the CSSOM (`style:`), which `style-src 'self'` permits (TRH-WEB-8).
+   * size and the mask are set through the CSSOM (`style:`), which `style-src 'self'` permits (AUN-WEB-8).
    */
   interface Props {
     /** The icon name from `uiIcons`. */

@@ -11,7 +11,7 @@
   import WizardPage from '../templates/WizardPage.svelte';
 
   /**
-   * Settings of this browser: theme and language. The own directory entry joins it (TRH-DIR-3).
+   * Settings of this browser: theme and language. The own directory entry joins it (AUN-DIR-3).
    */
   let theme: ThemeChoice = $state(readThemeChoice());
 

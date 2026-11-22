@@ -6,7 +6,7 @@
 
   /**
    * The search of the top bar: filter-as-you-type over the views; Enter opens the first match.
-   * Ctrl+K or Cmd+K opens it from anywhere. Document search joins it with the index (TRH-GEN-2, `search`).
+   * Ctrl+K or Cmd+K opens it from anywhere. Document search joins it with the index (AUN-GEN-2, `search`).
    */
   interface Props {
     /** Whether the palette is open, bindable. */

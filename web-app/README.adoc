@@ -1,8 +1,8 @@
-= TrailHand Web App
+= Audit Notary Web App
 :toc: left
 :toclevels: 2
 
-The browser interface of TrailHand: a Svelte 5 single-page application (SvelteKit, `adapter-static`), packaged as a
+The browser interface of Audit Notary: a Svelte 5 single-page application (SvelteKit, `adapter-static`), packaged as a
 resource JAR that the application serves. Specification: `doc/specification/web-app.adoc`; reasoning:
 `doc/concepts/web-app.adoc`. Structure and visuals follow `pm-web-app` of `pm-mcp-clients`.
 
@@ -22,7 +22,7 @@ resource JAR that the application serves. Specification: `doc/specification/web-
 |`src/lib/i18n/`
 |Texts: the catalogue of `GET /api/v1/messages`, cached per application version; the ICU subset in `format.ts`
 
-|`src/main/resources/META-INF/trailhand/`
+|`src/main/resources/META-INF/audit-notary/`
 |Shared with the application and `web-mock`: the catalogue (`messages/messages_{en,de}.properties`) and the canonical
 addresses (`canonical-addresses.json`)
 
@@ -55,7 +55,7 @@ Maven runs all of them (`frontend-maven-plugin`) and packages `build/` under `ME
 * No colour literal outside `tokens.css` (stylelint, `tokens.test.ts`).
 * No literal text in markup and no raw controls in views (`scripts/text-literal-lint.mjs`); every text is a catalogue
   key, and both languages hold the same keys (`catalogue.test.ts`).
-* No `style` attribute in markup: `style-src 'self'` (TRH-WEB-8) admits styles set through the CSSOM (`style:`)
+* No `style` attribute in markup: `style-src 'self'` (AUN-WEB-8) admits styles set through the CSSOM (`style:`)
   only.
 * The build carries the policy `<meta>` with the bootstrap hash and loads nothing from another origin
   (`scripts/check-build-output.mjs`).

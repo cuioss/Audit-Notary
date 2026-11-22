@@ -1,5 +1,5 @@
 <script lang="ts" module>
-  /** The poses of the ranch-hand mascot (doc/concepts/brand.adoc, The Mascot). */
+  /** The poses of the notary mascot (doc/concepts/brand.adoc, The Mascot). */
   export const MASCOT_POSES = ['welcome', 'at-work', 'done'] as const;
   /** A pose. */
   export type MascotPose = (typeof MASCOT_POSES)[number];

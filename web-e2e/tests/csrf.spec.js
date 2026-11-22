@@ -3,7 +3,7 @@ import { useScenario } from './helpers/mock.js';
 import { login } from './helpers/login.js';
 
 /**
- * TRH-WEB-8: a state-changing request needs the anti-CSRF header, and a foreign Origin is refused.
+ * AUN-WEB-8: a state-changing request needs the anti-CSRF header, and a foreign Origin is refused.
  */
 test.beforeEach(async ({ request }) => {
   await useScenario(request, 'first-login');

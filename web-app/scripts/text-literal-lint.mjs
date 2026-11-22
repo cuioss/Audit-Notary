@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * The lint against literal text in markup (TRH-WEB-7) and against raw controls in views (the closed
+ * The lint against literal text in markup (AUN-WEB-7) and against raw controls in views (the closed
  * vocabulary of pm-web-app components.adoc). Run by `npm run lint`.
  *
  * - Outside `src/lib/i18n`, no `.svelte` file may hold a text node or one of the attributes `title`,

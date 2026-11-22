@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 /**
- * Inter, self-hosted (TRH-WEB-2): the variable `woff2` and its licence ship from `static/fonts/`.
+ * Inter, self-hosted (AUN-WEB-2): the variable `woff2` and its licence ship from `static/fonts/`.
  */
 describe('self-hosted Inter', () => {
   const fontsDir = path.resolve(__dirname, '../../static/fonts');

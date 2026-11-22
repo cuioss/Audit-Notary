@@ -13,7 +13,7 @@
   import WizardPage from '../templates/WizardPage.svelte';
 
   /**
-   * The first login (TRH-DIR-2): the own entry of the person directory, prefilled with the name from the
+   * The first login (AUN-DIR-2): the own entry of the person directory, prefilled with the name from the
    * token and the team from the groups; team and role are picked from the catalogs; the information text
    * stands before the save button.
    */

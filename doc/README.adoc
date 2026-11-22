@@ -1,11 +1,11 @@
-= TrailHand -- Documentation Index
+= Audit Notary -- Documentation Index
 :toc: left
 :toclevels: 3
 :toc-title: Table of Contents
 :sectnums:
 :source-highlighter: highlight.js
 
-*TrailHand* -- the CISO's friend -- is the server application in which a development organisation maintains its
+*Audit Notary* is the server application in which a development organisation maintains its
 OWASP SAMM assessments, threat models, incident response reports and ISMS documents as versioned documents, on the Git
 server it already runs. It is built on the libraries of `git-document-repository` and the Token Sheriff libraries, runs as a Quarkus
 native application on Java 25, and has two user interfaces: a web app for people and an MCP server for AI agents
@@ -19,7 +19,7 @@ in one go on 2026-11-20. It is self-contained: its diagrams are in `resources/di
 links into the library documentation, by absolute address, only to the library concepts and specifications.
 ====
 
-New readers start with the xref:concepts/trailhand-overview.adoc[Overview]; operators with
+New readers start with the xref:concepts/audit-notary-overview.adoc[Overview]; operators with
 xref:concepts/deployment.adoc[Deployment] and xref:specification/configuration.adoc[Configuration].
 
 [#_concepts]
@@ -27,7 +27,7 @@ xref:concepts/deployment.adoc[Deployment] and xref:specification/configuration.a
 
 In reading order:
 
-. xref:concepts/trailhand-overview.adoc[Overview] -- question, categories, audience, interfaces, positioning
+. xref:concepts/audit-notary-overview.adoc[Overview] -- question, categories, audience, interfaces, positioning
 . xref:concepts/category-samm.adoc[OWASP SAMM Assessments] -- layout, workshop editing, release, scores, targets
 . xref:concepts/category-threat-models.adoc[Threat Models] -- tool landscape, place of a model, life cycle
 . xref:concepts/category-incident-reports.adoc[Incident Response Reports] -- handling versus report, notification
@@ -54,7 +54,7 @@ https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/git-as-
 [#_specification]
 == Specification
 
-Each specification document states its requirements as numbered sections (`TRH-<GROUP>-<n>`): first the rules that
+Each specification document states its requirements as numbered sections (`AUN-<GROUP>-<n>`): first the rules that
 must hold, then the design that realises them. The application is in its bootstrap: the concepts and specifications
 describe its full design, including every check and CI job they name, and the modules built so far are listed in
 xref:specification/architecture-and-modules.adoc#_maven_modules[Architecture and Modules]. Each module documents its
@@ -65,55 +65,55 @@ layout and commands in its own `README.adoc`.
 |Document |Group |Content
 
 |xref:specification/architecture-and-modules.adoc[Architecture and Modules]
-|`TRH-GEN`
+|`AUN-GEN`
 |What the libraries own, Maven modules, categories, layers, run-time state, logging, an unreachable Git server
 
 |xref:specification/configuration.adoc[Configuration]
-|`TRH-CONF`
-|`application.properties`, `trailhand.yaml`, boot validation, repositories and refresh
+|`AUN-CONF`
+|`application.properties`, `audit-notary.yaml`, boot validation, repositories and refresh
 
 |xref:specification/deployment.adoc[Deployment]
-|`TRH-OPS`
+|`AUN-OPS`
 |Image, ports and readiness, secrets, compose sample
 
 |xref:specification/authentication.adoc[Authentication]
-|`TRH-AUTH`
+|`AUN-AUTH`
 |Web login, rights, signed commits and trailers, step-up, the Git credential
 
 |xref:specification/directory.adoc[Directory and Catalogs]
-|`TRH-DIR`
+|`AUN-DIR`
 |Person directory, first login, catalogs, service catalog, Backstage import, former members
 
 |xref:specification/mcp-server.adoc[MCP Server]
-|`TRH-MCP`
+|`AUN-MCP`
 |Transport, metadata, token validation, scopes, credentials, tools, audit
 
 |xref:specification/web-app.adoc[Web App]
-|`TRH-WEB`
+|`AUN-WEB`
 |Stack, visual language, navigation, forms, editing, review, texts, page security
 
 |xref:specification/category-samm.adoc[SAMM]
-|`TRH-SAMM`
+|`AUN-SAMM`
 |Layout, scope, editing, release, scores and comparison, targets, evidence
 
 |xref:specification/category-threat-models.adoc[Threat Models]
-|`TRH-TM`
+|`AUN-TM`
 |Place, format, review due date, links, recipes
 
 |xref:specification/category-incident-reports.adoc[Incident Reports]
-|`TRH-IR`
+|`AUN-IR`
 |Layout, deadlines, mandatory fields, affected services
 
 |xref:specification/category-isms.adoc[ISMS]
-|`TRH-ISMS`
+|`AUN-ISMS`
 |Documents, risk register, reporting dates, operational data
 
 |xref:specification/data-protection.adoc[Data Protection]
-|`TRH-DP`
+|`AUN-DP`
 |Repository cut, references, erasure, retention, personal details, read-access events
 
 |xref:specification/testing.adoc[Testing]
-|`TRH-TEST`, `TRH-NFR`
+|`AUN-TEST`, `AUN-NFR`
 |Test lanes, mock server, index size, save latency, concurrency, security tests, native image
 |===
 

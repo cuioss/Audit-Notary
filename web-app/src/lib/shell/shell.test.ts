@@ -19,7 +19,7 @@ import {
 } from './nav';
 
 describe('nav', () => {
-  it('offers the eight lenses of TRH-WEB-3, four of them on the phone bar', () => {
+  it('offers the eight lenses of AUN-WEB-3, four of them on the phone bar', () => {
     expect(ALL_ITEMS.map((item) => item.lens)).toEqual([
       'due',
       'samm',

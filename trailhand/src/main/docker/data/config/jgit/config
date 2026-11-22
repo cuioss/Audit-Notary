@@ -1,8 +1,0 @@
-# User config of JGit (XDG_CONFIG_HOME=/app/data/config, TRH-OPS-2).
-# JGit starts a gc in the background after the fetch of a fresh bare clone, while the clone is still in its staging
-# directory. The directory is then moved to its place and the gc fails with an ERROR on its lock file. autoDetach
-# makes the gc run in the calling thread, so it is over before the move; auto = 0 skips it, as the bare repositories
-# are fetched, never worked in.
-[gc]
-	auto = 0
-	autoDetach = false

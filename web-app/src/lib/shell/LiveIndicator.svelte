@@ -5,7 +5,7 @@
   import { streamState } from '../stores/app';
 
   /**
-   * The state of the event stream (TRH-WEB-5): a word and a dot, never a colour alone. Offline offers
+   * The state of the event stream (AUN-WEB-5): a word and a dot, never a colour alone. Offline offers
    * "Try again".
    */
   const LABELS = {

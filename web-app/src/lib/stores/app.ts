@@ -24,14 +24,14 @@ export const bootPhase = writable<BootPhase>('starting');
 
 /** The result of {@link boot}. */
 export interface BootResult {
-  /** Whether the user must save the own directory entry first (TRH-DIR-2). */
+  /** Whether the user must save the own directory entry first (AUN-DIR-2). */
   firstLoginRequired: boolean;
   /** Ends the subscriptions the start opened. */
   stop: () => void;
 }
 
 /**
- * Starts the app: status, texts, session, event stream (TRH-WEB-9).
+ * Starts the app: status, texts, session, event stream (AUN-WEB-9).
  *
  * The status and the texts need no login, so the login screen of a `401` is never without texts.
  *

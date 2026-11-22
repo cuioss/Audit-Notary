@@ -1,7 +1,7 @@
 /**
  * The ports of the Vite dev server and of the mock server (`web-mock`), from the environment.
  *
- * `TRAILHAND_WEB_PORT` (default 5173) and `TRAILHAND_MOCK_PORT` (default 7420) are the only names; the
+ * `AUDIT_NOTARY_WEB_PORT` (default 5173) and `AUDIT_NOTARY_MOCK_PORT` (default 7420) are the only names; the
  * end-to-end suite passes the same variables.
  */
 export interface ResolvedPorts {
@@ -36,8 +36,8 @@ function parsePort(name: string, rawValue: string | undefined, defaultPort: numb
  * @throws Error if a variable holds no valid port
  */
 export function resolvePorts(env: Record<string, string | undefined> = process.env): ResolvedPorts {
-  const webPort = parsePort('TRAILHAND_WEB_PORT', env.TRAILHAND_WEB_PORT, 5173);
-  const mockPort = parsePort('TRAILHAND_MOCK_PORT', env.TRAILHAND_MOCK_PORT, 7420);
+  const webPort = parsePort('AUDIT_NOTARY_WEB_PORT', env.AUDIT_NOTARY_WEB_PORT, 5173);
+  const mockPort = parsePort('AUDIT_NOTARY_MOCK_PORT', env.AUDIT_NOTARY_MOCK_PORT, 7420);
   return { webPort, mockPort, mockTarget: `http://127.0.0.1:${mockPort}` };
 }
 
@@ -45,8 +45,8 @@ export function resolvePorts(env: Record<string, string | undefined> = process.e
  * Whether the dev server must hold an assigned port instead of moving to the next free one.
  *
  * @param env the environment, `process.env` by default
- * @returns `true` when `TRAILHAND_WEB_PORT` names a port
+ * @returns `true` when `AUDIT_NOTARY_WEB_PORT` names a port
  */
 export function holdsAssignedPort(env: Record<string, string | undefined> = process.env): boolean {
-  return (env.TRAILHAND_WEB_PORT ?? '').trim() !== '';
+  return (env.AUDIT_NOTARY_WEB_PORT ?? '').trim() !== '';
 }

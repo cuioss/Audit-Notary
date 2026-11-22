@@ -1,4 +1,4 @@
-# The primary profiles of the web mock, in menu order (doc/specification/testing.adoc, TRH-TEST-1).
+# The primary profiles of the web mock, in menu order (doc/specification/testing.adoc, AUN-TEST-1).
 workshop
 first-login
 read-only

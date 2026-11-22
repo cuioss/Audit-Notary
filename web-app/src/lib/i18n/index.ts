@@ -1,5 +1,5 @@
 /**
- * The texts of the web app (TRH-WEB-7).
+ * The texts of the web app (AUN-WEB-7).
  *
  * Every user-facing text comes from the server's message catalogue, `GET /api/v1/messages?lang=`; the
  * app embeds no catalogue. A catalogue is kept in `localStorage` per locale and application version, so
@@ -18,10 +18,10 @@ export const LOCALES = ['en', 'de'] as const;
 export type Locale = (typeof LOCALES)[number];
 
 /** The storage key of the language this browser chose. */
-export const LOCALE_STORAGE_KEY = 'trailhand_locale';
+export const LOCALE_STORAGE_KEY = 'audit_notary_locale';
 
 /** The storage key prefix of a cached catalogue: `<prefix><locale>@<version>`. */
-export const CATALOGUE_STORAGE_PREFIX = 'trailhand_messages_';
+export const CATALOGUE_STORAGE_PREFIX = 'audit_notary_messages_';
 
 /** The language the app shows. */
 export const currentLocale = writable<Locale>('en');

@@ -1,15 +1,15 @@
-= TrailHand Web Mock
+= Audit Notary Web Mock
 :toc: left
 :toclevels: 2
 :source-highlighter: highlight.js
 
-A mock server of the `/api/v1` requests of the TrailHand web app, driven by scenario files. The web unit tests, the
+A mock server of the `/api/v1` requests of the Audit Notary web app, driven by scenario files. The web unit tests, the
 end-to-end suite (`web-e2e`) and manual work on views run against it instead of the application, the identity provider
-and a Git server. Specification: `doc/specification/testing.adoc`, TRH-TEST-1; decision:
+and a Git server. Specification: `doc/specification/testing.adoc`, AUN-TEST-1; decision:
 `doc/adr/0003-UI_tests_run_against_a_scenario_mock_server.adoc`. Development and tests only; never deployed.
 
 Plain Java 25: the JDK HTTP server on `127.0.0.1`, one virtual thread per request, Jackson. The message catalogue
-and the canonical addresses come from the `trailhand-web-app` JAR (`META-INF/trailhand/`).
+and the canonical addresses come from the `audit-notary-web-app` JAR (`META-INF/audit-notary/`).
 
 == Start and Stop
 
@@ -37,7 +37,7 @@ WEB_MOCK-1: Web mock listening on http://127.0.0.1:7420 with scenario workshop#r
 |A profile name, `name#state`, or the path of a scenario file (optionally with `#state`)
 
 |`-p`, `--port`
-|`$TRAILHAND_MOCK_PORT` or `7420`
+|`$AUDIT_NOTARY_MOCK_PORT` or `7420`
 |Port on `127.0.0.1`; `0` takes any free port
 
 |`-t`, `--timing`
@@ -49,7 +49,7 @@ WEB_MOCK-1: Web mock listening on http://127.0.0.1:7420 with scenario workshop#r
 |Prints the usage
 |===
 
-Without the scripts: `java -cp … de.cuioss.trailhand.mock.cli.WebMockCli --scenario workshop`, or
+Without the scripts: `java -cp … de.cuioss.notary.audit.mock.cli.WebMockCli --scenario workshop`, or
 `./mvnw -pl web-mock exec:java -Dexec.args="--scenario workshop"`. From a JUnit test:
 `try (var mock = WebMock.start("workshop", 0, Timing.ORDERED)) { … }`.
 
@@ -90,14 +90,14 @@ Without the scripts: `java -cp … de.cuioss.trailhand.mock.cli.WebMockCli --sce
 == What the Mock Emulates
 
 * *Session:* `GET /api/v1/auth/login?return=<address>` signs in as the scenario's user without an identity provider:
-  it sets the cookie `trailhand-mock-session` (`HttpOnly`, `SameSite=Strict`, `Path=/`; not `Secure`, the mock runs
+  it sets the cookie `audit-notary-mock-session` (`HttpOnly`, `SameSite=Strict`, `Path=/`; not `Secure`, the mock runs
   on plain HTTP) and answers a page that navigates to the checked `return` by `<meta http-equiv="refresh">`, no
   script. A `return` that is not a canonical address becomes `/`. Every other `/api/v1` request without session
   answers `401 UNAUTHENTICATED` with `login`.
 * *Anti-CSRF and Origin:* every state-changing request must carry `X-CSRF-Token` with the token of
   `GET /api/v1/session`; an `Origin` header must be the own origin, which is `X-Forwarded-Proto://X-Forwarded-Host`
   behind the Vite proxy (`xfwd: true`), otherwise `http://<Host>`. Otherwise `403 CSRF_REJECTED`.
-* *First login:* while `first_login_required` holds, every request outside the allow-list of TRH-DIR-2 answers
+* *First login:* while `first_login_required` holds, every request outside the allow-list of AUN-DIR-2 answers
   `403 FIRST_LOGIN_REQUIRED`.
 * *Built in:* `GET /api/v1/session`, `POST /api/v1/auth/logout` (answers `{"redirect"}` to the page
   `/api/v1/auth/mock-signed-out`), `GET /api/v1/messages?lang=en|de` (`400` for another language) and
@@ -176,7 +176,7 @@ No login; the Vite dev server forwards `/mock` for loopback clients only.
 
 == Use by the Web App and the End-to-End Suite
 
-* *Vite dev server:* proxies `/api` and `/mock` to `http://127.0.0.1:$TRAILHAND_MOCK_PORT` with `changeOrigin` and
+* *Vite dev server:* proxies `/api` and `/mock` to `http://127.0.0.1:$AUDIT_NOTARY_MOCK_PORT` with `changeOrigin` and
   `xfwd`; `/mock` only for loopback clients.
 * *Web unit tests:* read the scenario files directly as fixtures.
 * *End-to-end suite:* starts the mock in its global setup on a fixed port with `--timing ordered`, switches profiles

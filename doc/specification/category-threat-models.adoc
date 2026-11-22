@@ -1,24 +1,24 @@
-= TrailHand: Category Threat Models
+= Audit Notary: Category Threat Models
 :toc: left
 :toclevels: 2
 :toc-title: Table of Contents
 :source-highlighter: highlight.js
 
-xref:../README.adoc[TrailHand documentation] » Specification
+xref:../README.adoc[Audit Notary documentation] » Specification
 
 The threat-model category as configuration (`categories/threat-models/`). Reasoning:
 xref:../concepts/category-threat-models.adoc[Threat Models]. Repository: `threat-models`.
 
-[#TRH-TM-1]
-== TRH-TM-1: Place of a Threat Model
+[#AUN-TM-1]
+== AUN-TM-1: Place of a Threat Model
 
 * Every threat model must be stored in the central repository `threat-models` as a document of the per-document kind
   `threat-model` in the library's layout (https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-3[GDR-FORMS-3]), at
   `models/<ulid>/`, and saved and released like every other document. The service is a field of the document, not a
   part of its path, so a reference needs no service id and a renamed service moves no file.
 
-[#TRH-TM-2]
-== TRH-TM-2: Open Format
+[#AUN-TM-2]
+== AUN-TM-2: Open Format
 
 * A threat model must be stored as one file in an open, published threat-model format.
 * Diagrams must be stored as data; images must be generated.
@@ -38,22 +38,22 @@ Threat Dragon v2.6.2]), and Open Threat Model
 (link:https://github.com/iriusrisk/OpenThreatModel[OTM on GitHub]); which one is used is an open question of the
 concept (xref:../concepts/category-threat-models.adoc#_open_questions[Threat Models, Open Questions]).
 
-[#TRH-TM-3]
-== TRH-TM-3: Review Due Date
+[#AUN-TM-3]
+== AUN-TM-3: Review Due Date
 
 * A threat model must be due for review one review interval after its last review; the interval must follow the
   highest of the service's effective protection needs.
 
 The intervals are data of the kind, not code: `very-high` `P6M`, `high` `P12M`, `normal` `P24M`, applied to the highest
 of the three effective protection needs (confidentiality, integrity, availability) of the service
-(xref:directory.adoc#TRH-DIR-5[TRH-DIR-5]) and counted from `last-review`, which a completed review sets. The
+(xref:directory.adoc#AUN-DIR-5[AUN-DIR-5]) and counted from `last-review`, which a completed review sets. The
 deadline rules of https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-6[GDR-FORMS-6] cannot express this yet: none
 selects a period by a value of a referenced catalog entry or counts from a date field. The rule the library needs is
 an open question of
 https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/schema-driven-documents.adoc#_open_questions[Schema-Driven Documents, Open Questions].
 
-[#TRH-TM-4]
-== TRH-TM-4: Links and Evaluation
+[#AUN-TM-4]
+== AUN-TM-4: Links and Evaluation
 
 * Every threat model must refer to exactly one `service:` entry.
 * An accepted or untreated threat must be transferable into an ISMS risk entry.
@@ -67,12 +67,12 @@ Transfer, issues and evaluation:
 * Evaluation per service: open threats, untreated threats (without countermeasure and not transferred to the risk
   register), days since `last-review`, review due date.
 
-[#TRH-TM-5]
-== TRH-TM-5: Recipes
+[#AUN-TM-5]
+== AUN-TM-5: Recipes
 
 * The application must guide the filling-in of a threat model by a recipe: an ordered list of steps, each naming the
   part of the model it fills.
 
 A recipe is `categories/threat-models/recipes/<id>.yaml`: `title`, ordered `steps`, each with `title`, `guidance`
 (AsciiDoc fragment) and `fills` (JSON Pointer into the model file). The web app renders a recipe as `WizardPage`; the MCP
-server exposes recipes through the tool `read_recipe` (xref:mcp-server.adoc#TRH-MCP-6[MCP Server, TRH-MCP-6]).
+server exposes recipes through the tool `read_recipe` (xref:mcp-server.adoc#AUN-MCP-6[MCP Server, AUN-MCP-6]).

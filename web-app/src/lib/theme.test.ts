@@ -23,8 +23,8 @@ function stubMedia(matches: boolean) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('theme', () => {
-  it('stores and reads the choice under trailhand_theme (TRH-WEB-2)', () => {
-    expect(THEME_STORAGE_KEY).toBe('trailhand_theme');
+  it('stores and reads the choice under audit_notary_theme (AUN-WEB-2)', () => {
+    expect(THEME_STORAGE_KEY).toBe('audit_notary_theme');
     expect(readThemeChoice()).toBe('system');
     writeThemeChoice('dark');
     expect(readThemeChoice()).toBe('dark');

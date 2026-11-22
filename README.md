@@ -1,9 +1,9 @@
-# TrailHand
+# Audit Notary
 
-<img align="right" width="260" src="doc/resources/brand/mascot-welcome.png" alt="The TrailHand mascot: a bear in a cowboy hat and neckerchief waves and holds a tally book">
+<img align="right" width="260" src="doc/resources/brand/mascot-welcome.png" alt="Provisional mascot: a bear in a cowboy hat and neckerchief waves and holds a tally book">
 
-[![Maven Build](https://github.com/cuioss/TrailHand/actions/workflows/maven.yml/badge.svg)](https://github.com/cuioss/TrailHand/actions/workflows/maven.yml)
-[![Integration Tests](https://github.com/cuioss/TrailHand/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/cuioss/TrailHand/actions/workflows/integration-tests.yml)
+[![Maven Build](https://github.com/cuioss/AuditNotary/actions/workflows/maven.yml/badge.svg)](https://github.com/cuioss/AuditNotary/actions/workflows/maven.yml)
+[![Integration Tests](https://github.com/cuioss/AuditNotary/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/cuioss/AuditNotary/actions/workflows/integration-tests.yml)
 [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=cuioss_TrailHand&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=cuioss_TrailHand)
@@ -20,7 +20,7 @@ Security documentation tends to live in four places at once: a spreadsheet for t
 per threat model, a Confluence space for incident reports and an ISMS tool. Each has its own history, its own rights and
 its own backup, and none of them knows the others.
 
-**TrailHand**, the CISO's friend, is the server application in which a development organisation keeps its
+**Audit Notary** is the server application in which a development organisation keeps its
 **OWASP SAMM assessments, threat models, incident response reports and ISMS documents** as versioned documents on the
 **Git server it already runs**. No client holds a clone and no additional database is needed.
 
@@ -36,13 +36,13 @@ changed what and when, is the history of the Git server and not a table in a dat
 output, review and approval, deadlines and typed links. By design both interfaces call the same application services,
 so what a user may do is decided once, in the server.
 
-The reasoning is in the [Overview](doc/concepts/trailhand-overview.adoc), the
+The reasoning is in the [Overview](doc/concepts/audit-notary-overview.adoc), the
 [SAMM concept](doc/concepts/category-samm.adoc) and
 [Authentication and Identity](doc/concepts/authentication-and-identity.adoc).
 
 ## Project state
 
-TrailHand is in its bootstrap. The web app, its mock server, the end-to-end suite and the Quarkus application with the
+Audit Notary is in its bootstrap. The web app, its mock server, the end-to-end suite and the Quarkus application with the
 web login, the configuration and the repository handling exist, and the native image runs against Keycloak in CI. The
 document operations of the four categories, the MCP server and the directory follow, in the order of
 [Architecture and Modules](doc/specification/architecture-and-modules.adoc).
@@ -50,8 +50,8 @@ document operations of the four categories, the MCP server and the directory fol
 ## Documentation
 
 - [Documentation index](doc/README.adoc): concepts, decisions and specification.
-- [Overview](doc/concepts/trailhand-overview.adoc): the place to start.
-- [Specification](doc/README.adoc#_specification): the requirements (`TRH-...`) with their design.
+- [Overview](doc/concepts/audit-notary-overview.adoc): the place to start.
+- [Specification](doc/README.adoc#_specification): the requirements (`AUN-...`) with their design.
 - [Decisions](doc/README.adoc#_decisions): the architecture decision records.
 - [Development](doc/development/README.adoc): modules, build, tests, CI and releasing.
 

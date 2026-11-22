@@ -1,8 +1,8 @@
-# The integration stack (doc/specification/testing.adoc, Integration lane): the native TrailHand image with
-# Keycloak. Gitea joins with the Git round trip (TRH-NFR-5); until then the repositories are local bare
-# repositories mounted as file: remotes (TRH-CONF-2). Certificates and remotes are generated into target/ by the
-# scripts of the module (TRAILHAND_IT_TARGET).
-name: trailhand-it
+# The integration stack (doc/specification/testing.adoc, Integration lane): the native Audit Notary image with
+# Keycloak. Gitea joins with the Git round trip (AUN-NFR-5); until then the repositories are local bare
+# repositories mounted as file: remotes (AUN-CONF-2). Certificates and remotes are generated into target/ by the
+# scripts of the module (AUDIT_NOTARY_IT_TARGET).
+name: audit-notary-it
 
 services:
   keycloak:
@@ -18,7 +18,7 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_HEALTH_ENABLED: "true"
       KC_HTTP_ENABLED: "false"
-      # One identity, the browser-facing one: every issuer and redirect is minted from it. TrailHand reaches the
+      # One identity, the browser-facing one: every issuer and redirect is minted from it. Audit Notary reaches the
       # same server as https://keycloak:8443 (SHERIFF_CLIENT_BACK_CHANNEL_ORIGIN below).
       KC_HOSTNAME: https://localhost:1443
     # Published on loopback only: the stack is for this host, and Keycloak's admin account is admin/admin.
@@ -27,35 +27,35 @@ services:
       - "127.0.0.1:1090:9000"
     volumes:
       - ./keycloak:/opt/keycloak/data/import:ro
-      - ${TRAILHAND_IT_TARGET:-../../../target}/certificates:/opt/keycloak/certificates:ro
+      - ${AUDIT_NOTARY_IT_TARGET:-../../../target}/certificates:/opt/keycloak/certificates:ro
     healthcheck:
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && exec 3<&-"]
       interval: 5s
       timeout: 3s
       retries: 30
-    networks: [trailhand-it]
+    networks: [audit-notary-it]
 
-  trailhand:
-    image: trailhand:it
+  audit-notary:
+    image: audit-notary:it
     # The trust store makes Token Sheriff's calls to Keycloak trust its self-signed certificate.
     command:
       - -Djavax.net.ssl.trustStore=/run/secrets/tls/truststore.p12
-      - -Djavax.net.ssl.trustStorePassword=trailhand-it
+      - -Djavax.net.ssl.trustStorePassword=audit-notary-it
       - -Djavax.net.ssl.trustStoreType=PKCS12
     environment:
       SHERIFF_CLIENT_BACK_CHANNEL_ORIGIN: https://keycloak:8443
       SHERIFF_CLIENT_ALLOWED_EGRESS_HOSTS: keycloak
-      SHERIFF_TOKEN_ISSUERS_TRAILHAND_JWKS_HTTP_ALLOWED_EGRESS_HOSTS: keycloak
-      TRAILHAND_OIDC_JWKS_URL: https://keycloak:8443/realms/trailhand/protocol/openid-connect/certs
+      SHERIFF_TOKEN_ISSUERS_AUDITNOTARY_JWKS_HTTP_ALLOWED_EGRESS_HOSTS: keycloak
+      AUDIT_NOTARY_OIDC_JWKS_URL: https://keycloak:8443/realms/audit-notary/protocol/openid-connect/certs
     ports:
       - "127.0.0.1:10443:8443"
       - "127.0.0.1:19000:9000"
     volumes:
-      - ./trailhand-config:/app/config:ro
+      - ./audit-notary-config:/app/config:ro
       - ./secrets:/app/secrets:ro
-      - ${TRAILHAND_IT_TARGET:-../../../target}/certificates:/run/secrets/tls:ro
-      - ${TRAILHAND_IT_TARGET:-../../../target}/remotes:/srv/remotes:ro
-      - trailhand-data:/app/data
+      - ${AUDIT_NOTARY_IT_TARGET:-../../../target}/certificates:/run/secrets/tls:ro
+      - ${AUDIT_NOTARY_IT_TARGET:-../../../target}/remotes:/srv/remotes:ro
+      - audit-notary-data:/app/data
     depends_on:
       keycloak:
         condition: service_healthy
@@ -65,10 +65,10 @@ services:
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=64m
     # No healthcheck key: the image's HEALTHCHECK (the binary's --health-probe) applies.
-    networks: [trailhand-it]
+    networks: [audit-notary-it]
 
 volumes:
-  trailhand-data:
+  audit-notary-data:
 
 networks:
-  trailhand-it:
+  audit-notary-it:

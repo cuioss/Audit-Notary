@@ -1,5 +1,5 @@
 /**
- * The lenses on the navigation rail and on the phone's bottom bar (TRH-WEB-3).
+ * The lenses on the navigation rail and on the phone's bottom bar (AUN-WEB-3).
  */
 import { lensAddress, type Lens } from '../routes';
 
@@ -50,7 +50,7 @@ export const BOTTOM_ITEMS: NavItem[] = ALL_ITEMS.slice(0, 4);
 export const MORE_ITEMS: NavItem[] = ALL_ITEMS.slice(4);
 
 /** The storage key of the rail's collapsed state. */
-export const RAIL_COLLAPSED_KEY = 'trailhand_rail_collapsed';
+export const RAIL_COLLAPSED_KEY = 'audit_notary_rail_collapsed';
 
 /** @returns whether this browser collapsed the rail */
 export function readRailCollapsed(): boolean {

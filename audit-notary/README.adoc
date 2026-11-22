@@ -1,0 +1,140 @@
+= Audit Notary Application
+:toc: left
+:toclevels: 2
+
+The Quarkus application: it serves the web app and its `/api/v1`, logs people in through Token Sheriff with the
+session held on the server (ADR-0001), and keeps the configured repositories as local copies through
+`git-document-repository`. It ships as a native image in a distroless container. Specifications:
+`doc/specification/architecture-and-modules.adoc` (layers), `authentication.adoc`, `configuration.adoc`,
+`deployment.adoc`, `web-app.adoc` (the requests of the web app); log messages: link:doc/LogMessages.adoc[].
+
+== Packages
+
+[cols="1,3"]
+|===
+|Package |Content
+
+|`de.cuioss.notary.audit`
+|`AuditNotaryApplication` (`@QuarkusMain`): `--health-probe` (`HealthProbe`, a connect to the own management port) and
+`--validate-config <dir>` (`ConfigValidation`) run before Quarkus boots; `AuditNotaryLogMessages`
+
+|`config`
+|`audit-notary.yaml`: `ConfigurationLoader` (with the `${NAME:-default}` placeholders of `Placeholders`) yields a
+`ConfigurationResult` with every `Violation`; `ConfigurationProducer` stops the boot on one.
+`TokenSheriffConfigSourceFactory` derives the Token Sheriff settings from the same file (see <<configuration>>)
+
+|`security`
+|The login (`LoginService`, `LoginFlowProducer`, `QueryResponseModeRequestBuilder`), the pending logins
+(`LoginTransactions`), the session (`SessionStore`, `UserSession`, cleaned by `SessionJanitor`), the rights from the
+groups claim (`RightsMapper`), the check of the `return` address against the canonical addresses (`ReturnAddresses`)
+
+|`service`
+|The only package that uses the libraries (AUN-GEN-4): `RepositoryService` builds the registry and clones or fetches;
+`RepositoryLifecycle` runs the fetch every `fetch.interval`; the health checks
+
+|`web`
+|`RequestGate` in front of every request; the resources below `/api/v1`; `PagePolicy` (the Content Security Policy
+taken from the built `index.html`); `MessageCatalogue` (the catalogue of `web-app`); `EventStream`
+|===
+
+`ArchitectureTest` (ArchUnit) keeps the layering: nothing uses JGit directly, only `service` uses the libraries, and
+`web` and the later `mcp` are independent of each other.
+
+== Requests
+
+`RequestGate` registers three Vert.x routes in front of the resources:
+
+. every answer gets the security headers (Content Security Policy, `nosniff`, `no-referrer`);
+. below `/api/v1` the session comes from its cookie. A request without one answers `401 UNAUTHENTICATED`, except the
+  public `GET` of `status`, `messages`, `auth/login` and `auth/callback`. A state-changing request needs the
+  `X-CSRF-Token` of the session and the configured `web.origin` as `Origin`, else `403 CSRF_REJECTED`;
+. every other `GET` that names no file of the web app answers with its `index.html`, so a canonical address reloads.
+
+[cols="1,3"]
+|===
+|Request |Answer
+
+|`GET /api/v1/status`, `GET /api/v1/messages?lang=`
+|The application status (version, degraded state); the catalogue of `en` or `de`, `400` otherwise
+
+|`GET /api/v1/auth/login?return=`
+|`302` to the identity provider (code flow with PKCE, `response_mode=query`, PAR when the provider offers it; the
+reasoning is in `doc/specification/authentication.adoc`); `502 IDENTITY_PROVIDER_UNAVAILABLE` when its discovery
+fails, `503 TOO_MANY_LOGINS` while 10,000 logins are pending
+
+|`GET /api/v1/auth/callback`
+|Completes the login and sets the session cookie; a same-origin page leads on to the checked `return` address (the
+Strict cookie is sent from there on). A failed login answers `400` with a page that offers a new one
+
+|`POST /api/v1/auth/logout`
+|Ends the session, revokes the tokens and names the provider's logout address
+
+|`GET /api/v1/session`, `GET /api/v1/due`, `GET /api/v1/events`
+|The user, rights and anti-CSRF token; the Due list (empty until the document index is built); the event stream
+|===
+
+[#configuration]
+== Configuration
+
+Two files, as `doc/specification/configuration.adoc` specifies: `application.properties` (Quarkus: ports, TLS paths,
+management interface, the native build) and the policy `audit-notary.yaml` in `audit-notary.config.dir`.
+`TokenSheriffConfigSourceFactory` derives `sheriff.client.*` (issuer, client id, the secret from its `file:`
+reference, redirect address, scopes) and the issuer `sheriff.token.issuers.auditnotary.*` from `oidc` and `web.origin`,
+with an ordinal above `application.properties` and below the environment. Settings that depend on the deployment
+(egress hosts, a back-channel address of the provider, `AUDIT_NOTARY_OIDC_JWKS_URL`) come from the environment; the
+compose file of `integration-tests` shows them.
+
+The tests read `src/test/resources/config/audit-notary.yaml`, whose issuer is not reachable: they cover everything up to
+the call to the provider. The full login runs in `integration-tests`.
+
+== Health
+
+On the management port 9000 (plain HTTP, fixed at build time): `/q/health/live`, `/q/health/ready` with the check
+`repositories` (`UP` once every repository has a local copy; a later fetch failure does not take it down) and the group
+`/q/health/group/git-remote` (`DOWN` while a fetch fails), and `/q/metrics`.
+
+== Native Image
+
+[source,bash]
+----
+./mvnw package -Pnative -pl audit-notary -am      # Mandrel in a container; runs NativeRegistrationTest first
+docker build -f audit-notary/src/main/docker/Dockerfile.native -t audit-notary:dev audit-notary
+docker run --rm -v "$PWD/my-config:/cfg:ro" audit-notary:dev --validate-config /cfg   # exit 0 or 1
+----
+
+The image is distroless, runs as `65532:65532`, and its `HEALTHCHECK` is the binary's `--health-probe`. JGit and Token
+Sheriff need registrations that the JVM does not; each one fixed a failure seen in the native image:
+
+[cols="1,3"]
+|===
+|Registration |Why
+
+|`--initialize-at-run-time` for `org.eclipse.jgit`, `de.cuioss.sheriff.token.client.flow` and `SessionStore`
+(`application.properties`)
+|Their classes hold `Random` or `SecureRandom` in static fields; initialised during the build, every process would
+share the same seed
+
+|`META-INF/native-image/de.cuioss.notary.audit/audit-notary/reflect-config.json`
+|JGit fills the fields of its message bundle `JGitText` by reflection, and `Config.getEnum` calls `values()` of every
+enum it reads; without them a clone fails
+
+|`META-INF/native-image/de.cuioss.notary.audit/audit-notary/resource-config.json`
+|The `JGitText` properties
+
+|`security/TokenClientNativeRegistration`
+|The generated DSL-JSON converters of Token Sheriff's response types, so the client can read discovery and token
+answers
+|===
+
+`NativeRegistrationTest` compares both lists with the resolved JARs: every converter of the Token Sheriff client and
+every enum of JGit must be registered, and nothing else. The profile `native` runs it before every native build, so a
+dependency update that changes them fails before an image is packaged; this lists
+every enum of the JGit JAR for `reflect-config.json`:
+
+[source,bash]
+----
+JAR=~/.m2/repository/org/eclipse/jgit/org.eclipse.jgit/<version>/org.eclipse.jgit-<version>.jar
+javap -cp "$JAR" $(unzip -Z1 "$JAR" | sed -n 's#\.class$##p' | tr / .) | grep -E '^[^ ].* extends java\.lang\.Enum<'
+----
+
+A change of the registrations is checked only by the native image: run `integration-tests`.

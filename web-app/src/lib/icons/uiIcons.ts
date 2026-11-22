@@ -1,5 +1,5 @@
 /**
- * The UI icons of TrailHand and the names that resolve to them (TRH-WEB-2: an own icon set).
+ * The UI icons of Audit Notary and the names that resolve to them (AUN-WEB-2: an own icon set).
  *
  * The drawings are taken over from `pm-web-app` (`src/lib/icons/ui/`, the same 24 px grid, round caps,
  * `currentColor` only, 1.5 px stroke). Every name has one SVG under `ui/`; a view resolves a name here

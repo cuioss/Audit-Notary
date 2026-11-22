@@ -1,5 +1,5 @@
 /**
- * The brand of TrailHand (doc/concepts/brand.adoc).
+ * The brand of Audit Notary (doc/concepts/brand.adoc).
  *
  * The name is decided; the mark is **provisional** until the final drawing is delivered and accepted
  * (brand.adoc, Open Decisions). The visible name stays beside the mark, the mark never changes with state,

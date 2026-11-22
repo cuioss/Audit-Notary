@@ -1,7 +1,7 @@
 /**
- * The one client of the web app against same-origin `/api/v1` (TRH-WEB-1, TRH-WEB-8, TRH-WEB-9).
+ * The one client of the web app against same-origin `/api/v1` (AUN-WEB-1, AUN-WEB-8, AUN-WEB-9).
  *
- * The browser holds no token (TRH-AUTH-1): the session is a cookie the browser sends by itself. The client
+ * The browser holds no token (AUN-AUTH-1): the session is a cookie the browser sends by itself. The client
  * adds the anti-CSRF header to every state-changing request, follows the login address of a `401` with
  * the current canonical address as `return`, and keeps one shared event stream.
  */
@@ -32,7 +32,7 @@ export const STREAM_RETRY_DELAY_MS = 2_000;
 /** The attempts after which the event stream reports `offline`. */
 export const STREAM_RETRY_LIMIT = 10;
 
-/** The anti-CSRF header of TRH-WEB-8. */
+/** The anti-CSRF header of AUN-WEB-8. */
 export const CSRF_HEADER = 'X-CSRF-Token';
 
 /** The default login address, used when a `401` names none. */

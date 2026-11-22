@@ -23,7 +23,7 @@ export default defineConfig({
   plugins: [
     {
       // SvelteKit's route announcer carries an inline `style` attribute, which `style-src 'self'`
-      // (TRH-WEB-8) blocks; the attribute becomes a class that base.css styles.
+      // (AUN-WEB-8) blocks; the attribute becomes a class that base.css styles.
       name: 'strip-announcer-inline-style',
       enforce: 'post',
       transform(code, id) {
@@ -54,7 +54,7 @@ export default defineConfig({
         strict: false,
       }),
       preprocess: vitePreprocess(),
-      // TRH-WEB-8: SvelteKit writes the policy with the hash of its bootstrap script into the
+      // AUN-WEB-8: SvelteKit writes the policy with the hash of its bootstrap script into the
       // fallback page as a <meta> tag; the application sends the full policy as a header, with
       // `frame-ancestors`, which a <meta> policy cannot carry.
       csp: {
@@ -72,7 +72,7 @@ export default defineConfig({
     }),
   ],
   build: {
-    // Every asset is a file of the app's own origin (TRH-WEB-1).
+    // Every asset is a file of the app's own origin (AUN-WEB-1).
     assetsInlineLimit: 0,
   },
   resolve: {
@@ -92,7 +92,7 @@ export default defineConfig({
         target: ports.mockTarget,
         changeOrigin: true,
         // The mock compares a request's Origin with X-Forwarded-Host, as the application compares it
-        // with its own origin (TRH-WEB-8, TRH-TEST-1).
+        // with its own origin (AUN-WEB-8, AUN-TEST-1).
         xfwd: true,
       },
       '/mock': {

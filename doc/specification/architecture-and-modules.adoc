@@ -1,10 +1,10 @@
-= TrailHand: Architecture and Modules
+= Audit Notary: Architecture and Modules
 :toc: left
 :toclevels: 2
 :toc-title: Table of Contents
 :source-highlighter: highlight.js
 
-xref:../README.adoc[TrailHand documentation] » Specification
+xref:../README.adoc[Audit Notary documentation] » Specification
 
 The module layout, the layers inside the application, the run-time state and the cross-cutting technical rules.
 Reasoning: xref:../concepts/application-architecture.adoc[Application Architecture].
@@ -39,7 +39,7 @@ link:https://github.com/cuioss/TokenSheriff/tree/main/doc/validation[validation]
 
 == Maven Modules
 
-Root: `de.cuioss:trailhand-parent` (working coordinates). Parent `de.cuioss:cui-quarkus-parent`. Root
+Root: `de.cuioss.notary.audit:audit-notary-parent` (working coordinates). Parent `de.cuioss:cui-quarkus-parent`. Root
 `dependencyManagement` imports, in this order: `io.quarkus:quarkus-bom`, the Token Sheriff BOM, the
 `git-document-repository` versions.
 
@@ -51,8 +51,8 @@ Root: `de.cuioss:trailhand-parent` (working coordinates). Parent `de.cuioss:cui-
 |jar (resources only)
 |`categories/<category>/kinds.yaml` and, per kind of document, `<kind>/schema.json`, `<kind>/template.adoc` and
 `<kind>/workflow.yaml`; the catalog declarations
-(xref:directory.adoc#TRH-DIR-4[TRH-DIR-4]) and the threat-model recipes
-(xref:category-threat-models.adoc#TRH-TM-5[TRH-TM-5])
+(xref:directory.adoc#AUN-DIR-4[AUN-DIR-4]) and the threat-model recipes
+(xref:category-threat-models.adoc#AUN-TM-5[AUN-TM-5])
 
 |`web-app`
 |jar
@@ -61,9 +61,9 @@ Root: `de.cuioss:trailhand-parent` (working coordinates). Parent `de.cuioss:cui-
 |`web-mock`
 |jar (not deployed)
 |Mock server of the `/api/v1` requests of the web app with test profiles
-(xref:testing.adoc#TRH-TEST-1[TRH-TEST-1]); development and tests only
+(xref:testing.adoc#AUN-TEST-1[AUN-TEST-1]); development and tests only
 
-|`trailhand`
+|`audit-notary`
 |jar (Quarkus)
 |The application; profile `native`
 
@@ -74,19 +74,19 @@ Root: `de.cuioss:trailhand-parent` (working coordinates). Parent `de.cuioss:cui-
 |`integration-tests`
 |jar (not deployed)
 |Native image, distroless container, compose stack, failsafe `*IT`; profile `integration-tests`; the measurements of
-xref:testing.adoc#TRH-NFR-1[TRH-NFR-1] and xref:testing.adoc#TRH-NFR-2[TRH-NFR-2] in the profile `benchmarks`
+xref:testing.adoc#AUN-NFR-1[AUN-NFR-1] and xref:testing.adoc#AUN-NFR-2[AUN-NFR-2] in the profile `benchmarks`
 
 |`deployment`
 |pom
 |Compose sample; profile `compose-sample`
 |===
 
-Reactor order: `categories`, `web-app`, `web-mock`, `trailhand`, `web-e2e`, `integration-tests`, `deployment`. The
-modules are added as they are built: the bootstrap has `web-app`, `web-mock`, `trailhand`, `web-e2e` and
+Reactor order: `categories`, `web-app`, `web-mock`, `audit-notary`, `web-e2e`, `integration-tests`, `deployment`. The
+modules are added as they are built: the bootstrap has `web-app`, `web-mock`, `audit-notary`, `web-e2e` and
 `integration-tests`; `categories` and `deployment` follow.
 
-[#TRH-GEN-1]
-== TRH-GEN-1: Categories as Configuration
+[#AUN-GEN-1]
+== AUN-GEN-1: Categories as Configuration
 
 * Each category (SAMM, threat models, incident reports, ISMS) must be defined as one or more kinds of documents of
   the library (https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-1[GDR-FORMS-1]), each with a JSON Schema, an
@@ -115,17 +115,17 @@ pseudonym
 |===
 
 The kinds: `scope` and `assessment` (SAMM), `threat-model`, `incident`, the four document types of
-xref:category-isms.adoc#TRH-ISMS-1[TRH-ISMS-1] and `risk` (ISMS).
+xref:category-isms.adoc#AUN-ISMS-1[AUN-ISMS-1] and `risk` (ISMS).
 
 Besides the category definitions, the `categories` module carries the catalog declarations
-(xref:directory.adoc#TRH-DIR-4[TRH-DIR-4]) and the threat-model recipes `categories/threat-models/recipes/<id>.yaml`
-(xref:category-threat-models.adoc#TRH-TM-5[TRH-TM-5]); both are resources, not code.
+(xref:directory.adoc#AUN-DIR-4[AUN-DIR-4]) and the threat-model recipes `categories/threat-models/recipes/<id>.yaml`
+(xref:category-threat-models.adoc#AUN-TM-5[AUN-TM-5]); both are resources, not code.
 
 The only extension point is `ScoreCalculator` (SAMM scores), a named CDI interface in `service`. The test category
 `categories/test-note/` exercises create, save, release and output generation without it.
 
-[#TRH-GEN-2]
-== TRH-GEN-2: One Rule Set for Both Interfaces
+[#AUN-GEN-2]
+== AUN-GEN-2: One Rule Set for Both Interfaces
 
 * Every operation offered by the MCP server must be executed by the same application service as the web app's
   equivalent operation, with the same rights check, schema validation and step-up check.
@@ -133,20 +133,20 @@ The only extension point is `ScoreCalculator` (SAMM scores), a named CDI interfa
   call with the same user and input produce the same outcome (success, validation error, conflict, forbidden).
 
 Web-app equivalents: `list_documents` the document lists of the lenses and `read_catalog` the *Catalogs* lens
-(xref:web-app.adoc#TRH-WEB-3[TRH-WEB-3]), `list_due` the *Due* lens, `search` the search of the top bar
+(xref:web-app.adoc#AUN-WEB-3[AUN-WEB-3]), `list_due` the *Due* lens, `search` the search of the top bar
 (xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App]), `read_recipe` the recipe's
-`WizardPage` (xref:category-threat-models.adoc#TRH-TM-5[TRH-TM-5]), `read_document` the document request
-`GET /api/v1/documents/…`, `diff` the diff request (xref:web-app.adoc#TRH-WEB-6[TRH-WEB-6]), `write_draft` the
-draft save and `save` the save (xref:web-app.adoc#TRH-WEB-5[TRH-WEB-5]). Two tools
+`WizardPage` (xref:category-threat-models.adoc#AUN-TM-5[AUN-TM-5]), `read_document` the document request
+`GET /api/v1/documents/…`, `diff` the diff request (xref:web-app.adoc#AUN-WEB-6[AUN-WEB-6]), `write_draft` the
+draft save and `save` the save (xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5]). Two tools
 have no web-app equivalent and are tested through the MCP server alone: `discard_draft`, because the web app offers
 no discarding of a draft, and `request_release`. An agent can only request a release: `request_release` returns
 `RELEASE_REQUESTED`, and completing a release is a web-app operation, which requires step-up under the shipped
 workflows
-(xref:mcp-server.adoc#TRH-MCP-6[TRH-MCP-6], xref:authentication.adoc#TRH-AUTH-4[TRH-AUTH-4]).
+(xref:mcp-server.adoc#AUN-MCP-6[AUN-MCP-6], xref:authentication.adoc#AUN-AUTH-4[AUN-AUTH-4]).
 
 [cols="1,2,2"]
 |===
-|Package (below `de.cuioss.trailhand`) |Content |May depend on
+|Package (below `de.cuioss.notary.audit`) |Content |May depend on
 
 |`web`
 |REST resources `/api/v1`, event stream, session and CSRF handling
@@ -170,7 +170,7 @@ workflows
 |===
 
 Commit signing, anchoring and the person directory belong to the libraries; `service` configures them from
-`trailhand.yaml`. Its only adapters are the key source behind `kms:` references, a provider of the library's
+`audit-notary.yaml`. Its only adapters are the key source behind `kms:` references, a provider of the library's
 `SigningKeySource` (https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc#GDR-STORE-12[GDR-STORE-12]), and the resolution of
 `vault:` references. Outbound calls go to the Git server, the identity provider, the KMS or Vault and, with the anchor
 provider `rfc3161`, the timestamp authority; there is no other.
@@ -184,8 +184,8 @@ a web-app equivalent, a web resource calls the same method.
 
 Each operation of the application services has one closed set of outcomes, the same for the web app and the MCP
 server. Every operation can also end with `FORBIDDEN` (no mapped right,
-xref:authentication.adoc#TRH-AUTH-2[TRH-AUTH-2]) and `FIRST_LOGIN_REQUIRED`
-(xref:directory.adoc#TRH-DIR-2[TRH-DIR-2]).
+xref:authentication.adoc#AUN-AUTH-2[AUN-AUTH-2]) and `FIRST_LOGIN_REQUIRED`
+(xref:directory.adoc#AUN-DIR-2[AUN-DIR-2]).
 
 [cols="1,1,3"]
 |===
@@ -202,34 +202,34 @@ xref:authentication.adoc#TRH-AUTH-2[TRH-AUTH-2]) and `FIRST_LOGIN_REQUIRED`
 |Save
 |`save`
 |`SAVED`; `CONFLICT` (per file, with the fields that differ and both values); validation errors per field, among them
-`REFERENCE_NOT_FOUND` (xref:data-protection.adoc#TRH-DP-2[TRH-DP-2]); `DOCUMENT_RELEASED`
-(xref:category-samm.adoc#TRH-SAMM-4[TRH-SAMM-4]); `REJECTED` (the Git server refused the push,
-xref:authentication.adoc#TRH-AUTH-5[TRH-AUTH-5]); `GIT_UNAVAILABLE` (<<TRH-GEN-6>>); `STEP_UP_REQUIRED` when the
-workflow requires step-up for the transition (xref:authentication.adoc#TRH-AUTH-4[TRH-AUTH-4])
+`REFERENCE_NOT_FOUND` (xref:data-protection.adoc#AUN-DP-2[AUN-DP-2]); `DOCUMENT_RELEASED`
+(xref:category-samm.adoc#AUN-SAMM-4[AUN-SAMM-4]); `REJECTED` (the Git server refused the push,
+xref:authentication.adoc#AUN-AUTH-5[AUN-AUTH-5]); `GIT_UNAVAILABLE` (<<AUN-GEN-6>>); `STEP_UP_REQUIRED` when the
+workflow requires step-up for the transition (xref:authentication.adoc#AUN-AUTH-4[AUN-AUTH-4])
 
 |Transition into review
 |—
 |The new state; `MANDATORY_FIELDS_MISSING` with the JSON Pointers of the missing fields
-(xref:category-incident-reports.adoc#TRH-IR-3[TRH-IR-3]); `STEP_UP_REQUIRED` when the workflow requires step-up for
+(xref:category-incident-reports.adoc#AUN-IR-3[AUN-IR-3]); `STEP_UP_REQUIRED` when the workflow requires step-up for
 the transition
 
 |Release
 |—
-|`RELEASED`; `STEP_UP_REQUIRED` with the step-up address (xref:authentication.adoc#TRH-AUTH-4[TRH-AUTH-4]);
+|`RELEASED`; `STEP_UP_REQUIRED` with the step-up address (xref:authentication.adoc#AUN-AUTH-4[AUN-AUTH-4]);
 `MANDATORY_FIELDS_MISSING`; `REJECTED`; `GIT_UNAVAILABLE`
 
 |Request a release
 |`request_release`
 |`RELEASE_REQUESTED` with the request id; `REJECTED`; `GIT_UNAVAILABLE` (an open request is a document saved in Git,
-<<TRH-GEN-3>>)
+<<AUN-GEN-3>>)
 
 |Read, list, search, diff
 |`read_document`, `list_documents`, `search`, `diff`, `list_due`, `read_catalog`, `read_recipe`
 |The result
 |===
 
-[#TRH-GEN-3]
-== TRH-GEN-3: No Database of Its Own
+[#AUN-GEN-3]
+== AUN-GEN-3: No Database of Its Own
 
 * The application must persist durable state only in Git repositories.
 * The in-memory index and computed reminders must be rebuilt from Git at start; a restart test must show identical
@@ -267,25 +267,25 @@ the transition
 
 No `quarkus-datasource` or Hibernate extension is on the class path; an enforcer rule bans them.
 
-[#TRH-GEN-4]
-== TRH-GEN-4: Persistence Only Through the Libraries
+[#AUN-GEN-4]
+== AUN-GEN-4: Persistence Only Through the Libraries
 
 * Application packages must reach Git only through the `git-document-repository` modules; an ArchUnit rule must fail
   the build when an application package imports `org.eclipse.jgit`.
 
-[#TRH-GEN-5]
-== TRH-GEN-5: Logging and Metrics
+[#AUN-GEN-5]
+== AUN-GEN-5: Logging and Metrics
 
 * Every message at INFO and above must use a `LogRecord` documented in `LogMessages.adoc`.
 * The application must expose Prometheus metrics on the management port.
 
 Logger: `de.cuioss.tools.logging.CuiLogger`; one `LogMessages` class per package root, DSL style, identifiers
-`TRAILHAND-<n>`. `LogMessages.adoc` lists every record (identifier, level, template, parameters, trigger) and is
+`AUDIT-NOTARY-<n>`. `LogMessages.adoc` lists every record (identifier, level, template, parameters, trigger) and is
 created with the code. Metrics: `quarkus-micrometer-registry-prometheus` at `/q/metrics`, names below
-`trailhand_`.
+`audit_notary_`.
 
-[#TRH-GEN-6]
-== TRH-GEN-6: Unreachable Git Server
+[#AUN-GEN-6]
+== AUN-GEN-6: Unreachable Git Server
 
 * When the Git server is unreachable, reads must be served from the local repositories and the web app must show the
   degraded state.
@@ -306,5 +306,5 @@ stays `UP`
 user saves again later
 
 |Git server unreachable at start
-|See xref:deployment.adoc#TRH-OPS-2[Deployment, TRH-OPS-2]
+|See xref:deployment.adoc#AUN-OPS-2[Deployment, AUN-OPS-2]
 |===

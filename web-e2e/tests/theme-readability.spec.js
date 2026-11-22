@@ -4,7 +4,7 @@ import { useScenario } from './helpers/mock.js';
 import { login } from './helpers/login.js';
 
 /**
- * TRH-WEB-2: axe-core on every view in both themes; no violation of impact serious or critical.
+ * AUN-WEB-2: axe-core on every view in both themes; no violation of impact serious or critical.
  */
 const VIEWS = [
   ['workshop', '/', 'due-view'],

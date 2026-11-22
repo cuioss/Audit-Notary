@@ -4,7 +4,7 @@
   import { t } from '../i18n';
   import DashboardPage from '../templates/DashboardPage.svelte';
 
-  /** The answer for an address that names no view (TRH-WEB-3). */
+  /** The answer for an address that names no view (AUN-WEB-3). */
 </script>
 
 <DashboardPage title={$t('error.not-found.title')} testId="not-found-view">

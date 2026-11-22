@@ -5,12 +5,12 @@
 :sectnums:
 :source-highlighter: highlight.js
 
-xref:../README.adoc[TrailHand documentation] » Concepts
+xref:../README.adoc[Audit Notary documentation] » Concepts
 
 An application that stores its data in the organisation's Git server owns no database: it has no schema migration, no
 database backup and no connection pool to tune, and the Git server's backup covers every saved state. Only the drafts
 are covered by the backup of the volume, which therefore needs one of its own. The consequence is that everything the
-application knows at run time is either derived from Git or lost on restart. The architecture of TrailHand keeps
+application knows at run time is either derived from Git or lost on restart. The architecture of Audit Notary keeps
 the first property and limits the second. Its build, runtime and test structure follow API Sheriff, so a contributor
 who knows one knows the other.
 
@@ -95,7 +95,7 @@ Every further dependency is a decision of the owner.
 == Configuration
 
 Following API Sheriff, `application.properties` carries only Quarkus and runtime settings (ports, management
-interface, logging). The policy of the application lives in its own YAML, `trailhand.yaml`, validated against a
+interface, logging). The policy of the application lives in its own YAML, `audit-notary.yaml`, validated against a
 bundled JSON Schema:
 
 * the repositories with alias, remote, confidentiality, retention period and credential reference;
@@ -116,11 +116,11 @@ offline (`--validate-config <dir>`).
 Everything the application holds in memory is either derived from Git or deliberately volatile: the in-memory index,
 the person directory and the reminders are rebuilt from Git at start, the drafts survive only on the persistent
 volume, and the sessions of the web app are lost, so the user logs in again
-(xref:../specification/architecture-and-modules.adoc#TRH-GEN-3[TRH-GEN-3]).
+(xref:../specification/architecture-and-modules.adoc#AUN-GEN-3[AUN-GEN-3]).
 
 The index is refreshed after every save and by a periodic fetch. Even hundreds of SAMM assessments with about ninety
 answers each are estimated at a few megabytes, which
-xref:../specification/testing.adoc#TRH-NFR-1[TRH-NFR-1] measures; the index needs no database.
+xref:../specification/testing.adoc#AUN-NFR-1[AUN-NFR-1] measures; the index needs no database.
 
 == One Instance
 
@@ -137,8 +137,8 @@ service-loader use has to be registered, and the transport is restricted to HTTP
 The bootstrap settled the first half. Clone and fetch of `file:` remotes run in the native image, with no JVM fallback,
 once JGit is initialised at run time (it holds random generators in static fields) and its message bundle and enums
 are registered for reflection; Token Sheriff's flow package needs the same run-time initialisation. The registrations
-and their reasons are listed in the README of the `trailhand` module. HTTPS transport, in-core writing and notes
-follow with the Git round trip, whose integration test (TRH-NFR-5) runs a fetch, a save, a release and a push against
+and their reasons are listed in the README of the `audit-notary` module. HTTPS transport, in-core writing and notes
+follow with the Git round trip, whose integration test (AUN-NFR-5) runs a fetch, a save, a release and a push against
 a local Git server.
 
 == Testing

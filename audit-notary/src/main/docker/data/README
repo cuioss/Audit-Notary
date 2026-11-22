@@ -1,0 +1,2 @@
+The data directory of Audit Notary (/app/data): the local repositories and the drafts. Mount a persistent volume
+here; the image creates the directory owned by nonroot (65532) so a new named volume takes over that owner.

@@ -20,7 +20,7 @@ Accepted
 
 The web app is tested on three levels: unit tests beside the components, an end-to-end suite in a browser, and manual
 work on views. All three need answers to the requests of
-xref:../specification/web-app.adoc#TRH-WEB-9[TRH-WEB-9], in well-defined states: a user before the first login, a
+xref:../specification/web-app.adoc#AUN-WEB-9[AUN-WEB-9], in well-defined states: a user before the first login, a
 read-only user, a Git server that cannot be reached, a document another user has just saved.
 
 Against the application itself, every such state needs an identity provider with prepared users, Git repositories with
@@ -38,7 +38,7 @@ hard to reach on purpose, an event arriving at a given moment for example, would
   when the web app sends the matching request, and whose events are pushed over the event stream. A profile is chosen
   at start and switched at run time through loopback-only control requests.
 * The mock emulates what the browser sees of the real session: the session cookie, the anti-CSRF header and the
-  `Origin` check (xref:../specification/web-app.adoc#TRH-WEB-8[TRH-WEB-8]). The web app's handling of them is
+  `Origin` check (xref:../specification/web-app.adoc#AUN-WEB-8[AUN-WEB-8]). The web app's handling of them is
   therefore tested end to end; the mock does not emulate the identity provider.
 * The mock serves the real message catalogue from the `web-app` JAR, so a missing text shows in the end-to-end suite.
 * The web unit tests read the same scenario files. Unit tests, end-to-end tests and manual runs see the same data.
@@ -57,7 +57,7 @@ The application is tested against Keycloak and a Git repository in the integrati
 === Negative
 
 * The answers of the mock and of the application can drift apart. The contract is the specification
-  (xref:../specification/web-app.adoc#TRH-WEB-9[TRH-WEB-9]); the integration tests check the application against it,
+  (xref:../specification/web-app.adoc#AUN-WEB-9[AUN-WEB-9]); the integration tests check the application against it,
   and the mock's own tests check the scenario files.
 * The login against the identity provider is not part of the end-to-end suite; the integration tests cover it.
 
@@ -90,6 +90,6 @@ start time and dependencies without providing them. The plain-Java form is the o
 
 * xref:0001-Authentication_is_delegated_to_Token_Sheriff_with_a_server-side_session_for_the_web_app.adoc[ADR-0001]
   -- the session the mock emulates
-* xref:../specification/testing.adoc#TRH-TEST-1[Testing, TRH-TEST-1] -- the mock server
+* xref:../specification/testing.adoc#AUN-TEST-1[Testing, AUN-TEST-1] -- the mock server
 * xref:../specification/web-app.adoc[Web App] -- the requests it answers
 * `pm-mcp-clients/pm-mock-runtime` -- the reference implementation of a scenario mock

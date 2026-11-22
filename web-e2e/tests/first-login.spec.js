@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { acts, clearActs, useScenario } from './helpers/mock.js';
 
 /**
- * TRH-DIR-2: without a directory entry the first-login form is the only view; saving it ends the
+ * AUN-DIR-2: without a directory entry the first-login form is the only view; saving it ends the
  * restriction.
  */
 test('every address leads to the form until the entry is saved', async ({ page, request }) => {

@@ -2,7 +2,7 @@
   import type { MarkRendering } from './brand';
 
   /**
-   * The TrailHand mark: a document page with a trail of three commit nodes, the newest gold
+   * The Audit Notary mark: a document page with a trail of three commit nodes, the newest gold
    * (doc/concepts/brand.adoc, The Mark). PROVISIONAL drawing on the 24 × 24 grid, to be replaced by the
    * accepted final mark before the first release.
    *

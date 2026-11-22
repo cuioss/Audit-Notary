@@ -1,5 +1,5 @@
 /**
- * The refusals of `/api/v1` (TRH-WEB-9) and the client's own failures.
+ * The refusals of `/api/v1` (AUN-WEB-9) and the client's own failures.
  */
 
 /** The outcomes a refusal names. */

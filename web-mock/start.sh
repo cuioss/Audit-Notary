@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Starts the TrailHand web mock in the background (README.adoc).
+# Starts the Audit Notary web mock in the background (README.adoc).
 #   start.sh [-s <scenario|scenario#state|file.json>] [-p <port>] [-t realistic|ordered] [-f]
 #   -f runs it in the foreground instead.
 set -euo pipefail
@@ -26,10 +26,10 @@ PID_FILE="$TARGET_DIR/web-mock.pid"
 LOG_FILE="$TARGET_DIR/web-mock.log"
 CP_FILE="$TARGET_DIR/classpath.txt"
 BUILD_STAMP="$TARGET_DIR/.build-stamp"
-MAIN_CLASS="de.cuioss.trailhand.mock.cli.WebMockCli"
+MAIN_CLASS="de.cuioss.notary.audit.mock.cli.WebMockCli"
 
 SCENARIO="workshop"
-PORT="${TRAILHAND_MOCK_PORT:-7420}"
+PORT="${AUDIT_NOTARY_MOCK_PORT:-7420}"
 TIMING="realistic"
 FOREGROUND=false
 

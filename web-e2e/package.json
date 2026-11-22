@@ -1,9 +1,9 @@
 {
-  "name": "trailhand-web-e2e",
+  "name": "audit-notary-web-e2e",
   "version": "0.1.0-SNAPSHOT",
   "private": true,
   "type": "module",
-  "description": "The end-to-end suite of the TrailHand web app (doc/specification/testing.adoc)",
+  "description": "The end-to-end suite of the Audit Notary web app (doc/specification/testing.adoc)",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=22.17",

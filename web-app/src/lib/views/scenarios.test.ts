@@ -6,12 +6,12 @@ import DueView from './DueView.svelte';
 import WelcomeView from './WelcomeView.svelte';
 
 /**
- * The views against the profiles of `web-mock` (TRH-TEST-1): the same data as the end-to-end suite.
+ * The views against the profiles of `web-mock` (AUN-TEST-1): the same data as the end-to-end suite.
  */
 afterEach(() => vi.unstubAllGlobals());
 
 describe('the profiles', () => {
-  it('are the five of TRH-TEST-1', () => {
+  it('are the five of AUN-TEST-1', () => {
     expect(primaryScenarios().sort()).toEqual([
       'degraded',
       'empty',

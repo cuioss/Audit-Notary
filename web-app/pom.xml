@@ -2,28 +2,28 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>de.cuioss</groupId>
-        <artifactId>trailhand-parent</artifactId>
+        <groupId>de.cuioss.notary.audit</groupId>
+        <artifactId>audit-notary-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>trailhand-web-app</artifactId>
+    <artifactId>audit-notary-web-app</artifactId>
     <packaging>jar</packaging>
 
-    <name>TrailHand Web App</name>
-    <description>The TrailHand web app: a SvelteKit single-page application packaged as a resource JAR under
+    <name>Audit Notary Web App</name>
+    <description>The Audit Notary web app: a SvelteKit single-page application packaged as a resource JAR under
         META-INF/resources, together with the message catalogue and the canonical addresses under
-        META-INF/trailhand (doc/specification/web-app.adoc).
+        META-INF/audit-notary (doc/specification/web-app.adoc).
     </description>
 
     <properties>
-        <maven.jar.plugin.automatic.module.name>de.cuioss.trailhand.web.app</maven.jar.plugin.automatic.module.name>
+        <maven.jar.plugin.automatic.module.name>de.cuioss.notary.audit.web.app</maven.jar.plugin.automatic.module.name>
         <skip.lint>false</skip.lint>
         <skip.npm.build>false</skip.npm.build>
         <skip.typecheck>false</skip.typecheck>
         <!-- Set together with -Dskip.npm and -Dskip.installnodenpm (frontend-maven-plugin) to build only the
-             resources of META-INF/trailhand, for example to work on web-mock without a Node build. -->
+             resources of META-INF/audit-notary, for example to work on web-mock without a Node build. -->
         <skip.spa.check>false</skip.spa.check>
         <sonar.sources>src</sonar.sources>
         <sonar.tests>src</sonar.tests>
@@ -124,7 +124,7 @@
                 <executions>
                     <execution>
                         <!-- process-classes: after npm-build (compile) wrote build/, and before the test phase, so a
-                             reactor run that stops at test (./mvnw test -pl trailhand -am) already finds the web app
+                             reactor run that stops at test (./mvnw test -pl audit-notary -am) already finds the web app
                              in target/classes. process-resources would run before build/ exists. -->
                         <id>copy-spa-resources</id>
                         <phase>process-classes</phase>
@@ -144,7 +144,7 @@
                 </executions>
             </plugin>
 
-            <!-- Prove that the SPA build reached the published resource JAR (TRH-WEB-1). The copy above and the
+            <!-- Prove that the SPA build reached the published resource JAR (AUN-WEB-1). The copy above and the
                  jar plugin would both succeed on an empty build directory, so the artifact alone is not the
                  evidence: the application serves exactly META-INF/resources. -->
             <plugin>
@@ -165,7 +165,7 @@
                                     <zipfileset src="${project.build.directory}/${project.build.finalName}.jar"
                                                 includes="META-INF/resources/index.html"/>
                                 </resourcecount>
-                                <fail message="trailhand-web-app: ${project.build.finalName}.jar carries no META-INF/resources/index.html; the SPA build did not reach the resource JAR.">
+                                <fail message="audit-notary-web-app: ${project.build.finalName}.jar carries no META-INF/resources/index.html; the SPA build did not reach the resource JAR.">
                                     <condition>
                                         <equals arg1="${spa.index.count}" arg2="0"/>
                                     </condition>
@@ -174,12 +174,12 @@
                                     <zipfileset src="${project.build.directory}/${project.build.finalName}.jar"
                                                 includes="META-INF/resources/_app/immutable/**"/>
                                 </resourcecount>
-                                <fail message="trailhand-web-app: ${project.build.finalName}.jar carries no META-INF/resources/_app/immutable asset; the SPA build did not reach the resource JAR.">
+                                <fail message="audit-notary-web-app: ${project.build.finalName}.jar carries no META-INF/resources/_app/immutable asset; the SPA build did not reach the resource JAR.">
                                     <condition>
                                         <equals arg1="${spa.immutable.count}" arg2="0"/>
                                     </condition>
                                 </fail>
-                                <echo message="trailhand-web-app: packaged ${spa.index.count} index.html and ${spa.immutable.count} immutable asset(s) under META-INF/resources."/>
+                                <echo message="audit-notary-web-app: packaged ${spa.index.count} index.html and ${spa.immutable.count} immutable asset(s) under META-INF/resources."/>
                             </target>
                         </configuration>
                     </execution>

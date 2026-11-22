@@ -24,7 +24,7 @@ export default defineConfig({
   webServer: {
     command: `npm run dev --prefix ../web-app -- --port ${WEB_PORT} --strictPort`,
     url: BASE_URL,
-    env: { TRAILHAND_WEB_PORT: String(WEB_PORT), TRAILHAND_MOCK_PORT: String(MOCK_PORT) },
+    env: { AUDIT_NOTARY_WEB_PORT: String(WEB_PORT), AUDIT_NOTARY_MOCK_PORT: String(MOCK_PORT) },
     reuseExistingServer: !process.env.CI && !PORTS_ASSIGNED,
     timeout: 60_000,
   },

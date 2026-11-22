@@ -1,13 +1,13 @@
 /**
- * The address model of the web app (TRH-WEB-3): one canonical address per object kind, and reloading an
+ * The address model of the web app (AUN-WEB-3): one canonical address per object kind, and reloading an
  * address restores the same view.
  *
- * The addresses are data, `META-INF/trailhand/canonical-addresses.json`, shared with the server's check of
- * the login's `return` (TRH-AUTH-1) and with the mock server.
+ * The addresses are data, `META-INF/audit-notary/canonical-addresses.json`, shared with the server's check of
+ * the login's `return` (AUN-AUTH-1) and with the mock server.
  */
-import canonical from '../main/resources/META-INF/trailhand/canonical-addresses.json';
+import canonical from '../main/resources/META-INF/audit-notary/canonical-addresses.json';
 
-/** A lens of the navigation rail (TRH-WEB-3). */
+/** A lens of the navigation rail (AUN-WEB-3). */
 export type Lens =
   'due' | 'samm' | 'threat-models' | 'incidents' | 'isms' | 'catalogs' | 'reports' | 'settings';
 
