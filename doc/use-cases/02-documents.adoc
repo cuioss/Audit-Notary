@@ -154,7 +154,10 @@ Flow::
        ▼
   [S] save.apply               the draft applied onto the tip of the
        │                       working branch as one signed commit, by
-       │                       the blob ids loaded
+       │                       the blob ids loaded; the frozen state
+       │                       checked again in the same atomic step
+       ├── released meanwhile ──────► done, DOCUMENT_RELEASED; the draft
+       │                              stays
        ├── a file changed meanwhile ─► save.conflict
        ├── push refused ────────────► done, REJECTED; the draft stays
        ├── Git server unreachable ──► done, GIT_UNAVAILABLE; the draft
@@ -176,6 +179,9 @@ Variations::
 * *Generated output* takes no part in the conflict check; each save regenerates it in the same commit.
 * *Step-up*: a save needs none under the delivered workflows; where a workflow asks for it, the save returns
   `STEP_UP_REQUIRED` (xref:01-access.adoc#UC-ACC-3[UC-ACC-3]).
+* *A release in between*: a release that completes after `save.validate` cannot let the save through; `save.apply`
+  checks the frozen state again atomically with the write, and a save that loses the race answers `DOCUMENT_RELEASED`
+  with the draft unchanged (<<change-frozen-at-write>>).
 * *Released, not frozen*: the first save after a release of a document type released more than once is applied
   like any other; it starts the next version in the workflow's first state (<<change-reopen>>). Only a frozen
   document (a released SAMM assessment) answers `DOCUMENT_RELEASED`.
@@ -190,7 +196,7 @@ xref:../specification/authentication.adoc#AUN-AUTH-3[AUN-AUTH-3] (signed commit,
 xref:../specification/authentication.adoc#AUN-AUTH-5[AUN-AUTH-5] (technical user, `REJECTED`),
 xref:../specification/testing.adoc#AUN-NFR-2[AUN-NFR-2] (save latency); library:
 https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc[`git-store`].
-Changes:: <<change-reopen>>.
+Changes:: <<change-reopen>>, <<change-frozen-at-write>>.
 Design:: xref:../concepts/web-app.adoc#_drafts_saving_and_conflicts[Web App, Drafts, Saving and Conflicts].
 
 [#UC-DOC-5]
@@ -404,3 +410,9 @@ workflows allow saves in review and need none
 once returns from `released` to editing. Fix: for such a document type the first save after a release starts the
 next version in the workflow's first state; the next release is tagged `v<n+1>`; a document type released once (SAMM
 assessment) refuses the save with `DOCUMENT_RELEASED`.
+[[change-frozen-at-write]]Operation Outcomes, the frozen check at the write:: Gap: the specification refuses saves to a
+released assessment (xref:../specification/category-samm.adoc#AUN-SAMM-4[AUN-SAMM-4]) but does not say when the
+check is made, so a release that completes between the check and the write would let the save through; the blob-id
+check does not catch it when the release changes none of the loaded files. Fix: the save checks the frozen state in
+the same atomic step as the write, and a save that loses the race answers `DOCUMENT_RELEASED` with the draft unchanged
+(xref:../specification/architecture-and-modules.adoc#operation-outcomes[Operation Outcomes], save row).
