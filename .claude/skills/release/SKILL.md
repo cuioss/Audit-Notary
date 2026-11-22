@@ -12,7 +12,7 @@ API-Sheriff's release runbook (`cuioss/API-Sheriff`, `.claude/skills/release/SKI
 covers a container-image lane (GHCR, Trivy, Cosign). Extend this file when the repository gains one
 or other release-coupled content.
 
-Always pass `--repo cuioss/AuditNotary` to `gh` (the repository's own slug).
+Always pass `--repo cuioss/Audit-Notary` to `gh` (the repository's own slug).
 Temporary files go under `.plan/temp/`.
 
 ---
@@ -106,9 +106,9 @@ git checkout -b "chore/release_${RELEASE_VERSION}"
 git add .github/project.yml
 git commit -m "chore(release): declare version ${RELEASE_VERSION}"
 git push -u origin "chore/release_${RELEASE_VERSION}"
-gh label create skip-bot-review --repo cuioss/AuditNotary \
+gh label create skip-bot-review --repo cuioss/Audit-Notary \
   --description "Skip automated bot review" --color ededed 2>/dev/null || true
-gh pr create --repo cuioss/AuditNotary --base main --label "skip-bot-review" \
+gh pr create --repo cuioss/Audit-Notary --base main --label "skip-bot-review" \
   --title "chore(release): declare version ${RELEASE_VERSION}" \
   --body "Declare \`current-version\` \`${RELEASE_VERSION}\`, \`next-version\` \`${NEXT_VERSION}\`.
 
@@ -123,7 +123,7 @@ gh pr create --repo cuioss/AuditNotary --base main --label "skip-bot-review" \
 ### Step 2 — Clean tree and PR queue
 
 ```bash
-gh pr list --repo cuioss/AuditNotary --state open --json number,title,isDraft
+gh pr list --repo cuioss/Audit-Notary --state open --json number,title,isDraft
 git status --porcelain
 git fetch origin main && git rev-parse HEAD origin/main
 ```
@@ -184,7 +184,7 @@ is already published, so stop.
 
 ```bash
 MAIN_SHA=$(git rev-parse origin/main); echo "$MAIN_SHA"
-gh run list --repo cuioss/AuditNotary --commit "$MAIN_SHA" \
+gh run list --repo cuioss/Audit-Notary --commit "$MAIN_SHA" \
   --json workflowName,event,status,conclusion,databaseId,url
 ```
 
@@ -199,11 +199,11 @@ gh run list --repo cuioss/AuditNotary --commit "$MAIN_SHA" \
 Record the high-water mark first, in both paths:
 
 ```bash
-PREV_RUN_ID=$(gh run list --repo cuioss/AuditNotary --workflow "Release" --limit 1 \
+PREV_RUN_ID=$(gh run list --repo cuioss/Audit-Notary --workflow "Release" --limit 1 \
   --json databaseId --jq 'first | .databaseId // 0'); echo "$PREV_RUN_ID"
 ```
 
-**Path A.** Run `gh pr merge <n> --repo cuioss/AuditNotary --squash`.
+**Path A.** Run `gh pr merge <n> --repo cuioss/Audit-Notary --squash`.
 - **Never pass `--delete-branch`.** `main` is merge-queue gated, so the merge only enqueues, and the
   flag closes the PR unmerged.
 - Poll the PR `state` or `origin/main` to see what happened.
@@ -215,7 +215,7 @@ MAIN_SHA=<from Step 4>
 git fetch origin main || { echo "ERROR: fetch failed" >&2; exit 1; }
 test "$(git rev-parse origin/main)" = "$MAIN_SHA" \
   || { echo "STOP: origin/main moved - redo Steps 3(iii) and 4" >&2; exit 1; }
-gh workflow run "Release" --repo cuioss/AuditNotary --ref main
+gh workflow run "Release" --repo cuioss/Audit-Notary --ref main
 ```
 
 Dispatch with `--ref main`, never with a SHA: the release force-pushes its version commits to a branch.
@@ -225,7 +225,7 @@ Path A: `--event pull_request`):
 
 ```bash
 PREV_RUN_ID=<echoed above>
-RUN_ID=$(gh run list --repo cuioss/AuditNotary --workflow "Release" --event pull_request --limit 20 \
+RUN_ID=$(gh run list --repo cuioss/Audit-Notary --workflow "Release" --event pull_request --limit 20 \
   --json databaseId --jq "[.[] | select(.databaseId > ${PREV_RUN_ID}) | .databaseId] | if length == 1 then .[0] else empty end")
 test -n "$RUN_ID" || { echo "STOP: no unique new Release run" >&2; exit 1; }
 echo "$RUN_ID"
@@ -251,7 +251,7 @@ mechanism enforces this; it is the operator's obligation.
 
 ### Step 7 — Wait
 
-Run `gh run watch "$RUN_ID" --repo cuioss/AuditNotary` (check that `RUN_ID` is non-empty first).
+Run `gh run watch "$RUN_ID" --repo cuioss/Audit-Notary` (check that `RUN_ID` is non-empty first).
 
 The release is a single job: Maven release, then site deploy, push of the version commits, tag
 push and GitHub release. If it fails **after** `Maven release <v>` succeeded, the jars are on Central:
@@ -263,7 +263,7 @@ push and GitHub release. If it fails **after** `Maven release <v>` succeeded, th
 
 1. **One tag.** Run `git fetch --tags --force`, then check that
    `git ls-remote --refs --tags origin "refs/tags/$V" | wc -l` is `1` (the tag is bare, no prefix).
-2. **One GitHub release:** `gh release view "$V" --repo cuioss/AuditNotary`.
+2. **One GitHub release:** `gh release view "$V" --repo cuioss/Audit-Notary`.
 3. **Every deployed coordinate on Central** (list them in `COORDS` as `group/path/artifactId`). A `404` is propagation lag (the release uses `autoPublish=true`;
    around 40 minutes was measured in API-Sheriff). Any other status means the check did not evaluate.
    ```bash
@@ -291,9 +291,9 @@ Read each hit; don't stream-edit the grep output. Report the count, including "c
 ### Step 10 — Reformat the release notes
 
 ```bash
-gh release view "$V" --repo cuioss/AuditNotary --json body --jq .body > .plan/temp/release-$V-orig.md
+gh release view "$V" --repo cuioss/Audit-Notary --json body --jq .body > .plan/temp/release-$V-orig.md
 # build .plan/temp/release-$V.md, then:
-gh release edit "$V" --repo cuioss/AuditNotary --notes-file .plan/temp/release-$V.md
+gh release edit "$V" --repo cuioss/Audit-Notary --notes-file .plan/temp/release-$V.md
 ```
 
 House format (the same as API-Sheriff). **The first release gets no changelog**: write a short

@@ -311,7 +311,7 @@ out. Requirement numbers and groups stay unchanged; only the prefix changes.
 |`Audit Notary`
 
 |Repository `cuioss/TrailHand`, SonarCloud key `cuioss_TrailHand`
-|`cuioss/AuditNotary`, `cuioss_AuditNotary`
+|`cuioss/Audit-Notary`, `cuioss_Audit-Notary`
 
 |Requirement prefix `TRH-<GROUP>-<n>`
 |`AUN-<GROUP>-<n>`
@@ -397,7 +397,8 @@ shortened to _Notary_, which is the name of another project in the field (<<_can
 |Where |Form
 
 |Repository
-|`AuditNotary`, after the family precedent `TokenSheriff`
+|`Audit-Notary`, after the family precedent `API-Sheriff`: the hyphen keeps the two words apart and readable
+(owner's decision of 2026-11-22, after a first rename to `AuditNotary`)
 
 |Artifacts, image, configuration file, configuration keys, scopes, cookies, realm, example host
 |`audit-notary`
@@ -544,7 +545,7 @@ at stake. The words _notarised_ and _certified_ are not used for what the applic
 
 . *Clearance of the name.* Decided, but not yet cleared: a trademark search for _Audit Notary_ at the DPMA register and
   in https://www.tmdn.org/tmview/[TMview] (EUIPO) in the relevant classes, the registration of a domain, and the
-  repository name `cuioss/AuditNotary`. If the search finds a conflict, the rename is repeated with the same mapping.
+  repository name `cuioss/Audit-Notary`. If the search finds a conflict, the rename is repeated with the same mapping.
 . *The SonarCloud project key* `cuioss_TrailHand`: renamed in SonarCloud by its administrator, then in
   `.github/project.yml` and the README badges.
 . *Who draws the final mark and who makes the poses,* and under which licence.
