@@ -7,11 +7,16 @@
 
 xref:../README.adoc[TrailHand documentation] » Concepts
 
-Status: *the name is decided: TrailHand* (owner's decision of 2026-11-20); the mark and the mascot are proposals. This
-page records what was checked, why the working title *CISOs-Friend* was dropped, and what the rename changed
-(<<_the_rename>>). The trademark search of <<_open_decisions>> is still to be done.
+Status: *the name is decided: Audit Notary* (owner's decision of 2026-11-22). It replaces *TrailHand*, decided on
+2026-11-20, because a reader whose first language is not English cannot tell from that name what the application is
+(<<_why_trailhand_was_dropped>>). The rename is planned, not done: until the sweep of <<_the_rename>> is merged, the
+rest of the documentation, the code, the artifacts and the repository still say TrailHand. The mark and the mascot are
+proposals; the trademark search of <<_open_decisions>> is still to be done.
 
-== Why the Working Title Needs a Decision
+This page records what was checked, why the working title *CISOs-Friend* and then *TrailHand* were dropped, and what
+each rename changes.
+
+== Why the Working Title Needed a Decision
 
 * *Close to an established product.* https://github.com/intuitem/ciso-assistant-community[CISO Assistant] is an
   open-source governance, risk and compliance platform by intuitem, with a hosted offering; a 2026 article describes it
@@ -25,8 +30,7 @@ page records what was checked, why the working title *CISOs-Friend* was dropped,
 * *Hard to say and to type.* The possessive and the hyphen give an identifier no one can predict (`cisos-friend`,
   `CISOs-Friend`, `CISO's Friend`).
 
-The strength of the working title is that it says in three words what the application is for. The recommendation keeps
-that as the descriptor under a shorter name.
+The strength of the working title is that it says in three words what the application is for.
 
 == The Brand Family
 
@@ -71,38 +75,176 @@ rendering that follows `currentColor`.
 |Who or which tool made each drawing, and the owner's acceptance, before it ships.
 |===
 
+[#_how_the_family_names_work]
+=== How the Family's Names Work
+
+The names of the neighbouring projects are understood without an explanation, also by readers whose first language is
+not English. They share one pattern: the first word names *what the project works on*, the second names *a role*, and
+the role is the outfit of the mascot.
+
+[cols="1,1,1,2"]
+|===
+|Project |What it works on |Role |Mascot
+
+|https://github.com/cuioss/TokenSheriff[Token Sheriff]
+|Token
+|Sheriff
+|A stern bear with a sheriff's star and a revolver
+
+|https://github.com/cuioss/API-Sheriff[API-Sheriff]
+|API
+|Sheriff
+|The family's sheriff
+
+|https://github.com/cuioss/plan-marshall[Plan Marshall]
+|Plan
+|Marshal
+|A bear with a marshal's star on the hat and a clipboard headed `PLAN`
+|===
+
+Three properties carry the effect:
+
+* *Both words are basic vocabulary.* Token, API and Plan are words every developer knows; sheriff and marshal are known
+  far beyond English from the western genre.
+* *The role says what the project does with the object.* A sheriff enforces the rules on tokens; a marshal puts a plan
+  in order (_to marshal_ also means to arrange).
+* *The name can be drawn.* The outfit and one prop say the role, so the mascot, the mark and the tagline follow from
+  the name instead of explaining it.
+
+[#_why_trailhand_was_dropped]
+== Why TrailHand Was Dropped
+
+*TrailHand* (decided 2026-11-20) carried a narrative: the _trail_ was the audit trail of signed commits, the _hand_ the
+ranch hand who does the legwork. Measured against <<_how_the_family_names_work>>, the narrative does not reach the
+reader:
+
+. *"Trail" does not say "audit".* Only the compound _audit trail_ carries the meaning, and it is the vocabulary of
+  auditors and native speakers. On its own, _trail_ is a path through terrain; in German it is everyday vocabulary from
+  trail running and mountain biking. Learners of English also confuse _trail_ with _trial_, so the name is misheard and
+  mistyped.
+. *"Hand" is not a role outside English.* _Ranch hand_ and _farmhand_ are idioms; everyone else reads the part of the
+  body. The name therefore has no role word, which is the part that makes the family's names work.
+. *Neither word names the object.* Token, API and Plan say what the project is about; neither _trail_ nor _hand_ says
+  documents, audit or security.
+. *The mascot cannot show the name.* A bear in a cowboy hat without a star reads as a cowboy, or as a sheriff without
+  the badge. Nothing in the picture says _trail_ or _hand_.
+. *The name needed a paragraph.* The decision had to explain both words; a name that needs an explanation has failed
+  for the readers it is meant for.
+. *It sits close to Trailhead,* the learning platform of another vendor (see <<_spelling>> of the earlier decision);
+  the capital _H_ only helps in writing, not in speech.
+
 == Name Candidates
 
-Criteria: it says something true about the product; it is short and can be a package, a command and a domain; it fits
-the family without borrowing the sheriff badge; it does not collide with a product in security, compliance or
-developer tooling. Checked on 2026-11-20 by web search, by repository search on GitHub and by DNS lookup. *This is not a
-trademark search.*
+Criteria, sharpened after TrailHand:
+
+. *Two words of basic vocabulary,* understood by a developer or a CISO whose first language is not English, ideally
+  words that other European languages have borrowed.
+. *The first word names the object.* _Audit_ fits best: it is the CISO's own word, it is the same in German and
+  French, and every one of the four categories is evidence for an audit.
+. *The second word names a role with one prop,* so that the outfit, the mark and the tagline follow from the name.
+. *The role stands for care and record keeping, not enforcement,* as the voice of the application does (<<_voice>>):
+  unarmed, and a release stays with a human (xref:mcp-server.adoc[MCP Server]).
+. *No collision* with a product in security, compliance or developer tooling.
+
+[#_candidates_audit]
+=== Second Round (2026-11-22)
+
+Checked on 2026-11-22 by web search, by repository search on GitHub and by DNS lookup. *This is not a trademark
+search.*
+
+[cols="1,2,3,1"]
+|===
+|Name |Idea |Findings |Verdict
+
+|*Audit Notary*
+|A notary certifies, signs and dates a record and keeps the register, but does not decide what the record says. That is
+the signed commit whose trailers carry the person's pseudonym
+(xref:authentication-and-identity.adoc#_the_claims_and_what_becomes_of_them[Authentication and Identity]), and a
+release that stays with a human. _Notary_ is understood across Europe (German _Notar_, French _notaire_, Italian
+_notaio_, Spanish _notario_). The prop is the seal stamp.
+|No product or repository of this name found by web search or by repository search on GitHub. `auditnotary.com`,
+`auditnotary.io` and `auditnotary.dev` have neither an address nor a name server in DNS. *The single word is taken in
+the field:* https://github.com/theupdateframework/notary[Notary] is the CNCF project for signing software artifacts,
+and CodeNotary offers notarisation of Git repositories into a tamper-evident ledger
+(https://hackernoon.com/codenotary-is-a-free-open-source-timestamping-service-for-developers-sf4d33bz[HackerNoon]).
+The name therefore only works as the compound, never shortened to _Notary_.
+|*Chosen*
+
+|*Docs Notary*
+|The same role with the broader object _documents_.
+|`docsnotary.com` resolves in DNS (content not checked). _Docs_ also suggests a tool for software documentation.
+|Rejected
+
+|*Audit Sheriff*, *Docs Sheriff*
+|The family's own role.
+|No product of either name found. https://sdtimes.com/hisoftware/hisoftware-launches-compliance-security-software/[Compliance
+Sheriff] (HiSoftware) was compliance-testing software in the same field. The sheriff enforces; this application keeps
+records, and the badge belongs to Token Sheriff and plan-marshall (<<_the_brand_family>>).
+|Rejected
+
+|*Audit Scout*
+|The scout who finds the way and reports what is there; it would keep the trail story.
+|https://pypi.org/project/scoutsuite[Scout Suite] by NCC Group is an established multi-cloud security _auditing_ tool.
+`auditscout.com` resolves and `auditscout.io` has name servers. A scout explores; he does not keep the books.
+|Rejected
+
+|*Audit Ranger*
+|The ranger who looks after a territory.
+|https://ranger.apache.org/[Apache Ranger] is a framework for authorization and auditing in the Hadoop ecosystem
+(https://docs.cloudera.com/runtime/7.3.2/security-ranger-auditing/index.html[Cloudera, Ranger Auditing]). A bear in a
+ranger's hat is the picture of Smokey Bear, the fire-prevention character of the US Forest Service, whose name and
+image a federal statute protected until 2020
+(https://www.law.cornell.edu/uscode/text/18/711[18 U.S.C. § 711], repealed; other protection not checked).
+|Rejected
+
+|*Audit Marshal*
+|_To marshal evidence_ is to put it in order.
+|https://village.ai/company/auditmarshall[Audit Marshall] is an AI platform for quality, risk and compliance management.
+The word also belongs to plan-marshall.
+|Rejected
+
+|*Audit Steward*
+|The steward who looks after something that is not his.
+|No product of this name found; unrelated products are called _Steward_, for example a KYC onboarding product
+(https://slashdot.org/software/p/Steward/[Slashdot]). There is no outfit that says the role.
+|Rejected
+
+|*Audit Scribe*
+|The scribe who writes the record.
+|https://www.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-14/services/603976493420537[Scribe Compliance
+Audit Management] (Doc-works Ltd) is listed on the UK G-Cloud marketplace. _Scribe_ is not basic vocabulary.
+|Rejected
+|===
+
+[#_candidates_first_round]
+=== First Round (2026-11-20)
+
+Checked on 2026-11-20 by web search, by repository search on GitHub and by DNS lookup. *This is not a trademark
+search.*
 
 [cols="1,2,3,1"]
 |===
 |Name |Idea |Findings |Verdict
 
 |*TrailHand*
-|The _trail_ is the audit trail: every change is a signed commit whose trailers carry the person's pseudonym
-(xref:authentication-and-identity.adoc#_the_claims_and_what_becomes_of_them[Authentication and Identity]). The _hand_
-is the ranch hand, the reliable helper who does the legwork: the friend of the CISO, and the agent that works for a
-user.
+|The _trail_ is the audit trail of signed commits; the _hand_ is the ranch hand, the reliable helper who does the
+legwork.
 |No product of this name found by web search. GitHub: one repository, `krumIO/trailhand-ui`, no stars, no description.
 `trailhand.com`, `trailhand.io` and `trailhand.dev` resolve in DNS, so they are registered by someone (content not
 checked).
-|Chosen
+|Chosen on 2026-11-20, dropped on 2026-11-22 (<<_why_trailhand_was_dropped>>)
 
 |*Tinstar*
 |The tin star is the sheriff's badge: the family sign.
 |GitHub: `except-pass/tinstar`, "An Infinite Canvas IDE built for human/AI collaboration" (one star). `tinstar.io`
 resolves; `tinstar.dev` does not. Close to an AI developer tool, and it borrows the badge that two other projects
 already wear.
-|Runner-up
+|Rejected
 
 |*CISOs-Friend*
 |The working title.
-|See <<_why_the_working_title_needs_a_decision>>. `cisos-friend.com` has no address in DNS (`.com` only).
-|Keep as descriptor
+|See <<_why_the_working_title_needed_a_decision>>. `cisos-friend.com` has no address in DNS (`.com` only).
+|Rejected
 
 |*Docket*
 |The court's list of cases.
@@ -126,19 +268,86 @@ word also names the _confused deputy_ problem, which makes it a poor name for an
 
 === Decision
 
-*TrailHand, with the descriptor "the CISO's friend"*: the application is *TrailHand*, and the sentence under the logo
-is "Security documents on the Git server you already run -- the CISO's friend". The working title lives on as the
-tagline, so nothing of the first idea is lost, and a reader who searches for the role finds it.
+*Audit Notary.* The object is the audit, the role is the notary: the one who signs, dates and keeps the record, and who
+does not decide what it says. The name carries the two promises the design makes: every change is signed and
+attributable (xref:../specification/authentication.adoc[Authentication]), and the application does the record keeping
+for the person, in the web app or through an agent, while a release stays with a human (xref:mcp-server.adoc[MCP
+Server]).
 
-The name carries the two promises the design makes: _the trail_ (every change is attributable and verifiable,
-xref:../specification/authentication.adoc[Authentication]) and _the hand_ (it does the legwork for the person, in the
-web app or through an agent, and never decides alone: a release stays with a human,
-xref:mcp-server.adoc[MCP Server]).
+[cols="1,3"]
+|===
+|Line |Text
+
+|Name
+|Audit Notary
+
+|Claim
+|Every change signed. Every version on record.
+
+|Descriptor, under the logo
+|Security documents on the Git server you already run.
+|===
+
+The working title's phrase _the CISO's friend_ is no longer the descriptor: it is an idiom as well, and the claim now
+says the promise directly.
+
+*The notary is a metaphor, not a legal claim.* A notary has a legal function, and readers in compliance take words
+literally. No text of the application, its documentation or its marketing says that a document is _notarised_ or has
+the evidential value of a notarial deed. The wording is _signed_, _dated_, _attributable_ and _on record_.
 
 [#_the_rename]
 === The Rename
 
-Done in one sweep with the decision, because scopes and file names are public interfaces once the first release is out:
+==== From TrailHand to Audit Notary (planned)
+
+To be done in one sweep before the first release, because scopes, file names and coordinates are public interfaces once
+it is out. Requirement numbers and groups stay unchanged; only the prefix changes.
+
+[cols="2,2"]
+|===
+|Is |Becomes
+
+|`TrailHand` (name, titles, prose)
+|`Audit Notary`
+
+|Repository `cuioss/TrailHand`, SonarCloud key `cuioss_TrailHand`
+|`cuioss/AuditNotary`, `cuioss_AuditNotary`
+
+|Requirement prefix `TRH-<GROUP>-<n>`
+|`AUN-<GROUP>-<n>`
+
+|Maven `de.cuioss:trailhand-parent`, modules `trailhand`, `trailhand-web-app`, `trailhand-web-mock`,
+`trailhand-web-e2e`, `trailhand-integration-tests`; module directory `trailhand/`
+|`de.cuioss.notary.audit:audit-notary-parent`, `audit-notary`, `audit-notary-web-app`, `audit-notary-web-mock`,
+`audit-notary-web-e2e`, `audit-notary-integration-tests`; module directory `audit-notary/`
+
+|Package `de.cuioss.trailhand`, classes `TrailhandApplication`, `TrailhandConfiguration`, `TrailhandLogMessages`
+|`de.cuioss.notary.audit`, `AuditNotaryApplication`, `AuditNotaryConfiguration`, `AuditNotaryLogMessages`
+
+|Log message identifiers `TRAILHAND-<n>`
+|`AUDIT-NOTARY-<n>`
+
+|`trailhand.yaml`, `trailhand.schema.json`, `trailhand.config.dir`, `trailhand.data.dir`, `trailhand.oidc.*`
+|`audit-notary.yaml`, `audit-notary.schema.json`, `audit-notary.config.dir`, `audit-notary.data.dir`,
+`audit-notary.oidc.*`
+
+|Scopes `trailhand:read`, `:write`, `:request-release`
+|`audit-notary:read`, `:write`, `:request-release`
+
+|Image `ghcr.io/cuioss/trailhand`
+|`ghcr.io/cuioss/audit-notary`
+
+|Cookies `+__Host-trailhand-*+`, environment `TRAILHAND_*`, browser storage `trailhand_theme`, example host
+`trailhand.example.org`, test realm `trailhand`
+|`+__Host-audit-notary-*+`, `AUDIT_NOTARY_*`, `audit_notary_theme`, `audit-notary.example.org`, `audit-notary`
+
+|`concepts/trailhand-overview.adoc`, `resources/diagrams/trailhand-system-context.svg`
+|`concepts/audit-notary-overview.adoc`, `resources/diagrams/audit-notary-system-context.svg`
+|===
+
+After the sweep, the word TrailHand appears only on this page, as the CISOs-Friend working title did before.
+
+==== From CISOs-Friend to TrailHand (done 2026-11-20)
 
 [cols="2,2"]
 |===
@@ -166,61 +375,89 @@ Done in one sweep with the decision, because scopes and file names are public in
 |`concepts/trailhand-overview.adoc`, `resources/diagrams/trailhand-system-context.svg`
 |===
 
-The rename was made while these documents were still `doc/app/` of `git-document-repository`, where nothing else named
+That rename was made while these documents were still `doc/app/` of `git-document-repository`, where nothing else named
 the application except that repository's documentation index and its `AGENTS.md`, both updated; its orchestrator ledger
 is history and was left as it was. The libraries keep their own prefix `GDR`.
 
 [#_spelling]
 === Spelling
 
-*TrailHand* in prose, in the logo and in headings: the capital _H_ shows the two words (trail and hand) and keeps the
-name apart from _Trailhead_, the name of an established learning platform of another vendor (the similarity belongs to
-the clearance of <<_open_decisions>>). *`trailhand`* in every identifier: repository and artifact names, the
-configuration file, scopes, cookie, metric and image names, package names; `TRAILHAND_` for environment variables; `TRH`
-for requirement identifiers. The repository itself is spelled `TrailHand` after the family precedent `TokenSheriff`, and
-its Maven coordinates are `de.cuioss:trailhand-parent`.
+*Audit Notary* in prose, in the logo and in headings: two words, as _Token Sheriff_ and _Plan Marshall_. Never
+shortened to _Notary_, which is the name of another project in the field (<<_candidates_audit>>).
+
+[cols="1,2"]
+|===
+|Where |Form
+
+|Repository
+|`AuditNotary`, after the family precedent `TokenSheriff`
+
+|Artifacts, image, configuration file, configuration keys, scopes, cookies, realm, example host
+|`audit-notary`
+
+|Maven group and Java package
+|`de.cuioss.notary.audit`, role first and object second, after the family precedent `de.cuioss.sheriff.token` (Token
+Sheriff) and `de.cuioss.sheriff.gateway` (API-Sheriff)
+
+|Java class prefix
+|`AuditNotary`
+
+|Environment variables
+|`AUDIT_NOTARY_`
+
+|Log message identifiers
+|`AUDIT-NOTARY-<n>`
+
+|Requirement identifiers
+|`AUN-<GROUP>-<n>`
+|===
+
+The earlier decision spelled the name with a capital _H_ (_TrailHand_) to keep it apart from _Trailhead_, the name of an
+established learning platform of another vendor; that concern ends with the rename.
 
 == The Mark
 
-image::../resources/brand/mark-sketch.svg["Sketch of the proposed mark: a document page with a folded corner and a trail of three commit nodes, shown in colour at 96 pixels, in one colour, and at 32 and 16 pixels",align=center]
-
-*Idea:* a document page with a trail of three nodes over it, the commits of its history; the newest node is gold. It
-says "versioned document" without a star, a shield or a padlock, the three symbols every security product carries.
+*Idea:* a document page with a folded corner and a *round seal* on its lower half, the notary's seal on the record. The
+seal has a wavy, rosette edge, a plain centre and the gold of the palette. It says "a signed record" without a star, a
+shield or a padlock, the three symbols every security product carries.
 
 * *Drawing rules* are those of the family (<<_the_brand_family>>): `24 × 24` grid, hand-drawn, solid fills with the dark
-  outline, a one-colour rendering with the trail cut out, no text in the drawing.
-* *The sketch is for discussion.* At `16` px the colour version is too fine; the final drawing needs a favicon variant
-  with two nodes and a heavier trail. The drawing in `resources/brand/mark-sketch.svg` is a throw-away sketch, not an
-  asset to ship.
-* *Distance from the sheriff badge:* the mark has no star and no ball tips, so it is not mistaken for the sign of
-  plan-marshall or Token Sheriff beside which it will sit in a user's tool list.
+  outline, a one-colour rendering with the seal cut out, no text in the drawing.
+* *Small sizes.* At `16` px the mark reduces to the seal alone, which stays legible where the page with its folded
+  corner does not.
+* *Distance from the sheriff badge:* the seal is round with a wavy edge and has no points and no ball tips, so it is not
+  mistaken for the sign of plan-marshall or Token Sheriff beside which it will sit in a user's tool list.
+* *The earlier sketch is superseded.* `resources/brand/mark-sketch.svg` shows the TrailHand idea (a page with a trail of
+  three commit nodes). It stays as a record of that idea and is not an asset to ship.
 * *Provisional drawing in the web app.* Until the final mark is delivered and accepted, the web app carries a
-  provisional drawing of the same idea (`web-app/src/lib/brand/BrandMark.svelte`, favicon
-  `web-app/static/brand-mark.svg` with two nodes); `MARK_IS_PROVISIONAL` in `web-app/src/lib/brand/brand.ts` marks it.
-  It must be replaced before the first release.
+  provisional drawing of the TrailHand idea (`web-app/src/lib/brand/BrandMark.svelte`, favicon
+  `web-app/static/brand-mark.svg`); `MARK_IS_PROVISIONAL` in `web-app/src/lib/brand/brand.ts` marks it. It must be
+  replaced by the seal before the first release.
 
 [cols="1,1,1,1"]
 |===
 |Drawing |Made by |Accepted |Licence
 
-|Provisional mark and favicon of the web app
-|Drawn by hand as SVG during the bootstrap of the web app, after the sketch above
+|Provisional mark and favicon of the web app (TrailHand idea)
+|Drawn by hand as SVG during the bootstrap of the web app, after the superseded sketch
 |No: provisional, replaced before the first release
 |Apache License 2.0, as the repository
 |===
 
 == The Mascot
 
-The character is the family's bear. A *ranch hand*: a worn, wide-brimmed hat, a neckerchief, a tally book under one
-arm and a pencil behind the ear; the book's cover carries the mark. It is friendly where the sheriff is stern, and it is
-unarmed: the product stands for care, not enforcement. The family has a stern sheriff and a smiling detective; the ranch
-hand stands next to them as the one who keeps the books.
+The character is the family's bear. A *notary of the frontier town*: a green eyeshade visor, round spectacles, a
+waistcoat with sleeve garters over a cream shirt, a quill or pencil behind the ear. One paw holds a brass seal stamp,
+the other a bound register whose cover carries the mark. He is friendly where the sheriff is stern, and he is unarmed:
+the product stands for care, not enforcement. The family has a stern sheriff and a smiling detective; the notary
+stands next to them as the one who keeps and signs the record.
 
-A small closed set of poses, in the manner of the plan-marshall web app: *welcome* (login, first run), *at work* (the
-tally book open, empty states), *done* (the book closed with a tick, after a release). No pose shows a person's data or
-a score. The raster images follow the asset rules of the family: only derived, size-reduced files are shipped with the
-application, never the source image. The sources are kept in `resources/brand/` as the masters of the derivatives; the
-documentation is not part of the application.
+A small closed set of poses, in the manner of the plan-marshall web app: *welcome* (login, first run: the stamp raised
+in greeting), *at work* (the register open, the stamp over the page; empty states), *done* (the register closed with
+the seal on the cover, after a release). No pose shows a person's data or a score. The raster images follow the asset
+rules of the family: only derived, size-reduced files are shipped with the application, never the source image. The
+sources are kept in `resources/brand/` as the masters of the derivatives; the documentation is not part of the
+application.
 
 *Provenance:* the family's images were made with an AI image tool. For each pose, record the tool, the prompt and the
 owner's acceptance in a table like the one in `brand-mark-mascot.adoc` of `pm-mcp-clients`, before the pose ships. The
@@ -234,16 +471,24 @@ link:../resources/brand/image-provenance.adoc[Image Provenance and Licensing]; t
 |===
 |Image |Made by |Accepted |Licence
 
-|*Welcome* (`resources/brand/mascot-welcome.png`, used in the README; master `resources/brand/mascot-welcome-source.png`)
-|ChatGPT image generation (OpenAI), 2026, from the prompt below and refined with follow-up instructions. The shipped
-file is the source image cleaned of the generated glow and stray pixels outside the outline, cropped to the figure and
-reduced to 520 × 811 pixels. The master is the unchanged generated image (1024 × 1536 pixels).
-|Yes, by the owner, 2026-11-21. Not shipped in the web app yet.
+|*Welcome, ranch hand* (TrailHand; `resources/brand/mascot-welcome.png`, used in the README; master
+`resources/brand/mascot-welcome-source.png`)
+|ChatGPT image generation (OpenAI), 2026, from the ranch-hand prompt of the TrailHand decision, refined with follow-up
+instructions. The shipped file is the source image cleaned of the generated glow and stray pixels outside the outline,
+cropped to the figure and reduced to 520 × 811 pixels. The master is the unchanged generated image (1024 × 1536
+pixels).
+|Accepted by the owner on 2026-11-21; *superseded* by the rename on 2026-11-22. Never shipped in the web app; it leaves
+the README when the notary's welcome pose is accepted.
 |Apache License 2.0, as stated in the image provenance notice
+
+|*Welcome, notary*
+|To be made from the prompt below.
+|Open
+|Open
 |===
 
-The starting prompt of the base character, with the pose of *welcome*; the final image came out of follow-up
-instructions. The prompt asks for the family's own bears as style references; the provenance notice records that no
+The starting prompt of the notary, with the pose of *welcome*. Attach two of the family's own bears (the sheriff and
+the detective of `cuioss-parent-pom/doc/images`) as style references; record in the provenance notice that no
 third-party image was supplied.
 
 ....
@@ -253,15 +498,17 @@ paper-grain texture, big round eyes with small highlights, a cream muzzle, a sma
 background. Full body, standing, front three-quarter view, portrait format 2:3, centred, with margin around the
 figure. No text, no watermark, no border.
 
-Character: a RANCH HAND bear who keeps the books. Orange-brown fur (#E17512), cream muzzle and belly (#F6DDB0). He
-wears a worn, wide-brimmed brown hat (#A0602E) with a gold band (#F2B630) and a gold neckerchief (#F2B630) knotted at
-the front. A yellow pencil sits behind one ear. Under one arm he carries a brown tally book (#A0602E) with a stitched
-spine; the cover shows a small emblem: a cream document page with a folded top-right corner and a winding trail
-across it through three round nodes (the last node gold, the others brown). The emblem is the only graphic on the
-book. The other paw waves in a relaxed, friendly way.
+Character: a NOTARY bear of an old western frontier town, the one who signs, dates and keeps the town's records.
+Orange-brown fur (#E17512), cream muzzle and belly (#F6DDB0). He wears a green eyeshade visor, small round
+spectacles, a cream shirt with sleeve garters, and a brown waistcoat (#A0602E) with a gold watch chain (#F2B630).
+A yellow pencil sits behind one ear. One paw holds a brass seal stamp (#F2B630) with a round, wavy-edged seal face,
+raised in a friendly greeting. Under the other arm he carries a thick brown register book (#A0602E) with a stitched
+spine; the cover shows a small emblem: a cream document page with a folded top-right corner and a round gold seal
+with a wavy rosette edge on its lower half. The emblem is the only graphic on the book.
 
-Mood: calm, warm, trustworthy, a colleague who keeps good notes. He is clearly UNARMED: no badge, no star, no
-holster, no gun, no shield, no padlock. He is not a sheriff and not a detective.
+Mood: calm, precise, warm and trustworthy, a colleague who keeps good records. He is clearly UNARMED: no badge, no
+star, no holster, no gun, no shield, no padlock, no cowboy hat. He is not a sheriff, not a cowboy and not a
+detective.
 
 Keep the proportions, line weight and rendering identical to the references so the three characters look like one
 family.
@@ -269,11 +516,13 @@ family.
 
 The poses *at work* and *done* are still to be made; each gets its own row.
 
+[#_voice]
 == Voice
 
-Plain, calm and accountable. The people who read the application's pages are preparing an audit or answering an
-incident; the tone is that of a colleague who keeps good notes. No jokes in error messages, deadline warnings or
-anywhere in the incident-report category; the ranch-hand character appears only where nothing is at stake.
+Plain, calm and accountable: the voice of a notary's office. The people who read the application's pages are
+preparing an audit or answering an incident; the tone is that of a colleague who keeps good records. No jokes in error
+messages, deadline warnings or anywhere in the incident-report category; the character appears only where nothing is
+at stake. The words _notarised_ and _certified_ are not used for what the application does (<<_decision>>).
 
 == Usage Rules
 
@@ -286,10 +535,11 @@ anywhere in the incident-report category; the ranch-hand character appears only 
 [#_open_decisions]
 == Open Decisions
 
-. *Clearance of the name.* Decided, but not yet cleared: a trademark search at the DPMA register and in
-  https://www.tmdn.org/tmview/[TMview] (EUIPO) in the relevant classes, and a check of the domains and of the GitHub
-  organisation names. If the search finds a conflict, the rename is repeated with the same mapping.
-. *Whether the character is a ranch hand,* or another outfit of the family.
+. *Clearance of the name.* Decided, but not yet cleared: a trademark search for _Audit Notary_ at the DPMA register and
+  in https://www.tmdn.org/tmview/[TMview] (EUIPO) in the relevant classes, the registration of a domain, and the
+  repository name `cuioss/AuditNotary`. If the search finds a conflict, the rename is repeated with the same mapping.
+. *The rename sweep* of <<_the_rename>>, including the renaming of the repository and of the SonarCloud project, which
+  need the owner's rights.
 . *Who draws the final mark and who makes the poses,* and under which licence.
 . *The name of the local gateway* (xref:local-mcp-gateway.adoc[Local MCP Gateway]), which is a base project of its own
   and may carry a name in the Sheriff family: it builds on Token Sheriff.
