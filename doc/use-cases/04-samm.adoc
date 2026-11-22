@@ -106,10 +106,13 @@ Flow::
 Variations::
 * *No not-applicable answer*: the answer sets of the model contain none, so the scores stay comparable.
 * *No file upload*: evidence is a link, never a file.
+* *Evidence per practice*: evidence is kept per practice like the answers, so two assessors adding evidence to
+  different practices do not conflict (<<change-evidence-per-practice>>).
 Outcome:: every practice holds the answers the workshop agreed, each saved in the name of the assessor who saved it.
 Requirements:: xref:../specification/category-samm.adoc#AUN-SAMM-3[AUN-SAMM-3] (joint editing, 5 s),
 xref:../specification/category-samm.adoc#AUN-SAMM-7[AUN-SAMM-7] (evidence as links),
 xref:../specification/testing.adoc#AUN-NFR-3[AUN-NFR-3] (fifteen concurrent assessors).
+Changes:: <<change-evidence-per-practice>>.
 Design:: xref:../concepts/category-samm.adoc#_workshop_mode_save_often[SAMM, Workshop Mode: Save Often],
 xref:../concepts/web-app.adoc#_drafts_saving_and_conflicts[Web App, Drafts, Saving and Conflicts].
 
@@ -227,3 +230,14 @@ Open points:: whether the model is a vendored copy in the repository or a fetche
 Requirements:: xref:../specification/category-samm.adoc#AUN-SAMM-1[AUN-SAMM-1] (`samm.yaml` pins the versions); the
 flow of pinning: none yet.
 Design:: none yet.
+
+[#changes-to-the-specification]
+== Changes to the Specification
+
+Each change is the fix of a gap these use cases need; it is written into the specification once they are `AGREED`.
+
+[[change-evidence-per-practice]]AUN-SAMM-1, evidence per practice:: Gap: `evidence.yaml` is one file for all practices
+of an assessment, so two assessors adding evidence to different practices at once conflict, against
+xref:../specification/category-samm.adoc#AUN-SAMM-3[AUN-SAMM-3]. Fix: the declared split
+`evidence/<practice-id>.yaml`, one per practice, beside `answers/<practice-id>.yaml`; the concept's layout
+(xref:../concepts/category-samm.adoc#_repository_layout[SAMM, Repository Layout]) follows.

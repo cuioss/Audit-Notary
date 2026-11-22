@@ -86,7 +86,8 @@ Status:: `DRAFT`
 Actor:: a team member with `edit`, in the web app; an AI agent for the user.
 Goal:: create a document or change one in a form that keeps my work as I type and shows me what others save.
 Trigger:: the user creates a document of a document type, or opens one to edit it.
-Preconditions:: the user has `edit` on the document type's repository; the document is not released.
+Preconditions:: the user has `edit` on the document type's repository; the document is not frozen (a document type
+released once, such as a SAMM assessment, refuses every save after its release).
 Flow::
 +
 [source,text]
@@ -117,6 +118,9 @@ Variations::
 * *Through an agent*: `write_draft` with the data, validated against the schema; the answer is `DRAFT_SAVED` or the
   field errors.
 * *A draft not changed* for the configured period is deleted (`drafts.expiry`).
+* *A released document of a document type released more than once* (a threat model, an ISMS document) is reopened by
+  its first save after the release: that save starts the next version in the workflow's first state, and its next
+  release is tagged `v<n+1>` (<<change-reopen>>).
 Outcome:: the user's work is kept as a draft, visible only to them, until it is saved.
 Open points:: whether the AsciiDoc preview runs on the server only or with a sanitising client renderer
 (xref:../concepts/web-app.adoc#_open_questions[Web App, Open Questions]).
@@ -257,7 +261,10 @@ Flow::
        │                       released state, grouped by schema section
        ▼
   [U] release.decide           release, or back to editing
-       ├── back ─────────► done, nothing written
+       ├── back ─────────► done; the workflow's transition back to
+       │                   its first state where it declares one,
+       │                   otherwise nothing written and the
+       │                   document is edited in review
        ▼ release
   [S] release.check            required fields
        ├── fields missing ─► done, MANDATORY_FIELDS_MISSING
@@ -265,9 +272,12 @@ Flow::
   ↳ UC-ACC-3                   step-up, when the workflow requires it
        ├── not confirmed ─► done, nothing written
        ▼
-  [S] release.write            merged into main by the application,
-       │                       tagged <collection>/<id>/v<n>, signed
-       │                       with the approver in the trailers
+  [S] release.write            exactly the revision whose diff was
+       │                       shown, merged into main by the
+       │                       application, tagged <collection>/<id>/v<n>,
+       │                       signed with the approver in the trailers
+       ├── saved since the diff ─► release.diff, CHANGED_SINCE_REVIEW;
+       │                           the approver reviews the new diff
        ├── push refused ──────► done, REJECTED
        ├── Git unreachable ───► done, GIT_UNAVAILABLE
        ▼
@@ -277,7 +287,11 @@ Variations::
 * *Through an agent*: an agent cannot release; it requests the release (xref:#UC-DOC-8[UC-DOC-8]).
 * *A category that is released once*, such as a SAMM assessment, refuses every later save
   (xref:04-samm.adoc#UC-SAMM-4[UC-SAMM-4]).
-* *Anchoring*: the release is anchored with the configured anchor provider.
+* *Editing in review*: the delivered workflows allow saves in review, so "back to editing" writes nothing; a workflow
+  that does not allow them declares a transition back to its first state.
+* *Saved after the diff*: a release never includes content the approver did not see; a save after the diff makes the
+  release show the new diff instead (<<change-reviewed-revision>>).
+* *Anchoring*: the release is anchored when an anchor provider is active (`anchor.provider` other than `none`).
 Outcome:: the released state is on `main` under a protected tag, signed in the approver's name, and immutable.
 Requirements:: xref:../specification/web-app.adoc#AUN-WEB-6[AUN-WEB-6] (diff and release),
 xref:../specification/authentication.adoc#AUN-AUTH-4[AUN-AUTH-4] (step-up),
@@ -285,6 +299,7 @@ xref:../specification/authentication.adoc#AUN-AUTH-5[AUN-AUTH-5] (the applicatio
 xref:../specification/architecture-and-modules.adoc#operation-outcomes[Operation Outcomes] (the outcomes of a
 release), xref:../specification/configuration.adoc#AUN-CONF-1[AUN-CONF-1] (`anchor`); library:
 https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc[`git-store`].
+Changes:: <<change-reviewed-revision>>, <<change-back-to-editing>>.
 Design:: xref:../concepts/web-app.adoc#_review_and_release[Web App, Review and Release].
 
 [#UC-DOC-8]
@@ -294,7 +309,8 @@ Status:: `DRAFT`
 Actor:: an AI agent for a user, then that user, or an approver, in the web app.
 Goal:: let the agent hand a finished document to a human for release, without ever releasing itself.
 Trigger:: the agent has finished a document for the user, for example a threat model from a recipe.
-Preconditions:: the token carries `audit-notary:request-release`; the document is saved.
+Preconditions:: the token carries `audit-notary:request-release`; the document is saved, in its workflow's first state
+or in review.
 Flow::
 +
 [source,text]
@@ -310,13 +326,17 @@ Flow::
        │                       user
        ▼
   [U] request.open             the user opens the request
-       ▼
+       ├── document in its first state ─► ↳ UC-DOC-6, submitted for
+       │                                  review by a user with edit
+       ▼ document in review
   ↳ UC-DOC-7                   review and release, with step-up, by a
        ▼                       user with approve
   done
 ----
 Variations::
 * *Not approved*: the request stays pending; the document can be edited further.
+* *No submit by the agent*: an agent has no tool for the transition into review, so a human submits the document when
+  the request is opened (xref:#UC-DOC-6[UC-DOC-6]).
 Outcome:: the release, if it happens, is a human act with step-up; the request and its comment are on record.
 Open points:: how a release request is stored in Git: as a field of the document on its working branch, or as a
 document of a document type of its own, and in which repository
@@ -354,3 +374,22 @@ https://github.com/cuioss/git-document-repository/blob/main/doc/specification/gi
 (deadline rules).
 Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Due*,
 `DashboardPage`).
+
+[#changes-to-the-specification]
+== Changes to the Specification
+
+Each change is the fix of a gap these use cases need; it is written into the specification once they are `AGREED`.
+
+[[change-reviewed-revision]]Operation Outcomes, the reviewed revision:: Gap: the release does not say which revision
+it merges, so a save after the diff could be released unseen. Fix: the release request carries the commit the diff was
+made from; the release merges exactly that commit, and answers `CHANGED_SINCE_REVIEW` when the working branch has
+moved since (xref:../specification/architecture-and-modules.adoc#operation-outcomes[Operation Outcomes], release row;
+xref:../specification/web-app.adoc#AUN-WEB-6[AUN-WEB-6]).
+[[change-back-to-editing]]Workflows, back to editing:: Gap: no transition leads from review back to the first state.
+Fix: a workflow that does not allow saves in review declares the transition back to its first state; the delivered
+workflows allow saves in review and need none
+(xref:../specification/category-samm.adoc#AUN-SAMM-3[AUN-SAMM-3] states it for SAMM).
+[[change-reopen]]Workflows, the next version:: Gap: the specification does not say how a document released more than
+once returns from `released` to editing. Fix: for such a document type the first save after a release starts the
+next version in the workflow's first state; the next release is tagged `v<n+1>`; a document type released once (SAMM
+assessment) refuses the save with `DOCUMENT_RELEASED`.

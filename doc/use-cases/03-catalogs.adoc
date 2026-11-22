@@ -178,7 +178,8 @@ Flow::
        │                       managed-by-source; nothing erased here
        ▼
   done                         effective at once; the next checkpoint
-                               anchors the commit
+                               anchors the commit when an anchor
+                               provider is active
 ----
 Variations::
 * *Documents afterwards* show the pseudonym as "former" with the role and team the person held, or "former member".

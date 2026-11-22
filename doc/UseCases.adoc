@@ -212,24 +212,24 @@ that needs it.
 |Persons, teams, roles and services are the references every category picks from.
 
 |M4 SAMM
-|UC-SAMM-1 to UC-SAMM-7
-|The core of the application.
+|UC-SAMM-1 to UC-SAMM-5, UC-SAMM-7
+|The core of the application; the gaps that become risks wait for the register (M8).
 
 |M5 Agents
 |UC-AGT-1, UC-AGT-2, and the MCP variations of UC-DOC
 |The tools call the services M2 built; threat models and incidents use agents.
 
 |M6 Threat models
-|UC-TM-1 to UC-TM-4
-|Needs the service catalog (M3) and, for the transfer of a threat, the risk register (M8).
+|UC-TM-1, UC-TM-2, UC-TM-4
+|Needs the service catalog (M3); the transfer of a threat waits for the register (M8).
 
 |M7 Incident reports
 |UC-IR-1 to UC-IR-3
 |Needs the service catalog and the deadline rules.
 
 |M8 ISMS
-|UC-ISMS-1 to UC-ISMS-3
-|The extension; the register receives the risks of SAMM gaps, threats and incidents.
+|UC-ISMS-1 to UC-ISMS-3, then UC-SAMM-6 and UC-TM-3
+|The extension; once the register exists, SAMM gaps and threats are carried into it.
 
 |M9 Custom categories
 |UC-KND-1 to UC-KND-5

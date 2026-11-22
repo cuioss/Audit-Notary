@@ -74,8 +74,15 @@ Flow::
        ▼
   [U] review.update            the model brought up to date
        ▼
-  ↳ UC-DOC-7                   released with step-up; the completed
-       ▼                       review sets the last review date
+  ↳ UC-DOC-3, UC-DOC-4         the first save after the release starts
+       │                       the next version, in the workflow's
+       │                       first state
+       ▼
+  ↳ UC-DOC-6                   submitted for review
+       ▼
+  ↳ UC-DOC-7                   released with step-up as v<n+1>; the
+       ▼                       completed review sets the last review
+                               date
   done
 ----
 Variations::
@@ -85,6 +92,7 @@ Outcome:: the model is current, released, and due again one interval later.
 Open points:: the deadline rule the library needs: a period selected by a value of a referenced catalog entry,
 counted from a date field (xref:../specification/category-threat-models.adoc#AUN-TM-3[AUN-TM-3]); detecting an
 outdated model from the service's code is deferred.
+Changes:: xref:02-documents.adoc#change-reopen[Documents, the next version].
 Requirements:: xref:../specification/category-threat-models.adoc#AUN-TM-3[AUN-TM-3] (review due date),
 xref:../specification/directory.adoc#AUN-DIR-5[AUN-DIR-5] (effective protection needs).
 Design:: none yet.

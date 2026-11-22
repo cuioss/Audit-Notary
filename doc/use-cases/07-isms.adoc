@@ -60,6 +60,8 @@ Flow::
        │                       R-<n>, unique also under concurrent
        │                       creation
        ▼
+  ↳ UC-DOC-6                   submitted for review
+       ▼
   ↳ UC-DOC-7                   released; the entry reaches main
        ▼
   done

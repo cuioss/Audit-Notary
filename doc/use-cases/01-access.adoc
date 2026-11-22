@@ -56,7 +56,9 @@ Flow::
 ----
 Variations::
 * *A foreign return address* is replaced by the *Due* lens; the login never sends the user to another origin.
-* *A user with no mapped right* is logged in but every request is refused as `FORBIDDEN`; the app says so.
+* *A user with no mapped right* is logged in, and every request on a repository is refused as `FORBIDDEN`; the app
+  says so. The shell's own requests and, with the default person directory, the first login of
+  xref:#UC-ACC-4[UC-ACC-4] still work: they act on no repository, and the first-login allow-list admits them.
 * *Already built*: the bootstrap carries the login, the callback, the session, the rights mapping and the session
   request of the shell; the first-login gate waits for UC-ACC-4.
 Outcome:: the user has a session, held by the server, with the rights of their groups, and sees the address they

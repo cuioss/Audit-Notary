@@ -155,7 +155,8 @@ Flow::
        ▼                       expire
   done
 ----
-Outcome:: the repository is gone from the application, the deletion is on record and anchored at the next checkpoint,
+Outcome:: the repository is gone from the application, the deletion is on record and, when an anchor provider is active, anchored at the next
+checkpoint,
 and the operator has deleted the remote and the backups.
 Requirements:: xref:../specification/data-protection.adoc#AUN-DP-4[AUN-DP-4] (retention),
 xref:../specification/configuration.adoc#AUN-CONF-2[AUN-CONF-2] (retention per repository).
