@@ -72,7 +72,9 @@ Flow::
        │                       effective protection need of the service
        │                       (very high P6M, high P12M, normal P24M)
        ▼
-  [U] review.update            the model brought up to date
+  [U] review.update            the model brought up to date and
+       │                       last-review set to the date of the
+       │                       review, prefilled with today
        ▼
   ↳ UC-DOC-3, UC-DOC-4         the first save after the release starts
        │                       the next version, in the workflow's
@@ -80,19 +82,21 @@ Flow::
        ▼
   ↳ UC-DOC-6                   submitted for review
        ▼
-  ↳ UC-DOC-7                   released with step-up as v<n+1>; the
-       ▼                       completed review sets the last review
-                               date
+  ↳ UC-DOC-7                   released with step-up as v<n+1>,
+       ▼                       last-review with it
   done
 ----
 Variations::
 * *Protection needs change*: the due date follows the service's effective protection needs
   (xref:03-catalogs.adoc#UC-CAT-2[UC-CAT-2]).
+* *The review date is content*: `last-review` is a field of the reviewed revision, so the approver sees it in the
+  diff and the release merges it with the rest; nothing is written after the release. The due date counts from the
+  `last-review` of the last released version (<<change-last-review>>).
 Outcome:: the model is current, released, and due again one interval later.
 Open points:: the deadline rule the library needs: a period selected by a value of a referenced catalog entry,
 counted from a date field (xref:../specification/category-threat-models.adoc#AUN-TM-3[AUN-TM-3]); detecting an
 outdated model from the service's code is deferred.
-Changes:: xref:02-documents.adoc#change-reopen[Documents, the next version].
+Changes:: xref:02-documents.adoc#change-reopen[Documents, the next version], <<change-last-review>>.
 Requirements:: xref:../specification/category-threat-models.adoc#AUN-TM-3[AUN-TM-3] (review due date),
 xref:../specification/directory.adoc#AUN-DIR-5[AUN-DIR-5] (effective protection needs).
 Design:: none yet.
@@ -147,3 +151,14 @@ Outcome:: the reader knows where the threat models need work.
 Requirements:: xref:../specification/category-threat-models.adoc#AUN-TM-4[AUN-TM-4] (evaluation per service); the
 list of services without a model: none yet.
 Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Threat models*).
+
+[#changes-to-the-specification]
+== Changes to the Specification
+
+Each change is the fix of a gap these use cases need; it is written into the specification once they are `AGREED`.
+
+[[change-last-review]]AUN-TM-3, who sets the review date:: Gap: "`last-review`, which a completed review sets" says
+neither who writes the date nor when, and a write after the release would change a version nobody approved. Fix: the
+reviewer sets `last-review` in the revision under review (the web app prefills the date of the day); the approver
+sees it in the diff and the release merges it with the rest; the due date counts from the `last-review` of the last
+released version (xref:../specification/category-threat-models.adoc#AUN-TM-3[AUN-TM-3]).

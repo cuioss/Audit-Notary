@@ -145,11 +145,12 @@ Flow::
 +
 [source,text]
 ----
-  [S] save.validate            the schema, required excepted; every
-       │                       reference resolved
+  [S] save.validate            first whether the document is frozen;
+       │                       then the schema, required excepted, and
+       │                       every reference resolved
+       ├── frozen document ───► done, DOCUMENT_RELEASED; the draft stays
        ├── field errors ──────► done, the errors per field, among them
        │                        REFERENCE_NOT_FOUND; the draft stays
-       ├── frozen document ───► done, DOCUMENT_RELEASED; the draft stays
        ▼
   [S] save.apply               the draft applied onto the tip of the
        │                       working branch as one signed commit, by
@@ -265,9 +266,12 @@ Flow::
        │                       released state, grouped by schema section
        ▼
   [U] release.decide           release, or back to editing
-       ├── back ─────────► done; the workflow's transition back to
-       │                   its first state where it declares one,
-       │                   otherwise nothing written and the
+       ├── back ─────────► done; where the workflow declares a
+       │                   transition back to its first state, it
+       │                   is written like any other transition:
+       │                   with edit, and with step-up (UC-ACC-3)
+       │                   where the workflow requires it;
+       │                   otherwise nothing is written and the
        │                   document is edited in review
        ▼ release
   [S] release.check            required fields
@@ -293,6 +297,9 @@ Variations::
   (xref:04-samm.adoc#UC-SAMM-4[UC-SAMM-4]).
 * *Editing in review*: the delivered workflows allow saves in review, so "back to editing" writes nothing; a workflow
   that does not allow them declares a transition back to its first state.
+* *Back without `edit`*: the transition back is no release, so it needs `edit`
+  (xref:../specification/authentication.adoc#AUN-AUTH-2[AUN-AUTH-2]) and the step-up its workflow asks for; an approver
+  who has only `approve` leaves the document in review, and a user with `edit` takes it back.
 * *Saved after the diff*: a release never includes content the approver did not see; a save after the diff makes the
   release show the new diff instead (<<change-reviewed-revision>>).
 * *Anchoring*: the release is anchored when an anchor provider is active (`anchor.provider` other than `none`).
