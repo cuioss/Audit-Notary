@@ -248,8 +248,9 @@ Token Sheriff repository and share its version.
 
 Open:
 
-* whether the two modules are built at all, or the Quarkus OIDC extension in web-app mode is used instead; if the
-  extension is rejected, PLAN-08 to PLAN-10 drop out and the rest stands;
+* whether the two modules are built at all, or the Quarkus OIDC extension in web-app mode is used instead. If only
+  the extension is rejected, PLAN-08 to PLAN-10 drop out and the engine seams and the session module stand; if both
+  modules are rejected, PLAN-05 to PLAN-07 drop out as well and only the engine seams stand;
 * whether the access token is revoked at logout too (Audit Notary: yes);
 * the pending-login lifetime (5 or 10 minutes) and the session defaults;
 * whether the session cookie defaults to `SameSite=Lax` or `Strict` (Audit Notary: `Strict`, AUN-AUTH-1);

@@ -33,7 +33,8 @@ Token Sheriff answered with its epic `client-framework-aspects` (state of 2026-1
   `sub` (CLIENT-34), a back-channel logout handler that selects the sessions to end (CLIENT-35), and the `resource`
   parameter of RFC 8707 on every request (CLIENT-36).
 * *`token-sheriff-session`*, pure Java: the session record and its bounded store (SESSION-1 to SESSION-3), the end of
-  the browser's session at a new login (SESSION-4), refresh (SESSION-5), logout and back-channel termination
+  the session the browser presented when the login started (SESSION-4; the cross-site callback carries no
+  `SameSite=Strict` cookie, so the login start records it), refresh (SESSION-5), logout and back-channel termination
   (SESSION-6), a session-ended event (SESSION-7), step-up into the same session with a pending action (SESSION-8), the
   `SessionBinding` seam (SESSION-9) and the session view (SESSION-10).
 * *`token-sheriff-bff-quarkus`*, a Quarkus extension whose first consumer is Audit Notary: the endpoints, cookies,
@@ -84,9 +85,10 @@ Sheriff's Session Layer].
 
 === Risks
 
-* ADR-0032 may reject the extension (PLAN-08 to PLAN-10). The engine seams and the session module stand either way;
-  the endpoints, cookies and CSRF would then come from the Quarkus OIDC extension or stay the application's, and this
-  decision is revisited.
+* ADR-0032 may reject the extension (PLAN-08 to PLAN-10), or both modules in favour of the Quarkus OIDC extension in
+  web-app mode. The engine seams stand either way, the session module unless it is rejected too; the endpoints,
+  cookies and CSRF, and without the session module the session, would then come from the Quarkus OIDC extension or
+  stay the application's, and this decision is revisited.
 * ADR-0032 may choose defaults that differ from Audit Notary's (the pending-login lifetime, `SameSite=Strict` for the
   session cookie, a mandatory anti-CSRF token, the revocation of the access token at logout); Audit Notary then needs
   them as configuration.

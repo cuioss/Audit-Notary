@@ -49,6 +49,11 @@ the application asks for `query` through `AuthorizationRequestOptions` with `Res
 CLIENT-27, since 0.9.10), as API Sheriff does. Accepted cost: the code appears in the callback
 address; PKCE, the single use of the code, the transaction with `state` and `Referrer-Policy: no-referrer` bound it
 
+|Provider metadata
+|From Token Sheriff's discovery cache (`CachingDiscoveryResolver`, CLIENT-29): refreshed one hour after it was read;
+while the provider cannot be reached, the last document serves logins for 24 hours more, and a failed refresh is
+retried after one minute at the earliest (`sheriff.client.discovery-cache.*` in `application.properties`)
+
 |Transaction cookie
 |`__Host-audit-notary-login`; `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, `Max-Age=600`; carries only an opaque
 reference to the server-side login transaction (`state`, `nonce`, PKCE verifier); taken once and deleted by the

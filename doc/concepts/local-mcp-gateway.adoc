@@ -138,7 +138,8 @@ connections, logout and revocation
 |The tools (<<_the_mapping>>), their texts and schemas
 
 |Remote side
-|Bearer on every request, only to the server the connection is for; retry once on `401`
+|The access token on every request, only to the server the connection is for: as `Bearer`, or, when the token is
+DPoP-bound, with the `DPoP` scheme and a fresh proof per request (<<_login_and_registration>>); retry once on `401`
 |The base URL and the routes
 
 |Product
@@ -154,7 +155,8 @@ The same vault serves three ways of use, from the least to the most the gateway 
 
 . *Credential helper.* `gateway token <connection>` prints the `Authorization` header as JSON on standard output. It
   fits the `headersHelper` of clients that support one, and is the Git Credential Manager pattern: the client keeps its
-  own MCP transport and OAuth stays out of it.
+  own MCP transport and OAuth stays out of it. It serves bearer access tokens only: a DPoP-bound token needs a proof
+  for every request, which a header printed once cannot carry, so such a connection uses the bridge.
 . *Bridge.* A STDIO MCP server that forwards every JSON-RPC message of the client to the remote Streamable HTTP endpoint
   with a fresh bearer. The tools live on the server. This is what Audit Notary needs.
 . *Mapped.* The gateway is the MCP server: it lists tools that the descendant declared and turns each call into one
@@ -181,15 +183,24 @@ The same vault serves three ways of use, from the least to the most the gateway 
 * *Resource and issuer.* The `resource` parameter (RFC 8707) is sent on every authorization and token request, and the
   `iss` of the response is checked (RFC 9207), as the MCP revision 2026-07-28 requires.
 * *DPoP, required.* The refresh token is bound to a proof key by DPoP
-  (https://www.rfc-editor.org/rfc/rfc9449.txt[RFC 9449]) and rotated where the identity provider allows it; the proof
-  key is non-exportable (Secure Enclave, TPM) where the platform allows it. An identity provider that cannot do DPoP for
-  public clients must rotate, and the local page says that the token is not sender-constrained.
+  (https://www.rfc-editor.org/rfc/rfc9449.txt[RFC 9449]; a public client's refresh token is bound to the key of its
+  proof, section 5) and rotated where the identity provider allows it; the proof key is non-exportable (Secure Enclave,
+  TPM) where the platform allows it. The provider decides whether the access token is DPoP-bound too, signalled by
+  `token_type` `DPoP` or `Bearer` (section 5). A DPoP-bound access token goes to the service with the `DPoP` scheme
+  (section 7.1) and a new proof for each request, carrying the hash of the token in `ath` (sections 4 and 4.2), so the
+  service must accept DPoP; for a service that accepts only bearer tokens, the provider has to issue bearer access
+  tokens for its resource. An identity provider that cannot do DPoP for public clients must rotate, and the local page
+  says that the token is not sender-constrained.
 * *PAR for the public client too* (https://www.rfc-editor.org/rfc/rfc9126[RFC 9126]; Token Sheriff's `ParClient`).
 * *One login, one token per service.* The `resource` parameter on the refresh request gives one access token per
   service, restricted to its audience (RFC 8707, section 2.2), from the one refresh token of the login; many logins
-  and many token files are not needed.
-* *Who cannot be told apart.* Any other local application can claim the same loopback client id; PKCE and DPoP are what
-  make a stolen code or token worthless. Attestation-based client authentication
+  and many token files are not needed. The authorization server may limit a refresh to the resources originally
+  granted (section 2.2), so the login asks for the resources of every service of the connection; where the provider
+  does not grant them together, each service gets a login of its own.
+* *Who cannot be told apart.* Any other local application can claim the same loopback client id. PKCE makes a stolen
+  code worthless, and DPoP a stolen token without its key; rotation alone does not: it only reveals a reuse after the
+  fact, and the authorization server cannot tell which party presented the invalidated token
+  (https://www.rfc-editor.org/rfc/rfc9700.txt[RFC 9700], section 4.14.2). Attestation-based client authentication
   (https://datatracker.ietf.org/doc/draft-ietf-oauth-attestation-based-client-auth/[draft-ietf-oauth-attestation-based-client-auth],
   version -12 of October 2026, an Internet-Draft) would give each installation its own proof; it is watched, not
   adopted.
