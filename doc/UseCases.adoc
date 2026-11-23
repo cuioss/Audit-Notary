@@ -138,7 +138,7 @@ by that role.
 |`UC-ACC`
 |xref:use-cases/01-access.adoc[01-access.adoc]
 |Getting in and out: the login, the logout, the step-up before a release, the first login with the own directory
-entry, keeping that entry current.
+entry, keeping that entry current, and the end of a session the user did not end.
 
 |`UC-DOC`
 |xref:use-cases/02-documents.adoc[02-documents.adoc]
@@ -199,8 +199,9 @@ that needs it.
 |Milestone |Use cases |Why here
 
 |M1 Access
-|UC-ACC-1 to UC-ACC-3
-|Partly built in the bootstrap; every other use case needs a session, and every release needs step-up.
+|UC-ACC-1 to UC-ACC-3, UC-ACC-6
+|Partly built in the bootstrap; every other use case needs a session, and every release needs step-up. Built on Token
+Sheriff's session layer once it exists (xref:use-cases/01-access.adoc#change-session[Access, the session layer]).
 
 |M2 Documents
 |UC-DOC-1 to UC-DOC-9, with the resources-only test category `test-note`
@@ -244,8 +245,10 @@ in the concept's _Open Questions_. This section lists every one of them; it hold
 
 * `UC-ACC`: which claims and groups reach the application, and whether groups arrive by token claim or by SCIM
   (xref:use-cases/01-access.adoc#UC-ACC-1[UC-ACC-1]; xref:concepts/authentication-and-identity.adoc#_open_questions[Authentication
-  and Identity, Open Questions]); confirming and undoing the binding of a prefilled entry
-  (xref:use-cases/01-access.adoc#UC-ACC-4[UC-ACC-4]).
+  and Identity, Open Questions]); whether refreshed tokens carry the groups
+  (xref:use-cases/01-access.adoc#UC-ACC-1[UC-ACC-1]); whether the provider sends back-channel logouts and issues
+  refresh tokens (xref:use-cases/01-access.adoc#UC-ACC-6[UC-ACC-6]); confirming and undoing the binding of a prefilled
+  entry (xref:use-cases/01-access.adoc#UC-ACC-4[UC-ACC-4]).
 * `UC-DOC`: how a release request is stored in Git (xref:use-cases/02-documents.adoc#UC-DOC-8[UC-DOC-8];
   xref:concepts/mcp-server.adoc#_open_questions[MCP Server, Open Questions]); whether the AsciiDoc preview runs on the
   server only (xref:use-cases/02-documents.adoc#UC-DOC-3[UC-DOC-3];
