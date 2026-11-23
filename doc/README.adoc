@@ -144,6 +144,10 @@ layout and commands in its own `README.adoc`.
 |xref:adr/0003-UI_tests_run_against_a_scenario_mock_server.adoc[ADR-0003]
 |UI tests run against a scenario mock server
 |Accepted
+
+|xref:adr/0004-Login_and_session_are_designed_against_Token_Sheriffs_planned_session_layer.adoc[ADR-0004]
+|Login and session are designed against Token Sheriff's planned session layer
+|Accepted
 |===
 
 [#_development]

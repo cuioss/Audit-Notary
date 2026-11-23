@@ -51,6 +51,12 @@ verification classes outside JUnit. The target is Java 25; CI builds on Java 25 
 ## Conventions
 
 - **Never add a dependency without the owner's approval.**
+- **Login and session belong to Token Sheriff.** Every change to login, session, logout, CSRF, the session view,
+  step-up or the local MCP gateway's login assumes that Token Sheriff's epic `client-framework-aspects` is
+  implemented ([ADR-0004](doc/adr/0004-Login_and_session_are_designed_against_Token_Sheriffs_planned_session_layer.adoc)).
+  Do not give `security/SessionStore`, `LoginTransactions`, `LoginService`, `web/RequestGate`, `web/Cookies` or
+  `web/AuthResource` new capabilities; design against the planned modules. What cannot wait stays minimal, is marked
+  "to be replaced by Token Sheriff `<module>` / `<requirement>`", and is shaped like the planned API.
 - Documentation is AsciiDoc, except the root `README.md`, which is Markdown so that the mascot sits beside the badges on
   GitHub (owner's decision); Javadoc on every public type and method.
 - Every source file carries the license header; `-Ppre-commit` maintains it. `inceptionYear` in the root pom

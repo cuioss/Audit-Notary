@@ -75,7 +75,8 @@ application deliberately adds none.
   with them.
 * Behind the gateway every agent presents the gateway's client id, so the audit log of the server no longer tells agents
   apart unless an agent label is added.
-* Token Sheriff needs additions: a public-client authentication method and a loopback redirect rule.
+* Token Sheriff needs additions: a public-client authentication method and a loopback redirect rule. Token Sheriff has
+  parked both until the spike lands; the `resource` parameter is planned there (CLIENT-36).
 * The protection of the vault is bounded by the operating system: another process of the same user can use the
   connection.
 

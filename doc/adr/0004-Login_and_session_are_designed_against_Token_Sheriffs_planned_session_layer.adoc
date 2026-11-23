@@ -1,0 +1,115 @@
+= ADR-0004: Login and session are designed against Token Sheriff's planned session layer
+:toc: left
+:toclevels: 3
+:toc-title: Table of Contents
+:sectnums:
+:source-highlighter: highlight.js
+
+// adr-metadata
+// summary: Every further change to login, session, logout, CSRF, the session view, step-up or the local MCP gateway's login assumes that Token Sheriff's epic client-framework-aspects is implemented: the engine seams CLIENT-31 to CLIENT-36, the module token-sheriff-session (SESSION-1 to SESSION-10) and the Quarkus extension token-sheriff-bff-quarkus (BFF-1 to BFF-9). Audit Notary's own session and login code gains no new capability; what cannot wait stays minimal, is marked as to be replaced, and is shaped like the planned API.
+// tags: authentication, session, bff, token-sheriff
+// affects: audit-notary, web-app
+// supersedes:
+// end-adr-metadata
+
+== Status
+
+Accepted
+
+== Context
+
+xref:0001-Authentication_is_delegated_to_Token_Sheriff_with_a_server-side_session_for_the_web_app.adoc[ADR-0001]
+delegates authentication to Token Sheriff, but leaves the session to the application. The bootstrap therefore holds
+its own login, pending logins, session store, cookies, request gate and session view in the packages `security` and
+`web`: 2,335 lines, of which about 1,330 are generic and the same in every server-session client of Token Sheriff.
+That code lacks refresh, back-channel logout, session bounds and the end of the session a browser presents at a new
+login, and it renews a session on refused requests too.
+
+Token Sheriff answered with its epic `client-framework-aspects` (state of 2026-11-23, Token Sheriff 0.9.10 released,
+`main` at 0.9.11-SNAPSHOT). It plans, all additive and opt-in:
+
+* *Engine seams* in `token-sheriff-client`: a bounded pending-authorization store (CLIENT-31), a published
+  refresh-disposition table (CLIENT-32), a logout step (CLIENT-33), the step-up result bound to the session's `iss` and
+  `sub` (CLIENT-34), a back-channel logout handler that selects the sessions to end (CLIENT-35), and the `resource`
+  parameter of RFC 8707 on every request (CLIENT-36).
+* *`token-sheriff-session`*, pure Java: the session record and its bounded store (SESSION-1 to SESSION-3), the end of
+  the browser's session at a new login (SESSION-4), refresh (SESSION-5), logout and back-channel termination
+  (SESSION-6), a session-ended event (SESSION-7), step-up into the same session with a pending action (SESSION-8), the
+  `SessionBinding` seam (SESSION-9) and the session view (SESSION-10).
+* *`token-sheriff-bff-quarkus`*, a Quarkus extension whose first consumer is Audit Notary: the endpoints, cookies,
+  flow defaults, CSRF, `SecurityIdentity`, the hooks `ReturnAddressPolicy`, `SessionAugmentor`, `StepUpRequirement`
+  and `SessionViewContributor`, limits, configuration and the session-info endpoint (BFF-1 to BFF-9).
+
+Token Sheriff's ADR-0032 (PLAN-01 of the epic, not yet written) decides the open questions, among them whether the
+extension is built at all or the Quarkus OIDC extension in web-app mode is used instead. The identifiers above are the
+planned ones and may still be renamed there.
+
+== Decision
+
+*For every further change to login, session, logout, CSRF, the session view, step-up, or the local MCP gateway's
+login, Audit Notary assumes that the Token Sheriff epic `client-framework-aspects` is implemented.*
+
+* The own session and login code (`security/SessionStore`, `LoginTransactions`, `LoginService`, `web/RequestGate`,
+  `web/Cookies`, `web/AuthResource`) gains no new capability. New features are designed against the planned modules.
+* What cannot wait for a Token Sheriff release stays minimal, is marked in the code as "to be replaced by Token
+  Sheriff `<module>` / `<requirement>`", and is shaped like the planned API.
+* What Token Sheriff 0.9.10 already offers replaces the application's own code: `ResponseMode.QUERY` through
+  `AuthorizationRequestOptions` (CLIENT-27) replaces `QueryResponseModeRequestBuilder`; the client's own native-image
+  registration (CLIENT-26) replaces `TokenClientNativeRegistration`, once one native build has proven it; the opt-in
+  `CachingDiscoveryResolver` (CLIENT-29) replaces the provider metadata read once in `LoginService`.
+* After adoption Audit Notary keeps only what is its own: `RightsMapper`, the canonical-address rules behind
+  `ReturnAddressPolicy`, a `SessionViewContributor` for the rights, the pseudonym and the first-login flag, the
+  directory and the commit trailers, the re-check of a pending action after step-up, and closing its event stream on
+  the session-ended event.
+
+The use cases describe the behaviour, whichever code carries it
+(xref:../use-cases/01-access.adoc#session-layer[Access, The session is Token Sheriff's]); the mapping of the
+application's code to the planned modules is in
+xref:../concepts/authentication-and-identity.adoc#_token_sheriffs_session_layer[Authentication and Identity, Token
+Sheriff's Session Layer].
+
+== Consequences
+
+=== Positive
+
+* The session behaviour is the same as in API Sheriff's gateway and every other client of the layer, and it is
+  threat-modelled once, in Token Sheriff's `doc/session/` and `doc/bff/`.
+* About 1,330 lines of generic code leave the application; what stays is its domain.
+
+=== Negative
+
+* Refresh, back-channel logout, the session bounds and step-up wait for Token Sheriff releases; the planned order puts
+  the session module after the engine seams and the extension last.
+* Interim code that cannot wait is written twice: once minimal here, once in Token Sheriff.
+
+=== Risks
+
+* ADR-0032 may reject the extension (PLAN-08 to PLAN-10). The engine seams and the session module stand either way;
+  the endpoints, cookies and CSRF would then come from the Quarkus OIDC extension or stay the application's, and this
+  decision is revisited.
+* ADR-0032 may choose defaults that differ from Audit Notary's (the pending-login lifetime, `SameSite=Strict` for the
+  session cookie, a mandatory anti-CSRF token, the revocation of the access token at logout); Audit Notary then needs
+  them as configuration.
+
+== Alternatives Considered
+
+=== Extend the application's own session code
+
+*Rejected because* it duplicates what Token Sheriff plans for all its server-session clients, and every gap closed here
+would have to be closed again in API Sheriff and the next client.
+
+=== Wait for ADR-0032 before deciding
+
+*Rejected because* the use cases and the specification have to be written now; designing against the planned API keeps
+the cost of a later change to the names or the defaults small.
+
+== References
+
+* Token Sheriff epic `client-framework-aspects`: `.plan/orchestrator/client-framework-aspects/` in the Token Sheriff
+  repository (until its ledger is landed on `main`, in the shared ledger worktree): `epic.md`, `plans/PLAN-01` to
+  `plans/PLAN-11`, `sources/corpus-analysis-2026-11-23.md`, `sources/client_addendum.md`
+* xref:0001-Authentication_is_delegated_to_Token_Sheriff_with_a_server-side_session_for_the_web_app.adoc[ADR-0001]
+* xref:../concepts/authentication-and-identity.adoc#_token_sheriffs_session_layer[Authentication and Identity, Token
+  Sheriff's Session Layer]
+* xref:../use-cases/01-access.adoc[Use Cases: Access]
+* https://github.com/cuioss/TokenSheriff[Token Sheriff on GitHub]

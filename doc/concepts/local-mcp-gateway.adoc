@@ -175,9 +175,24 @@ The same vault serves three ways of use, from the least to the most the gateway 
   to be associated with the issuer that issued them. A Client ID Metadata Document is the forward path where the
   authorization server supports it; its Internet-Draft (`draft-ietf-oauth-client-id-metadata-document`, version -03 of
   2 November 2026) is not yet an RFC, and the MCP guidance notes that such a document cannot by itself prevent
-  impersonation of a `localhost` redirect.
+  impersonation of a `localhost` redirect. Dynamic registration is not used: the MCP revision 2026-07-28 deprecates it
+  ("New implementations should use Client ID Metadata Documents instead") and puts pre-registered client information
+  first and Client ID Metadata Documents second.
 * *Resource and issuer.* The `resource` parameter (RFC 8707) is sent on every authorization and token request, and the
   `iss` of the response is checked (RFC 9207), as the MCP revision 2026-07-28 requires.
+* *DPoP, required.* The refresh token is bound to a proof key by DPoP
+  (https://www.rfc-editor.org/rfc/rfc9449.txt[RFC 9449]) and rotated where the identity provider allows it; the proof
+  key is non-exportable (Secure Enclave, TPM) where the platform allows it. An identity provider that cannot do DPoP for
+  public clients must rotate, and the local page says that the token is not sender-constrained.
+* *PAR for the public client too* (https://www.rfc-editor.org/rfc/rfc9126[RFC 9126]; Token Sheriff's `ParClient`).
+* *One login, one token per service.* The `resource` parameter on the refresh request gives one access token per
+  service, restricted to its audience (RFC 8707, section 2.2), from the one refresh token of the login; many logins
+  and many token files are not needed.
+* *Who cannot be told apart.* Any other local application can claim the same loopback client id; PKCE and DPoP are what
+  make a stolen code or token worthless. Attestation-based client authentication
+  (https://datatracker.ietf.org/doc/draft-ietf-oauth-attestation-based-client-auth/[draft-ietf-oauth-attestation-based-client-auth],
+  version -12 of October 2026, an Internet-Draft) would give each installation its own proof; it is watched, not
+  adopted.
 * *Opening the browser.* The authorization URL comes from a server's metadata and is therefore untrusted. The gateway
   checks its scheme and opens it without a shell. The command injection CVE-2025-6514 in `mcp-remote` before 0.1.16 came
   from a crafted `authorization_endpoint` (https://jfrog.com/blog/2025-6514-critical-mcp-remote-rce-vulnerability/[JFrog
@@ -295,33 +310,58 @@ the Quarkus documentation builds a native STDIO runner, so the runtime is feasib
 === What Token Sheriff Has and Lacks
 
 Token Sheriff provides the OAuth flows as libraries, so the gateway should reuse it
-(xref:authentication-and-identity.adoc[Authentication and Identity]). Read in the local checkout
-(`0.9.8-33-ga9ce05df`) on 2026-11-20:
+(xref:authentication-and-identity.adoc[Authentication and Identity]). The state of Token Sheriff's `main`
+(0.9.11-SNAPSHOT, after the release of 0.9.10) on 2026-11-23, from Token Sheriff's answer and checked against its
+source:
 
-[cols="2,3"]
+[cols="2,1,3"]
 |===
-|Present |Absent for this use
+|Aspect |In Token Sheriff |Where, or why not
 
-|`TokenStore` with `store`, `retrieve`, `remove`, `update`, keyed by a session id, and `InMemoryTokenStore`: the vault is
-an implementation of this interface.
-|`ClientAuthMethod` lists `client_secret_basic`, `client_secret_post`, `private_key_jwt` and `tls_client_auth`: *no
-`none`*, so no public client.
+|PKCE `S256`
+|yes
+|`PkceChallenge`; `plain` is refused
 
-|`AuthorizationCodeFlow`, `RefreshFlow`, `PkceChallenge`, `ParClient`, `StepUpHandler`.
-|The client documentation describes a *server-side confidential-client engine* and rules out public-client token
-storage in the browser; a native public client is not addressed.
+|`iss` check (RFC 9207)
+|yes
+|`IssValidator`
 
-|`DpopProofGenerator` and `ConstraintBinding`: the proof for a key pair given to it, and a stored binding that must not
-be downgraded on refresh.
-|No device authorization grant.
+|Authorization URL from untrusted metadata
+|yes, in the library
+|`EndpointSchemePolicy`: an absolute URL with a host, `https` (plain `http` only when the caller opts in). Opening the
+browser without a shell stays the gateway's job
 
-|`RefreshTokenFamily` and rotation handling.
-|`ClientConfiguration.redirectUri` is one exact string; a loopback port is therefore fixed in the registration or a
-configuration is built per login.
+|DPoP, its binding on refresh, rotation
+|yes
+|`DpopProofGenerator`, `ConstraintBinding` (no downgrade on refresh), `RefreshTokenFamily`
+
+|The vault as `TokenStore`
+|yes, as an interface
+|`TokenStore` with `store`, `retrieve`, `remove`, `update`; the encryption and the OS store stay the gateway's
+
+|`resource` (RFC 8707)
+|planned
+|CLIENT-36 (PLAN-11 of the epic `client-framework-aspects`): on authorization, PAR, code, refresh and
+client-credentials requests, with a per-call override
+
+|Public client (`none`)
+|no
+|`ClientAuthMethod` has no `none`; parked until the spike (<<_stages>>, stage 1)
+
+|Loopback redirect on any port
+|no
+|Parked: `ClientConfiguration.redirectUri` is one exact string
+
+|Device authorization grant (RFC 8628)
+|no
+|Parked
+
+|Client ID Metadata Document
+|no
+|Parked; still an Internet-Draft
 |===
 
-These are additions to a project the author owns: a `none` authentication method for public clients, a loopback redirect
-rule, optionally the device grant. They are not decided here.
+Token Sheriff revisits the parked items when the spike lands or a second native consumer appears.
 
 == Alternatives
 
@@ -350,7 +390,8 @@ avoids an additional component to operate; a local gateway keeps each user's tok
 
 . *Spike*: Quarkus native STDIO server on the three platforms; dynamic tool registration; FFM access to the OS store on
   macOS; a loopback login against Keycloak with a hand-written public client. Throw it away; keep the findings.
-. *Token Sheriff*: the public-client method and the loopback rule, in Token Sheriff and with its tests.
+. *Token Sheriff*: the public-client method and the loopback rule, in Token Sheriff and with its tests; Token Sheriff
+  has parked both until the spike lands.
 . *Base, credential helper and bridge*: login, vault, `gateway token`, the bridge. Descendant: Audit Notary, as a
   configuration only. The test of the base is that this descendant needs no code.
 . *Mapped mode*, when a service without MCP is real.

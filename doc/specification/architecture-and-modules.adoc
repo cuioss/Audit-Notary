@@ -35,6 +35,11 @@ https://github.com/cuioss/git-document-repository/blob/main/doc/specification/gi
 |OIDC confidential client, step-up (RFC 9470), logout, token validation
 |Token Sheriff (link:https://github.com/cuioss/TokenSheriff/tree/main/doc/client[client],
 link:https://github.com/cuioss/TokenSheriff/tree/main/doc/validation[validation])
+
+|The session, its bounds and its end, CSRF, the session view, the step-up into the session
+|Token Sheriff's planned session layer, `token-sheriff-session` and `token-sheriff-bff-quarkus`; the application's own
+code carries it until then and gains no new capability
+(xref:../adr/0004-Login_and_session_are_designed_against_Token_Sheriffs_planned_session_layer.adoc[ADR-0004])
 |===
 
 == Maven Modules

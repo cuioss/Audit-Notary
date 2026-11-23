@@ -122,9 +122,148 @@ never do.
 An AI agent can never release; it hands the release to the human (xref:mcp-server.adoc[MCP Server]). A document that
 needs a qualified electronic signature is signed outside the application.
 
+[#_token_sheriffs_session_layer]
+== Token Sheriff's Session Layer
+
+The login, the session, its end, the CSRF check, the session view and the step-up are designed against Token
+Sheriff's planned session layer, as if its epic `client-framework-aspects` were implemented
+(xref:../adr/0004-Login_and_session_are_designed_against_Token_Sheriffs_planned_session_layer.adoc[ADR-0004]). The
+state below is Token Sheriff's answer of 2026-11-23, checked against its source: 0.9.10 is released and pinned
+(`version.token-sheriff` in the root `pom.xml`), `main` is 0.9.11-SNAPSHOT. The requirement identifiers of the planned
+parts and the module names may still be renamed in Token Sheriff's ADR-0032.
+
+=== Usable Now, Against 0.9.10
+
+[cols="2,3"]
+|===
+|Audit Notary code |Replaced by
+
+|`security/QueryResponseModeRequestBuilder` and its test
+|`ResponseMode.QUERY` through `AuthorizationRequestOptions` (CLIENT-27); Token Sheriff's default stays `form_post`
+
+|`security/TokenClientNativeRegistration`
+|Nothing: the `token-sheriff-client` jar ships `META-INF/native-image/.../reflect-config.json` with its DSL-JSON
+converters and their types (CLIENT-26). One native build proves it before the class goes; the JGit part of
+`NativeRegistrationTest` stays
+
+|The provider metadata in `LoginService`, read once and never refreshed
+|`CachingDiscoveryResolver` (CLIENT-29), opt-in through `sheriff.client.discovery-cache.enabled` and
+`sheriff.client.discovery-cache.ttl`
+
+|The groups read from the raw payload of the ID token
+|Stays until the planned ID-token groups accessor that keeps a comma inside one group (PLAN-02); the engine has
+`ClaimValue.asList` and `AccessTokenContent.getGroups()`, but no groups accessor on the ID token
+|===
+
+=== Gaps of the Current Code
+
+Each gap is closed by the planned layer; the first is worth fixing earlier.
+
+[cols="3,2"]
+|===
+|Gap |Planned answer
+
+|A refused request renews the session: `RequestGate` reads the session through `SessionStore.use` before the CSRF check
+and the `401`, so a refused or polled request keeps it alive
+|SESSION-2: only a request that is let through records access
+
+|The session cookie carries the internal session id, with no re-issuable handle and no `Max-Age`
+|SESSION-1, SESSION-9: a random handle, re-issuable, never the internal identity
+
+|No bound of the sessions in total or per subject
+|SESSION-1
+
+|A login does not end the session the browser presented
+|SESSION-4
+
+|No refresh: the refresh token is only stored and revoked
+|SESSION-5 over CLIENT-32
+
+|No back-channel logout
+|SESSION-6 over CLIENT-35; the logout token is validated by VALIDATION-13.4 and VALIDATION-13.5, released in 0.9.10
+
+|The logout logs every failed revocation at `WARN`
+|CLIENT-33: the first failure at `WARN`, later ones at `DEBUG`
+
+|Pending logins: 10,000 in total, 10 minutes, no share per source
+|CLIENT-31: a total and a per-source bound
+
+|The event stream is bound to no session, and nothing closes it when the session ends
+|SESSION-7: the session-ended event; the application closes its stream on it
+
+|No `SecurityIdentity`; the session sits in the Vert.x `RoutingContext`
+|BFF-5
+
+|No threat model of the login and session layer, only the requirements AUN-AUTH-* and AUN-WEB-8/9
+|Token Sheriff's threat models in `doc/session/` and `doc/bff/`
+
+|Step-up, the pseudonym and the first-login gate are specified, not built
+|SESSION-8 (step-up with a pending action) and the `SessionViewContributor` hook
+|===
+
+=== Planned, Not Yet Released
+
+Nothing here can be built against 0.9.10; each item needs the Token Sheriff release that contains it. All of it is
+additive and opt-in.
+
+[cols="1,4"]
+|===
+|Part |What Audit Notary gets
+
+|`token-sheriff-client`
+|CLIENT-31, a bounded pending-authorization store (total and per-source bounds, single use, released after a failed
+PAR); CLIENT-32, the published refresh-disposition table; CLIENT-33, the logout step (best-effort revocation, the
+end-session address); CLIENT-34, the step-up result bound to the session's `iss` and `sub`, compared in constant time
+(AUN-AUTH-4); CLIENT-35, the back-channel logout handler that selects the sessions by `sid`, or all sessions of a `sub`;
+CLIENT-36, the `resource` parameter of RFC 8707 on authorization, PAR, code, refresh and client-credentials requests;
+the ID-token groups accessor (AUN-AUTH-2)
+
+|`token-sheriff-session`
+|SESSION-1 to SESSION-3, the record, the bounded store, the deadlines (replaces `SessionStore`, `SessionJanitor`,
+`UserSession`, `LoginIdentity`); SESSION-4 to SESSION-7, the end at a new login, refresh, logout and back-channel
+termination, the session-ended event; SESSION-8, step-up into the same session with an opaque pending action;
+SESSION-9, the `SessionBinding` seam; SESSION-10, the session view
+
+|`token-sheriff-bff-quarkus`
+|BFF-1 the endpoints, BFF-2 the cookies, BFF-3 the flow defaults, BFF-4 CSRF, BFF-5 `SecurityIdentity`, BFF-6 the hooks
+`ReturnAddressPolicy`, `SessionAugmentor`, `StepUpRequirement` and `SessionViewContributor`, BFF-7 the limits and
+answers, BFF-8 the configuration (`sheriff.bff.*`), BFF-9 the session-info endpoint over SESSION-10 (replaces
+`web/AuthResource`, `web/Cookies`, `security/LoginFlowProducer`, most of `LoginService`, and the generic parts of
+`web/RequestGate`, `security/ReturnAddresses` and `web/SessionResource`)
+|===
+
+The session view (SESSION-10) is one implementation shared with API Sheriff's gateway: a claim allow-list and a default
+view, the claims in their JSON types with `expires_at`, `auth_time` and `acr`, `401` as problem JSON without a session
+and never a redirect, `403` for a claim outside the allow-list, `Cache-Control: no-store` on every answer, and a poll
+that never renews the session. Audit Notary adds the rights, the pseudonym and the first-login flag through its
+`SessionViewContributor`.
+
+The order is the engine seams first (PLAN-02, then PLAN-03, PLAN-04, PLAN-11), the session module next (PLAN-05 to
+PLAN-07), the extension last (PLAN-08 to PLAN-10).
+
+=== Token Sheriff's ADR-0032
+
+Decided: the session view is one shared aspect whose domain content comes through a hook; both modules live in the
+Token Sheriff repository and share its version.
+
+Open:
+
+* whether the two modules are built at all, or the Quarkus OIDC extension in web-app mode is used instead; if the
+  extension is rejected, PLAN-08 to PLAN-10 drop out and the rest stands;
+* whether the access token is revoked at logout too (Audit Notary: yes);
+* the pending-login lifetime (5 or 10 minutes) and the session defaults;
+* whether the session cookie defaults to `SameSite=Lax` or `Strict` (Audit Notary: `Strict`, AUN-AUTH-1);
+* the CSRF model: `Origin` or `Sec-Fetch-Site`, and an optional or mandatory token (Audit Notary: mandatory,
+  AUN-WEB-8);
+* whether DPoP and `private_key_jwt` are defaults;
+* the names and the requirement prefixes.
+
 == Open Questions
 
-. Clarify with Token Sheriff which claims (`sub`, `acr`, `amr`, `auth_time`) and groups reach the application.
+. Clarify with Token Sheriff which claims (`sub`, `acr`, `amr`, `auth_time`) reach the application, and whether the
+  identity provider puts the groups into refreshed ID tokens, from which SESSION-5 takes them.
+. Whether the problem JSON of SESSION-10 carries the `outcome` and `login` members every refused `/api/v1` request
+  answers (xref:../specification/web-app.adoc#AUN-WEB-9[AUN-WEB-9]).
 . Whether groups arrive by token claim or by SCIM.
 . Deferred: the `Session` trailer, an HMAC of the session id `sid` that would correlate a commit with the login logs.
 
@@ -133,5 +272,7 @@ needs a qualified electronic signature is signed outside the application.
 * https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/identity-and-signing.adoc[Identity and Signing] — the library side
 * https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/directory-and-catalogs.adoc[Directory and Catalogs] — persons, roles, teams
 * xref:mcp-server.adoc[MCP Server], xref:web-app.adoc[Web App]
-* Token Sheriff: `TokenSheriff/doc/client` (CLIENT-1 to CLIENT-24, step-up CLIENT-12, logout CLIENT-13) and
-  `TokenSheriff/doc/validation` (audience, scopes)
+* Token Sheriff: `TokenSheriff/doc/client` (CLIENT-1 to CLIENT-30, step-up CLIENT-12, logout CLIENT-13) and
+  `TokenSheriff/doc/validation` (audience, scopes, the logout token VALIDATION-13.4 and VALIDATION-13.5); the epic
+  `client-framework-aspects` (<<_token_sheriffs_session_layer>>)
+* xref:../adr/0004-Login_and_session_are_designed_against_Token_Sheriffs_planned_session_layer.adoc[ADR-0004]
