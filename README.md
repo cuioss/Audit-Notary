@@ -4,7 +4,7 @@
 
 [![Maven Build](https://github.com/cuioss/Audit-Notary/actions/workflows/maven.yml/badge.svg)](https://github.com/cuioss/Audit-Notary/actions/workflows/maven.yml)
 [![Integration Tests](https://github.com/cuioss/Audit-Notary/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/cuioss/Audit-Notary/actions/workflows/integration-tests.yml)
-[![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+[![License: FSL-1.1-ALv2](https://img.shields.io/badge/license-FSL--1.1--ALv2-blue.svg)](LICENSE.md)
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=cuioss_Audit-Notary&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=cuioss_Audit-Notary)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=cuioss_Audit-Notary&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=cuioss_Audit-Notary)
@@ -57,5 +57,12 @@ document operations of the four categories, the MCP server and the directory fol
 
 ## License
 
-[Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.html). The mascot illustrations are AI-generated; their
-origin and terms are in [Image Provenance and Licensing](doc/resources/brand/image-provenance.adoc).
+Audit Notary is licensed under the [Functional Source License, Version 1.1, ALv2 Future License
+(FSL-1.1-ALv2)](LICENSE.md): each version becomes available under the Apache License 2.0 two years after it is made
+available. The mascot illustrations are AI-generated and keep their own terms (Apache License 2.0); their origin is in
+[Image Provenance and Licensing](doc/resources/brand/image-provenance.adoc).
+
+For organizations that cannot comply with the FSL's competing-use restriction during the licensed period (e.g.,
+proprietary or closed-source deployments that compete with the software), commercial licenses are available.
+[Request a commercial license](https://tally.so/r/9qalQY) through the private licensing form (no public issue is
+created).

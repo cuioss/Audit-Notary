@@ -1,17 +1,12 @@
 /*
- * Copyright © 2026-present CUI-OpenSource-Software (info@cuioss.de)
+ * Copyright © 2026-present Oliver Wolff
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * SPDX-License-Identifier: FSL-1.1-ALv2
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Licensed under the Functional Source License, Version 1.1, ALv2 Future License
+ * (the "License"); you may not use this file except in compliance with the License.
+ * The License is in the file LICENSE.md at the root of this repository and at
+ * https://github.com/cuioss/Audit-Notary/blob/main/LICENSE.md.
  */
 package de.cuioss.notary.audit.security;
 
@@ -308,7 +303,9 @@ public class LoginService {
         ProviderMetadata metadataNow;
         try {
             metadataNow = metadata();
-        } catch (RuntimeException e) {
+        }
+        /*TODO: Catch specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+        catch (RuntimeException e) {
             // The discovery cache rethrows whatever its refresh failed with once the grace period has passed. The
             // session has ended and its tokens are out of the store: the logout completes here, without revocation and
             // without the provider's end of session (AUN-AUTH-1: a failed revocation never stops the logout).

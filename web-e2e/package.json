@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "description": "The end-to-end suite of the Audit Notary web app (doc/specification/testing.adoc)",
-  "license": "Apache-2.0",
+  "license": "FSL-1.1-ALv2",
   "engines": {
     "node": ">=22.17",
     "npm": ">=10"
