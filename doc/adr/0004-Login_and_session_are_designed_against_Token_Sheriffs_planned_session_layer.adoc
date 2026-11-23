@@ -54,10 +54,11 @@ login, Audit Notary assumes that the Token Sheriff epic `client-framework-aspect
   `web/Cookies`, `web/AuthResource`) gains no new capability. New features are designed against the planned modules.
 * What cannot wait for a Token Sheriff release stays minimal, is marked in the code as "to be replaced by Token
   Sheriff `<module>` / `<requirement>`", and is shaped like the planned API.
-* What Token Sheriff 0.9.10 already offers replaces the application's own code: `ResponseMode.QUERY` through
-  `AuthorizationRequestOptions` (CLIENT-27) replaces `QueryResponseModeRequestBuilder`; the client's own native-image
-  registration (CLIENT-26) replaces `TokenClientNativeRegistration`, once one native build has proven it; the opt-in
-  `CachingDiscoveryResolver` (CLIENT-29) replaces the provider metadata read once in `LoginService`.
+* What Token Sheriff 0.9.10 already offers replaces the application's own code, and has replaced it:
+  `ResponseMode.QUERY` through `AuthorizationRequestOptions` (CLIENT-27) instead of `QueryResponseModeRequestBuilder`;
+  the client's own native-image registration (CLIENT-26) instead of `TokenClientNativeRegistration`, proven by the
+  native integration tests; `CachingDiscoveryResolver` (CLIENT-29) instead of the provider metadata read once in
+  `LoginService`.
 * After adoption Audit Notary keeps only what is its own: `RightsMapper`, the canonical-address rules behind
   `ReturnAddressPolicy`, a `SessionViewContributor` for the rights, the pseudonym and the first-login flag, the
   directory and the commit trailers, the re-check of a pending action after step-up, and closing its event stream on

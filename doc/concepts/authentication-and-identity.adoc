@@ -132,23 +132,25 @@ state below is Token Sheriff's answer of 2026-11-23, checked against its source:
 (`version.token-sheriff` in the root `pom.xml`), `main` is 0.9.11-SNAPSHOT. The requirement identifiers of the planned
 parts and the module names may still be renamed in Token Sheriff's ADR-0032.
 
-=== Usable Now, Against 0.9.10
+=== Taken Over From 0.9.10
+
+The first three rows are done; the last waits for a release.
 
 [cols="2,3"]
 |===
 |Audit Notary code |Replaced by
 
-|`security/QueryResponseModeRequestBuilder` and its test
+|`security/QueryResponseModeRequestBuilder` and its test (removed)
 |`ResponseMode.QUERY` through `AuthorizationRequestOptions` (CLIENT-27); Token Sheriff's default stays `form_post`
 
-|`security/TokenClientNativeRegistration`
+|`security/TokenClientNativeRegistration` (removed)
 |Nothing: the `token-sheriff-client` jar ships `META-INF/native-image/.../reflect-config.json` with its DSL-JSON
-converters and their types (CLIENT-26). One native build proves it before the class goes; the JGit part of
-`NativeRegistrationTest` stays
+converters and their types (CLIENT-26), which the native integration tests have proven; `NativeRegistrationTest`
+checks that file, and its JGit part stays
 
 |The provider metadata in `LoginService`, read once and never refreshed
-|`CachingDiscoveryResolver` (CLIENT-29), opt-in through `sheriff.client.discovery-cache.enabled` and
-`sheriff.client.discovery-cache.ttl`
+|`CachingDiscoveryResolver` (CLIENT-29), enabled through `sheriff.client.discovery-cache.*` in
+`application.properties` (xref:../specification/authentication.adoc#AUN-AUTH-1[AUN-AUTH-1], provider metadata)
 
 |The groups read from the raw payload of the ID token
 |Stays until the planned ID-token groups accessor that keeps a comma inside one group (PLAN-02); the engine has
