@@ -108,6 +108,16 @@ public final class AuditNotaryLogMessages {
                 .prefix(PREFIX)
                 .identifier(105)
                 .build();
+
+        /**
+         * The provider's metadata could not be read at logout, so the held tokens were not revoked and the provider's
+         * session was not ended: the exception type.
+         */
+        public static final LogRecord LOGOUT_WITHOUT_PROVIDER = LogRecordModel.builder()
+                .template("Logout without the identity provider, its metadata cannot be read: %s")
+                .prefix(PREFIX)
+                .identifier(106)
+                .build();
     }
 
     /** Messages at level ERROR. */

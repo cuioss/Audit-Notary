@@ -70,7 +70,9 @@ carries the session cookie.
 
 |Logout
 |RP-initiated at the provider's `end_session_endpoint`; held tokens revoked first. Revocation is best effort: a
-provider without `revocation_endpoint` or a refused revocation (logged, `AUDIT-NOTARY-104`) does not stop the logout. The
+provider without `revocation_endpoint` or a refused revocation (logged, `AUDIT-NOTARY-104`) does not stop the logout;
+provider metadata that cannot be read does not stop it either: the logout then ends only the session here and lands on
+the start page (logged, `AUDIT-NOTARY-106`). The
 session ends and the tokens are dropped from the application in every case, and the end-session request ends the
 provider's session. The address carries the ID token as
 `id_token_hint`, which OpenID Connect RP-Initiated Logout recommends

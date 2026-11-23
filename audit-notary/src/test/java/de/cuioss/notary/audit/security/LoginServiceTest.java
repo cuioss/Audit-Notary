@@ -280,6 +280,24 @@ class LoginServiceTest {
     }
 
     @Test
+    @DisplayName("completes the logout to the own origin when the provider's metadata cannot be read")
+    void logoutWithoutProvider() {
+        var session = sessions.open(new LoginIdentity(ISSUER, "sub-8", "Kim", List.of(), null, null));
+        tokens.store(session.id(), new StoredToken("access-token",
+                "refresh-token", "id-token", null, Instant.now().plusSeconds(300), "sub-8"));
+        expect(discovery.resolve()).andThrow(new ClientProtocolException("metadata expired")).anyTimes();
+        replay(discovery, revocation);
+
+        var redirect = service.logout(session.id());
+
+        assertEquals(ORIGIN + "/", redirect);
+        assertTrue(sessions.use(session.id()).isEmpty());
+        assertTrue(tokens.get(session.id()).isEmpty());
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "AUDIT-NOTARY-106");
+        verify(revocation);
+    }
+
+    @Test
     @DisplayName("logs out a session without tokens to the own origin")
     void logoutWithoutTokens() {
         assertEquals(ORIGIN + "/", service.logout("unknown"));

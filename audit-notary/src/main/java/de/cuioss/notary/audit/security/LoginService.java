@@ -305,7 +305,16 @@ public class LoginService {
         if (held.isEmpty()) {
             return home;
         }
-        var metadataNow = metadata();
+        ProviderMetadata metadataNow;
+        try {
+            metadataNow = metadata();
+        } catch (RuntimeException e) {
+            // The discovery cache rethrows whatever its refresh failed with once the grace period has passed. The
+            // session has ended and its tokens are out of the store: the logout completes here, without revocation and
+            // without the provider's end of session (AUN-AUTH-1: a failed revocation never stops the logout).
+            LOGGER.warn(WARN.LOGOUT_WITHOUT_PROVIDER, e.getClass().getSimpleName());
+            return home;
+        }
         revoke(metadataNow, held.get().refreshToken(), "refresh_token");
         revoke(metadataNow, held.get().accessToken(), "access_token");
         var endSession = metadataNow.getEndSessionEndpoint();
