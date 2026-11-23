@@ -24,7 +24,8 @@ session held on the server (ADR-0001), and keeps the configured repositories as 
 `TokenSheriffConfigSourceFactory` derives the Token Sheriff settings from the same file (see <<configuration>>)
 
 |`security`
-|The login (`LoginService`, `LoginFlowProducer`, `QueryResponseModeRequestBuilder`), the pending logins
+|The login (`LoginService`, `LoginFlowProducer`; `response_mode=query` through Token Sheriff's request options, the
+provider metadata from its discovery cache), the pending logins
 (`LoginTransactions`), the session (`SessionStore`, `UserSession`, cleaned by `SessionJanitor`), the rights from the
 groups claim (`RightsMapper`), the check of the `return` address against the canonical addresses (`ReturnAddresses`)
 
@@ -121,13 +122,13 @@ enum it reads; without them a clone fails
 |`META-INF/native-image/de.cuioss.notary.audit/audit-notary/resource-config.json`
 |The `JGitText` properties
 
-|`security/TokenClientNativeRegistration`
-|The generated DSL-JSON converters of Token Sheriff's response types, so the client can read discovery and token
-answers
+|None for Token Sheriff's client
+|The client JAR registers the generated DSL-JSON converters of its response types itself
+(`META-INF/native-image/de.cuioss.sheriff.token/token-sheriff-client/reflect-config.json`, CLIENT-26)
 |===
 
-`NativeRegistrationTest` compares both lists with the resolved JARs: every converter of the Token Sheriff client and
-every enum of JGit must be registered, and nothing else. The profile `native` runs it before every native build, so a
+`NativeRegistrationTest` checks both against the resolved JARs: the client's own `reflect-config.json` must name every
+converter of the client and its response type, and the application's must name every enum of JGit and nothing else. The profile `native` runs it before every native build, so a
 dependency update that changes them fails before an image is packaged; this lists
 every enum of the JGit JAR for `reflect-config.json`:
 

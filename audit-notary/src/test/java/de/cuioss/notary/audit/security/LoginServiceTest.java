@@ -19,13 +19,14 @@ import de.cuioss.notary.audit.config.AuditNotaryConfiguration;
 import de.cuioss.notary.audit.config.OidcSettings;
 import de.cuioss.notary.audit.config.WebSettings;
 import de.cuioss.sheriff.token.client.auth.ClientAuthentication;
-import de.cuioss.sheriff.token.client.discovery.DiscoveryResolver;
+import de.cuioss.sheriff.token.client.discovery.CachingDiscoveryResolver;
 import de.cuioss.sheriff.token.client.discovery.ProviderMetadata;
 import de.cuioss.sheriff.token.client.flow.AuthorizationCodeFlow;
 import de.cuioss.sheriff.token.client.flow.CallbackParameters;
 import de.cuioss.sheriff.token.client.flow.FlowContext;
 import de.cuioss.sheriff.token.client.flow.ParClient;
 import de.cuioss.sheriff.token.client.flow.ParResponse;
+import de.cuioss.sheriff.token.client.flow.ResponseMode;
 import de.cuioss.sheriff.token.client.lifecycle.InMemoryTokenStore;
 import de.cuioss.sheriff.token.client.lifecycle.RefreshScheduler;
 import de.cuioss.sheriff.token.client.lifecycle.RevocationClient;
@@ -73,7 +74,7 @@ class LoginServiceTest {
     private static final String CALLBACK = ORIGIN + "/api/v1/auth/callback";
     private static final String ISSUER = "https://idp.example.org/realms/audit-notary";
 
-    private DiscoveryResolver discovery;
+    private CachingDiscoveryResolver discovery;
     private AuthorizationCodeFlow flow;
     private ParClient par;
     private RevocationClient revocation;
@@ -86,7 +87,7 @@ class LoginServiceTest {
 
     @BeforeEach
     void setUp() {
-        discovery = EasyMock.createMock(DiscoveryResolver.class);
+        discovery = EasyMock.createMock(CachingDiscoveryResolver.class);
         flow = EasyMock.createMock(AuthorizationCodeFlow.class);
         par = EasyMock.createMock(ParClient.class);
         revocation = EasyMock.createMock(RevocationClient.class);
@@ -131,9 +132,9 @@ class LoginServiceTest {
     @DisplayName("starts with the provider's authorization address and a transaction for the checked return")
     void start() {
         var context = FlowContext.create(CALLBACK);
-        expect(discovery.resolve()).andReturn(metadata).once();
+        expect(discovery.resolve()).andReturn(metadata).anyTimes();
         expect(metadata.getPushedAuthorizationRequestEndpoint()).andReturn(Optional.empty()).anyTimes();
-        expect(flow.authorize(metadata))
+        expect(flow.authorize(metadata, LoginService.authorizationOptions()))
                 .andReturn(new AuthorizationCodeFlow.AuthorizationRedirect("https://idp/auth?x", context)).times(2);
         replay(discovery, flow, metadata);
 
@@ -146,12 +147,18 @@ class LoginServiceTest {
     }
 
     @Test
+    @DisplayName("asks for response_mode=query through Token Sheriff's request options (AUN-AUTH-1)")
+    void queryResponseMode() {
+        assertEquals(ResponseMode.QUERY, LoginService.authorizationOptions().getResponseMode());
+    }
+
+    @Test
     @DisplayName("pushes the authorization parameters when the provider offers PAR and sends only the request_uri")
     void startWithPar() {
         var context = FlowContext.create(CALLBACK);
-        expect(discovery.resolve()).andReturn(metadata);
+        expect(discovery.resolve()).andReturn(metadata).anyTimes();
         expect(metadata.getPushedAuthorizationRequestEndpoint()).andReturn(Optional.of("https://idp/par")).anyTimes();
-        expect(flow.authorize(metadata)).andReturn(new AuthorizationCodeFlow.AuthorizationRedirect(
+        expect(flow.authorize(metadata, LoginService.authorizationOptions())).andReturn(new AuthorizationCodeFlow.AuthorizationRedirect(
                 "https://idp/auth?client_id=audit-notary-web&state=s%201&response_mode=query&flag", context));
         var pushed = new LinkedHashMap<String, String>();
         pushed.put("client_id", "audit-notary-web");
@@ -174,9 +181,9 @@ class LoginServiceTest {
     @DisplayName("refuses a PAR answer without request_uri and a start while too many logins are pending")
     void startRefusals() {
         var context = FlowContext.create(CALLBACK);
-        expect(discovery.resolve()).andReturn(metadata).times(2);
+        expect(discovery.resolve()).andReturn(metadata).anyTimes();
         expect(metadata.getPushedAuthorizationRequestEndpoint()).andReturn(Optional.of("https://idp/par")).anyTimes();
-        expect(flow.authorize(metadata)).andReturn(
+        expect(flow.authorize(metadata, LoginService.authorizationOptions())).andReturn(
                 new AuthorizationCodeFlow.AuthorizationRedirect("https://idp/auth?client_id=c", context)).times(2);
         expect(par.pushAuthorizationRequest(anyObject(), anyObject(), anyObject())).andReturn(new ParResponse());
         replay(discovery, flow, metadata, par);
@@ -191,9 +198,9 @@ class LoginServiceTest {
     void parFailureFreesCapacity() {
         var context = FlowContext.create(CALLBACK);
         var single = service(new LoginTransactions(Clock.systemUTC(), 1));
-        expect(discovery.resolve()).andReturn(metadata);
+        expect(discovery.resolve()).andReturn(metadata).anyTimes();
         expect(metadata.getPushedAuthorizationRequestEndpoint()).andReturn(Optional.of("https://idp/par")).anyTimes();
-        expect(flow.authorize(metadata)).andReturn(
+        expect(flow.authorize(metadata, LoginService.authorizationOptions())).andReturn(
                 new AuthorizationCodeFlow.AuthorizationRedirect("https://idp/auth?client_id=c", context)).times(2);
         var answer = new ParResponse();
         answer.requestUri = "urn:x";
@@ -211,7 +218,7 @@ class LoginServiceTest {
     void complete() {
         var context = FlowContext.create(CALLBACK);
         var reference = transactions.begin(context, "/incidents").orElseThrow();
-        expect(discovery.resolve()).andReturn(metadata);
+        expect(discovery.resolve()).andReturn(metadata).anyTimes();
         expect(flow.exchange(eq(metadata), eq(context), anyObject(CallbackParameters.class), eq(clientAuthentication)))
                 .andReturn(new AuthorizationCodeFlow.AuthenticationResult(accessToken(), idToken(), "refresh-token"));
         replay(discovery, flow);
@@ -236,7 +243,7 @@ class LoginServiceTest {
     void refusals() {
         var context = FlowContext.create(CALLBACK);
         var reference = transactions.begin(context, "/").orElseThrow();
-        expect(discovery.resolve()).andReturn(metadata);
+        expect(discovery.resolve()).andReturn(metadata).anyTimes();
         expect(flow.exchange(anyObject(), anyObject(), anyObject(), anyObject()))
                 .andThrow(new ClientProtocolException("state mismatch"));
         replay(discovery, flow);
@@ -256,7 +263,7 @@ class LoginServiceTest {
         ProviderMetadata endpoints = EasyMock.createMock(ProviderMetadata.class);
         expect(endpoints.getRevocationEndpoint()).andReturn(Optional.of("https://idp/revoke")).anyTimes();
         expect(endpoints.getEndSessionEndpoint()).andReturn(Optional.of("https://idp/logout")).anyTimes();
-        expect(discovery.resolve()).andReturn(endpoints);
+        expect(discovery.resolve()).andReturn(endpoints).anyTimes();
         revocation.revoke("https://idp/revoke", "refresh-token", "refresh_token", clientAuthentication);
         revocation.revoke("https://idp/revoke", "access-token", "access_token", clientAuthentication);
         expectLastCall().andThrow(new ClientProtocolException("revocation refused"));
@@ -269,6 +276,24 @@ class LoginServiceTest {
         assertTrue(sessions.use(session.id()).isEmpty());
         assertTrue(tokens.get(session.id()).isEmpty());
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "AUDIT-NOTARY-104");
+        verify(revocation);
+    }
+
+    @Test
+    @DisplayName("completes the logout to the own origin when the provider's metadata cannot be read")
+    void logoutWithoutProvider() {
+        var session = sessions.open(new LoginIdentity(ISSUER, "sub-8", "Kim", List.of(), null, null));
+        tokens.store(session.id(), new StoredToken("access-token",
+                "refresh-token", "id-token", null, Instant.now().plusSeconds(300), "sub-8"));
+        expect(discovery.resolve()).andThrow(new ClientProtocolException("metadata expired")).anyTimes();
+        replay(discovery, revocation);
+
+        var redirect = service.logout(session.id());
+
+        assertEquals(ORIGIN + "/", redirect);
+        assertTrue(sessions.use(session.id()).isEmpty());
+        assertTrue(tokens.get(session.id()).isEmpty());
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "AUDIT-NOTARY-106");
         verify(revocation);
     }
 

@@ -17,7 +17,6 @@ package de.cuioss.notary.audit.security;
 
 import de.cuioss.sheriff.token.client.config.ClientConfiguration;
 import de.cuioss.sheriff.token.client.flow.AuthorizationCodeFlow;
-import de.cuioss.sheriff.token.client.flow.CallbackHandler;
 import de.cuioss.sheriff.token.client.flow.IssValidator;
 import de.cuioss.sheriff.token.client.flow.TokenEndpointClient;
 import de.cuioss.sheriff.token.client.token.IdTokenValidationBridge;
@@ -27,8 +26,8 @@ import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Named;
 
 /**
- * Builds the authorization code flow of the web login from Token Sheriff's beans, with the
- * {@link QueryResponseModeRequestBuilder} in place of the built-in request builder (AUN-AUTH-1). Without sender
+ * Builds the authorization code flow of the web login from Token Sheriff's beans, with Token Sheriff's own request
+ * builder; {@link LoginService} asks for {@code response_mode=query} per request (AUN-AUTH-1). Without sender
  * constraint: the tokens stay on the server.
  */
 @ApplicationScoped
@@ -51,6 +50,6 @@ public class LoginFlowProducer {
     AuthorizationCodeFlow webLoginFlow(ClientConfiguration configuration, TokenEndpointClient tokenEndpoint,
             TokenValidationBridge accessTokenBridge, IdTokenValidationBridge idTokenBridge, IssValidator issValidator) {
         return new AuthorizationCodeFlow(configuration, tokenEndpoint, accessTokenBridge, idTokenBridge, issValidator,
-                new QueryResponseModeRequestBuilder(), new CallbackHandler(), null);
+                null);
     }
 }

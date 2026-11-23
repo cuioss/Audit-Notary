@@ -16,9 +16,7 @@
 package de.cuioss.notary.audit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.cuioss.notary.audit.security.TokenClientNativeRegistration;
 import de.cuioss.sheriff.token.client.discovery.ProviderMetadata;
-import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.smallrye.config.PropertiesConfigSource;
 import io.smallrye.config.SmallRyeConfigBuilder;
 import org.junit.jupiter.api.DisplayName;
@@ -28,14 +26,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -50,11 +46,14 @@ class NativeRegistrationTest {
 
     private static final Pattern CONVERTER = Pattern.compile("(.*/)_([^/]+)_DslJsonConverter\\.class");
     private static final String JGIT_TEXT = "org.eclipse.jgit.internal.JGitText";
+    private static final String TOKEN_CLIENT_REFLECT_CONFIG =
+            "META-INF/native-image/de.cuioss.sheriff.token/token-sheriff-client/reflect-config.json";
 
     @Test
-    @DisplayName("every DSL-JSON converter of Token Sheriff's client and its response type is registered")
+    @DisplayName("Token Sheriff's client registers every DSL-JSON converter and its response type itself (CLIENT-26)")
     void tokenClientConverters() throws Exception {
         var expected = new TreeSet<String>();
+        Set<String> registered;
         try (var jar = jarOf(ProviderMetadata.class)) {
             jar.stream().map(JarEntry::getName).map(CONVERTER::matcher).filter(Matcher::matches)
                     .forEach(match -> {
@@ -62,12 +61,15 @@ class NativeRegistrationTest {
                         expected.add(packageName + "_" + match.group(2) + "_DslJsonConverter");
                         expected.add(packageName + match.group(2));
                     });
+            var entry = jar.getJarEntry(TOKEN_CLIENT_REFLECT_CONFIG);
+            assertNotNull(entry, "the client JAR ships its reflect-config.json");
+            try (InputStream in = jar.getInputStream(entry)) {
+                registered = names(in);
+            }
         }
-        var registration = TokenClientNativeRegistration.class.getAnnotation(RegisterForReflection.class);
-        var registered = Arrays.stream(registration.targets()).map(Class::getName).collect(Collectors.toCollection(TreeSet::new));
 
         assertTrue(expected.size() > 1, "the client JAR holds converters");
-        assertEquals(expected, registered);
+        assertTrue(registered.containsAll(expected), "not registered by the client: " + difference(expected, registered));
     }
 
     @Test
@@ -116,10 +118,20 @@ class NativeRegistrationTest {
         try (InputStream in = NativeRegistrationTest.class.getClassLoader()
                      .getResourceAsStream("META-INF/native-image/de.cuioss.notary.audit/audit-notary/reflect-config.json")) {
             assertNotNull(in, "reflect-config.json is on the class path");
-            var names = new TreeSet<String>();
-            new ObjectMapper().readTree(in).forEach(entry -> names.add(entry.get("name").asText()));
-            return names;
+            return names(in);
         }
+    }
+
+    private static Set<String> names(InputStream reflectConfig) throws IOException {
+        var names = new TreeSet<String>();
+        new ObjectMapper().readTree(reflectConfig).forEach(entry -> names.add(entry.get("name").asText()));
+        return names;
+    }
+
+    private static Set<String> difference(Set<String> expected, Set<String> registered) {
+        var missing = new TreeSet<>(expected);
+        missing.removeAll(registered);
+        return missing;
     }
 
     private static JarFile jarOf(Class<?> type) throws IOException, URISyntaxException {
