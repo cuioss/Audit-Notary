@@ -68,13 +68,6 @@ public class LoginService {
     private static final CuiLogger LOGGER = new CuiLogger(LoginService.class);
     private static final ObjectMapper JSON = new ObjectMapper();
 
-    /**
-     * The options of every authorization request: {@code response_mode=query}, so the callback is a top-level
-     * {@code GET} that carries the {@code SameSite=Lax} transaction cookie (AUN-AUTH-1; Token Sheriff CLIENT-27).
-     */
-    static final AuthorizationRequestOptions AUTHORIZATION_OPTIONS = AuthorizationRequestOptions.builder()
-            .responseMode(ResponseMode.QUERY).build();
-
     private final CachingDiscoveryResolver discovery;
     private final AuthorizationCodeFlow flow;
     private final ParClient par;
@@ -137,7 +130,7 @@ public class LoginService {
      */
     public LoginStart start(@Nullable String requestedReturn) {
         var metadataNow = metadata();
-        var redirect = flow.authorize(metadataNow, AUTHORIZATION_OPTIONS);
+        var redirect = flow.authorize(metadataNow, authorizationOptions());
         var reference = transactions.begin(redirect.context(), returnAddresses.check(requestedReturn))
                 .orElseThrow(TooManyLoginsException::new);
         var started = false;
@@ -151,6 +144,18 @@ public class LoginService {
                 transactions.take(reference);
             }
         }
+    }
+
+    /**
+     * The options of every authorization request: {@code response_mode=query}, so the callback is a top-level
+     * {@code GET} that carries the {@code SameSite=Lax} transaction cookie (AUN-AUTH-1; Token Sheriff CLIENT-27).
+     * Built per call, not held in a static field: Token Sheriff's flow package is initialised at run time in the
+     * native image, so no instance of it may sit in the image heap.
+     *
+     * @return the options
+     */
+    static AuthorizationRequestOptions authorizationOptions() {
+        return AuthorizationRequestOptions.builder().responseMode(ResponseMode.QUERY).build();
     }
 
     /**

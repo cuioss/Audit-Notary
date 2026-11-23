@@ -134,7 +134,7 @@ class LoginServiceTest {
         var context = FlowContext.create(CALLBACK);
         expect(discovery.resolve()).andReturn(metadata).anyTimes();
         expect(metadata.getPushedAuthorizationRequestEndpoint()).andReturn(Optional.empty()).anyTimes();
-        expect(flow.authorize(metadata, LoginService.AUTHORIZATION_OPTIONS))
+        expect(flow.authorize(metadata, LoginService.authorizationOptions()))
                 .andReturn(new AuthorizationCodeFlow.AuthorizationRedirect("https://idp/auth?x", context)).times(2);
         replay(discovery, flow, metadata);
 
@@ -149,7 +149,7 @@ class LoginServiceTest {
     @Test
     @DisplayName("asks for response_mode=query through Token Sheriff's request options (AUN-AUTH-1)")
     void queryResponseMode() {
-        assertEquals(ResponseMode.QUERY, LoginService.AUTHORIZATION_OPTIONS.getResponseMode());
+        assertEquals(ResponseMode.QUERY, LoginService.authorizationOptions().getResponseMode());
     }
 
     @Test
@@ -158,7 +158,7 @@ class LoginServiceTest {
         var context = FlowContext.create(CALLBACK);
         expect(discovery.resolve()).andReturn(metadata).anyTimes();
         expect(metadata.getPushedAuthorizationRequestEndpoint()).andReturn(Optional.of("https://idp/par")).anyTimes();
-        expect(flow.authorize(metadata, LoginService.AUTHORIZATION_OPTIONS)).andReturn(new AuthorizationCodeFlow.AuthorizationRedirect(
+        expect(flow.authorize(metadata, LoginService.authorizationOptions())).andReturn(new AuthorizationCodeFlow.AuthorizationRedirect(
                 "https://idp/auth?client_id=audit-notary-web&state=s%201&response_mode=query&flag", context));
         var pushed = new LinkedHashMap<String, String>();
         pushed.put("client_id", "audit-notary-web");
@@ -183,7 +183,7 @@ class LoginServiceTest {
         var context = FlowContext.create(CALLBACK);
         expect(discovery.resolve()).andReturn(metadata).anyTimes();
         expect(metadata.getPushedAuthorizationRequestEndpoint()).andReturn(Optional.of("https://idp/par")).anyTimes();
-        expect(flow.authorize(metadata, LoginService.AUTHORIZATION_OPTIONS)).andReturn(
+        expect(flow.authorize(metadata, LoginService.authorizationOptions())).andReturn(
                 new AuthorizationCodeFlow.AuthorizationRedirect("https://idp/auth?client_id=c", context)).times(2);
         expect(par.pushAuthorizationRequest(anyObject(), anyObject(), anyObject())).andReturn(new ParResponse());
         replay(discovery, flow, metadata, par);
@@ -200,7 +200,7 @@ class LoginServiceTest {
         var single = service(new LoginTransactions(Clock.systemUTC(), 1));
         expect(discovery.resolve()).andReturn(metadata).anyTimes();
         expect(metadata.getPushedAuthorizationRequestEndpoint()).andReturn(Optional.of("https://idp/par")).anyTimes();
-        expect(flow.authorize(metadata, LoginService.AUTHORIZATION_OPTIONS)).andReturn(
+        expect(flow.authorize(metadata, LoginService.authorizationOptions())).andReturn(
                 new AuthorizationCodeFlow.AuthorizationRedirect("https://idp/auth?client_id=c", context)).times(2);
         var answer = new ParResponse();
         answer.requestUri = "urn:x";
