@@ -1,7 +1,7 @@
 = Image Provenance and Licensing
 :author: cuioss
-:revdate: 2026-11-22
-:revnumber: 1.1
+:revdate: 2026-11-23
+:revnumber: 1.2
 :doctype: article
 
 == Scope
@@ -31,7 +31,7 @@ The project makes these illustrations available under the
 link:https://www.apache.org/licenses/LICENSE-2.0[Apache License, Version 2.0]
 (SPDX identifier: `Apache-2.0`), to the extent that cuioss holds rights that can be licensed and applicable law permits.
 
-You may use, reproduce, modify, and redistribute the illustrations under the terms of Apache-2.0. A copy of the license is available in the repository's `LICENSE` file and at the link above.
+You may use, reproduce, modify, and redistribute the illustrations under the terms of Apache-2.0. The license is available at the link above; the repository's `LICENSE.md` is the license of the software (FSL-1.1-ALv2) and does not apply to the illustrations.
 
 This asset-specific notice does not change the license of the software project or grant rights that cuioss does not hold.
 

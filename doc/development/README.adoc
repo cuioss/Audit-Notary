@@ -35,7 +35,9 @@ docker build -f audit-notary/src/main/docker/Dockerfile.native -t audit-notary:d
 ----
 
 The profile `pre-commit` auto-fixes license headers and every configured OpenRewrite recipe (modernisation, not only
-formatting). Review every resulting diff and commit it.
+formatting). Review every resulting diff and commit it. The header is the FSL-1.1-ALv2 notice of `src/license/header.txt`;
+the root pom's `pre-commit` profile puts it in place of the parent pom's Apache-2.0 header. The plugin covers the Java
+sources; a new shell script gets the same text as a `#` comment by hand.
 
 == Working on the Web App
 

@@ -455,7 +455,7 @@ record" without a star, a shield or a padlock, the three symbols every security 
 |Drawn as SVG on the `24 × 24` grid on 2026-11-22; the scalloped edge is computed (twenty lobes, rounded). It replaced
 the provisional drawing of the TrailHand idea.
 |No: provisional, replaced before the first release
-|Apache License 2.0, as the repository
+|FSL-1.1-ALv2, as the repository
 |===
 
 == The Mascot

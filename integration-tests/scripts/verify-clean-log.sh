@@ -1,18 +1,13 @@
 #!/usr/bin/env bash
 #
-# Copyright © 2026-present CUI-OpenSource-Software (info@cuioss.de)
+# Copyright © 2026-present Oliver Wolff
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# SPDX-License-Identifier: FSL-1.1-ALv2
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Licensed under the Functional Source License, Version 1.1, ALv2 Future License
+# (the "License"); you may not use this file except in compliance with the License.
+# The License is in the file LICENSE.md at the root of this repository and at
+# https://github.com/cuioss/Audit-Notary/blob/main/LICENSE.md.
 # The application must log no ERROR or SEVERE record during the integration run. Two such records were seen before
 # the image configured JGit (doc/specification/deployment.adoc, Volume): JGit failing to write its user config on the
 # read-only root file system (org.eclipse.jgit.util.FS$FileStoreAttributes, which takes the directory from

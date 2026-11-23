@@ -59,8 +59,11 @@ verification classes outside JUnit. The target is Java 25; CI builds on Java 25 
   "to be replaced by Token Sheriff `<module>` / `<requirement>`", and is shaped like the planned API.
 - Documentation is AsciiDoc, except the root `README.md`, which is Markdown so that the mascot sits beside the badges on
   GitHub (owner's decision); Javadoc on every public type and method.
-- Every source file carries the license header; `-Ppre-commit` maintains it. `inceptionYear` in the root pom
-  must stay set, otherwise every run restamps all headers.
+- The license is FSL-1.1-ALv2 (`LICENSE.md`, owner's decision); the Maven Wrapper and the mascot illustrations keep
+  their own Apache-2.0 terms. Every source file carries the license header of `src/license/header.txt`;
+  `-Ppre-commit` maintains it for Java sources (the root pom overrides the Apache-2.0 header of the parent pom), and
+  the shell scripts carry the same text by hand. `inceptionYear` in the root pom must stay set, otherwise every run
+  restamps all headers.
 - The conventions for code (null safety, logging, results instead of exceptions, tests) are those of the libraries;
   see `doc/specification/architecture-and-modules.adoc` and `doc/specification/testing.adoc`.
 

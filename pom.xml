@@ -21,6 +21,16 @@
     <description>Audit Notary: security documents on the Git server you already run. Every change signed, every version on record. Quarkus native, with a web app and an MCP server for AI agents.
     </description>
     <url>https://github.com/cuioss/Audit-Notary/</url>
+    <!-- Replaces the Apache-2.0 declaration inherited from cui-parent-pom. The name is the SPDX identifier, so that
+         SBOM and license tooling resolve it; the full text is LICENSE.md. -->
+    <licenses>
+        <license>
+            <name>FSL-1.1-ALv2</name>
+            <url>https://github.com/cuioss/Audit-Notary/blob/main/LICENSE.md</url>
+            <distribution>repo</distribution>
+            <comments>Functional Source License, Version 1.1, ALv2 Future License</comments>
+        </license>
+    </licenses>
     <scm>
         <url>https://github.com/cuioss/Audit-Notary/</url>
         <connection>
@@ -106,4 +116,53 @@
             </snapshots>
         </repository>
     </repositories>
+    <profiles>
+        <!-- cui-parent-pom's pre-commit profile writes the Apache-2.0 header. This profile of the same id overrides
+             it with the FSL-1.1-ALv2 header of src/license/header.txt; the license plugin replaces an existing header
+             (detected by the keyword "copyright") when it differs. -->
+        <profile>
+            <id>pre-commit</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.mycila</groupId>
+                        <artifactId>license-maven-plugin</artifactId>
+                        <configuration>
+                            <properties>
+                                <owner>Oliver Wolff</owner>
+                            </properties>
+                            <licenseSets combine.self="override">
+                                <licenseSet>
+                                    <header>${maven.multiModuleProjectDirectory}/src/license/header.txt</header>
+                                    <includes>
+                                        <include>src/main/java/**</include>
+                                        <include>src/test/java/**</include>
+                                    </includes>
+                                </licenseSet>
+                            </licenseSets>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>format-license-headers</id>
+                                <configuration>
+                                    <properties>
+                                        <owner>Oliver Wolff</owner>
+                                    </properties>
+                                    <licenseSets combine.self="override">
+                                        <licenseSet>
+                                            <header>${maven.multiModuleProjectDirectory}/src/license/header.txt</header>
+                                            <includes>
+                                                <include>src/main/java/**</include>
+                                                <include>src/test/java/**</include>
+                                            </includes>
+                                        </licenseSet>
+                                    </licenseSets>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
