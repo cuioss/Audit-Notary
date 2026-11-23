@@ -200,8 +200,10 @@ that needs it.
 
 |M1 Access
 |UC-ACC-1 to UC-ACC-3, UC-ACC-6
-|Partly built in the bootstrap; every other use case needs a session, and every release needs step-up. Built on Token
-Sheriff's session layer once it exists (xref:use-cases/01-access.adoc#change-session[Access, the session layer]).
+|Partly built in the bootstrap; every other use case needs a session, and every release needs step-up. Designed against
+Token Sheriff's planned session layer
+(xref:adr/0004-Login_and_session_are_designed_against_Token_Sheriffs_planned_session_layer.adoc[ADR-0004]) and built on
+it as its releases arrive (xref:use-cases/01-access.adoc#change-session[Access, the session layer]).
 
 |M2 Documents
 |UC-DOC-1 to UC-DOC-9, with the resources-only test category `test-note`
@@ -245,8 +247,10 @@ in the concept's _Open Questions_. This section lists every one of them; it hold
 
 * `UC-ACC`: which claims and groups reach the application, and whether groups arrive by token claim or by SCIM
   (xref:use-cases/01-access.adoc#UC-ACC-1[UC-ACC-1]; xref:concepts/authentication-and-identity.adoc#_open_questions[Authentication
-  and Identity, Open Questions]); whether refreshed tokens carry the groups
-  (xref:use-cases/01-access.adoc#UC-ACC-1[UC-ACC-1]); whether the provider sends back-channel logouts and issues
+  and Identity, Open Questions]); whether the provider puts the groups into refreshed ID
+  tokens (xref:use-cases/01-access.adoc#UC-ACC-1[UC-ACC-1]); whether the session view's problem JSON carries the
+  `outcome` and `login` of AUN-WEB-9 (xref:concepts/authentication-and-identity.adoc#_open_questions[Authentication
+  and Identity, Open Questions]); whether the provider sends back-channel logouts and issues
   refresh tokens (xref:use-cases/01-access.adoc#UC-ACC-6[UC-ACC-6]); confirming and undoing the binding of a prefilled
   entry (xref:use-cases/01-access.adoc#UC-ACC-4[UC-ACC-4]).
 * `UC-DOC`: how a release request is stored in Git (xref:use-cases/02-documents.adoc#UC-DOC-8[UC-DOC-8];

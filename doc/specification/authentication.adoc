@@ -30,7 +30,9 @@ https://github.com/cuioss/git-document-repository/blob/main/doc/specification/gi
 |Item |Value
 
 |Engine
-|`token-sheriff-client-quarkus`, confidential client
+|`token-sheriff-client-quarkus`, confidential client; the session, its bounds, its end and the endpoints are designed
+against Token Sheriff's planned session layer
+(xref:../adr/0004-Login_and_session_are_designed_against_Token_Sheriffs_planned_session_layer.adoc[ADR-0004])
 
 |Flow
 |Authorization code, PKCE `S256`, session-bound `state` and `nonce`, issuer check; PAR when the provider supports it
@@ -40,11 +42,17 @@ https://github.com/cuioss/git-document-repository/blob/main/doc/specification/gi
 
 |Response mode
 |`response_mode=query`: the provider sends the browser back to the callback with `code`, `state` and `iss` in the
-query, a top-level `GET` navigation that carries the transaction cookie. Token Sheriff's request builder sets
-`form_post`, whose callback is a cross-site `POST` without `SameSite=Lax` cookies
+query, a top-level `GET` navigation that carries the transaction cookie. Token Sheriff's default is `form_post`,
+whose callback is a cross-site `POST` without `SameSite=Lax` cookies
 (link:https://www.ietf.org/archive/id/draft-ietf-httpbis-rfc6265bis-22.html#section-5.6.7.1[draft-ietf-httpbis-rfc6265bis-22, §5.6.7.1]);
-the application replaces only that parameter, as API Sheriff does. Accepted cost: the code appears in the callback
+the application asks for `query` through `AuthorizationRequestOptions` with `ResponseMode.QUERY` (Token Sheriff
+CLIENT-27, since 0.9.10), as API Sheriff does. Accepted cost: the code appears in the callback
 address; PKCE, the single use of the code, the transaction with `state` and `Referrer-Policy: no-referrer` bound it
+
+|Provider metadata
+|From Token Sheriff's discovery cache (`CachingDiscoveryResolver`, CLIENT-29): refreshed one hour after it was read;
+while the provider cannot be reached, the last document serves logins for 24 hours more, and a failed refresh is
+retried after one minute at the earliest (`sheriff.client.discovery-cache.*` in `application.properties`)
 
 |Transaction cookie
 |`__Host-audit-notary-login`; `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`, `Max-Age=600`; carries only an opaque
@@ -100,7 +108,8 @@ whose authorization request cannot be sent (PAR refused) frees its place at once
 
 Input: the `groups` claim (or the claim configured as group source) of the session or bearer token, read from the
 JSON payload of the validated token as the provider wrote it: an array yields its strings, a single string one group,
-anything else none, so a group name that contains a comma stays one group. Mapping: `audit-notary.yaml` → `rights`.
+anything else none, so a group name that contains a comma stays one group; Token Sheriff's planned groups accessor of
+the ID token, which keeps such a name whole, replaces this read (ADR-0004). Mapping: `audit-notary.yaml` → `rights`.
 
 [cols="1,3"]
 |===

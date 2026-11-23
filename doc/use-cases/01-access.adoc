@@ -22,9 +22,13 @@ mapped in the configuration; never from a directory role (xref:../specification/
 [#session-layer]
 The session is Token Sheriff's:: The login, the session, its end and the step-up run on Token Sheriff's session layer;
 Audit Notary supplies what is its own through the layer's hooks: the canonical return addresses, the mapping of groups
-to rights, and the first login with the directory entry (<<change-session>>). The layer is proposed to Token Sheriff,
-not built, and not yet in its specification; the IDs CLIENT-31 to CLIENT-35, SESSION-1 to SESSION-9 and BFF-1 to BFF-8
-are the proposal's. The use cases describe the behaviour, whichever code carries it.
+to rights, and the first login with the directory entry (<<change-session>>). The layer is planned in Token Sheriff's
+epic `client-framework-aspects` and not yet released; the use cases assume it is implemented
+(xref:../adr/0004-Login_and_session_are_designed_against_Token_Sheriffs_planned_session_layer.adoc[ADR-0004]). The
+identifiers CLIENT-31 to CLIENT-36, SESSION-1 to SESSION-10 and BFF-1 to BFF-9 are the planned ones, which Token
+Sheriff's ADR-0032 may still rename
+(xref:../concepts/authentication-and-identity.adoc#_token_sheriffs_session_layer[Authentication and Identity, Token
+Sheriff's Session Layer]). The use cases describe the behaviour, whichever code carries it.
 
 [#UC-ACC-1]
 == UC-ACC-1: Log In and Come Back to Where I Was
@@ -74,28 +78,34 @@ Variations::
   login. Only when every place is taken is a start answered `TOO_MANY_LOGINS`, and the logins already started are kept
   (<<change-session>>).
 * *A second login in the same browser* ends the session the browser still holds before the new one is created; the
-  earlier session does not live on beside it; its open tabs are reloaded (xref:#UC-ACC-6[UC-ACC-6]).
+  earlier session does not live on beside it; its open tabs are reloaded (xref:#UC-ACC-6[UC-ACC-6]). The callback is a
+  cross-site navigation and does not carry the `SameSite=Strict` session cookie, so the login start, a same-site
+  request that carries it, records the presented session in the login transaction, and the callback ends that one. A
+  login started without the cookie has no session to end; the new cookie replaces the old one in the browser, and the
+  old session ends at its idle time (<<change-session>>).
 * *Too many sessions of one user*: one user holds a bounded number of sessions, one per browser; a login beyond the
   bound ends the user's oldest session, whose browser learns it with its next request
   (xref:#UC-ACC-6[UC-ACC-6]).
 * *Changed groups* take effect when the session's tokens are refreshed, without a new login, where the refreshed
   tokens carry the groups (<<change-provider-end>>); otherwise at the next login.
 * *Who builds what*: the login, the callback, the session and its limits come from Token Sheriff's session layer;
-  Audit Notary adds the canonical return addresses, the mapping of groups to rights, the first-login gate and the
-  session request of the shell. Until the layer exists, the bootstrap's own login carries this flow, without the
-  shares per source and the bounds per user.
+  Audit Notary adds the canonical return addresses, the mapping of groups to rights, the first-login gate, and the
+  rights, the pseudonym and the first-login flag of the shell's session request through the session view's
+  contributor. Until the layer exists, the bootstrap's own login carries this flow, without the shares per source,
+  the bounds per user and the end of the session the browser held, and gains no new capability.
 Outcome:: the user has a session, held by the server, with the rights of their groups, and sees the address they
 opened.
 Open points:: which claims (`sub`, `acr`, `amr`, `auth_time`) and groups reach the application, whether groups arrive
-by token claim or by SCIM, and whether refreshed tokens carry them
-(xref:../concepts/authentication-and-identity.adoc#_open_questions[Authentication and Identity, Open Questions]).
+by token claim or by SCIM, and whether the provider puts them into refreshed ID tokens, from which the layer takes
+them (xref:../concepts/authentication-and-identity.adoc#_open_questions[Authentication and Identity, Open Questions]).
 Requirements:: xref:../specification/authentication.adoc#AUN-AUTH-1[AUN-AUTH-1] (login, cookies, return address,
 pending logins), xref:../specification/authentication.adoc#AUN-AUTH-2[AUN-AUTH-2] (rights from groups),
 xref:../specification/web-app.adoc#AUN-WEB-9[AUN-WEB-9] (the shell's requests and the refusals),
 xref:../specification/web-app.adoc#AUN-WEB-3[AUN-WEB-3] (canonical addresses).
 Changes:: <<change-auth-2>>, <<change-session>>, <<change-provider-end>>.
 Design:: xref:../concepts/web-app.adoc#_authentication[Web App, Authentication]; Token Sheriff's session layer,
-proposed: BFF-1, BFF-2, BFF-5 to BFF-7, SESSION-1, SESSION-2, SESSION-4 and CLIENT-31.
+planned: BFF-1 to BFF-3, BFF-5 to BFF-7, SESSION-1, SESSION-2, SESSION-4 and CLIENT-31; the session request
+through SESSION-10 and BFF-9, with Audit Notary's `SessionViewContributor` (BFF-6).
 
 [#UC-ACC-2]
 == UC-ACC-2: Log Out
@@ -138,7 +148,7 @@ ends too when the browser reaches the provider's end of session; otherwise it st
 Requirements:: xref:../specification/authentication.adoc#AUN-AUTH-1[AUN-AUTH-1] (RP-initiated logout, revocation).
 Changes:: <<change-logout>>, <<change-events>>.
 Design:: xref:../concepts/web-app.adoc#_authentication[Web App, Authentication]; Token Sheriff's session layer,
-proposed: SESSION-6, SESSION-7 and CLIENT-33.
+planned: SESSION-6, SESSION-7 and CLIENT-33.
 
 [#UC-ACC-3]
 == UC-ACC-3: Confirm a Transition with Step-Up
@@ -203,7 +213,8 @@ xref:../specification/configuration.adoc#AUN-CONF-1[AUN-CONF-1] (the `step-up` s
 https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-7[GDR-FORMS-7].
 Changes:: <<change-step-up>>.
 Design:: xref:../specification/web-app.adoc#AUN-WEB-6[AUN-WEB-6] (the control says "confirm with MFA"); Token Sheriff:
-CLIENT-12 (step-up), and proposed SESSION-3, SESSION-8, BFF-6 (`StepUpRequirement`) and CLIENT-34.
+CLIENT-12 (step-up), and planned SESSION-3 (the same session updated, not a new one), SESSION-8 (step-up with a
+pending action), BFF-6 (`StepUpRequirement`) and CLIENT-34 (the result bound to the session's `iss` and `sub`).
 
 [#UC-ACC-4]
 == UC-ACC-4: Complete the First Login
@@ -255,8 +266,9 @@ xref:../specification/directory.adoc#AUN-DIR-1[AUN-DIR-1] (the provider), xref:.
 (prefilled entries); library:
 https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-directory.adoc#GDR-DIR-2[GDR-DIR-2].
 Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (first login as a
-`WizardPage`); the gate hooks into Token Sheriff's session layer as its `SessionAugmentor`, proposed BFF-6; the
-allow-list stays Audit Notary's.
+`WizardPage`); the gate hooks into Token Sheriff's session layer as its `SessionAugmentor`, planned BFF-6, and the
+first-login flag reaches the session view through its `SessionViewContributor` (BFF-6, SESSION-10); the allow-list
+stays Audit Notary's.
 
 [#UC-ACC-5]
 == UC-ACC-5: Keep My Directory Entry Current
@@ -355,7 +367,8 @@ without refresh tokens it also bounds every session.
 Requirements:: xref:../specification/authentication.adoc#AUN-AUTH-1[AUN-AUTH-1] (idle time, lifetime); the end by the
 provider: none yet.
 Changes:: <<change-provider-end>>, <<change-session>>, <<change-events>>.
-Design:: Token Sheriff's session layer, proposed: SESSION-2, SESSION-5 to SESSION-7, CLIENT-32 and CLIENT-35.
+Design:: Token Sheriff's session layer, planned: SESSION-2, SESSION-5 to SESSION-7, CLIENT-32 and CLIENT-35; the
+logout token is validated by VALIDATION-13.4 and VALIDATION-13.5, released in Token Sheriff 0.9.10.
 
 [#changes-to-the-specification]
 == Changes to the Specification
@@ -369,15 +382,19 @@ repository without a mapped right is refused (deny by default); requests that ac
 those on the first-login allow-list of AUN-DIR-2, are checked by their own rules.
 
 [[change-session]]AUN-AUTH-1, the session layer:: Gap: xref:../specification/authentication.adoc#AUN-AUTH-1[AUN-AUTH-1]
-names Token Sheriff's client as the engine and leaves the session to the application, which bounds neither the
-sessions nor the pending logins of one source, and renews a session on every request, refused ones included. Fix: the
-login, the callback, the session and the logout run on Token Sheriff's session layer (`token-sheriff-session` and
-`token-sheriff-bff-quarkus`, both proposed), and AUN-AUTH-1 keeps only Audit
-Notary's choices. It adds: a bounded share of the pending logins per source; a bound of sessions in total and per
-user, the oldest ending first; a login ends the session the browser still holds; only a request that is let through
-renews the idle time. Decided with it: the lifetime of a pending login (10 minutes today, 5 in API Sheriff) and whether
-the session cookie stays `SameSite=Strict`. The layer is a new dependency and needs the owner's approval; ADR-0001 is
-amended with it.
+names Token Sheriff's client as the engine and leaves the session to the application, which bounds neither the sessions
+nor the pending logins of one source, and renews a session on every request, refused ones included. Fix: the login, the
+callback, the session and the logout run on Token Sheriff's session layer (`token-sheriff-session` and
+`token-sheriff-bff-quarkus`, planned in Token Sheriff's epic `client-framework-aspects`), and AUN-AUTH-1 keeps only
+Audit Notary's choices. It adds: a bounded share of the pending logins per source; a bound of sessions in total and per
+user, the oldest ending first; a login ends the session the browser still holds, which the login start records in the
+login transaction because the cross-site callback does not carry the `Strict` session cookie; only a request that is let
+through renews the idle time; the shell's session request (AUN-WEB-9) is answered by the layer's session view, which a
+poll never renews, with Audit Notary's members added by its contributor. Token Sheriff's ADR-0032 decides the defaults:
+the lifetime of a pending login (5 or 10 minutes; 10 today), whether the session cookie defaults to `SameSite=Lax` or
+`Strict`, and the CSRF model; Audit Notary keeps `Strict` and the mandatory anti-CSRF token
+(xref:../specification/web-app.adoc#AUN-WEB-8[AUN-WEB-8]) and needs them as configuration where the defaults differ.
+ADR-0004 records the direction; the layer is a new dependency and still needs the owner's approval when it is added.
 
 [[change-provider-end]]AUN-AUTH-1, a session the provider ends:: Gap: nothing ends a session before its idle time or
 lifetime; there is neither a back-channel logout nor a refresh, so an account disabled at the provider keeps working
@@ -387,10 +404,10 @@ the sessions they name; it refreshes the session's tokens, ends the session when
 token and keeps it when the provider cannot be reached; a refresh whose tokens carry the groups maps the rights again.
 
 [[change-logout]]AUN-AUTH-1, the order of the logout:: Gap: "held tokens revoked first" leaves open whether the session
-here ends before the revocation or after it, and what a logout without a session does. Fix: the session here ends
-first, then the held tokens are revoked (the refresh token in any case; the access token as Token Sheriff's logout
-step settles it), then the browser goes to the provider's end of session; a failed revocation never stops the logout;
-a logout without a session clears the cookie and lands on the start page.
+here ends before the revocation or after it, and what a logout without a session does. Fix: the session here ends first,
+then the held tokens are revoked (the refresh token in any case; the access token too, which Audit Notary asks for and
+Token Sheriff's ADR-0032 decides for its logout step), then the browser goes to the provider's end of session; a failed
+revocation never stops the logout; a logout without a session clears the cookie and lands on the start page.
 
 [[change-step-up]]AUN-AUTH-4, the return of the step-up:: Gap:
 xref:../specification/authentication.adoc#AUN-AUTH-4[AUN-AUTH-4] does not say what is kept across the redirect to the

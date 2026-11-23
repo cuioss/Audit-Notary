@@ -27,7 +27,9 @@ session held on the server (ADR-0001), and keeps the configured repositories as 
 |The login (`LoginService`, `LoginFlowProducer`; `response_mode=query` through Token Sheriff's request options, the
 provider metadata from its discovery cache), the pending logins
 (`LoginTransactions`), the session (`SessionStore`, `UserSession`, cleaned by `SessionJanitor`), the rights from the
-groups claim (`RightsMapper`), the check of the `return` address against the canonical addresses (`ReturnAddresses`)
+groups claim (`RightsMapper`), the check of the `return` address against the canonical addresses (`ReturnAddresses`).
+Everything here but `RightsMapper` and the canonical-address rules is to be replaced by Token Sheriff's session layer
+and gains no new capability (ADR-0004).
 
 |`service`
 |The only package that uses the libraries (AUN-GEN-4): `RepositoryService` builds the registry and clones or fetches;
@@ -128,9 +130,9 @@ enum it reads; without them a clone fails
 |===
 
 `NativeRegistrationTest` checks both against the resolved JARs: the client's own `reflect-config.json` must name every
-converter of the client and its response type, and the application's must name every enum of JGit and nothing else. The profile `native` runs it before every native build, so a
-dependency update that changes them fails before an image is packaged; this lists
-every enum of the JGit JAR for `reflect-config.json`:
+converter of the client and its response type, and the application's must name every enum of JGit and nothing else.
+The profile `native` runs it before every native build, so a dependency update that changes them fails before an image
+is packaged; this lists every enum of the JGit JAR for `reflect-config.json`:
 
 [source,bash]
 ----

@@ -105,7 +105,10 @@ gives the browser only cookies (xref:../specification/authentication.adoc#AUN-AU
 State-changing requests carry an anti-CSRF header the `ApiClient` adds; the server also refuses them when their
 `Origin` is another origin than its own. A `401` sends the user through the login and
 back to the same address; a step-up demand opens the identity provider's MFA prompt and returns to the release
-(xref:authentication-and-identity.adoc[Authentication and Identity]).
+(xref:authentication-and-identity.adoc[Authentication and Identity]). The session, the CSRF check and the session view
+are designed against Token Sheriff's planned session layer
+(xref:authentication-and-identity.adoc#_token_sheriffs_session_layer[Authentication and Identity, Token Sheriff's
+Session Layer]).
 
 === Forms from Schemas
 
