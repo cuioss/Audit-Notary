@@ -1,0 +1,125 @@
+= Use Cases: Incident Response Reports (UC-IR)
+:toc: left
+:toclevels: 2
+:nofooter:
+
+xref:../UseCases.adoc[Use Cases] » Incident Reports
+
+After the live phase of an incident, which stays in chat and ticket system, the responders write the report: a form
+whose mandatory fields and notification deadlines are enforced, reviewed and released with step-up, from which a
+readable report is generated (xref:../concepts/category-incident-reports.adoc[Incident Reports]). The documents follow
+the xref:02-documents.adoc[document use cases].
+
+[#UC-IR-1]
+== UC-IR-1: Write an Incident Report
+
+Status:: `DRAFT`
+Actor:: an incident responder with `edit` on the incident repository of the year, in the web app; or an AI agent
+drafting from the notes the user hands over.
+Goal:: record what happened, what it affected and what is done about it, in a structured report without personal
+details.
+Trigger:: the live phase of an incident is over, or a notification is due and the report has to start now.
+Preconditions:: the repository of the year of awareness is configured (xref:10-operations.adoc#UC-OPS-2[UC-OPS-2]).
+Flow::
++
+[source,text]
+----
+  [U] incident.create          title and the times: occurred, detected,
+       │                       aware; classification: category,
+       │                       severity, personal data affected, NIS2
+       │                       significant
+       ▼
+  [U] incident.services        affected services picked from the catalog
+       ▼
+  [S] incident.protection      per dimension the maximum over the
+       │                       effective protection needs of the
+       │                       affected services
+       ▼
+  [U] incident.narrative       course, root-cause analysis, lessons as
+       │                       AsciiDoc; measures and tickets by id
+       ▼
+  ↳ UC-DOC-4                   saved; mandatory fields may still be
+       ▼                       missing
+  done
+----
+Variations::
+* *Through an agent*: the agent drafts the report from notes with `write_draft`; the user checks and saves it.
+* *Personal details*: data subjects only as categories and approximate numbers; persons as pseudonyms; the free-text
+  fields carry the hint that details belong in the ticket.
+Outcome:: a saved report in the incident repository of the year, its deadlines computed (<<UC-IR-2>>).
+Open points:: the schema of the report; how the one document type `incident` addresses a repository per year
+(xref:../concepts/data-protection-and-repository-layout.adoc#_open_questions[Data Protection and Repository Layout,
+Open Questions]); importing the timeline and proposing further affected services are deferred
+(xref:../concepts/category-incident-reports.adoc#_open_questions[Incident Reports, Open Questions]).
+Requirements:: xref:../specification/category-incident-reports.adoc#AUN-IR-1[AUN-IR-1] (layout),
+xref:../specification/category-incident-reports.adoc#AUN-IR-4[AUN-IR-4] (affected services, protection needs),
+xref:../specification/data-protection.adoc#AUN-DP-5[AUN-DP-5] (no personal details),
+xref:../specification/data-protection.adoc#AUN-DP-1[AUN-DP-1] (repository per year).
+Design:: xref:../concepts/category-incident-reports.adoc#_asciidoc_is_the_output_not_the_truth[Incident Reports,
+AsciiDoc Is the Output, Not the Truth].
+
+[#UC-IR-2]
+== UC-IR-2: Meet the Notification Deadlines
+
+Status:: `DRAFT`
+Actor:: an incident responder, in the web app.
+Goal:: know when each notification is due, record when it was sent and to whom, and never miss one unnoticed.
+Trigger:: the report is classified (personal data affected, NIS2 significant) and has its time of awareness.
+Preconditions:: a saved report (<<UC-IR-1>>).
+Flow::
++
+[source,text]
+----
+  [S] deadlines.compute        from the workflow's deadline rules: GDPR
+       │                       Art. 33, the NIS2 early warning,
+       │                       notification, intermediate and final
+       │                       reports; each OPEN, MET or MISSED
+       ▼
+  [S] deadlines.show           in the form and in the Due lens of the
+       │                       responders
+       ▼
+  [U] notification.record      a notification sent: its time and
+       │                       recipient
+       ▼
+  ↳ UC-DOC-4                   saved; the deadline it meets turns MET
+       ▼
+  done
+----
+Variations::
+* *Missed*: a deadline missed stays visible, also in the released report.
+* *Other periods* (a transposition, a trust service provider) are a change of the category's workflow, not of code.
+Outcome:: every notification duty of the incident is either met with its record or visibly missed.
+Open points:: the deadline rules go beyond the forms the library offers
+(https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/schema-driven-documents.adoc#_open_questions[Schema-Driven
+Documents, Open Questions]).
+Requirements:: xref:../specification/category-incident-reports.adoc#AUN-IR-2[AUN-IR-2] (deadlines as data, shown,
+missed stays visible).
+Design:: xref:../concepts/category-incident-reports.adoc#_the_deadline_clock[Incident Reports, The Deadline Clock].
+
+[#UC-IR-3]
+== UC-IR-3: Review and Release a Report
+
+Status:: `DRAFT`
+Actor:: a responder submits; an approver releases, in the web app.
+Goal:: approve the report as evidence and get the readable report generated from it.
+Trigger:: the report is complete.
+Preconditions:: a saved report.
+Flow::
++
+[source,text]
+----
+  ↳ UC-DOC-6                   to in-review; refused with the missing
+       │                       mandatory fields while any is missing
+       ▼
+  ↳ UC-DOC-7                   incident.release with step-up
+       ▼
+  [S] report.generated         report.adoc generated from the YAML and
+       ▼                       the fragments, committed with the release
+  done
+----
+Variations::
+* *A hand-edited report.adoc*: a CI check fails when the committed report differs from a fresh generation.
+Outcome:: the report is released and immutable, with a generated `report.adoc` from which a PDF can be made.
+Requirements:: xref:../specification/category-incident-reports.adoc#AUN-IR-3[AUN-IR-3] (mandatory fields),
+xref:../specification/category-incident-reports.adoc#AUN-IR-1[AUN-IR-1] (generated output).
+Design:: xref:../specification/web-app.adoc#AUN-WEB-6[AUN-WEB-6].

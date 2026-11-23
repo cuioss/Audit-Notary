@@ -1,0 +1,164 @@
+= Use Cases: Threat Models (UC-TM)
+:toc: left
+:toclevels: 2
+:nofooter:
+
+xref:../UseCases.adoc[Use Cases] » Threat Models
+
+A team keeps the threat model of each of its services current: it fills it in by a recipe, alone or with an AI agent,
+reviews it when the service's protection needs say it is due, and carries the threats it accepts into the risk
+register. Audit Notary is not a diagram editor; its contribution is the life cycle across all services
+(xref:../concepts/category-threat-models.adoc[Threat Models]). The documents follow the
+xref:02-documents.adoc[document use cases].
+
+[#UC-TM-1]
+== UC-TM-1: Create a Threat Model by a Recipe
+
+Status:: `DRAFT`
+Actor:: a team member with `edit` on `threat-models`, in the web app; or an AI agent for the user.
+Goal:: produce the threat model of a service step by step, guided by a recipe, in an open format.
+Trigger:: a service has no threat model, or a new one is started.
+Preconditions:: the service exists in the service catalog.
+Flow::
++
+[source,text]
+----
+  [U] model.create             the service, the owner role, the recipe
+       ▼
+  [S] recipe.step              the next step: its title, its guidance,
+       │                       the part of the model it fills
+       ▼
+  [U] recipe.fill              the part filled in
+       ▼
+  ↳ UC-DOC-3                   draft kept
+       ├── more steps ─► recipe.step
+       ▼ last step
+  ↳ UC-DOC-4                   saved; the service reference resolved
+       ▼
+  done
+----
+Variations::
+* *Through an agent*: `read_recipe` lists the recipes and gives the steps; the agent fills them with `write_draft`,
+  saves with `save`, and requests the release (xref:02-documents.adoc#UC-DOC-8[UC-DOC-8]).
+* *Diagrams* are data in the model file; images are generated.
+* *Unknown fields* of the model file are preserved on write.
+Outcome:: the service has a threat model, saved, in the chosen open format.
+Open points:: the format (OTM or Threat Dragon JSON), how the model file fits the library's layout, which recipes
+ship and whether a recipe is a document itself
+(xref:../concepts/category-threat-models.adoc#_open_questions[Threat Models, Open Questions]); whether recipes are MCP
+prompts (xref:../concepts/mcp-server.adoc#_open_questions[MCP Server, Open Questions]).
+Requirements:: xref:../specification/category-threat-models.adoc#AUN-TM-1[AUN-TM-1] (place),
+xref:../specification/category-threat-models.adoc#AUN-TM-2[AUN-TM-2] (open format),
+xref:../specification/category-threat-models.adoc#AUN-TM-5[AUN-TM-5] (recipes),
+xref:../specification/category-threat-models.adoc#AUN-TM-4[AUN-TM-4] (one service),
+xref:../specification/mcp-server.adoc#AUN-MCP-6[AUN-MCP-6] (`read_recipe`).
+Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (a recipe as
+`WizardPage`).
+
+[#UC-TM-2]
+== UC-TM-2: Review a Threat Model When It Is Due
+
+Status:: `DRAFT`
+Actor:: a team member reviews; an approver releases, in the web app.
+Goal:: check the threat model against the service as it is now, before it falls out of date, at the interval its
+protection needs require.
+Trigger:: the review falls due and appears in the *Due* lens (xref:02-documents.adoc#UC-DOC-9[UC-DOC-9]).
+Preconditions:: a released threat model with a last review date.
+Flow::
++
+[source,text]
+----
+  [S] review.due               last review + the interval of the highest
+       │                       effective protection need of the service
+       │                       (very high P6M, high P12M, normal P24M)
+       ▼
+  [U] review.update            the model brought up to date and
+       │                       last-review set to the date of the
+       │                       review, prefilled with today
+       ▼
+  ↳ UC-DOC-3, UC-DOC-4         the first save after the release starts
+       │                       the next version, in the workflow's
+       │                       first state
+       ▼
+  ↳ UC-DOC-6                   submitted for review
+       ▼
+  ↳ UC-DOC-7                   released with step-up as v<n+1>,
+       ▼                       last-review with it
+  done
+----
+Variations::
+* *Protection needs change*: the due date follows the service's effective protection needs
+  (xref:03-catalogs.adoc#UC-CAT-2[UC-CAT-2]).
+* *The review date is content*: `last-review` is a field of the reviewed revision, so the approver sees it in the
+  diff and the release merges it with the rest; nothing is written after the release. The due date counts from the
+  `last-review` of the last released version (<<change-last-review>>).
+Outcome:: the model is current, released, and due again one interval later.
+Open points:: the deadline rule the library needs: a period selected by a value of a referenced catalog entry,
+counted from a date field (xref:../specification/category-threat-models.adoc#AUN-TM-3[AUN-TM-3]); detecting an
+outdated model from the service's code is deferred.
+Changes:: xref:02-documents.adoc#change-reopen[Documents, the next version], <<change-last-review>>.
+Requirements:: xref:../specification/category-threat-models.adoc#AUN-TM-3[AUN-TM-3] (review due date),
+xref:../specification/directory.adoc#AUN-DIR-5[AUN-DIR-5] (effective protection needs).
+Design:: none yet.
+
+[#UC-TM-3]
+== UC-TM-3: Transfer a Threat to the Risk Register
+
+Status:: `DRAFT`
+Actor:: a team member or a security officer, in the web app; creating the risk needs `edit` on `isms-register`.
+Goal:: carry a threat that is accepted or left untreated into the risk register, and record the issues of the
+countermeasures that treat the others.
+Trigger:: the threat model is reviewed.
+Preconditions:: the threat model is saved.
+Flow::
++
+[source,text]
+----
+  [U] threat.decide            per threat: a countermeasure with its
+       │                       issue ids, or transfer to the register
+       ├── countermeasure ─► ↳ UC-DOC-4, done
+       ▼ transfer
+  [S] risk.draft               a draft risk in isms-register with the
+       │                       reference to the threat
+       ▼
+  ↳ UC-ISMS-2                  the risk completed and saved
+       ▼
+  done
+----
+Variations::
+* *Issue ids* are entered by the user or the agent; the application connects to no issue tracker.
+Outcome:: every threat is treated by a countermeasure with its issues, or is a risk in the register.
+Requirements:: xref:../specification/category-threat-models.adoc#AUN-TM-4[AUN-TM-4] (transfer, issues),
+xref:../specification/category-isms.adoc#AUN-ISMS-4[AUN-ISMS-4] (operational data by reference).
+Design:: none yet.
+
+[#UC-TM-4]
+== UC-TM-4: Evaluate Threat Models Across Services
+
+Status:: `DRAFT`
+Actor:: a security officer with `read` on `threat-models`, in the web app; an AI agent for the user.
+Goal:: see which services carry open or untreated threats and whose threat models are old or overdue.
+Trigger:: a security review or an audit.
+Preconditions:: none.
+Flow::
+. *Per service*: open threats, untreated threats (no countermeasure and not transferred), days since the last review,
+  the review due date.
+. *Without a model*: the services of the catalog that have no threat model.
+. *A service* opens its threat model.
+Variations::
+* *Through an agent*: the same questions answered from the index (xref:08-agents.adoc#UC-AGT-2[UC-AGT-2]).
+Outcome:: the reader knows where the threat models need work.
+Requirements:: xref:../specification/category-threat-models.adoc#AUN-TM-4[AUN-TM-4] (evaluation per service); the
+list of services without a model: none yet.
+Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Threat models*).
+
+[#changes-to-the-specification]
+== Changes to the Specification
+
+Each change is the fix of a gap these use cases need; it is written into the specification once they are `AGREED`.
+
+[[change-last-review]]AUN-TM-3, who sets the review date:: Gap: "`last-review`, which a completed review sets" says
+neither who writes the date nor when, and a write after the release would change a version nobody approved. Fix: the
+reviewer sets `last-review` in the revision under review (the web app prefills the date of the day); the approver
+sees it in the diff and the release merges it with the rest; the due date counts from the `last-review` of the last
+released version (xref:../specification/category-threat-models.adoc#AUN-TM-3[AUN-TM-3]).
