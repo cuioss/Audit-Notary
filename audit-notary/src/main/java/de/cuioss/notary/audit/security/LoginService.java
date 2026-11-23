@@ -19,11 +19,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.cuioss.notary.audit.config.AuditNotaryConfiguration;
 import de.cuioss.sheriff.token.client.auth.ClientAuthentication;
-import de.cuioss.sheriff.token.client.discovery.DiscoveryResolver;
+import de.cuioss.sheriff.token.client.discovery.CachingDiscoveryResolver;
 import de.cuioss.sheriff.token.client.discovery.ProviderMetadata;
 import de.cuioss.sheriff.token.client.flow.AuthorizationCodeFlow;
+import de.cuioss.sheriff.token.client.flow.AuthorizationRequestOptions;
 import de.cuioss.sheriff.token.client.flow.CallbackParameters;
 import de.cuioss.sheriff.token.client.flow.ParClient;
+import de.cuioss.sheriff.token.client.flow.ResponseMode;
 import de.cuioss.sheriff.token.client.lifecycle.RevocationClient;
 import de.cuioss.sheriff.token.client.lifecycle.StoredToken;
 import de.cuioss.sheriff.token.client.lifecycle.TokenLifecycleManager;
@@ -49,7 +51,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static de.cuioss.notary.audit.AuditNotaryLogMessages.INFO;
 import static de.cuioss.notary.audit.AuditNotaryLogMessages.WARN;
@@ -67,7 +68,14 @@ public class LoginService {
     private static final CuiLogger LOGGER = new CuiLogger(LoginService.class);
     private static final ObjectMapper JSON = new ObjectMapper();
 
-    private final DiscoveryResolver discovery;
+    /**
+     * The options of every authorization request: {@code response_mode=query}, so the callback is a top-level
+     * {@code GET} that carries the {@code SameSite=Lax} transaction cookie (AUN-AUTH-1; Token Sheriff CLIENT-27).
+     */
+    static final AuthorizationRequestOptions AUTHORIZATION_OPTIONS = AuthorizationRequestOptions.builder()
+            .responseMode(ResponseMode.QUERY).build();
+
+    private final CachingDiscoveryResolver discovery;
     private final AuthorizationCodeFlow flow;
     private final ParClient par;
     private final ClientAuthentication clientAuthentication;
@@ -77,10 +85,9 @@ public class LoginService {
     private final LoginTransactions transactions;
     private final ReturnAddresses returnAddresses;
     private final AuditNotaryConfiguration configuration;
-    private final AtomicReference<@Nullable ProviderMetadata> metadata = new AtomicReference<>();
 
     /**
-     * @param discovery            Token Sheriff's discovery
+     * @param discovery            Token Sheriff's caching discovery (CLIENT-29)
      * @param flow                 the authorization code flow
      * @param par                  the client of the pushed-authorization-request endpoint
      * @param clientAuthentication the client authentication
@@ -92,7 +99,7 @@ public class LoginService {
      * @param configuration        the configuration
      */
     @SuppressWarnings("java:S107") // the collaborators of the flow; grouping them would only hide them
-    public LoginService(DiscoveryResolver discovery, @Named(LoginFlowProducer.WEB_LOGIN) AuthorizationCodeFlow flow,
+    public LoginService(CachingDiscoveryResolver discovery, @Named(LoginFlowProducer.WEB_LOGIN) AuthorizationCodeFlow flow,
             ParClient par, ClientAuthentication clientAuthentication, TokenLifecycleManager tokens, RevocationClient revocation,
             SessionStore sessions, LoginTransactions transactions, ReturnAddresses returnAddresses,
             AuditNotaryConfiguration configuration) {
@@ -109,17 +116,14 @@ public class LoginService {
     }
 
     /**
-     * The provider's metadata, read once: the resolver of Token Sheriff fetches on every call.
+     * The provider's metadata from Token Sheriff's discovery cache, which refreshes it once its time to live has passed
+     * and serves the last document for the grace period while the provider cannot be reached
+     * ({@code sheriff.client.discovery-cache.*} in {@code application.properties}).
      *
      * @return the metadata
      */
     ProviderMetadata metadata() {
-        var current = metadata.get();
-        if (current == null) {
-            current = discovery.resolve();
-            metadata.set(current);
-        }
-        return current;
+        return discovery.resolve();
     }
 
     /**
@@ -133,7 +137,7 @@ public class LoginService {
      */
     public LoginStart start(@Nullable String requestedReturn) {
         var metadataNow = metadata();
-        var redirect = flow.authorize(metadataNow);
+        var redirect = flow.authorize(metadataNow, AUTHORIZATION_OPTIONS);
         var reference = transactions.begin(redirect.context(), returnAddresses.check(requestedReturn))
                 .orElseThrow(TooManyLoginsException::new);
         var started = false;
