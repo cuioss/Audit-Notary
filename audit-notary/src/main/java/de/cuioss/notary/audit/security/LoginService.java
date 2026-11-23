@@ -111,7 +111,8 @@ public class LoginService {
     /**
      * The provider's metadata from Token Sheriff's discovery cache, which refreshes it once its time to live has passed
      * and serves the last document for the grace period while the provider cannot be reached
-     * ({@code sheriff.client.discovery-cache.*} in {@code application.properties}).
+     * ({@code sheriff.client.discovery-cache.*} in {@code application.properties}). Checked against Token Sheriff
+     * 0.9.10: {@code doc/client/requirements.adoc}, CLIENT-29, and the Javadoc of {@code CachingDiscoveryResolver}.
      *
      * @return the metadata
      */
