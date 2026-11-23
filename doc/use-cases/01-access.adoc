@@ -6,8 +6,8 @@
 xref:../UseCases.adoc[Use Cases] » Access
 
 A person gets into the application with the organisation's login and out of it again, confirms a release with a fresh
-multi-factor login, keeps the own entry of the person directory current, and loses access as soon as the organisation
-withdraws it. Nobody needs an account on the Git server: the identity of a change comes from the login and is signed
+multi-factor login, keeps the own entry of the person directory current, and loses access when the organisation
+withdraws it: at once with a back-channel logout, otherwise at the next refused refresh. Nobody needs an account on the Git server: the identity of a change comes from the login and is signed
 into the commit (xref:../concepts/authentication-and-identity.adoc[Authentication and Identity]).
 
 [#principles]
@@ -133,8 +133,8 @@ Variations::
   `UNAUTHENTICATED`.
 * *Who builds what*: Token Sheriff's logout step takes the tokens only after the session has ended here, so the order
   cannot be reversed; until the layer exists, the bootstrap's own logout keeps the same order.
-Outcome:: no session is left in the application; the provider's session ends too, wherever the provider offers an end
-of session.
+Outcome:: no session is left in the application. The provider's session ends too when the browser reaches the
+provider's end of session; otherwise it stays, as the variations describe.
 Requirements:: xref:../specification/authentication.adoc#AUN-AUTH-1[AUN-AUTH-1] (RP-initiated logout, revocation).
 Changes:: <<change-logout>>, <<change-events>>.
 Design:: xref:../concepts/web-app.adoc#_authentication[Web App, Authentication]; Token Sheriff's session layer,
@@ -294,8 +294,9 @@ check at login hooks into Token Sheriff's session layer like the first-login gat
 
 Status:: `DRAFT`
 Actor:: any logged-in user, in the web app; the identity provider; the application.
-Goal:: lose access as soon as the organisation withdraws it or the session runs out, and learn it with my next step
-instead of working on in a session that no longer counts.
+Goal:: lose access when the organisation withdraws it or the session runs out, and learn it with my next step instead
+of working on in a session that no longer counts. A back-channel logout ends the session at once; without one, the
+session ends at the next refused refresh, which the lifetime of the access token sets.
 Trigger:: one of: the identity provider ends the session (a logout at the provider or in another application, an
 account disabled), the provider refuses to refresh the session's tokens, the idle time or the lifetime runs out, the
 user's bound of sessions is reached, or a new login in the same browser replaces the session.
@@ -329,13 +330,14 @@ Variations::
   not, and an open event stream counts once, when it starts.
 * *Unsaved work*: drafts are kept on the server (xref:02-documents.adoc#UC-DOC-3[UC-DOC-3]), so an ended session
   loses only the changes made since the last draft was written.
-* *One instance*: the application runs as one instance, so a back-channel logout reaches every session of the user
-  (xref:../adr/0001-Authentication_is_delegated_to_Token_Sheriff_with_a_server-side_session_for_the_web_app.adoc[ADR-0001]).
+* *One instance*: the application runs as one instance, so it receives every back-channel logout and ends the sessions
+  the logout token names: a token with `sid` ends the sessions of that provider session, a token with `sub` alone ends
+  every session of the user (xref:../adr/0001-Authentication_is_delegated_to_Token_Sheriff_with_a_server-side_session_for_the_web_app.adoc[ADR-0001]).
 * *Through an agent*: an agent's bearer token is no session; a logout at the provider does not end it, and it stays
   valid until it expires, since the MCP server checks signature, expiry, issuer and audience only
   (xref:../specification/mcp-server.adoc#AUN-MCP-3[AUN-MCP-3]; xref:08-agents.adoc#UC-AGT-1[UC-AGT-1]).
-Outcome:: the session ends when access is withdrawn at the provider or by a refused refresh, not only at its own
-expiry, and every tab learns it with its next request.
+Outcome:: the session ends when the provider ends it by a back-channel logout or refuses its refresh, not only at its
+own expiry, and every tab learns it with its next request.
 Open points:: whether the provider sends back-channel logouts and issues refresh tokens (both settings of the provider);
 without back-channel logout, the lifetime of the access token decides how late a disabled account is noticed.
 Requirements:: xref:../specification/authentication.adoc#AUN-AUTH-1[AUN-AUTH-1] (idle time, lifetime); the end by the
