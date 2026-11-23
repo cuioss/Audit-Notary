@@ -22,8 +22,9 @@ mapped in the configuration; never from a directory role (xref:../specification/
 [#session-layer]
 The session is Token Sheriff's:: The login, the session, its end and the step-up run on Token Sheriff's session layer;
 Audit Notary supplies what is its own through the layer's hooks: the canonical return addresses, the mapping of groups
-to rights, and the first login with the directory entry (<<change-session>>). The layer is proposed, not built
-(`TokenSheriff/doc/client_addendum.md`); the use cases describe the behaviour, whichever code carries it.
+to rights, and the first login with the directory entry (<<change-session>>). The layer is proposed to Token Sheriff,
+not built, and not yet in its specification; the IDs CLIENT-31 to CLIENT-35, SESSION-1 to SESSION-9 and BFF-1 to BFF-8
+are the proposal's. The use cases describe the behaviour, whichever code carries it.
 
 [#UC-ACC-1]
 == UC-ACC-1: Log In and Come Back to Where I Was
@@ -73,7 +74,7 @@ Variations::
   login. Only when every place is taken is a start answered `TOO_MANY_LOGINS`, and the logins already started are kept
   (<<change-session>>).
 * *A second login in the same browser* ends the session the browser still holds before the new one is created; the
-  earlier session does not live on beside it.
+  earlier session does not live on beside it; its open tabs are reloaded (xref:#UC-ACC-6[UC-ACC-6]).
 * *Too many sessions of one user*: one user holds a bounded number of sessions, one per browser; a login beyond the
   bound ends the user's oldest session, whose browser learns it with its next request
   (xref:#UC-ACC-6[UC-ACC-6]).
@@ -94,8 +95,7 @@ xref:../specification/web-app.adoc#AUN-WEB-9[AUN-WEB-9] (the shell's requests an
 xref:../specification/web-app.adoc#AUN-WEB-3[AUN-WEB-3] (canonical addresses).
 Changes:: <<change-auth-2>>, <<change-session>>, <<change-provider-end>>.
 Design:: xref:../concepts/web-app.adoc#_authentication[Web App, Authentication]; Token Sheriff's session layer,
-proposed: BFF-1, BFF-2, BFF-5 to BFF-7, SESSION-1, SESSION-2, SESSION-4 and CLIENT-31
-(`TokenSheriff/doc/client_addendum.md`).
+proposed: BFF-1, BFF-2, BFF-5 to BFF-7, SESSION-1, SESSION-2, SESSION-4 and CLIENT-31.
 
 [#UC-ACC-2]
 == UC-ACC-2: Log Out
@@ -133,12 +133,12 @@ Variations::
   `UNAUTHENTICATED`.
 * *Who builds what*: Token Sheriff's logout step takes the tokens only after the session has ended here, so the order
   cannot be reversed; until the layer exists, the bootstrap's own logout keeps the same order.
-Outcome:: no session is left in the application. The provider's session ends too when the browser reaches the
-provider's end of session; otherwise it stays, as the variations describe.
+Outcome:: the session of this browser has ended; the user's sessions in other browsers go on. The provider's session
+ends too when the browser reaches the provider's end of session; otherwise it stays, as the variations describe.
 Requirements:: xref:../specification/authentication.adoc#AUN-AUTH-1[AUN-AUTH-1] (RP-initiated logout, revocation).
 Changes:: <<change-logout>>, <<change-events>>.
 Design:: xref:../concepts/web-app.adoc#_authentication[Web App, Authentication]; Token Sheriff's session layer,
-proposed: SESSION-6, SESSION-7 and CLIENT-33 (`TokenSheriff/doc/client_addendum.md`).
+proposed: SESSION-6, SESSION-7 and CLIENT-33.
 
 [#UC-ACC-3]
 == UC-ACC-3: Confirm a Transition with Step-Up
@@ -203,8 +203,7 @@ xref:../specification/configuration.adoc#AUN-CONF-1[AUN-CONF-1] (the `step-up` s
 https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-7[GDR-FORMS-7].
 Changes:: <<change-step-up>>.
 Design:: xref:../specification/web-app.adoc#AUN-WEB-6[AUN-WEB-6] (the control says "confirm with MFA"); Token Sheriff:
-CLIENT-12 (step-up), and proposed SESSION-3, SESSION-8, BFF-6 (`StepUpRequirement`) and CLIENT-34
-(`TokenSheriff/doc/client_addendum.md`).
+CLIENT-12 (step-up), and proposed SESSION-3, SESSION-8, BFF-6 (`StepUpRequirement`) and CLIENT-34.
 
 [#UC-ACC-4]
 == UC-ACC-4: Complete the First Login
@@ -256,8 +255,8 @@ xref:../specification/directory.adoc#AUN-DIR-1[AUN-DIR-1] (the provider), xref:.
 (prefilled entries); library:
 https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-directory.adoc#GDR-DIR-2[GDR-DIR-2].
 Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (first login as a
-`WizardPage`); the gate hooks into Token Sheriff's session layer as its `SessionAugmentor`, proposed BFF-6
-(`TokenSheriff/doc/client_addendum.md`); the allow-list stays Audit Notary's.
+`WizardPage`); the gate hooks into Token Sheriff's session layer as its `SessionAugmentor`, proposed BFF-6; the
+allow-list stays Audit Notary's.
 
 [#UC-ACC-5]
 == UC-ACC-5: Keep My Directory Entry Current
@@ -296,7 +295,8 @@ Status:: `DRAFT`
 Actor:: any logged-in user, in the web app; the identity provider; the application.
 Goal:: lose access when the organisation withdraws it or the session runs out, and learn it with my next step instead
 of working on in a session that no longer counts. A back-channel logout ends the session at once; without one, the
-session ends at the next refused refresh, which the lifetime of the access token sets.
+session ends at the next refused refresh, which the lifetime of the access token sets; a session without a refresh
+token ends when its access token expires.
 Trigger:: one of: the identity provider ends the session (a logout at the provider or in another application, an
 account disabled), the provider refuses to refresh the session's tokens, the idle time or the lifetime runs out, the
 user's bound of sessions is reached, or a new login in the same browser replaces the session.
@@ -317,7 +317,9 @@ Flow::
        │                       new login replaced
        ▼
   [S] session.missing          the next request of every open tab is
-       │                       answered UNAUTHENTICATED
+       │                       answered UNAUTHENTICATED; after a new
+       │                       login in the same browser, the tab is
+       │                       reloaded instead
        ▼
   ↳ UC-ACC-1                   log in again, back to the same address
        ▼
@@ -326,6 +328,14 @@ Flow::
 Variations::
 * *A refused refresh*: the provider refuses the session's refresh token (an account disabled, a grant withdrawn), and
   the session ends. A provider that cannot be reached ends nothing: the session goes on with the tokens it holds.
+* *No refresh token*: where the provider issues none, nothing can be refreshed, and the session ends when its access
+  token expires, as if its refresh had been refused; the lifetime of the access token then bounds the session.
+* *Open tabs after a new login*: the browser holds one session cookie, so a tab of the replaced session sends the new
+  session's cookie with its next request. A `GET` is answered for the new session and its rights; a state-changing
+  request carries the replaced session's anti-CSRF token and is answered `CSRF_REJECTED`
+  (xref:../specification/web-app.adoc#AUN-WEB-8[AUN-WEB-8]). The tab learns of the change when its event stream
+  closes with the replaced session: the web app reads the session again and, finding another one than the tab started
+  with, reloads the tab at its address, so no tab goes on showing the replaced session's state (<<change-events>>).
 * *What counts as activity*: only a request the application lets through renews the idle time; a refused request does
   not, and an open event stream counts once, when it starts.
 * *Unsaved work*: drafts are kept on the server (xref:02-documents.adoc#UC-DOC-3[UC-DOC-3]), so an ended session
@@ -336,15 +346,16 @@ Variations::
 * *Through an agent*: an agent's bearer token is no session; a logout at the provider does not end it, and it stays
   valid until it expires, since the MCP server checks signature, expiry, issuer and audience only
   (xref:../specification/mcp-server.adoc#AUN-MCP-3[AUN-MCP-3]; xref:08-agents.adoc#UC-AGT-1[UC-AGT-1]).
-Outcome:: the session ends when the provider ends it by a back-channel logout or refuses its refresh, not only at its
-own expiry, and every tab learns it with its next request.
+Outcome:: the session ends when the provider ends it by a back-channel logout or refuses its refresh, or, without a
+refresh token, when its access token expires, not only at its own expiry; every tab learns it with its next request,
+or is reloaded when a new login in the same browser replaced the session.
 Open points:: whether the provider sends back-channel logouts and issues refresh tokens (both settings of the provider);
-without back-channel logout, the lifetime of the access token decides how late a disabled account is noticed.
+without back-channel logout, the lifetime of the access token decides how late a disabled account is noticed, and
+without refresh tokens it also bounds every session.
 Requirements:: xref:../specification/authentication.adoc#AUN-AUTH-1[AUN-AUTH-1] (idle time, lifetime); the end by the
 provider: none yet.
 Changes:: <<change-provider-end>>, <<change-session>>, <<change-events>>.
-Design:: Token Sheriff's session layer, proposed: SESSION-2, SESSION-5 to SESSION-7, CLIENT-32 and CLIENT-35
-(`TokenSheriff/doc/client_addendum.md`).
+Design:: Token Sheriff's session layer, proposed: SESSION-2, SESSION-5 to SESSION-7, CLIENT-32 and CLIENT-35.
 
 [#changes-to-the-specification]
 == Changes to the Specification
@@ -361,7 +372,7 @@ those on the first-login allow-list of AUN-DIR-2, are checked by their own rules
 names Token Sheriff's client as the engine and leaves the session to the application, which bounds neither the
 sessions nor the pending logins of one source, and renews a session on every request, refused ones included. Fix: the
 login, the callback, the session and the logout run on Token Sheriff's session layer (`token-sheriff-session` and
-`token-sheriff-bff-quarkus`, proposed in `TokenSheriff/doc/client_addendum.md`), and AUN-AUTH-1 keeps only Audit
+`token-sheriff-bff-quarkus`, both proposed), and AUN-AUTH-1 keeps only Audit
 Notary's choices. It adds: a bounded share of the pending logins per source; a bound of sessions in total and per
 user, the oldest ending first; a login ends the session the browser still holds; only a request that is let through
 renews the idle time. Decided with it: the lifetime of a pending login (10 minutes today, 5 in API Sheriff) and whether
@@ -391,5 +402,6 @@ the checks of the transition run again before it is written.
 [[change-events]]AUN-WEB-5 and AUN-WEB-9, the event stream and the session:: Gap: the event stream is one stream for
 every connection, bound to no session, so it stays open after a logout or the end of the session, and it would carry
 the saves of every repository to every user. Fix: each event stream belongs to the session that opened it and is closed
-when that session ends; it carries only the events of repositories the session may read
+when that session ends; it carries only the events of repositories the session may read; when its stream closes, the
+web app reads the session again and reloads a tab whose session was replaced by another one
 (xref:../specification/web-app.adoc#AUN-WEB-5[AUN-WEB-5], xref:../specification/web-app.adoc#AUN-WEB-9[AUN-WEB-9]).
