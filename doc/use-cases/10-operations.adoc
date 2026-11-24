@@ -6,90 +6,110 @@
 xref:../UseCases.adoc[Use Cases] » Operations
 
 The operator runs Audit Notary as one native container beside the organisation's Git server, identity provider and
-KMS or Vault: configures it, adds the repositories it needs, keeps it running when the Git server is away, deletes
-what has outlived its retention period, and watches it (xref:../concepts/deployment.adoc[Deployment]). The application
-has no database of its own; everything durable is in Git, and the drafts are on the persistent volume.
+KMS or Vault: sets its few service-level settings, creates the repositories it needs on the Git server, keeps it
+running when the Git server is away, deletes what has outlived its retention period, and watches it
+(xref:../concepts/deployment.adoc[Deployment]). Everything else is configured by the configuration administrators in
+the application (<<UC-OPS-6>>). The application has no database of its own; everything durable is in Git, the
+configuration included, and the drafts are on the persistent volume.
 
 [#UC-OPS-1]
-== UC-OPS-1: Install and Configure
+== UC-OPS-1: Install
 
 Status:: `DRAFT`
 Actor:: the operator.
-Goal:: run the application with the organisation's repositories, identity provider, rights and keys, and know before
-the start that the configuration is valid.
-Trigger:: a new installation, or a change of the configuration.
-Preconditions:: the remote repositories exist on the Git server, with `main` protected so that only the technical user
-pushes; the identity provider has a confidential client for the application; the secrets are mounted or in the KMS or
-Vault.
+Goal:: run the application against the organisation's identity provider, Git server and keys, with nothing set at
+the container that the configuration administrators can set themselves.
+Trigger:: a new installation, or a change of the service-level settings (a new client credential, a rotated key).
+Preconditions:: the configuration repository and the remote repositories exist on the Git server, with `main`
+protected so that only the technical user pushes; the identity provider has a confidential client for the
+application and a group for the configuration administrators; the secrets are mounted or in the KMS or Vault.
 Flow::
 +
 [source,text]
 ----
-  [O] config.write             audit-notary.yaml: repositories, rights,
-       │                       oidc, the enabled categories and their
-       │                       document types, step-up, signing,
-       │                       anchor, mcp, web, directory; secrets only
-       │                       as references
+  [O] settings.set             environment variables of the container:
+       │                       login provider and identity provider,
+       │                       configuration administrators, origin,
+       │                       configuration repository and Git
+       │                       credential, signing and anchor keys with
+       │                       their allowed signers; secrets only as
+       │                       references
        ▼
-  [O] config.validate          --validate-config <dir>, offline
-       ├── invalid ─► one record per violation; exit 1
-       ▼
-  [S] boot                     placeholders resolved, every rule checked
+  [S] boot                     every service-level setting checked
        ├── invalid ─► the boot stops, one record per violation
+       ▼
+  [S] configuration.apply      the configuration repository fetched; the
+       │                       newest signed, valid commit applied
+       ├── empty ─► the empty configuration: no documents yet
+       │            ↳ UC-OPS-6 the administrators write the first one
        ▼
   [S] ready                    every repository has a local copy, the
        ▼                       person directory and the index are built
   done                         readiness UP on the management port
 ----
 Variations::
-* *Already built*: the bootstrap reads and validates `repositories`, `rights`, `oidc`, `web` and `fetch`, the
-  placeholders, `file:` references, and runs the native image in the integration tests; the other keys are not
-  checked yet (xref:../specification/configuration.adoc#_boot_validation[Configuration, Boot Validation]).
-* *Categories*: which categories and document types are on is part of this configuration
-  (xref:09-categories.adoc#UC-KND-5[UC-KND-5]).
+* *Already built*: the bootstrap still reads a mounted `audit-notary.yaml` with `repositories`, `rights`, `oidc`,
+  `web` and `fetch`, resolves placeholders and `file:` references, and runs the native image in the integration tests
+  (xref:../specification/configuration.adoc#_bootstrap_state[Configuration, State of the Bootstrap]).
+* *An unsigned or invalid head*: the newest signed, valid commit is applied, and the start reports that it is not
+  the head (xref:../specification/configuration.adoc#AUN-CONF-4[AUN-CONF-4]).
+* *A rollback of the application*: a configuration written by a newer version is skipped; the application applies the
+  newest one written by its own or an earlier version, and returns to the newer one when the newer version runs
+  again.
 * *Compose sample*: a sample with Keycloak and Gitea and a check script shows a working setup.
-Outcome:: the application runs with a valid configuration and is ready.
+Outcome:: the application runs with valid service-level settings and the configuration of the repository, and is
+ready.
 Open points:: whether the rest of JGit (HTTPS transport, in-core writing, notes) runs in the native image
 (xref:../concepts/application-architecture.adoc#_open_questions[Application Architecture, Open Questions]).
-Requirements:: xref:../specification/configuration.adoc#AUN-CONF-1[AUN-CONF-1] (configuration, validation),
+Requirements:: xref:../specification/configuration.adoc#AUN-CONF-3[AUN-CONF-3] (service-level settings),
+xref:../specification/configuration.adoc#AUN-CONF-4[AUN-CONF-4] (applying the configuration),
 xref:../specification/deployment.adoc#AUN-OPS-1[AUN-OPS-1] (image),
 xref:../specification/deployment.adoc#AUN-OPS-2[AUN-OPS-2] (ports, readiness),
 xref:../specification/deployment.adoc#AUN-OPS-3[AUN-OPS-3] (compose sample),
 xref:../specification/testing.adoc#AUN-NFR-5[AUN-NFR-5] (native image verification),
 xref:../specification/testing.adoc#AUN-NFR-1[AUN-NFR-1] (start time).
-Design:: xref:../concepts/deployment.adoc[Deployment].
+Design:: xref:../concepts/deployment.adoc[Deployment],
+xref:../adr/0006-The_configuration_lives_in_a_configuration_repository_written_by_the_application.adoc[ADR-0006].
 
 [#UC-OPS-2]
 == UC-OPS-2: Add a Repository
 
 Status:: `DRAFT`
-Actor:: the operator.
+Actor:: the operator on the Git server; then a configuration administrator (`administer-configuration`), in the web
+app.
 Goal:: give the application a further repository, above all the incident repository of a new year before its first
-report.
+report, without a restart.
 Trigger:: a new year, a new custom category (xref:09-categories.adoc#UC-KND-1[UC-KND-1]), or a changed repository cut.
-Preconditions:: the remote repository exists; the technical user may push to it.
+Preconditions:: the remote repository exists on the Git server of the configuration repository; the technical user
+may push to it.
 Flow::
 +
 [source,text]
 ----
-  [O] repository.add           an entry in repositories: alias, remote,
-       │                       confidentiality class, retention period,
-       │                       credential reference; the rights of the
-       │                       groups on it
+  [O] remote.create            the remote repository on the Git server,
+       │                       main protected
        ▼
-  ↳ UC-OPS-1                   validated and started
+  [U] repository.add           an entry in repositories: alias, remote,
+       │                       confidentiality class, retention period;
+       │                       the rights of the groups on it
        ▼
-  done                         the repository is fetched and served
+  ↳ UC-OPS-6                   validated, saved and applied
+       ▼
+  [S] repository.clone         cloned and fetched; readiness stays UP
+       ▼
+  done                         the repository is served
 ----
 Variations::
 * *One retention period, one confidentiality class* per repository; data with different periods never share one.
+* *Remote missing or not reachable*: the configuration is applied, the repository's clone is retried with every
+  fetch, and the application reports it as not yet served.
 Outcome:: the repository is part of the application, with its rights, class and retention period.
 Open points:: how the one document type `incident` addresses a repository per year
 (xref:../concepts/data-protection-and-repository-layout.adoc#_open_questions[Data Protection and Repository Layout,
 Open Questions]).
 Requirements:: xref:../specification/configuration.adoc#AUN-CONF-2[AUN-CONF-2] (repositories),
 xref:../specification/data-protection.adoc#AUN-DP-1[AUN-DP-1] (the repository cut).
-Design:: none; an operator works with files.
+Design:: the configuration editor (<<UC-OPS-6>>).
 
 [#UC-OPS-3]
 == UC-OPS-3: Keep Working While the Git Server Is Away
@@ -130,7 +150,8 @@ Design:: xref:../specification/web-app.adoc#AUN-WEB-9[AUN-WEB-9].
 == UC-OPS-4: Delete a Repository After Its Retention Period
 
 Status:: `DRAFT`
-Actor:: a catalog administrator (`administer-catalogs`), in the web app; then the operator.
+Actor:: a catalog administrator (`administer-catalogs`), in the web app; a configuration administrator; then the
+operator.
 Goal:: delete a repository whose retention period has ended, as a whole, with a record of the deletion and without
 rewriting any history.
 Trigger:: the repository appears as expired in the *Due* lens.
@@ -149,15 +170,17 @@ Flow::
        │                       the local repository removed; no longer
        │                       served or fetched, also after a restart
        ▼
+  [U] repository.remove        a configuration administrator removes
+       │                       it from repositories (UC-OPS-6)
+       ▼
   [O] deletion.remote          the operator deletes the remote
-       │                       repository, removes it from the
-       │                       configuration, and lets the backups
+       │                       repository and lets the backups
        ▼                       expire
   done
 ----
 Outcome:: the repository is gone from the application, the deletion is on record and, when an anchor provider is active, anchored at the next
 checkpoint,
-and the operator has deleted the remote and the backups.
+the configuration no longer lists it, and the operator has deleted the remote and the backups.
 Requirements:: xref:../specification/data-protection.adoc#AUN-DP-4[AUN-DP-4] (retention),
 xref:../specification/configuration.adoc#AUN-CONF-2[AUN-CONF-2] (retention per repository).
 Design:: xref:../concepts/deployment.adoc#_operating_duties[Deployment, Operating Duties].
@@ -182,3 +205,63 @@ xref:../specification/mcp-server.adoc#AUN-MCP-7[AUN-MCP-7] (audit of tool calls)
 xref:../specification/deployment.adoc#AUN-OPS-2[AUN-OPS-2] (management port),
 xref:../specification/testing.adoc#AUN-NFR-2[AUN-NFR-2] (the save timer).
 Design:: none.
+
+[#UC-OPS-6]
+== UC-OPS-6: Administer the Configuration
+
+Status:: `DRAFT`
+Actor:: a configuration administrator (`administer-configuration`, a member of the groups of
+`audit-notary.configuration.administrators`), in the web app.
+Goal:: change the organisation's configuration (repositories, rights, categories, step-up, fetch, anchoring,
+sessions, directory) in the application, as a signed commit with history, and have it take effect without a restart.
+Trigger:: a new repository, a new group, a category to switch on, a policy that changes; or the first configuration
+of a new installation.
+Preconditions:: the user holds `administer-configuration`.
+Flow::
++
+[source,text]
+----
+  [U] configuration.open       the editor shows audit-notary.yaml of the
+       │                       applied commit, and whether it is the head
+       ▼
+  [U] configuration.change     the administrator edits it
+       ▼
+  [S] configuration.validate   the whole resulting configuration, every
+       │                       rule of the boot validation
+       ├── invalid ─► one message per violation; nothing saved
+       ▼
+  [U] step-up                  when step-up is enabled
+       ▼
+  [S] configuration.save       a commit signed with the commit-signing
+       │                       key, the administrator's pseudonym in the
+       │                       trailers, application-version set to the
+       │                       running version, pushed by the technical
+       │                       user; no second approval
+       ├── overtaken ─► refused; offered again on the new state
+       ▼
+  [S] configuration.apply      fetched, verified, applied as a whole
+       ▼
+  done                         the next request sees the new configuration
+----
+Variations::
+* *A rejected head*: a commit of `main` that is unsigned, or signed by a key outside the allowed signers, or invalid,
+  is never applied; the editor shows the applied commit and the rejected head, and the administrator saves a
+  corrected configuration on top of it.
+* *History*: the editor shows the history of the configuration, each commit with its author's pseudonym and time, and
+  the difference to the one before.
+* *Custom categories*: a category administrator (`administer-categories`) changes files under `categories/` in the
+  same repository (xref:09-categories.adoc#UC-KND-1[UC-KND-1]); switching a category on stays with the configuration
+  administrators (xref:09-categories.adoc#UC-KND-5[UC-KND-5]).
+* *A head written by a newer version* (after a rollback of the application): the editor shows it and says before
+  the save that the change starts from the applied configuration and leaves out the newer version's changes, which
+  stay in the history.
+* *Agents* neither read nor change the configuration; the MCP server has no tool for it.
+* *Until the editor is built*: the first configuration is pushed by hand as a commit signed with a key of the allowed
+  signers.
+Outcome:: the configuration is changed, recorded as a signed commit, and in effect.
+Requirements:: xref:../specification/configuration.adoc#AUN-CONF-1[AUN-CONF-1] (configuration, validation),
+xref:../specification/configuration.adoc#AUN-CONF-4[AUN-CONF-4] (applying the configuration),
+xref:../specification/configuration.adoc#AUN-CONF-5[AUN-CONF-5] (changing the configuration),
+xref:../specification/authentication.adoc#AUN-AUTH-2[AUN-AUTH-2] (`administer-configuration`).
+Design:: xref:../adr/0006-The_configuration_lives_in_a_configuration_repository_written_by_the_application.adoc[ADR-0006];
+the editor: none yet.

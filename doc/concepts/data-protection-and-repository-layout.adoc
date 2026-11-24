@@ -54,12 +54,18 @@ pseudonym), the record of erasures and the record of deleted repositories
 |Everyone in the organisation
 |===
 
+Beside the cut, the repository `configuration` holds the configuration of the application: the list of these
+repositories, the rights, the categories, the custom ones included. It holds no personal data beyond the
+administrators' pseudonyms in its trailers, no secret, and is read and written only through the application, by the
+configuration administrators
+(xref:../adr/0006-The_configuration_lives_in_a_configuration_repository_written_by_the_application.adoc[ADR-0006]).
+
 Drafts of every repository, confidential ones included, are never pushed: they stay in the application's local
 repositories on the persistent volume, which the operator backs up
 (https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/storage-engine.adoc#_two_levels_of_saving[Storage Engine, Two Levels of Saving];
 xref:deployment.adoc#_operating_duties[Deployment, Operating Duties]).
 
-The cut is configuration: an organisation may merge `isms-core` and `isms-register` or split the register further.
+The cut is configuration, kept in that repository: an organisation may merge `isms-core` and `isms-register` or split the register further.
 Two rules hold for every configuration:
 
 * *One retention period per repository*, declared on the repository and nowhere else. Data with different retention

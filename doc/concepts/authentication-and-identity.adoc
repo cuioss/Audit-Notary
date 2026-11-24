@@ -81,15 +81,16 @@ follows Quarkus' lead here instead of building its own: Quarkus has a realm of u
 (https://quarkus.io/guides/security-properties[Quarkus, Using security with .properties file]), which is exactly this
 purpose.
 
-A deployment chooses one login provider in `audit-notary.yaml`, `oidc` or `local`, never both; the build is the same
-for both. The users file holds Quarkus' own keys of its embedded realm:
+A deployment chooses one login provider in its service-level settings, `oidc` or `local`, never both; the build is
+the same for both
+(xref:../specification/configuration.adoc#AUN-CONF-3[Configuration, AUN-CONF-3]). The users file holds Quarkus' own
+keys of its embedded realm:
 
-[source,yaml]
+[source,properties]
 ----
-login:
-  provider: local
-  local:
-    users-ref: file:/run/secrets/audit-notary/local-users.properties
+# environment of the container
+AUDIT_NOTARY_LOGIN_PROVIDER=local
+AUDIT_NOTARY_LOGIN_LOCAL_USERS_REF=file:/run/secrets/audit-notary/local-users.properties
 ----
 
 [source,properties]
@@ -100,7 +101,7 @@ quarkus.security.users.embedded.roles.alice=isms-editors,isms-approvers
 ----
 
 The operator mounts the file and restarts the application; the application hands its entries to Quarkus through the
-same config source that already derives Token Sheriff's settings from `audit-notary.yaml`
+same config source that already derives Token Sheriff's settings from the service-level settings
 (xref:../specification/authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]). The application says what it runs on: a `WARN`
 record at every start, and a notice on the login page and in the shell of the web app. It does not try to make the
 file secure: an unsalted digest, no throttling, no lockout, no password rules, no second factor.
@@ -173,6 +174,11 @@ a configured mapping from groups to repositories and to the actions *read*, *edi
 catalogs*. In the first iteration no right is derived from the roles of the directory; who may approve is a matter of
 access, not of the catalog of roles. A later iteration may derive rights from roles; then the assignment of such a role
 needs a confirmation or comes from the identity provider.
+
+The mapping is part of the configuration repository and changes without a restart. One right stays outside it:
+*administer configuration* belongs to the groups named at service level, so that no change of the mapping can take it
+from the administrators or give it to anyone else
+(xref:../adr/0006-The_configuration_lives_in_a_configuration_repository_written_by_the_application.adoc[ADR-0006]).
 
 The application enforces the rights for every request, in the web app and in the MCP server alike. The Git server sees
 only the technical user.

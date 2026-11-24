@@ -1,0 +1,191 @@
+= ADR-0006: The configuration lives in a configuration repository written by the application
+:toc: left
+:toclevels: 3
+:toc-title: Table of Contents
+:sectnums:
+:source-highlighter: highlight.js
+
+// adr-metadata
+// summary: Only what the start cannot do without is set at service level, as environment variables or system properties of the container: the login (identity provider or local users) with the group that administers the configuration, the application's origin, the remote of the configuration repository and the one Git credential, and the secrets and trust anchors (signing keys, allowed signers, TLS). Everything else (the repositories, the rights, the categories with the custom ones, step-up, save, drafts, fetch, anchor policy, MCP, session lifetimes, directory) lives in a repository of its own, configuration. The application is its only writer, through an editor in the web app, with signed commits and step-up; it verifies the signatures and validates every new commit after each fetch, applies a valid one at once and keeps the last valid one otherwise. This settles the open question of UC-KND whether custom categories live on the volume or in Git.
+// tags: configuration, deployment, repositories, categories, rights
+// affects: audit-notary, web-app, integration-tests
+// supersedes:
+// end-adr-metadata
+
+== Status
+
+Accepted (2026-11-24, the owner's decisions on the service-level settings, the writer of the configuration, the time
+a change takes effect, the place of the custom categories, no second approval, and the application version in each
+configuration).
+
+== Context
+
+The configuration today is one YAML file, `audit-notary.yaml`, in a directory mounted into the container
+(xref:../specification/configuration.adoc[Configuration] before this record). It holds two different things:
+
+* what the container needs to start at all: the identity provider, the application's origin, the remotes and the Git
+  credential; and
+* the policy of the organisation: which repositories exist, who may do what in which of them, which categories are on,
+  when step-up is required, how long drafts live.
+
+The second part changes with the organisation, not with the deployment: a new incident repository every year, a new
+group with rights, a custom category switched on. As a mounted file each such change is a change of the deployment,
+made by whoever runs the container, outside Git, without history, signature or review, and it needs a restart. That
+contradicts what the application stands for: changes as signed commits with a history. Durable state outside Git is
+also what xref:../specification/architecture-and-modules.adoc#AUN-GEN-3[AUN-GEN-3] excludes, and it is the open
+question of the custom categories (xref:../use-cases/09-categories.adoc#open-points[UC-KND, Open Points], point 1).
+
+Two constraints of the library decide what cannot move into a repository: the allowed signers against which commit
+signatures and anchor signatures are verified are "taken from configuration and never from the repository"
+(https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc#GDR-STORE-14[GDR-STORE-14],
+https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc#GDR-STORE-18[GDR-STORE-18]),
+and every repository of the registry has its remote on the one Git server, checked against one remote policy
+(https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc#GDR-STORE-1[GDR-STORE-1]).
+
+Quarkus reads system properties (ordinal 400) and environment variables (ordinal 300) above `application.properties`
+(250), also in a native executable (`./target/myapp-runner -Dkey=value`), and finds a property by the environment
+variable whose name replaces every character that is neither alphanumeric nor `_` with `_` and is then upper case
+(https://quarkus.io/guides/config-reference#configuration-sources[Quarkus, Configuration Reference, Config Sources],
+https://quarkus.io/guides/config-reference#system-properties[System properties],
+https://quarkus.io/guides/config-reference#environment-variables[Environment variables];
+https://download.eclipse.org/microprofile/microprofile-config-3.1/microprofile-config-spec-3.1.html#default_configsources.env.mapping[MicroProfile
+Config 3.1, 5.3.1 Environment Variables Mapping Rules]). `audit-notary.web.origin` is therefore
+`AUDIT_NOTARY_WEB_ORIGIN` in the container's environment.
+
+== Decision
+
+*Only what the start cannot do without is set at service level, as environment variables or system properties of the
+container. Everything else lives in a repository of its own, `configuration`, which only the application writes, and
+a change takes effect when the application has fetched, verified and validated it.*
+
+=== Service Level
+
+Four groups of settings, and no other:
+
+. *The login*: the login provider (`oidc` or `local`); with `oidc` the identity provider's issuer, the client id, the
+  reference to the client credential and the groups claim; with `local` the references to the users file and the
+  cookie key (xref:0005-Local_users_from_a_mounted_file_are_for_evaluation_and_testing_only.adoc[ADR-0005]); and in
+  both cases the *configuration administrators*: the group (or role of the users file) whose members hold the right
+  `administer-configuration`.
+. *The application's own address*: `web.origin`, which is the login's redirect address and the value of the `Origin`
+  check.
+. *The configuration repository*: its remote, and the one Git credential of the technical user, which serves every
+  repository on the Git server.
+. *Secrets and trust anchors*: the commit-signing key and the anchor key with their `allowed_signers` files, the
+  trust and credential of an RFC 3161 timestamp authority, and the TLS certificate and key of `application.properties`.
+
+The right `administer-configuration` comes from the service level only; no entry of `rights` can grant it. A
+configuration that removes every other right still leaves the administrators able to repair it, and a writer of the
+configuration cannot make itself administrator of it.
+
+=== The Configuration Repository
+
+* `configuration` is a repository on the Git server, created by the operator like every other, with `main` protected
+  so that only the technical user pushes. It is not listed in `repositories`: its remote is the service-level setting,
+  its class `restricted`, its retention unlimited.
+* It holds `audit-notary.yaml` (the repositories, the rights, the enabled categories and every other policy key),
+  the custom categories under `categories/<category>/`, and the texts the application shows, such as the information
+  text of the directory, as files instead of references.
+* It holds no secret, and no reference to a secret: every secret is a service-level setting.
+
+=== The Application Is Its Only Writer
+
+* An administrator changes the configuration in an editor of the web app. The application validates the whole
+  resulting configuration and saves it only when it is valid, as a commit signed with the commit-signing key and
+  carrying the administrator's pseudonym in its trailers, after a step-up when step-up is on; the history of the
+  repository is the history of the configuration.
+* `administer-configuration` permits every change; `administer-categories`, granted through `rights`, permits changes
+  under `categories/` only. A custom category stays off until a configuration administrator switches it on.
+* A change takes effect with the administrator's own save; there is no second approval.
+* Agents neither read nor change the configuration; the MCP server has no tool for it. No use case needs one, and the
+  configuration names who may do what in which repository, which an agent steered by a prompt injection should not
+  learn.
+
+=== When a Change Takes Effect
+
+* After every fetch of `configuration` (the periodic fetch, and after its own saves), the application verifies the
+  signature of every new commit of `main` against `signing.allowed-signers` and validates the configuration of the
+  newest one. A valid, signed configuration is applied at once and as a whole; anything else is not applied, the last
+  applied configuration stays in force, and each violation is one `ERROR` record.
+* Every saved configuration records the version of the application that wrote it (`application-version`). A
+  version never applies a configuration written by a newer one, even a valid one, since a key may have changed its
+  meaning: after a rollback the application goes back to the newest configuration written by its own or an earlier
+  version, and with the newer version it returns to the newer configuration. Every version applies the
+  configurations of earlier ones.
+* At the start the application applies the newest commit of `main` that is signed, valid and not written by a newer
+  version, and reports when that is not the head. An empty repository is an empty configuration: no document repositories, no rights; only the
+  configuration administrators can work, and they write the first configuration.
+* `--validate-config <dir>` validates a checkout of the repository offline, for example in the CI of the Git server.
+
+== Consequences
+
+=== Positive
+
+* A change of the organisation's policy is a signed commit with author, time and history, made in the application and
+  not in the deployment; adding the incident repository of a new year needs no restart.
+* The deployment is small: a few environment variables and the mounted secrets. The same configuration repository
+  can be validated in CI before anyone uses it.
+* No durable state outside Git; the custom categories have their history, and the open point 1 of UC-KND is settled.
+* A push to `configuration` that bypasses the application, by anyone but the technical user's key, is never applied.
+
+=== Negative
+
+* Applying a configuration at run time is more code than reading one at the start: repositories come and go, the
+  rights of open sessions change with their next request, and every service has to take the new values atomically.
+* The application needs a configuration editor and the right `administer-configuration` before an organisation can
+  configure anything without Git tooling; until then the first configuration is pushed as a signed commit by hand.
+* `${NAME:-default}` placeholders go: a value that depends on the deployment is a service-level setting, and the
+  configuration in the repository is the same wherever it is used.
+* Every later version must keep reading the configurations of earlier ones.
+* The bootstrap's loader of the mounted `audit-notary.yaml`, its placeholders, the integration stack's
+  configuration directory and `audit-notary.config.dir` are replaced.
+
+=== Risks
+
+* A configuration that is valid but wrong (a removed right, a repository dropped from the list) takes effect at once,
+  without a second approval. The administrators keep their right and the history keeps the previous version.
+* An administrator who changes the configuration while an older version runs after a rollback leaves out the changes
+  of the newer version; the editor says so before the save, and the changes stay in the history.
+* While the Git server cannot be reached, no change takes effect, and a first start without a local copy cannot get
+  ready.
+
+== Alternatives Considered
+
+=== Keep the mounted file
+
+*Rejected because* the policy of the organisation would stay outside Git, without signature and history, and every
+change of it a change of the deployment.
+
+=== Every repository's remote at service level
+
+The environment lists every remote; the repository holds only the policy. *Rejected because* adding a repository, the
+incident repository of every year above all, would remain a redeployment.
+
+=== Changes through the Git server's review
+
+The application only reads `configuration`; administrators change it through pull requests on the Git server.
+*Rejected because* the application then cannot validate a change before it lands, the commits are not signed by the
+application, and the protection of `main` would have to admit other writers than the technical user.
+
+=== Changes take effect at the next restart
+
+*Rejected because* the point of moving the configuration is that the organisation changes it without the operator.
+
+=== The configuration in the `directory` repository, or a separate `categories` repository
+
+*Not chosen because* the directory is readable by everyone in the organisation and the configuration is not; and the
+custom categories are configuration of the same administrators, switched on in the same file, so one repository
+keeps a change of both in one commit.
+
+== References
+
+* xref:../specification/configuration.adoc[Configuration]
+* xref:../concepts/application-architecture.adoc#_configuration[Application Architecture, Configuration]
+* xref:../concepts/deployment.adoc#_configuration_and_secrets[Deployment, Configuration and Secrets]
+* xref:../use-cases/10-operations.adoc#UC-OPS-6[UC-OPS-6], xref:../use-cases/09-categories.adoc[UC-KND]
+* xref:0005-Local_users_from_a_mounted_file_are_for_evaluation_and_testing_only.adoc[ADR-0005]
+* https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc[`git-store`
+  specification] (GDR-STORE-1, GDR-STORE-14, GDR-STORE-18)
+* https://quarkus.io/guides/config-reference[Quarkus, Configuration Reference];
+  https://download.eclipse.org/microprofile/microprofile-config-3.1/microprofile-config-spec-3.1.html[MicroProfile
+  Config 3.1]

@@ -53,7 +53,8 @@ saved on `main` and signed like every commit; first login and own-entry changes 
   every `/api/v1` request outside the allow-list below with `FIRST_LOGIN_REQUIRED`, until the entry is saved. A
   pseudonym is kept only once the entry is saved; a user who leaves the form unsaved gets a new one at the next login.
 . `GET /api/v1/directory/me` returns the prefill: `name` from the token, `team` candidates from the groups.
-. The form shows the text referenced by `web.information-text-ref`.
+. The form shows the text that `web.information-text` names in the configuration repository
+  (xref:configuration.adoc#_audit_notary_yaml[Configuration, audit-notary.yaml]).
 . `PUT /api/v1/directory/me` validates team and role against the catalogs. For a user with a mapped right, without
   the field `binding` and with binding candidates, it saves nothing and answers `BINDING_CANDIDATES` with their
   pseudonyms, names and memberships; the form shows them, and the repeated request carries `binding`: `new`, or the

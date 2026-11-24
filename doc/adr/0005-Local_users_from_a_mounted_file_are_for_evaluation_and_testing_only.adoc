@@ -17,6 +17,12 @@
 Accepted (2026-11-24, the owner's decisions on the purpose, the mode, Quarkus' realm, the MCP credential and the
 step-up switch).
 
+Amended by
+xref:0006-The_configuration_lives_in_a_configuration_repository_written_by_the_application.adoc[ADR-0006]: the login
+provider and the users file are service-level settings (`audit-notary.login.provider`,
+`audit-notary.login.local.users-ref`), not keys of `audit-notary.yaml`; `step-up` stays in `audit-notary.yaml`, now in
+the configuration repository.
+
 == Context
 
 xref:0001-Authentication_is_delegated_to_Token_Sheriff_with_a_server-side_session_for_the_web_app.adoc[ADR-0001]

@@ -94,22 +94,38 @@ Every further dependency is a decision of the owner.
 
 == Configuration
 
-Following API Sheriff, `application.properties` carries only Quarkus and runtime settings (ports, management
-interface, logging). The policy of the application lives in its own YAML, `audit-notary.yaml`, validated against a
-bundled JSON Schema:
+The configuration has two levels, and the line between them is what the start cannot do without
+(xref:../adr/0006-The_configuration_lives_in_a_configuration_repository_written_by_the_application.adoc[ADR-0006]).
 
-* the repositories with alias, remote, confidentiality, retention period and credential reference;
+The *service level* is set as environment variables or system properties of the container, beside the Quarkus runtime
+settings of `application.properties` (ports, management interface, TLS, logging), which follow API Sheriff:
+
+* the login: the identity provider (or the local users file), and the group whose members administer the
+  configuration;
+* the application's own origin;
+* the remote of the configuration repository and the one Git credential of the technical user;
+* the secrets and trust anchors: the signing and anchor keys with their allowed signers, the trust of a timestamp
+  authority.
+
+Everything else is the policy of the organisation and lives in the *configuration repository* `configuration`, as
+`audit-notary.yaml` validated against a bundled JSON Schema, with the custom categories and the texts beside it:
+
+* the repositories with alias, remote, confidentiality and retention period;
 * one fetch interval for all repositories (`fetch.interval`);
 * the mapping from identity-provider groups to rights per repository;
 * the enabled categories, whose behaviour comes from their definitions alone; there is no second layer of overrides;
 * the one step-up setting (accepted `acr` and `amr`, maximum age) for every transition whose workflow requires
   step-up;
-* the person directory provider and the signing and anchor keys.
+* the person directory provider, the anchor policy, the session lifetimes and the MCP settings.
 
-Deployment-bound values (URLs, secret paths) are placeholders `${NAME:-default}` resolved from the environment.
-Secrets are never values in the YAML, only references to mounted files or to the KMS. At boot an ordered list of
-validation rules checks the configuration and refuses to start on an error; the binary also validates a configuration
-offline (`--validate-config <dir>`).
+The repository holds no secret. The application is its only writer: an administrator changes the configuration in the
+web app, the application validates the whole result and saves it as a signed commit, so the history of the
+configuration is a Git history like that of every document. After every fetch the application verifies the signatures
+of the new commits and validates the newest; a valid configuration takes effect at once and as a whole, an invalid or
+unsigned one never, and the last valid one stays. Each configuration records the version of the application that
+saved it; after a rollback the older version goes back to the newest configuration written by a version it knows. The right to administer the configuration comes only from the
+service level, so no change of the configuration can lock the administrators out. A checkout of the repository can be
+validated offline (`--validate-config <dir>`), for example in the CI of the Git server.
 
 == Run-Time State
 
@@ -152,7 +168,6 @@ specified in xref:../specification/testing.adoc[Testing].
 
 . Verify that the rest of JGit (HTTPS transport, in-core writing, notes) runs in the native image without the JVM
   fallback; clone and fetch are verified.
-. Whether the categories module ships inside the application or as an overridable directory mounted at run time.
 
 == Related
 

@@ -16,9 +16,10 @@ lives in. The ISMS category has five document types (`policy`, `isms-scope`, `au
 Audit Notary delivers four categories with the application. An organisation needs further ones, an exception
 approval, a supplier assessment, an access review, and should not need a release of the application for them. So
 categories come from two places: the *delivered* categories inside the application, and the *custom* categories of
-the organisation from a directory mounted at run time. The configuration says which categories, and which of their
+the organisation under `categories/` of the configuration repository
+(xref:../adr/0006-The_configuration_lives_in_a_configuration_repository_written_by_the_application.adoc[ADR-0006]). The configuration says which categories, and which of their
 document types, are switched on. A category administrator creates and changes custom categories in an editor in the
-web app; an operator can also supply them as files.
+web app; until the editor is built they are committed there as files.
 
 [#principles]
 == Principles
@@ -28,13 +29,14 @@ Two levels, one switch each:: The configuration switches a category on or off, a
 single document types off. A category declares which of its document types need each other, so that none is switched
 off while another that needs it is on.
 [#the-operator-switches]
-The operator switches:: Which categories and document types are on is the operator's configuration, read at start; the
-editor creates and changes categories, but a new custom category stays off until the operator switches it on. So no
-category reaches the users without the operator's decision.
+The configuration administrators switch:: Which categories and document types are on is part of the configuration
+(`audit-notary.yaml`), changed by a configuration administrator; the editor creates and changes categories, but a new
+custom category stays off until a configuration administrator switches it on. So no category reaches the users
+without that decision.
 [#delivery-apart-from-custom]
 Delivery apart from custom:: The delivered categories ship in the `categories` module and are read-only in the
-application; they change only with a release of the application. The custom categories live in the categories
-directory of the deployment, and only they can be created and changed at run time.
+application; they change only with a release of the application. The custom categories live in the configuration
+repository, and only they can be created and changed at run time.
 [#add-never-override]
 A custom category adds, never overrides:: A custom category has its own id and its own document type ids; it never
 replaces or extends a delivered one, and no custom document type is added to a delivered category. To start from a
@@ -54,15 +56,13 @@ released document stays as it was released.
 [#layout]
 == Layout of a Category
 
-The layout is the same in the `categories` module (`categories/<category>/`) and in the categories directory
-(`<categories-dir>/<category>/`):
+The layout is the same in the `categories` module (`categories/<category>/`) and in the configuration repository
+(`categories/<category>/`):
 
 [source,text]
 ----
-<categories-dir>/                 the categories directory of the deployment,
-                                  audit-notary.yaml → categories-dir;
-                                  default /app/data/categories on the
-                                  persistent volume
+categories/                       in the configuration repository, beside
+                                  audit-notary.yaml
   <category-id>/                  one directory per custom category; the id
                                   differs from every delivered category id
     category.yaml                 the category: which document types need
@@ -83,9 +83,12 @@ The layout is the same in the `categories` module (`categories/<category>/`) and
     messages_en.properties        the category's texts: names of the
     messages_de.properties        category, its document types, fields and
                                   states; both languages hold the same keys
-  .drafts/<category-id>/          the editor's unactivated changes, in the
-                                  same layout (UC-KND-3, UC-KND-4)
 ----
+
+The editor's unactivated changes are drafts of the configuration repository, kept on the volume and never pushed,
+like the drafts of every repository
+(https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/storage-engine.adoc#_two_levels_of_saving[Storage
+Engine, Two Levels of Saving]).
 
 The switch is in `audit-notary.yaml`, one list for delivered and custom categories (<<UC-KND-5>>):
 
@@ -95,36 +98,34 @@ categories:
   - id: samm                          # delivered; all its document types
   - id: isms                          # delivered; one document type off
     exclude-kinds: [management-review]
-  - id: supplier-assessment           # custom, from the categories directory
+  - id: supplier-assessment           # custom, from categories/
 ----
 
 [#UC-KND-1]
 == UC-KND-1: Supply a Custom Category at Run Time
 
 Status:: `DRAFT`
-Actor:: the operator.
+Actor:: a category administrator (`administer-categories`) and a configuration administrator.
 Goal:: add a category the organisation wrote or received as files, without a new release of the application.
 Trigger:: the organisation needs document types the delivered categories do not have.
-Preconditions:: the repository each of its document types names is configured in `repositories`; the application
-creates no repository (xref:../specification/data-protection.adoc#AUN-DP-1[AUN-DP-1]).
+Preconditions:: the repository each of its document types names is in `repositories`; the application creates no
+repository (xref:../specification/data-protection.adoc#AUN-DP-1[AUN-DP-1]).
 Flow::
 +
 [source,text]
 ----
-  [O] category.place           the operator places the category's
-       │                       directory in the categories directory
+  [U] category.place           the category's files under categories/
+       │                       of the configuration repository, saved
+       │                       as a signed commit (UC-OPS-6)
        ▼
-  [O] category.enable          the operator lists it in categories of
-       │                       audit-notary.yaml (UC-KND-5)
+  [U] category.enable          a configuration administrator lists it
+       │                       in categories of audit-notary.yaml
+       │                       (UC-KND-5)
        ▼
-  [O] config.validate          --validate-config, offline, also checks
-       │                       the categories directory
-       ├── violations ─► one record per violation; exit 1
-       ▼
-  [S] boot.load                at start: every category of the list,
-       │                       delivered or custom, validated with its
-       │                       document types
-       ├── a category invalid ─► the boot stops, one record per violation
+  [S] configuration.apply      every category of the list, delivered or
+       │                       custom, validated with its document
+       │                       types, then applied (AUN-CONF-4)
+       ├── a category invalid ─► nothing saved, one message per violation
        ▼
   [S] categories.ready         the enabled document types are known to
        ▼                       the index, the forms, the workflows and
@@ -134,20 +135,23 @@ Variations::
 * *What is checked*: every file against its meta-schema; an id that clashes with a delivered or another custom
   category or document type; a repository alias that is not configured; a reference marker naming an unknown catalog;
   messages missing in one of the two languages; a template that does not parse.
-* *Present but not listed*: a custom category in the directory that the list does not name is validated by
-  `--validate-config` but not loaded; it is off.
-* *A file changed on disk* while the application runs takes effect at the next start; changes in the running
-  application go through the editor (<<UC-KND-4>>).
-* *No categories directory*: the application runs with the delivered categories only.
+* *Present but not listed*: a custom category under `categories/` that the list does not name is validated but not
+  loaded; it is off.
+* *Offline*: `--validate-config` checks a checkout of the configuration repository with its categories, for example
+  in the CI of the Git server.
+* *A change* takes effect when its commit is applied, without a restart; changes of a category in use go through the
+  editor (<<UC-KND-4>>).
+* *No `categories/`*: the application runs with the delivered categories only.
 Outcome:: the custom category is on beside the delivered ones, and its documents are created, saved and released like
 any other (xref:02-documents.adoc[UC-DOC]).
 Changes:: <<change-gen-1>>, <<change-conf-1>>, <<change-category-yaml>>, <<change-modules>>.
 Requirements:: xref:../specification/architecture-and-modules.adoc#AUN-GEN-1[AUN-GEN-1] (categories as
 configuration, the test category from resources only), xref:../specification/configuration.adoc#AUN-CONF-1[AUN-CONF-1]
-(boot validation, `--validate-config`); the categories directory: none yet; library:
+(validation, `--validate-config`), xref:../specification/configuration.adoc#AUN-CONF-4[AUN-CONF-4] (applying),
+xref:../specification/configuration.adoc#AUN-CONF-5[AUN-CONF-5] (changing); library:
 https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-1[GDR-FORMS-1]
 (kinds as configuration, in a directory chosen by the application).
-Design:: none; an operator works with files.
+Design:: xref:../adr/0006-The_configuration_lives_in_a_configuration_repository_written_by_the_application.adoc[ADR-0006].
 
 [#UC-KND-2]
 == UC-KND-2: Inspect the Categories and Copy One
@@ -167,8 +171,8 @@ Flow::
   the editor as an unactivated custom category (<<UC-KND-3>>).
 Variations::
 * *A delivered category* can be read and copied, never changed.
-* *Off categories* are shown too, so that the administrator sees what exists before asking the operator to switch it
-  on.
+* *Off categories* are shown too, so that the administrator sees what exists before asking a configuration administrator
+  to switch it on.
 Outcome:: the administrator knows the category's definition, or holds an unactivated copy of it.
 Changes:: <<change-auth-2>>, <<change-web-3>>.
 Requirements:: none yet.
@@ -208,14 +212,14 @@ Flow::
        │                       data and the template, rendered by the
        │                       server
        ▼
-  [U] editor.keep              the unactivated change kept in .drafts
+  [U] editor.keep              the unactivated change kept as a draft
        ├── go on later ─► done, nothing active
        ▼ activate
   ↳ UC-KND-4                   activation
        ▼
   done                         the definition is current; the category
-                               stays off until the operator switches it
-                               on (UC-KND-5)
+                               stays off until a configuration
+                               administrator switches it on (UC-KND-5)
 ----
 Variations::
 * *Sample data* lives only in the preview; it is never saved as a document.
@@ -224,7 +228,7 @@ Variations::
 * *A further document type* is added to a custom category in the same editor; a delivered category takes none.
 * *An agent* cannot create or change a category.
 Outcome:: a new custom category, checked and previewed, waits for activation in the editor's drafts, or is activated
-and waits for the operator to switch it on.
+and waits for a configuration administrator to switch it on.
 Open points:: <<open-points>>.
 Changes:: <<change-auth-2>>, <<change-web-3>>, <<change-web-7>>, <<change-gen-3>>, <<change-category-yaml>>.
 Requirements:: xref:../specification/web-app.adoc#AUN-WEB-4[AUN-WEB-4] (the form generated from the schema, the same
@@ -263,8 +267,10 @@ Flow::
   ↳ UC-ACC-3                   step-up
        ├── not confirmed ─► done, nothing activated
        ▼
-  [S] change.activate          the files moved from .drafts into place
-       │                       at once; if the category is on, its
+  [S] change.activate          the draft saved as one signed commit of
+       │                       the configuration repository, with the
+       │                       pseudonym in its trailers, and applied
+       │                       (AUN-CONF-4); if the category is on, its
        │                       document types reloaded without a
        │                       restart; one audit record with pseudonym,
        │                       category and the files changed
@@ -276,7 +282,7 @@ Variations::
 * *A document that fails the new schema* stays as it is; its next save asks for the fields the new schema needs.
 * *An open draft* of a changed document type is validated against the new schema at its next save.
 * *A document type with documents* cannot be removed from the category's files, because its documents must stay
-  readable; to stop using it, the operator switches it off (<<UC-KND-5>>).
+  readable; to stop using it, a configuration administrator switches it off (<<UC-KND-5>>).
 * *A delivered category* cannot be changed; copy it (<<UC-KND-2>>).
 Outcome:: the new version of the category is active, the change is on record, and no document was rewritten.
 Open points:: <<open-points>>.
@@ -290,21 +296,22 @@ Design:: none yet.
 == UC-KND-5: Switch Categories and Document Types On or Off
 
 Status:: `DRAFT`
-Actor:: the operator.
+Actor:: a configuration administrator (`administer-configuration`), in the web app.
 Goal:: decide which categories, delivered or custom, and which of their document types the organisation uses.
 Trigger:: the application is set up; a custom category is ready (<<UC-KND-3>>); the organisation starts or stops
 using a category or a document type, for example the ISMS without management reviews.
-Preconditions:: the categories to switch on exist, delivered or in the categories directory.
+Preconditions:: the categories to switch on exist, delivered or under `categories/` of the configuration
+repository.
 Flow::
 +
 [source,text]
 ----
-  [O] categories.edit          the list categories in audit-notary.yaml:
+  [U] categories.edit          the list categories in audit-notary.yaml:
        │                       per category its id, and optionally the
        │                       document types to leave out
        │                       (exclude-kinds)
        ▼
-  ↳ UC-OPS-1                   validated offline and at start
+  ↳ UC-OPS-6                   validated, saved, applied
        ├── unknown category or document type ─► refused, named
        ├── a document type left out that an enabled one requires
        │       ─► refused, naming both
@@ -324,21 +331,18 @@ Variations::
   declares this in its `category.yaml`.
 * *Deadlines and reminders* of a switched-off document type are no longer computed or shown.
 Outcome:: exactly the configured categories and document types are in use; nothing was deleted.
-Open points:: whether a category administrator may switch categories in the application instead of the operator; that
-switch would be durable state, with the same question as the editor's (<<open-points>>, point 1).
+Open points:: none of its own; the switch is a change of the configuration (<<open-points>>, point 7).
 Changes:: <<change-conf-1>>, <<change-category-yaml>>.
 Requirements:: xref:../specification/configuration.adoc#AUN-CONF-1[AUN-CONF-1] (`categories`, the list of enabled
 categories, boot validation); the document-type switch: none yet.
-Design:: none; an operator works with files.
+Design:: the configuration editor (xref:10-operations.adoc#UC-OPS-6[UC-OPS-6]).
 
 [#open-points]
 == Open Points
 
-. *Durable state outside Git.* The editor writes the categories directory on the volume, which is durable state that
-  is not in Git; xref:../specification/architecture-and-modules.adoc#AUN-GEN-3[AUN-GEN-3] allows none. Either the
-  categories directory is accepted as configuration the operator backs up with the volume, or it is kept as a
-  repository of its own (`categories`), whose activations are signed commits with the administrator in the trailers
-  and whose history is the history of the category. To be decided in an ADR.
+. *Durable state outside Git.* Decided in xref:../adr/0006-The_configuration_lives_in_a_configuration_repository_written_by_the_application.adoc[ADR-0006]: the custom categories live under `categories/` of the
+  configuration repository; their activations are signed commits with the administrator in the trailers, and its
+  history is the history of the category. There is no durable state outside Git.
 . *Schema evolution.* Documents saved under an earlier version of their schema, released ones above all, which are
   immutable. Whether each document records the version or checksum of the schema it was saved with, so that it can
   be shown and validated against that version, is open; the library has no notion of either.
@@ -354,7 +358,9 @@ Design:: none; an operator works with files.
   (https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/schema-driven-documents.adoc#_open_questions[Schema-Driven
   Documents, Open Questions]).
 . *Switching in the application.* Whether a category administrator may switch categories and document types on and
-  off in the application, instead of the operator in the configuration (<<UC-KND-5>>).
+  off in the application, instead of the operator in the configuration (<<UC-KND-5>>). Decided in
+  xref:../adr/0006-The_configuration_lives_in_a_configuration_repository_written_by_the_application.adoc[ADR-0006]: a configuration administrator switches them in the application; a category
+  administrator does not.
 
 [#changes-to-the-specification]
 == Changes to the Specification
@@ -364,30 +370,30 @@ Each change is the fix of a gap these use cases need; it is written into the spe
 [[change-gen-1]]AUN-GEN-1, two levels and two places:: Gap: a category comes only from the `categories` module, and
 the terms category and kind of document are not set apart. Fix: a category is a set of document types (`kind`), and
 the prose says "document type"; a category comes from the `categories` module (delivered, read-only) or from the
-categories directory (custom); a custom category has its own ids, never extends a delivered one, and has no extension
-point; the test category `test-note` also passes from the categories directory.
+configuration repository (custom, under `categories/`); a custom category has its own ids, never extends a delivered
+one, and has no extension point; the test category `test-note` also passes from `categories/`.
 [[change-conf-1]]AUN-CONF-1, the categories and their switch:: Gap: `categories` lists only delivered categories, by
-id, no key names a categories directory, and the boot validation does not check categories. Fix: `categories-dir`
-(default `/app/data/categories`); `categories` is a list of `{id, exclude-kinds}` naming every enabled category,
-delivered or custom, and anything not listed is off; the boot validation and `--validate-config` check every listed
+id, and the validation does not check categories. Fix: the custom categories are read from `categories/` of the
+configuration repository; `categories` is a list of `{id, exclude-kinds}` naming every enabled category,
+delivered or custom, and anything not listed is off; the validation and `--validate-config` check every listed
 category with the rules of <<UC-KND-1>> and refuse an unknown id, an unknown document type in `exclude-kinds`, and a
 document type left out that an enabled one requires.
 [[change-category-yaml]]Category declaration, `category.yaml`:: Gap: the library's `kinds.yaml` describes each
 document type alone; nothing says which document types need each other. Fix: a file `category.yaml` per category,
 owned by the application, with `requires` per document type; the library's `kinds.yaml` stays unchanged.
 [[change-auth-2]]AUN-AUTH-2, a right for categories:: Gap: no action permits changing a category. Fix: the action
-`administer-categories`, not bound to a repository; with a repository for categories (<<open-points>>, point 1),
-bound to that repository.
+`administer-categories`, not bound to a document repository, permitting changes under `categories/` of the
+configuration repository only (xref:../specification/configuration.adoc#AUN-CONF-5[AUN-CONF-5]).
 [[change-web-3]]AUN-WEB-3, a lens for custom categories:: Gap: the lenses are fixed. Fix: a lens for the documents of
 custom categories, the canonical addresses `/categories/<category>` (the definition and the editor) and the documents'
 addresses (<<open-points>>, point 3); a lens of a switched-off delivered category is not shown.
 [[change-web-7]]AUN-WEB-7, texts of custom categories:: Gap: the message catalogue has one source, the `web-app`
 JAR (xref:../specification/web-app.adoc#AUN-WEB-7[AUN-WEB-7]). Fix: the catalogue merges the messages of each enabled
 custom category under its own key prefix (`category.<id>.`); both languages hold the same keys.
-[[change-gen-3]]AUN-GEN-3, the categories directory as state:: Gap: durable state only in Git. Fix: as decided in
-<<open-points>>, point 1: either the categories directory is named as the one durable state outside Git, backed up
-with the volume, or the custom categories live in a repository of their own.
+[[change-gen-3]]AUN-GEN-3, the custom categories in Git:: Gap: the editor's state had no place in Git. Fix: as decided
+in <<open-points>>, point 1, the custom categories are part of the configuration repository; AUN-GEN-3 names it beside
+the document repositories.
 [[change-modules]]Architecture and Modules, the run-time directory:: Gap: the open question of
 xref:../concepts/application-architecture.adoc#_open_questions[Application Architecture] whether the categories ship
-inside the application or as a mounted directory. Fix: both; the delivered ones inside, the custom ones mounted, as in
-<<layout>>.
+inside the application or as a mounted directory. Fix: both; the delivered ones inside, the custom ones in the
+configuration repository, as in <<layout>>.

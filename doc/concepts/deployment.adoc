@@ -7,8 +7,9 @@
 
 xref:../README.adoc[Audit Notary documentation] » Concepts
 
-Audit Notary needs no new database. An operator runs one container with one persistent volume, provides the secrets
-listed under <<_configuration_and_secrets>>, and connects a few systems the organisation already runs. This page
+Audit Notary needs no new database. An operator runs one container with one persistent volume, sets a few
+environment variables and provides the secrets listed under <<_configuration_and_secrets>>, and connects a few systems
+the organisation already runs. This page
 names all of them, and how the container is built and shipped. The structure
 follows API Sheriff.
 
@@ -29,7 +30,7 @@ separate port.
 every unsaved draft.
 
 |*Git server* (GitHub, GitLab, Gitea, Forgejo)
-|Source of truth and backup; protected branches and tags.
+|Source of truth and backup, the configuration repository included; protected branches and tags.
 
 |*Identity provider*
 |Authentication of people and agents; groups; step-up. The Token Sheriff libraries that talk to it run inside the
@@ -63,10 +64,15 @@ The release follows the cuioss release process of the application repository; pu
 [#_configuration_and_secrets]
 == Configuration and Secrets
 
-`audit-notary.yaml` is a file in a mounted configuration directory, validated at boot and offline
-(`--validate-config`); URLs and client ids come from environment variables, referenced as placeholders. Secrets (the Git
-credential of the
-technical user, the TLS key, the OIDC client credential) are mounted files or Vault references; the commit-signing key
+The container gets only what it cannot start without, as environment variables (`AUDIT_NOTARY_*`) or system
+properties: the login with the group of the configuration administrators, the application's origin, the remote of the
+configuration repository with the Git credential, and the secrets and trust anchors
+(xref:../specification/configuration.adoc#AUN-CONF-3[Configuration, AUN-CONF-3]). Everything else, from the list of
+repositories to the rights and the categories, is in the configuration repository, which the administrators change in
+the web app and the application applies without a restart
+(xref:../adr/0006-The_configuration_lives_in_a_configuration_repository_written_by_the_application.adoc[ADR-0006]).
+Secrets (the Git credential of the technical user, the TLS key, the OIDC client credential) are mounted files or Vault
+references; the commit-signing key
 and the anchor key are best kept in a KMS
 (https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/identity-and-signing.adoc#_what_has_to_be_done_right[Identity and Signing]). The full list is
 in xref:../specification/deployment.adoc#_secrets[Deployment,
@@ -77,9 +83,9 @@ Secrets].
 The `deployment` module carries a compose sample, like API Sheriff's, that runs the published image and never builds
 one:
 
-* `audit-notary` on `${AUDIT_NOTARY_IMAGE}` with a named volume;
+* `audit-notary` on `${AUDIT_NOTARY_IMAGE}` with a named volume and its service-level settings;
 * Keycloak as identity provider with a realm for people (web login) and a client registration for an MCP client;
-* Gitea as Git server with the repositories of the default cut;
+* Gitea as Git server with the configuration repository and the repositories of the default cut;
 * start and stop scripts and a check script that logs in, saves a draft and releases it.
 
 The integration tests use the same topology with additional variants.
@@ -92,10 +98,11 @@ The integration tests use the same topology with additional variants.
   (https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/storage-engine.adoc#_two_levels_of_saving[Storage Engine, Two Levels of Saving]).
 . When the application lists a repository whose retention period has ended, delete the remote repository on the Git
   server, and let backups expire with the same period: deleting the repository in the application reaches neither.
-. Create the remote repository of every configured alias, the incident repository of each new year included, and add
-  it to `repositories`; the application creates no repository on the Git server.
-. Protect `main` of every repository on the Git server so that only the technical user may push to it and nobody may
-  force-push; the application cannot verify this setting
+. Create the configuration repository, and the remote repository of every alias the configuration administrators
+  add, the incident repository of each new year included; the application creates no repository on the Git server
+  (xref:../use-cases/10-operations.adoc#UC-OPS-2[UC-OPS-2]).
+. Protect `main` of every repository on the Git server, the configuration repository included, so that only the
+  technical user may push to it and nobody may force-push; the application cannot verify this setting
   (xref:authentication-and-identity.adoc#_the_git_credential[Authentication and Identity, The Git Credential]).
 . Watch the readiness probe (xref:../specification/deployment.adoc#AUN-OPS-2[Deployment, AUN-OPS-2]).
 . Register the commit-signing key with the bot account if the Git server shall show commits as "Verified".
