@@ -162,7 +162,8 @@ A request is permitted only if one of the user's groups maps the action on the t
 |`iss`; with local users `web.origin`
 
 |`Auth-Time`
-|`auth_time`; with local users the time of the password check
+|`auth_time`; with local users as AUN-AUTH-6 states: the time of a step-up's renewed password check, otherwise the
+time of the request
 
 |`Auth-Context`
 |`acr` and `amr`, in the library's format; with local users `amr=pwd`
@@ -373,11 +374,13 @@ cookie is renewed while it is used
 |xref:web-app.adoc#AUN-WEB-8[AUN-WEB-8] applies to every request after the login; with local users the anti-CSRF token
 of `GET /api/v1/session` is bound to the login cookie instead of a server-side session. The login request
 `POST /j_security_check` cannot carry that token: it is the one exception, and it is refused unless its `Origin`
-header is present and is `web.origin`
+header is present and is `web.origin`, by a check that runs before Quarkus handles the request
 
 |Mechanism per path
 |Form authentication on every protected path except `/mcp`, Basic only on `/mcp`: the config source derives one HTTP
-permission per side with `auth-mechanism` `form` or `basic`, so a Basic header elsewhere authenticates nobody
+permission per side with `auth-mechanism` `form` or `basic`, so a Basic header elsewhere authenticates nobody. An
+integration test must show that Basic credentials work on `/mcp` and authenticate no request to another protected
+path
 
 |Step-up
 |With `step-up.enabled: true` (<<AUN-AUTH-4>>) the web app asks for the password in a dialog and sends it with the

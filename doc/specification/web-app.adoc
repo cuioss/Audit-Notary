@@ -156,7 +156,10 @@ files.
 == AUN-WEB-8: Page Security
 
 * The app must be served with a Content Security Policy that allows no `unsafe-inline` script.
-* Every state-changing request must carry the anti-CSRF header; the server must refuse one without it.
+* Every state-changing request must carry the anti-CSRF header; the server must refuse one without it. The one
+  exception is the login of local users, `POST /j_security_check`, which has no session to take a token from: it must
+  be refused unless its `Origin` header is present and is the application's own origin, checked before Quarkus handles
+  the request (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]).
 * A state-changing request whose `Origin` header is present and is not the application's own origin must be refused.
 * Generated AsciiDoc output must be rendered and sanitised by the server.
 
@@ -175,7 +178,7 @@ connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'`
 |`no-referrer`
 |===
 
-Anti-CSRF: every non-`GET` request carries `X-CSRF-Token` with the value from `GET /api/v1/session`; the server
+Anti-CSRF: every non-`GET` request except the local login carries `X-CSRF-Token` with the value from `GET /api/v1/session`; the server
 compares it with the session's token and answers a mismatch with `403`. Origin: a non-`GET` request with an `Origin`
 header that differs from the application's own origin is answered with `403`; a request without `Origin` is decided
 by the anti-CSRF header alone.
