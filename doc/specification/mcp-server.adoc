@@ -248,7 +248,8 @@ With the login provider `local`
   (link:https://www.rfc-editor.org/rfc/rfc9110#section-15.5.2[RFC 9110, §15.5.2]); the protected resource metadata of
   <<AUN-MCP-2>> must not be served. Quarkus runs Basic in silent mode beside form authentication and then challenges
   only a request that sent credentials (`AuthConfig` and `BasicAuthenticationMechanism` in the Quarkus 3.40.1
-  source), so the application adds the challenge to a `401` of `/mcp` that has none.
+  source), so the application adds the challenge to a `401` of `/mcp` that has none. A test covers both a missing and a wrong
+  credential.
 * As at the web login, the answer must not tell an unknown user from a wrong password
   (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]).
 * There are no scopes: the effective permission is the user's rights (xref:authentication.adoc#AUN-AUTH-2[AUN-AUTH-2]),
@@ -266,9 +267,10 @@ protected path takes form authentication only (xref:authentication.adoc#AUN-AUTH
 
 |Transport
 |HTTPS: Basic "SHOULD NOT be used" without it, because it transmits the password in clear text
-(link:https://www.rfc-editor.org/rfc/rfc7617#section-4[RFC 7617, §4]). The application redirects plain HTTP
-(`quarkus.http.insecure-requests=redirect`, xref:configuration.adoc#AUN-CONF-1[AUN-CONF-1]), which comes too late for a
-header already sent; the protection is the client's: the local MCP gateway sends Basic only to an `https:` address
+(link:https://www.rfc-editor.org/rfc/rfc7617#section-4[RFC 7617, §4]). The application redirects plain HTTP in its
+production profile (`quarkus.http.insecure-requests=redirect`, xref:configuration.adoc#AUN-CONF-1[AUN-CONF-1]; the
+`%dev` and `%test` profiles of `application.properties` accept plain HTTP), which comes too late for a header already
+sent; the protection is the client's: the local MCP gateway sends Basic only to an `https:` address
 
 |Identity
 |`iss`, `sub`, `amr` and the groups as in AUN-AUTH-6; `auth_time` the time of the request
