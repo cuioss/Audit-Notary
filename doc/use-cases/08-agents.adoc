@@ -66,7 +66,7 @@ Variations::
 * *A local gateway* may hold the user's login for agents that cannot (xref:../concepts/local-mcp-gateway.adoc[Local
   MCP Gateway], a proposal).
 * *No credential leaves*: no Git or KMS credential appears in a tool result, an error or a log.
-* *Local test users* (`login.provider: local`, for evaluation and tests only): there is no authorization server and no metadata. The local MCP gateway
+* *Local test users* (login provider `local`, for evaluation and tests only): there is no authorization server and no metadata. The local MCP gateway
   keeps the user's username and password and sends them as HTTP Basic on every call; a wrong or missing credential is
   `401` with a Basic challenge, there are no scopes, and the rights alone decide
   (xref:../specification/mcp-server.adoc#AUN-MCP-8[AUN-MCP-8];

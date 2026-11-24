@@ -79,7 +79,8 @@ layout and commands in its own `README.adoc`.
 
 |xref:specification/configuration.adoc[Configuration]
 |`AUN-CONF`
-|`application.properties`, `audit-notary.yaml`, boot validation, repositories and refresh
+|Service-level settings, the configuration repository and `audit-notary.yaml`, validation, applying and changing the
+configuration, repositories and refresh
 
 |xref:specification/deployment.adoc[Deployment]
 |`AUN-OPS`
@@ -151,6 +152,11 @@ layout and commands in its own `README.adoc`.
 
 |xref:adr/0005-Local_users_from_a_mounted_file_are_for_evaluation_and_testing_only.adoc[ADR-0005]
 |Local users from a mounted file are for evaluation and testing only
+|Accepted
+
+|xref:adr/0006-The_configuration_lives_in_a_configuration_repository_written_by_the_application.adoc[ADR-0006]
+|The configuration lives in a configuration repository written by the application; only the start-up settings are
+service-level
 |Accepted
 |===
 

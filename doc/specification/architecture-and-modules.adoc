@@ -171,12 +171,13 @@ workflows
 |`config`, the `git-document-repository` modules
 
 |`config`
-|Configuration model, boot validation rules
+|Service-level settings, configuration model, validation rules
 |—
 |===
 
-Commit signing, anchoring and the person directory belong to the libraries; `service` configures them from
-`audit-notary.yaml`. Its only adapters are the key source behind `kms:` references, a provider of the library's
+Commit signing, anchoring and the person directory belong to the libraries; `service` configures them from the
+service-level settings and `audit-notary.yaml`, and reads, applies and saves the configuration repository through the
+same libraries as every other repository. Its only adapters are the key source behind `kms:` references, a provider of the library's
 `SigningKeySource` (https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc#GDR-STORE-12[GDR-STORE-12]), and the resolution of
 `vault:` references. Outbound calls go to the Git server, the identity provider, the KMS or Vault and, with the anchor
 provider `rfc3161`, the timestamp authority; there is no other.
@@ -237,7 +238,9 @@ the transition
 [#AUN-GEN-3]
 == AUN-GEN-3: No Database of Its Own
 
-* The application must persist durable state only in Git repositories.
+* The application must persist durable state only in Git repositories; its configuration, the custom categories
+  included, is the configuration repository
+  (xref:configuration.adoc#AUN-CONF-1[AUN-CONF-1]).
 * The in-memory index and computed reminders must be rebuilt from Git at start; a restart test must show identical
   dashboard results before and after restart.
 * The application must not configure a datasource.
@@ -245,6 +248,11 @@ the transition
 [cols="1,1,2"]
 |===
 |State |Built |Rebuild trigger
+
+|Applied configuration
+|At start, from the newest commit of the configuration repository that is signed, valid and not written by a newer
+version
+|Fetch that moves its `main`, own save of the configuration (xref:configuration.adoc#AUN-CONF-4[AUN-CONF-4])
 
 |Index
 |At start, per repository

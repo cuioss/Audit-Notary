@@ -184,8 +184,8 @@ switching categories and document types on or off.
 
 |`UC-OPS`
 |xref:use-cases/10-operations.adoc[10-operations.adoc]
-|Running the application: installation and configuration, adding a repository, an unreachable Git server, deleting a
-repository after its retention period, and monitoring.
+|Running the application: installation, adding a repository, an unreachable Git server, deleting a repository after
+its retention period, monitoring, and administering the configuration in its repository.
 |===
 
 [#order]
@@ -278,9 +278,8 @@ in the concept's _Open Questions_. This section lists every one of them; it hold
 * `UC-AGT`: the protocol revisions besides 2026-07-28, Client ID Metadata Documents or pre-registered agents, and
   whether recipes are offered as MCP prompts (xref:use-cases/08-agents.adoc#UC-AGT-1[UC-AGT-1];
   xref:concepts/mcp-server.adoc#_open_questions[MCP Server, Open Questions]).
-* `UC-KND`: durable state on the volume against xref:specification/architecture-and-modules.adoc#AUN-GEN-3[AUN-GEN-3],
-  schema evolution of existing documents, the lens of a custom category, what an agent may read of a category, whether
-  a change that invalidates documents is refused or confirmed, and whether categories are switched in the application
+* `UC-KND`: schema evolution of existing documents, the lens of a custom category, what an agent may read of a
+  category, and whether a change that invalidates documents is refused or confirmed
   (xref:use-cases/09-categories.adoc#open-points[Categories, Open Points]).
 * `UC-OPS`: the rest of JGit in the native image (xref:use-cases/10-operations.adoc#UC-OPS-1[UC-OPS-1];
   xref:concepts/application-architecture.adoc#_open_questions[Application Architecture, Open Questions]).

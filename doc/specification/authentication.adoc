@@ -9,7 +9,8 @@ xref:../README.adoc[Audit Notary documentation] » Specification
 Login, rights, the identity values written into commits, step-up, the Git credential and the local users. Reasoning:
 xref:../concepts/authentication-and-identity.adoc[Authentication and Identity].
 
-A deployment has exactly one login provider, `login.provider` in `audit-notary.yaml`: `oidc` (the default), the
+A deployment has exactly one login provider, the service-level setting `audit-notary.login.provider`
+(xref:configuration.adoc#AUN-CONF-3[AUN-CONF-3]): `oidc` (the default), the
 organisation's identity provider through Token Sheriff (<<AUN-AUTH-1>>), or `local`, the users of a mounted file in
 Quarkus' format (<<AUN-AUTH-6>>,
 xref:../adr/0005-Local_users_from_a_mounted_file_are_for_evaluation_and_testing_only.adoc[ADR-0005]).
@@ -112,7 +113,11 @@ whose authorization request cannot be sent (PAR refused) frees its place at once
 
 * Rights must be derived from identity-provider groups through a configured mapping to repositories and the actions
   *read*, *edit*, *approve* and *administer catalogs*.
-* Every request must be checked; a request without a mapped right must be refused (deny by default).
+* The right *administer configuration* must be derived only from the service-level groups of
+  `audit-notary.configuration.administrators`, never from the mapping
+  (xref:configuration.adoc#AUN-CONF-5[AUN-CONF-5]).
+* Every request must be checked; a request for a repository action without a mapped right, or for a change of the
+  configuration by a user outside the configuration administrators' groups, must be refused (deny by default).
 * No right may be derived from a directory role.
 
 Input with the login provider `local`: the user's roles in the users file (<<AUN-AUTH-6>>).
@@ -121,7 +126,9 @@ Input with the login provider `oidc`: the `groups` claim (or the claim configure
 bearer token, read from the
 JSON payload of the validated token as the provider wrote it: an array yields its strings, a single string one group,
 anything else none, so a group name that contains a comma stays one group; Token Sheriff's planned groups accessor of
-the ID token, which keeps such a name whole, replaces this read (ADR-0004). Mapping: `audit-notary.yaml` → `rights`.
+the ID token, which keeps such a name whole, replaces this read (ADR-0004). Mapping: `audit-notary.yaml` → `rights` in the configuration
+repository; a new mapping applies to every open session from its next request
+(xref:configuration.adoc#AUN-CONF-4[AUN-CONF-4]).
 
 [cols="1,3"]
 |===
@@ -138,9 +145,13 @@ the ID token, which keeps such a name whole, replaces this read (ADR-0004). Mapp
 
 |`administer-catalogs`
 |Changes of the catalogs; erasure of persons; deletion of expired repositories
+
+|`administer-configuration`
+|Every change of the configuration repository; not bound to a repository and not part of the mapping
 |===
 
-A request is permitted only if one of the user's groups maps the action on the target repository. No other source
+A request is permitted only if one of the user's groups maps the action on the target repository, or, for
+`administer-configuration`, is one of the configuration administrators' groups. No other source
 (directory role, token scope alone) grants a right.
 
 [#AUN-AUTH-3]
@@ -213,10 +224,11 @@ returns `RELEASE_REQUESTED`, and a user completes the release in the web app wit
 [#AUN-AUTH-5]
 == AUN-AUTH-5: Git Credential
 
-* The application must reach every Git server only as the technical user configured per repository.
+* The application must reach the Git server only as the technical user, with the one service-level credential.
 * The application must merge every release itself and push it as the technical user.
 
-Per repository: `credential-ref`, the credential of the technical user, an access token of a bot account used over HTTPS
+`audit-notary.git.credential-ref` (xref:configuration.adoc#AUN-CONF-3[AUN-CONF-3]), the credential of the technical
+user for every repository, the configuration repository included, an access token of a bot account used over HTTPS
 (https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-core.adoc#GDR-CORE-2[GDR-CORE-2] admits no SSH remote, so an SSH deploy key is not
 usable); there is no other kind of Git credential. A refused push returns `REJECTED` and the draft stays.
 
@@ -238,13 +250,13 @@ authentication for the web app and its Basic authentication for the MCP server.
 
 With the login provider `local`:
 
-* The login provider must be chosen by `login.provider` in `audit-notary.yaml`, at runtime; there is one build for
-  both providers.
+* The login provider must be chosen by the service-level setting `audit-notary.login.provider`, at runtime; there is
+  one build for both providers.
 * Every start must log one `WARN` record that local users are not meant for production; `--validate-config` must print
   the same warning.
 * The login page and the shell of the web app must show a notice that the installation uses local test accounts
   (xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]: `GET /api/v1/status` names the login provider).
-* The users must come only from the users file that `login.local.users-ref` references; a change must take effect
+* The users must come only from the users file that `audit-notary.login.local.users-ref` references; a change must take effect
   only at the next start.
 * No password, hash or `Authorization` header may be logged.
 
@@ -271,18 +283,18 @@ quarkus.http.auth.basic=true
 With `oidc` the realm stays empty and authenticates nobody. With `local`, the application's `ConfigSourceFactory`
 (the documented SmallRye way to derive a config source from other configuration,
 link:https://quarkus.io/guides/config-extending-support#config-source-factory[Quarkus, Extending configuration
-support, ConfigSourceFactory]) reads the users file of `login.local.users-ref` and offers its entries to Quarkus, as it
-offers Token Sheriff's keys derived from `audit-notary.yaml` (xref:configuration.adoc#AUN-CONF-1[AUN-CONF-1]). It also
+support, ConfigSourceFactory]) reads the users file of `audit-notary.login.local.users-ref` and offers its entries to Quarkus, as it
+offers Token Sheriff's keys derived from the service-level settings
+(xref:configuration.adoc#AUN-CONF-3[AUN-CONF-3]). It also
 derives the HTTP permissions that bind Basic to `/mcp` and form authentication to every other protected path
 (`quarkus.http.auth.permission.<name>.auth-mechanism`), `quarkus.http.auth.realm=audit-notary` and the key of the login
 cookie, both runtime configuration (`AuthRuntimeConfig`, `ConfigPhase.RUN_TIME`).
 
-[source,yaml]
+[source,properties]
 ----
-login:
-  provider: local
-  local:
-    users-ref: file:/run/secrets/audit-notary/local-users.properties
+# environment of the container
+AUDIT_NOTARY_LOGIN_PROVIDER=local
+AUDIT_NOTARY_LOGIN_LOCAL_USERS_REF=file:/run/secrets/audit-notary/local-users.properties
 ----
 
 === The Users File
@@ -363,7 +375,7 @@ same answer
 
 |Login cookie
 |`quarkus-credential`, encrypted with `quarkus.http.auth.session.encryption-key`, which the config source derives from
-the secret `login.local.cookie-key-ref`, never from the users file (without it Quarkus uses a temporary key and logs a
+the secret `audit-notary.login.local.cookie-key-ref`, never from the users file (without it Quarkus uses a temporary key and logs a
 warning, so a restart ends every login). On every request Quarkus looks the user up in the realm again
 (`ElytronTrustedIdentityProvider` in the Quarkus 3.40.1 source): after a restart a removed user's cookie is refused
 and changed roles apply; a changed password leaves existing cookies valid. `http-only-cookie` `true`, `SameSite`

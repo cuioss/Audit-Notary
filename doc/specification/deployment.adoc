@@ -52,8 +52,11 @@ revision from build arguments `APP_VERSION`, `APP_REVISION`
 == AUN-OPS-2: Ports and Readiness
 
 * The application must serve HTTPS on 8443 and the management interface (readiness, liveness, metrics) on 9000.
-* Readiness must report `UP` only when every configured repository has a valid local repository (fetched in this
-  process or kept from an earlier fetch), the person directory is loaded and the index is built; a later fetch failure
+* Readiness must report `UP` only when the configuration repository and every repository of the configuration
+  applied at the start that is still in the applied configuration and not deleted
+  (xref:../use-cases/10-operations.adoc#UC-OPS-4[UC-OPS-4]) have a valid local repository (fetched in this process or
+  kept from an earlier fetch), a configuration is applied, the person directory is loaded and the index is built; a
+  later fetch failure, or a new configuration that is not applied (xref:configuration.adoc#AUN-CONF-4[AUN-CONF-4]),
   must not drop readiness.
 
 [cols="1,1,2"]
@@ -73,11 +76,12 @@ revision from build arguments `APP_VERSION`, `APP_REVISION`
 |`/q/health/live`, `/q/health/ready`, `/q/metrics`
 |===
 
-Readiness checks, all required for `UP`: `repositories`, `persons`, `index`. A repository without a local copy keeps
-`repositories` `DOWN` until its first fetch succeeds, so the application can start from the volume while the Git server
-is unreachable.
+Readiness checks, all required for `UP`: `configuration`, `repositories`, `persons`, `index`. A repository without a
+local copy keeps its check `DOWN` until its first fetch succeeds, so the application can start from the volume while
+the Git server is unreachable. A repository added by a new configuration keeps readiness `UP` while it is cloned and
+is served once its clone is complete.
 
-Volume: `/app/data` holds the local repositories and the drafts. It is mounted from a persistent volume; the image
+Volume: `/app/data` holds the local repositories, the configuration repository's included, and the drafts. It is mounted from a persistent volume; the image
 declares no volume. `/app/data/config` (`XDG_CONFIG_HOME` of the image) holds the user config of JGit, which caches the
 file-time resolution of the file store there; the root file system is read-only, so the cache lives on the volume and
 survives restarts. The image seeds the file with `gc.auto = 0` and `gc.autoDetach = false`: the bare repositories are
@@ -95,27 +99,32 @@ application sets no other value there.
 |`/run/secrets/tls/{tls.key,tls.crt}`
 
 |OIDC client credential
-|`oidc.client-credential-ref`: the client secret or the `private_key_jwt` key; only with the login provider `oidc`
+|`audit-notary.oidc.client-credential-ref`: the client secret or the `private_key_jwt` key; only with the login provider `oidc`
 
 |Users file of the local users
-|`login.local.users-ref`: the users, their password hashes and roles in Quarkus' format; `login.local.cookie-key-ref`,
+|`audit-notary.login.local.users-ref`: the users, their password hashes and roles in Quarkus' format;
+`audit-notary.login.local.cookie-key-ref`,
 a separate secret: the key of the login cookie. Only with the login provider `local`, which is for evaluation
 and tests, not for production (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6])
 
 |Git credential of the technical user
-|`credential-ref` per repository
+|`audit-notary.git.credential-ref`, one for every repository, the configuration repository included
 
 |Commit-signing key
-|`signing.key-ref`: a `kms:` key id or a `file:` reference
+|`audit-notary.signing.key-ref`: a `kms:` key id or a `file:` reference
 
 |Anchor key of the own timestamp
-|`anchor.signed-key-ref`: a `kms:` key id or a `file:` reference, never the commit-signing key
+|`audit-notary.anchor.signed-key-ref`: a `kms:` key id or a `file:` reference, never the commit-signing key
+
+|Credentials of an RFC 3161 timestamp authority
+|`audit-notary.anchor.timestamp.credentials-ref`; only with the anchor provider `rfc3161`
 |===
 
-The two `allowed_signers` files hold public keys only and are no secrets; they are mounted read-only with the
-configuration directory and named by `signing.allowed-signers` and `anchor.signed-allowed-signers`
-(xref:configuration.adoc#_audit_notary_yaml[Configuration, audit-notary.yaml]), which also lists the reference forms
-each key accepts.
+The two `allowed_signers` files and the trust of a timestamp authority hold public keys only and are no secrets, but
+they are trust anchors: they are mounted read-only and named by `audit-notary.signing.allowed-signers`,
+`audit-notary.anchor.signed-allowed-signers` and `audit-notary.anchor.timestamp.trust`, never read from a repository
+(xref:configuration.adoc#AUN-CONF-3[Configuration, AUN-CONF-3], which also lists the reference forms each key
+accepts).
 
 [#AUN-OPS-3]
 == AUN-OPS-3: Compose Sample
@@ -130,14 +139,15 @@ Location: `deployment/compose-sample/`. Never builds an image; the image is `${A
 |Service |Role
 
 |`audit-notary`
-|The application, named volume `audit-notary-data`, configuration from `docker/audit-notary-config/`
+|The application, named volume `audit-notary-data`; the service-level settings as environment variables, the
+configuration repository in Gitea
 
 |`keycloak`
 |Realm `audit-notary` with users of each group, a confidential client for the web login and a client for an MCP
 agent
 
 |`gitea`
-|Git server with the repositories of the default cut
+|Git server with the configuration repository and the repositories of the default cut
 |===
 
 Scripts in `scripts/`: `start-sample.sh`, `stop-sample.sh`, `check-sample.sh` (logs in as a test user, writes a SAMM

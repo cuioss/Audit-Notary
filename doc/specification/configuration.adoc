@@ -6,20 +6,24 @@
 
 xref:../README.adoc[Audit Notary documentation] » Specification
 
-Two sources: `application.properties` for Quarkus runtime settings, and `audit-notary.yaml` for the policy of the
-application. Reasoning: xref:../concepts/application-architecture.adoc#_configuration[Application Architecture,
-Configuration].
+Two levels. The *service level* holds only what the start cannot do without: the login, the application's origin,
+the configuration repository with the Git credential, and the secrets and trust anchors; it is set as environment
+variables or system properties of the container (<<AUN-CONF-3>>), beside the Quarkus runtime settings of
+`application.properties`. Everything else is in the *configuration repository* `configuration`, which only the
+application writes (<<AUN-CONF-5>>) and which takes effect when it has been fetched, verified and validated
+(<<AUN-CONF-4>>). Decision:
+xref:../adr/0006-The_configuration_lives_in_a_configuration_repository_written_by_the_application.adoc[ADR-0006];
+reasoning: xref:../concepts/application-architecture.adoc#_configuration[Application Architecture, Configuration].
 
 [#AUN-CONF-1]
 == AUN-CONF-1: Configuration
 
-* Policy configuration must be one YAML document validated against a bundled JSON Schema; `${NAME:-default}`
-  placeholders must be resolved from the environment.
-* An invalid configuration must stop the boot with one log record per violation.
-* `--validate-config <dir>` must validate offline and exit with `0` for a valid and `1` for an invalid
-  configuration.
-* Secret values must not be representable in the YAML; the schema must accept only references (mounted file, KMS key
-  id or Vault path).
+* The policy configuration must be the file `audit-notary.yaml` at the root of the configuration repository, one YAML
+  document validated against a bundled JSON Schema and the rules of <<_validation>>.
+* The configuration repository must hold no secret and no reference to one; every secret and every trust anchor is a
+  service-level setting (<<AUN-CONF-3>>).
+* `--validate-config <dir>` must validate a checkout of the configuration repository offline, against the
+  service-level settings of its own environment, and exit with `0` for a valid and `1` for an invalid configuration.
 
 === application.properties
 
@@ -45,23 +49,20 @@ The application sets these values; the column shows the application's value, not
 |`/run/secrets/tls/tls.crt`, `/run/secrets/tls/tls.key`
 |TLS certificate chain and private key (PEM), mounted as a secret
 
-|`audit-notary.config.dir`
-|`config`
-|Directory holding `audit-notary.yaml`
-
-|`audit-notary.oidc.jwks-url`
-|not set
-|The address of the provider's keys, set only when the application reaches the provider under another origin than
-its issuer (split horizon, as in the compose stack); otherwise the keys are found through the issuer's well-known
-document
+|`audit-notary.data.dir`
+|`/app/data`
+|The persistent volume: the local repositories, the configuration repository's included, and the drafts
 |===
 
-Token Sheriff reads its own keys (`sheriff.client.*`, `sheriff.token.issuers.*`); the application derives them from
-`audit-notary.yaml` → `oidc` and `web.origin` with an ordinal above `application.properties` and below the environment.
-Settings of the deployment's network stay in the environment, among them `SHERIFF_CLIENT_BACK_CHANNEL_ORIGIN` (the
-origin the client dials instead of the issuer's), `SHERIFF_CLIENT_ALLOWED_EGRESS_HOSTS` and
-`SHERIFF_TOKEN_ISSUERS_AUDITNOTARY_JWKS_HTTP_ALLOWED_EGRESS_HOSTS` (hosts on private addresses that the egress guard
-admits).
+=== The Configuration Repository
+
+[source,text]
+----
+configuration/
+  audit-notary.yaml               the policy (the keys below)
+  categories/<category>/          the custom categories, in the layout of a delivered one
+  texts/                          texts the application shows, such as the information text of the directory
+----
 
 === audit-notary.yaml
 
@@ -71,36 +72,30 @@ Validated against `schema/audit-notary.schema.json` (bundled). Top-level keys:
 |===
 |Key |Required |Content
 
-|`repositories`
+|`application-version`
 |yes
-|List of repositories (<<AUN-CONF-2>>)
+|The version of the application that saved this configuration, written by the application on every save and not
+editable in the editor (<<AUN-CONF-4>>, <<AUN-CONF-5>>)
+
+|`repositories`
+|no
+|List of the document repositories (<<AUN-CONF-2>>); empty or absent, the application serves no documents
 
 |`rights`
-|yes
-|Map of identity-provider group → list of `{repository, actions}`; actions from `read`, `edit`, `approve`,
-`administer-catalogs`
-
-|`login`
 |no
-|`provider`: `oidc` (default) or `local`, the one login provider of the deployment
-(xref:authentication.adoc[Authentication]); with `local` the keys `local.users-ref`, required: the users file in
-Quarkus' format (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]), and `local.cookie-key-ref`, the key of the login
-cookie (without it a restart ends every login). `local` is for evaluation and tests only, and
-every start says so
-
-|`oidc`
-|with `oidc`
-|Web login through Token Sheriff: `issuer`, `client-id`, `client-credential-ref` (client secret, or the private key
-for `private_key_jwt`), `groups-claim` (default `groups`)
+|Map of identity-provider group (or role of the users file) → list of `{repository, actions}`; actions from `read`,
+`edit`, `approve`, `administer-catalogs`. The right `administer-configuration` is not among them: it comes only from
+the service level (<<AUN-CONF-3>>)
 
 |`categories`
-|yes
+|no
 |List of the enabled categories (`samm`, `threat-models`, `incident-reports`, `isms`); their behaviour comes from
 their definitions in the `categories` module and the named extension points
-(xref:architecture-and-modules.adoc#AUN-GEN-1[AUN-GEN-1])
+(xref:architecture-and-modules.adoc#AUN-GEN-1[AUN-GEN-1]); the custom categories under `categories/` and the switch
+per document type are the change xref:../use-cases/09-categories.adoc#change-conf-1[UC-KND, AUN-CONF-1]
 
 |`step-up`
-|yes
+|no
 |`enabled` (default `true` with the login provider `oidc`, `false` with `local`; `false` lets no transition require
 step-up), `acr` (list of `acr` values that state multi-factor authentication), `amr` (list of `amr` values accepted instead,
 default `mfa`, the value for multiple-factor authentication; a single method such as `otp`, one-time password, is not
@@ -108,50 +103,38 @@ multi-factor; values as registered in link:https://www.rfc-editor.org/rfc/rfc817
 `max-age` (default `PT5M`) (xref:authentication.adoc#AUN-AUTH-4[Authentication, AUN-AUTH-4]); with `local`, `amr` defaults
 to and may only be `pwd`, `acr` is not set, and step-up is a renewed password check
 
-|`signing`
-|yes
-|`key-ref` (commit-signing key; SSH format), `allowed-signers` (path of a mounted file in Git's `allowed_signers`
-format with the public commit-signing keys and their validity periods; never read from a repository,
-https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc#GDR-STORE-14[GDR-STORE-14])
-
 |`save`
-|yes
+|no
 |`max-attempts`: the number of attempts of a save, or of a push of notes, when the lease is refused or the push is
 rejected (https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc#GDR-STORE-3[GDR-STORE-3])
 
 |`drafts`
-|yes
+|no
 |`expiry`: ISO 8601 period after which a draft not changed is deleted
 (https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc#GDR-STORE-7[GDR-STORE-7])
 
 |`fetch`
 |no
-|`interval`: ISO 8601 duration of the periodic fetch, one value for all repositories, default `PT5M`
-(<<AUN-CONF-2>>)
+|`interval`: ISO 8601 duration of the periodic fetch, one value for all repositories, the configuration repository
+included, default `PT5M` (<<AUN-CONF-2>>)
 
 |`anchor`
-|yes
+|no
 |Anchoring of releases and checkpoints
 (https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/evidence-and-companion-stores.adoc#_the_anchor[Evidence and Companion Stores, The Anchor]):
 `provider` (`signed`, the default, `rfc3161`, or `none`, which switches anchoring off), `checkpoint-interval`
-(ISO 8601 duration, default `P1D`), `signed-key-ref` (the anchor key of the own timestamp; required with the provider
-`signed`; must differ from `signing.key-ref`),
-`signed-allowed-signers` (path of a mounted file in the `allowed_signers` format with the public anchor keys and their
-validity periods; required with the provider `signed`; must hold no commit-signing key; never read from a repository,
-https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc#GDR-STORE-18[GDR-STORE-18]), `timestamp` (`url`, `trust`, `credentials-ref`;
-`url` and `trust` required with the provider `rfc3161`, the library's `timestamp.url`, `timestamp.trust` and
-`timestamp.credentials` of https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-timestamp.adoc#GDR-TSA-1[GDR-TSA-1])
+(ISO 8601 duration, default `P1D`), `timestamp.url` (required with the provider `rfc3161`). The keys, the allowed
+signers and the trust of the timestamp authority are service-level settings
 
 |`mcp`
-|yes
+|no
 |`allowed-origins`; with the login provider `oidc` also `canonical-uri` and `authorization-servers`, which are not set
 with `local` (xref:mcp-server.adoc#AUN-MCP-8[MCP Server, AUN-MCP-8])
 
 |`web`
-|yes
-|`origin` (the application's own origin, an absolute `https` URI without path: the `Origin` check of
-xref:web-app.adoc#AUN-WEB-8[AUN-WEB-8] compares with it, and the login callback is `<origin>/api/v1/auth/callback`),
-`session.idle-timeout` (default `PT30M`), `session.max-lifetime` (default `PT8H`), `information-text-ref`
+|no
+|`session.idle-timeout` (default `PT30M`), `session.max-lifetime` (default `PT8H`), `information-text` (the path of
+the information text under `texts/`)
 
 |`directory`
 |no
@@ -160,59 +143,54 @@ xref:web-app.adoc#AUN-WEB-8[AUN-WEB-8] compares with it, and the login callback 
 xref:directory.adoc#AUN-DIR-6[AUN-DIR-6])
 |===
 
+No key but `application-version` is required; a repository without any commit is the empty configuration of a new
+installation (<<AUN-CONF-4>>). A value that depends on the deployment is a service-level setting, so the file has no placeholders;
+`${` in a string value is a violation, so that a placeholder never passes as a literal value.
+
 The library settings of https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc#store-configuration[`git-store`, Configuration] come
-from these keys: `repositories`, `save.max-attempts`, `drafts.expiry`, `fetch.interval`, `signing.allowed-signers`,
-`anchor.provider`, `anchor.checkpoint-interval` and `directory.persons.provider` under the same names; the library's
-`signing.key-source` and `signing.key` from `signing.key-ref`, its `anchor.signed.key-source` and
-`anchor.signed.key` from `anchor.signed-key-ref`, its `anchor.signed.allowed-signers` from
-`anchor.signed-allowed-signers`. The `step-up` keys are those of
+from these keys: `repositories`, `save.max-attempts`, `drafts.expiry`, `fetch.interval`, `anchor.provider`,
+`anchor.checkpoint-interval` and `directory.persons.provider` under the same names; from the service level
+`signing.allowed-signers` under the same name, the library's `signing.key-source` and `signing.key` from
+`audit-notary.signing.key-ref`, its `anchor.signed.key-source` and `anchor.signed.key` from
+`audit-notary.anchor.signed-key-ref`, its `anchor.signed.allowed-signers` from
+`audit-notary.anchor.signed-allowed-signers`, and its `timestamp.url`, `timestamp.trust` and `timestamp.credentials`
+from `anchor.timestamp.url` and the service-level `audit-notary.anchor.timestamp.trust` and
+`audit-notary.anchor.timestamp.credentials-ref`
+(https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-timestamp.adoc#GDR-TSA-1[GDR-TSA-1]).
+The `step-up` keys are those of
 https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-7[`git-forms`, GDR-FORMS-7]. Where the application's default
 differs from the library's (`anchor.provider`, `fetch.interval`, `directory.confirmation-interval`), the
 application's applies; the library keys not listed here (`anchor.releases`, `anchor.retry-interval`,
 `anchor.signed.max-clock-skew`) are not configurable and keep their library defaults.
 
-Every key ending in `-ref` accepts one of three reference forms; no key accepts a secret value. The password hashes
-of local users stay in their own file (`login.local.users-ref`), never in `audit-notary.yaml`:
+[#_validation]
+=== Validation
 
-* `file:/run/secrets/...`: a mounted file.
-* `kms:<key-id>`: a key held by the KMS and used there; accepted only by the signing keys (`signing.key-ref`,
-  `anchor.signed-key-ref`).
-* `vault:<path>`: a secret of Vault's key-value engine; accepted by every key except the signing keys.
+Every rule runs on every configuration before it is applied or saved, and offline in `--validate-config`; each
+violation produces one `ERROR` record. Besides the schema, the rules refuse what the schema cannot see: two
+repositories with one alias, a repository with the alias `configuration`, a `rights` entry or
+`directory.persons.repository` naming an unknown alias, `administer-configuration` in `rights`, an
+`application-version` that is missing or no version, a `${` in a string value, an `mcp.canonical-uri` that is
+not an absolute HTTPS URI without fragment, a `web.session.idle-timeout` longer than `web.session.max-lifetime`, and a
+`web.information-text` that names no file under `texts/`. Against the service-level settings: with the login provider
+`local`, `mcp.canonical-uri`, `mcp.authorization-servers` or `step-up.acr` set, or a `step-up.amr` other than `pwd`; `anchor.provider: signed` without `audit-notary.anchor.signed-key-ref` and
+`audit-notary.anchor.signed-allowed-signers`, and `rfc3161` without `audit-notary.anchor.timestamp.trust`.
 
-Placeholders: `${NAME}` and `${NAME:-default}` in any string value, resolved from the environment before validation.
-`NAME` is an environment variable name (letters, digits and underscores, not starting with a digit). An unresolved
-placeholder without default is a boot error, and so is any other `${...}`, so it never passes as a literal value.
-
-=== Boot Validation
-
-Before the application accepts requests, every rule runs; each violation produces one `ERROR` record, and any
-violation stops the boot. Besides the schema, the rules refuse what the schema cannot see: two repositories with one
-alias, a `rights` entry or `directory.persons.repository` naming an unknown alias, a `-ref` value in a form its key
-does not accept, an `anchor.signed-key-ref` equal to `signing.key-ref`, an `mcp.canonical-uri` that is not an
-absolute HTTPS URI without fragment, and a `web.origin` that is no HTTPS origin or a `web.session.idle-timeout` longer
-than `web.session.max-lifetime`. By login provider: `oidc` without `oidc`, or with a user of
-Quarkus' embedded realm from any source; `local` without `login.local.users-ref`, with `oidc`, `mcp.canonical-uri`,
-`mcp.authorization-servers` or `step-up.acr` set, or with a `step-up.amr` other than `pwd`; a users file that cannot
-be read or holds a key outside the embedded realm's runtime keys (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]).
-With `local`, the boot and `--validate-config` also log the warning of AUN-AUTH-6; it is no violation. `--validate-config <dir>` runs the same rules offline.
-
-The bootstrap enforces the rules of the keys it reads: `repositories`, `rights`, `oidc`, `web` and `fetch`, the
-placeholders, and `web.origin` and the session lifetimes. Until the Vault adapter is built, `file:` is the only
-reference form it accepts for the references it reads, `repositories[].credential-ref` and
-`oidc.client-credential-ref`; `vault:` and `kms:` are refused there at boot. Other `-ref` keys, such as
-`web.information-text-ref`, are not read yet and not checked. The JSON Schema and the rules of `signing`,
-`anchor`, `mcp` and `directory`, with the per-key reference forms, apply once their modules are built; until then a
-value under those keys is not checked. The bootstrap has no local login and does not read `login`
-yet: it logs in through `oidc` only, until AUN-AUTH-6 is built; `step-up.enabled` applies once step-up is built.
+The service-level settings are checked at the start (<<AUN-CONF-3>>); a violation there stops the boot. A violation
+in the configuration repository never stops the boot (<<AUN-CONF-4>>).
 
 [#AUN-CONF-2]
 == AUN-CONF-2: Repositories and Refresh
 
-* Every repository must have a remote; a single-server setup uses a local bare repository as its remote.
+* Every repository must have a remote on the Git server of the configuration repository; a single-server setup uses
+  local bare repositories as remotes.
 * Every repository must declare its confidentiality class and its retention period, and nothing else may declare a
   retention period.
-* The application must refresh every repository by a periodic fetch, at one interval for all repositories
-  (`fetch.interval`, default `PT5M`), and after its own saves.
+* The application must refresh every repository, the configuration repository included, by a periodic fetch, at one
+  interval for all repositories (`fetch.interval`, default `PT5M`), and after its own saves.
+* A repository added to `repositories` must be cloned and served once the configuration is applied, without a
+  restart; a repository removed from it is no longer served, and its local copy stays until the operator deletes it
+  (xref:../use-cases/10-operations.adoc#UC-OPS-4[UC-OPS-4]).
 
 [cols="1,1,3"]
 |===
@@ -220,12 +198,12 @@ yet: it logs in through `oidc` only, until AUN-AUTH-6 is built; `step-up.enabled
 
 |`alias`
 |yes
-|Stable alias used in references (`isms-register`); `isms-incidents-<year>` names one repository per year
+|Stable alias used in references (`isms-register`); `isms-incidents-<year>` names one repository per year;
+`configuration` is reserved
 
 |`remote`
 |yes
 |URL of the remote: HTTPS, or `file:` for a local bare repository
-
 |`confidentiality`
 |yes
 |`public-internal`, `restricted`, `strongly-restricted`
@@ -234,8 +212,199 @@ yet: it logs in through `oidc` only, until AUN-AUTH-6 is built; `step-up.enabled
 |yes
 |`unlimited` or an ISO 8601 period, counted from the repository's creation (for `isms-incidents-<year>` from the end
 of that year)
-
-|`credential-ref`
-|for HTTPS
-|Reference to the credential of the technical user, the only Git credential
 |===
+
+Every repository is reached with the one Git credential of the technical user, `audit-notary.git.credential-ref`
+(<<AUN-CONF-3>>); no repository names a credential of its own.
+
+[#AUN-CONF-3]
+== AUN-CONF-3: Service-Level Settings
+
+* The service level must consist of the login, the application's origin, the configuration repository with the Git
+  credential, and the secrets and trust anchors, and nothing else.
+* Each setting must be a configuration property under `audit-notary.`, set as an environment variable or as a system
+  property of the container; it must never be read from the configuration repository.
+* Secret values must not be representable: a key ending in `-ref` accepts only a reference to a secret.
+* A missing or invalid service-level setting must stop the boot with one record per violation.
+
+A property is found by Quarkus as a system property (`-D`, also on the command line of the native executable) or as
+the environment variable whose name replaces every character that is neither alphanumeric nor `_` with `_` and is upper
+case: `audit-notary.web.origin` is `AUDIT_NOTARY_WEB_ORIGIN`
+(https://quarkus.io/guides/config-reference#system-properties[Quarkus, Configuration Reference, System properties],
+https://quarkus.io/guides/config-reference#environment-variables[Environment variables];
+https://download.eclipse.org/microprofile/microprofile-config-3.1/microprofile-config-spec-3.1.html#default_configsources.env.mapping[MicroProfile
+Config 3.1, 5.3.1]). Both have a higher ordinal than `application.properties`
+(https://quarkus.io/guides/config-reference#configuration-sources[Config Sources]).
+
+[cols="2,1,3"]
+|===
+|Property (environment variable) |Required |Content
+
+3+|*Login*
+
+|`audit-notary.login.provider` (`AUDIT_NOTARY_LOGIN_PROVIDER`)
+|no
+|`oidc` (default) or `local`, the one login provider of the deployment (xref:authentication.adoc[Authentication]);
+`local` is for evaluation and tests only, and every start says so
+
+|`audit-notary.oidc.issuer`, `audit-notary.oidc.client-id`, `audit-notary.oidc.client-credential-ref`
+(`AUDIT_NOTARY_OIDC_ISSUER`, ...)
+|with `oidc`
+|Web login through Token Sheriff; the credential is the client secret, or the private key for `private_key_jwt`
+
+|`audit-notary.oidc.groups-claim`
+|no
+|Claim holding the groups, default `groups`
+
+|`audit-notary.oidc.jwks-url`
+|no
+|The address of the provider's keys, set only when the application reaches the provider under another origin than
+its issuer (split horizon, as in the compose stack); otherwise the keys are found through the issuer's well-known
+document
+
+|`audit-notary.login.local.users-ref`, `audit-notary.login.local.cookie-key-ref`
+|`users-ref` with `local`
+|The users file in Quarkus' format (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]) and the key of the login cookie
+(without it a restart ends every login)
+
+|`audit-notary.configuration.administrators` (`AUDIT_NOTARY_CONFIGURATION_ADMINISTRATORS`)
+|yes
+|Comma-separated groups of the identity provider, or roles of the users file, whose members hold the right
+`administer-configuration` (<<AUN-CONF-5>>)
+
+3+|*The application's address*
+
+|`audit-notary.web.origin` (`AUDIT_NOTARY_WEB_ORIGIN`)
+|yes
+|The application's own origin, an absolute `https` URI without path: the `Origin` check of
+xref:web-app.adoc#AUN-WEB-8[AUN-WEB-8] compares with it, and the login callback is `<origin>/api/v1/auth/callback`
+
+3+|*The configuration repository*
+
+|`audit-notary.configuration.remote` (`AUDIT_NOTARY_CONFIGURATION_REMOTE`)
+|yes
+|URL of the configuration repository's remote: HTTPS, or `file:` for a local bare repository
+
+|`audit-notary.git.credential-ref` (`AUDIT_NOTARY_GIT_CREDENTIAL_REF`)
+|for HTTPS
+|The credential of the technical user, the only Git credential, for every repository
+
+3+|*Secrets and trust anchors*
+
+|`audit-notary.signing.key-ref`, `audit-notary.signing.allowed-signers`
+|yes
+|The commit-signing key (SSH format), and the path of a mounted file in Git's `allowed_signers` format with the
+public commit-signing keys and their validity periods; never read from a repository
+(https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc#GDR-STORE-14[GDR-STORE-14])
+
+|`audit-notary.anchor.signed-key-ref`, `audit-notary.anchor.signed-allowed-signers`
+|with the anchor provider `signed`
+|The anchor key of the own timestamp, which must differ from the commit-signing key, and the path of a mounted file in
+the `allowed_signers` format with the public anchor keys, holding no commit-signing key; never read from a repository
+(https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-store.adoc#GDR-STORE-18[GDR-STORE-18])
+
+|`audit-notary.anchor.timestamp.trust`, `audit-notary.anchor.timestamp.credentials-ref`
+|`trust` with the anchor provider `rfc3161`
+|The trust of the timestamp authority and its credentials
+(https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-timestamp.adoc#GDR-TSA-1[GDR-TSA-1])
+|===
+
+The TLS certificate and key are the `quarkus.http.ssl.certificate.*` paths of `application.properties`.
+
+Token Sheriff reads its own keys (`sheriff.client.*`, `sheriff.token.issuers.*`); the application derives them from
+`audit-notary.oidc.*` and `audit-notary.web.origin` with an ordinal above `application.properties` and below the
+environment. Settings of the deployment's network stay in the environment, among them
+`SHERIFF_CLIENT_BACK_CHANNEL_ORIGIN` (the origin the client dials instead of the issuer's),
+`SHERIFF_CLIENT_ALLOWED_EGRESS_HOSTS` and `SHERIFF_TOKEN_ISSUERS_AUDITNOTARY_JWKS_HTTP_ALLOWED_EGRESS_HOSTS` (hosts on
+private addresses that the egress guard admits).
+
+Every key ending in `-ref` accepts one of three reference forms:
+
+* `file:/run/secrets/...`: a mounted file.
+* `kms:<key-id>`: a key held by the KMS and used there; accepted only by the signing keys
+  (`audit-notary.signing.key-ref`, `audit-notary.anchor.signed-key-ref`).
+* `vault:<path>`: a secret of Vault's key-value engine; accepted by every key except the signing keys.
+
+The boot refuses besides: a `-ref` value in a form its key does not accept, an `audit-notary.anchor.signed-key-ref`
+equal to `audit-notary.signing.key-ref`, a `web.origin` that is no HTTPS origin, an empty
+`audit-notary.configuration.administrators`; with `oidc`, a user of Quarkus' embedded realm from any source; with
+`local`, the `oidc` keys set, a users file that cannot be read or holds a key outside the embedded realm's runtime keys
+(xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]). With `local`, the boot and `--validate-config` also log the warning
+of AUN-AUTH-6; it is no violation.
+
+[#AUN-CONF-4]
+== AUN-CONF-4: Applying the Configuration
+
+* After every fetch of the configuration repository, the application must verify the signature of every new commit of
+  `main` against `audit-notary.signing.allowed-signers` and validate the configuration of the newest one.
+* A signed and valid configuration must be applied at once and as a whole; no request sees a mix of two
+  configurations.
+* An unsigned or invalid configuration must not be applied: the last applied one stays in force, and each violation
+  is one `ERROR` record naming the commit.
+* A configuration whose `application-version` is newer than the running application's must not be applied, even
+  when it is valid: the application applies the newest commit of `main` that was written by its own or an earlier
+  version, is signed and is valid, and logs one `WARN` record naming the skipped version and the applied commit.
+* Every version of the application must apply a configuration written by an earlier version.
+* At the start the application must apply the newest commit of `main` that is signed, valid and not written by a
+  newer version, and log a record when that is not the head. An empty repository, or one whose commits are all
+  unsigned, invalid or written by a newer version, is the empty configuration; in the second case one `ERROR` record
+  names the head and why no commit was applied, and a configuration administrator repairs it with a save in the
+  editor (<<AUN-CONF-5>>).
+* The application must report, on the management port, the commit of the applied configuration and whether it is the
+  head of `main`, without changing readiness or liveness.
+
+The version rule is what makes a rollback of the application safe: the older version goes back to the last
+configuration written by a version it knows, instead of applying a configuration whose keys it may read differently,
+and returns to the newer configuration by itself once the newer version runs again. Versions are compared by their
+numbers (major, minor, patch); a `-SNAPSHOT` version sorts before its release.
+
+Applying a configuration changes, from the next request or operation on: the served repositories (<<AUN-CONF-2>>);
+the rights, which are mapped again from the groups of every open session, and against which every event of an open
+event stream is checked before it is delivered, so that a user who lost read access to a repository receives none of
+its events (xref:../use-cases/01-access.adoc#change-events[UC-ACC, AUN-WEB-5]); the enabled categories
+(xref:../use-cases/09-categories.adoc#UC-KND-5[UC-KND-5]); the session lifetimes of open sessions; the periodic fetch
+from its next run; and every library setting. A configuration is never applied in part.
+
+With the empty configuration the application serves no documents and grants no right but
+`administer-configuration`; the configuration administrators write the first configuration
+(xref:../use-cases/10-operations.adoc#UC-OPS-6[UC-OPS-6]). While the Git server cannot be reached, the last applied
+configuration stays; a first start without a local copy of the configuration repository is not ready until it has
+one (xref:deployment.adoc#AUN-OPS-2[AUN-OPS-2]).
+
+[#AUN-CONF-5]
+== AUN-CONF-5: Changing the Configuration
+
+* The application must be the only writer of the configuration repository, apart from the interim below; the MCP
+  server must have no tool that reads or changes it.
+* A change takes effect with the administrator's own save; it needs no second approval.
+* Every save must set `application-version` to the running application's version.
+* A change must be validated as the whole resulting configuration (<<_validation>>) and saved only when it is valid,
+  as a commit signed with the commit-signing key and carrying the author's pseudonym in its trailers
+  (xref:authentication.adoc#AUN-AUTH-3[AUN-AUTH-3]), and must require step-up when step-up is enabled
+  (xref:authentication.adoc#AUN-AUTH-4[AUN-AUTH-4]).
+* The right `administer-configuration` must permit every change and be held only by the members of
+  `audit-notary.configuration.administrators`. Changes under `categories/` are also permitted to the action
+  `administer-categories`, which AUN-AUTH-2 gains with the categories use cases
+  (xref:../use-cases/09-categories.adoc#change-auth-2[UC-KND, AUN-AUTH-2]); it permits nothing outside
+  `categories/`.
+* A save that is overtaken by another change of the repository must be refused, not merged, and offered again on the
+  new state.
+* When the head of `main` was written by a newer version, the editor must show it, and a save must say before it is
+  made that it starts from the applied configuration and leaves out the changes of the newer version, which stay in
+  the history.
+
+The editor is part of the web app (xref:../use-cases/10-operations.adoc#UC-OPS-6[UC-OPS-6]). Until it is built, the
+configuration, the custom categories included, is written by hand: the operator adds a key of their own, with a
+validity period, to `audit-notary.signing.allowed-signers` and pushes commits signed with it, each setting
+`application-version` to the version of the application that will apply it; the key is removed from the allowed
+signers once the editor is built. This is the only exception to the application as the only writer.
+
+[#_bootstrap_state]
+== State of the Bootstrap
+
+The bootstrap does not yet follow this page: it reads `audit-notary.yaml` from the mounted directory
+`audit-notary.config.dir` at the start, resolves `${NAME:-default}` placeholders from the environment, reads `oidc`,
+`web.origin` and `credential-ref` per repository from that file, and validates `repositories`, `rights`, `oidc`, `web`
+and `fetch`; until the Vault adapter is built, `file:` is the only reference form it accepts. It has no local login, no
+configuration repository, no run-time application of a changed configuration and no editor. The JSON Schema and the
+rules of `anchor`, `mcp` and `directory`, and the signing keys, apply once their modules are built.
