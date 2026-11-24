@@ -132,7 +132,9 @@ Requests:
 * Release: `POST /api/v1/releases/{repository}/{id}`; the outcomes are those of the release in
   xref:architecture-and-modules.adoc#operation-outcomes[Architecture and Modules, Operation Outcomes];
   `STEP_UP_REQUIRED` carries the step-up address (xref:authentication.adoc#AUN-AUTH-4[Authentication, AUN-AUTH-4]).
-  When the release requires step-up, the button reads "Release (confirm with MFA)".
+  When the release requires step-up, the button reads "Release (confirm with MFA)", with local users "Release (confirm
+  with password)": the password is asked in a dialog and sent as `{"password"}` with the release request
+  (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]).
 
 [#AUN-WEB-7]
 == AUN-WEB-7: Texts
@@ -154,7 +156,10 @@ files.
 == AUN-WEB-8: Page Security
 
 * The app must be served with a Content Security Policy that allows no `unsafe-inline` script.
-* Every state-changing request must carry the anti-CSRF header; the server must refuse one without it.
+* Every state-changing request must carry the anti-CSRF header; the server must refuse one without it. The one
+  exception is the login of local users, `POST /j_security_check`, which has no session to take a token from: it must
+  be refused unless its `Origin` header is present and is the application's own origin, checked before Quarkus handles
+  the request (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]).
 * A state-changing request whose `Origin` header is present and is not the application's own origin must be refused.
 * Generated AsciiDoc output must be rendered and sanitised by the server.
 
@@ -173,7 +178,7 @@ connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'`
 |`no-referrer`
 |===
 
-Anti-CSRF: every non-`GET` request carries `X-CSRF-Token` with the value from `GET /api/v1/session`; the server
+Anti-CSRF: every non-`GET` request except the local login carries `X-CSRF-Token` with the value from `GET /api/v1/session`; the server
 compares it with the session's token and answers a mismatch with `403`. Origin: a non-`GET` request with an `Origin`
 header that differs from the application's own origin is answered with `403`; a request without `Origin` is decided
 by the anti-CSRF header alone.
@@ -193,8 +198,10 @@ AsciiDoc: rendered by the server in safe mode; the HTML is sanitised against an 
 
 |`GET /api/v1/status`
 |no
-|`{"version", "degraded", "repositories": [{"alias", "fetch"}]}`; `degraded` is `true` while a fetch of a repository
-fails (xref:architecture-and-modules.adoc#AUN-GEN-6[AUN-GEN-6]), `fetch` is `UP` or `DOWN`. Carries no personal data.
+|`{"version", "degraded", "loginProvider", "repositories": [{"alias", "fetch"}]}`; `degraded` is `true` while a fetch
+of a repository fails (xref:architecture-and-modules.adoc#AUN-GEN-6[AUN-GEN-6]), `fetch` is `UP` or `DOWN`;
+`loginProvider` is `oidc` or `local`, and with `local` the shell shows the notice of
+xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6] on every page. Carries no personal data.
 
 |`GET /api/v1/messages?lang=en\|de`
 |no
@@ -225,7 +232,13 @@ Refusals:
 
 |`401`
 |`UNAUTHENTICATED`
-|No session; the body carries `login`, the login address (xref:authentication.adoc#AUN-AUTH-1[AUN-AUTH-1])
+|No session; the body carries `login`, the login address (xref:authentication.adoc#AUN-AUTH-1[AUN-AUTH-1]); with local
+users the web app's login page (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6])
+
+|`401`
+|`INVALID_CREDENTIALS`
+|Local users: a release with a wrong step-up password; nothing is written
+(xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]). A failed login is Quarkus' plain `401` of `/j_security_check`
 
 |`403`
 |`CSRF_REJECTED`

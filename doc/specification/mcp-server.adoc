@@ -14,7 +14,9 @@ link:https://modelcontextprotocol.io/specification/2026-07-28/basic/authorizatio
 link:https://modelcontextprotocol.io/specification/2026-07-28/basic/transports[Transports] (Streamable HTTP);
 link:https://www.rfc-editor.org/rfc/rfc9728[RFC 9728], link:https://www.rfc-editor.org/rfc/rfc8707[RFC 8707],
 link:https://www.rfc-editor.org/rfc/rfc6750[RFC 6750]. Authorization is optional in MCP; Audit Notary uses
-authorization and follows the MCP authorization specification for HTTP transports.
+authorization and, with the login provider `oidc`, follows the MCP authorization specification for HTTP transports
+(<<AUN-MCP-2>> to <<AUN-MCP-4>>). With the login provider `local` there is no authorization server; the server takes
+HTTP Basic instead (<<AUN-MCP-8>>).
 
 [#AUN-MCP-1]
 == AUN-MCP-1: Transport
@@ -42,6 +44,8 @@ and never minted or echoed, a `Last-Event-ID` header is ignored)
 
 [#AUN-MCP-2]
 == AUN-MCP-2: Protected Resource Metadata
+
+With the login provider `oidc`:
 
 * The server must serve RFC 9728 metadata at `/.well-known/oauth-protected-resource/mcp` (the URL RFC 9728 derives
   from the resource identifier `<origin>/mcp`), and the same document at `/.well-known/oauth-protected-resource`, with
@@ -76,6 +80,8 @@ WWW-Authenticate: Bearer resource_metadata="https://audit-notary.example.org/.we
 [#AUN-MCP-3]
 == AUN-MCP-3: Token Validation
 
+With the login provider `oidc`:
+
 * Every request must be authenticated by a bearer token in the `Authorization` header; a token in the query string
   must be refused.
 * The server must validate signature, expiry, issuer and audience; the token's `aud` must contain the server's
@@ -106,6 +112,8 @@ Engine: `token-sheriff-validation-quarkus`, one issuer configuration per entry o
 
 [#AUN-MCP-4]
 == AUN-MCP-4: Scopes and Rights
+
+With the login provider `oidc`:
 
 * Each tool must require one scope of `audit-notary:read`, `audit-notary:write`, `audit-notary:request-release`.
 * A call lacking the scope must be answered with `403`, `error="insufficient_scope"`, the required `scope` and
@@ -220,4 +228,63 @@ refused.
   session ids and document content must not be logged.
 
 One `INFO` record per tool call: `AUDIT-NOTARY-<n>: MCP tool {tool} by {pseudonym} via {client} on {repository}:
-{outcome}`, where `{client}` is the token's `client_id`, else `azp`, else `-`.
+{outcome}`, where `{client}` is the token's `client_id`, else `azp`, else `-`; with Basic (<<AUN-MCP-8>>) it is
+`basic`.
+
+[#AUN-MCP-8]
+== AUN-MCP-8: Basic Authentication with Local Users
+
+WARNING: Local users, and with them Basic at the MCP server, are for evaluation, development, tests and
+demonstrations, not for production (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]).
+
+With the login provider `local`
+(xref:../adr/0005-Local_users_from_a_mounted_file_are_for_evaluation_and_testing_only.adoc[ADR-0005]):
+
+* Every request must be authenticated by `Authorization: Basic` with the username and password of a user of the
+  users file (link:https://www.rfc-editor.org/rfc/rfc7617[RFC 7617]; Quarkus decodes them as UTF-8); a bearer
+  token and any credential in the query string must be refused.
+* A request without a valid credential must be answered with `401` and `WWW-Authenticate: Basic realm="audit-notary"`,
+  as every `401` must carry a challenge
+  (link:https://www.rfc-editor.org/rfc/rfc9110#section-15.5.2[RFC 9110, §15.5.2]); the protected resource metadata of
+  <<AUN-MCP-2>> must not be served. Quarkus runs Basic in silent mode beside form authentication and then challenges
+  only a request that sent credentials (`AuthConfig` and `BasicAuthenticationMechanism` in the Quarkus 3.40.1
+  source), so the application adds the challenge to a `401` of `/mcp` that has none. A test covers both a missing and a wrong
+  credential.
+* As at the web login, the answer must not tell an unknown user from a wrong password
+  (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]).
+* There are no scopes: the effective permission is the user's rights (xref:authentication.adoc#AUN-AUTH-2[AUN-AUTH-2]),
+  and <<AUN-MCP-6>> applies unchanged.
+
+[cols="1,3"]
+|===
+|Item |Value
+
+|Engine
+|Quarkus' built-in Basic mechanism of `quarkus-vertx-http`, restricted to `/mcp` by
+`quarkus.http.auth.permission."permissions".auth-mechanism` (`basic`), over Quarkus' embedded realm
+(link:https://quarkus.io/guides/security-basic-authentication[Quarkus, Basic authentication]); every other
+protected path takes form authentication only (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6])
+
+|Transport
+|HTTPS: Basic "SHOULD NOT be used" without it, because it transmits the password in clear text
+(link:https://www.rfc-editor.org/rfc/rfc7617#section-4[RFC 7617, §4]). The application redirects plain HTTP in its
+production profile (`quarkus.http.insecure-requests=redirect`, xref:configuration.adoc#AUN-CONF-1[AUN-CONF-1]; the
+`%dev` and `%test` profiles of `application.properties` accept plain HTTP), which comes too late for a header already
+sent; the protection is the client's: the local MCP gateway sends Basic only to an `https:` address
+
+|Identity
+|`iss`, `sub`, `amr` and the groups as in AUN-AUTH-6; `auth_time` the time of the request
+
+|Step-up
+|A transition that requires step-up returns `STEP_UP_REQUIRED` as with `oidc` (xref:authentication.adoc#AUN-AUTH-4[AUN-AUTH-4])
+
+|Client
+|The local MCP gateway keeps the credential and puts it on each request; the agent never sees it
+(xref:../concepts/local-mcp-gateway.adoc#_basic_connections[Local MCP Gateway, Basic Connections])
+|===
+
+This deviates from the MCP authorization specification, which makes authorization "OPTIONAL" and says that
+implementations using an HTTP-based transport "SHOULD" conform to it
+(link:https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization[MCP 2026-07-28, Authorization,
+Protocol Requirements]). An MCP client that discovers its authorization through <<AUN-MCP-2>> finds none here and needs
+the header configured, or the gateway.

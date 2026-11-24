@@ -9,11 +9,10 @@ xref:../README.adoc[Audit Notary documentation] » Concepts
 
 Users of an ISMS or of an incident report need no account on the Git server, and the application does not require
 one: a Git account per person only to fill in a form would be one more account to manage for each of them.
-Audit Notary therefore authenticates people against the organisation's identity provider, pushes with a technical
-user, and
-writes the identity of the person into every commit in a form the application signs. This page is the application
-side of that design: the login, the claims used, the first login, the rights, the Git credential and the step-up of
-a release.
+Audit Notary therefore authenticates people against the organisation's identity provider, or, where there is none,
+against a file of local users, pushes with a technical user, and writes the identity of the person into every commit
+in a form the application signs. This page is the application side of that design: the login, the claims used, the
+local users, the first login, the rights, the Git credential and the step-up of a release.
 
 The library side (the trailer schema, the commit signature, step-up, the signature check) is described in
 https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/identity-and-signing.adoc[Identity and Signing] and is not restated here.
@@ -67,6 +66,88 @@ release (step-up).
 (xref:mcp-server.adoc#_attribution_of_agent_actions[MCP Server, Attribution]).
 |===
 
+[#_local_users]
+== Local Users
+
+WARNING: Local users are for evaluation, development, tests and demonstrations. For production, use the
+organisation's identity provider: only it gives MFA, protection against guessing, and the withdrawal of access in one
+place.
+
+To try Audit Notary out without an identity provider, its users can be configured in files, as a servlet container
+does with Tomcat's `tomcat-users.xml`
+(xref:../adr/0005-Local_users_from_a_mounted_file_are_for_evaluation_and_testing_only.adoc[ADR-0005]). Audit Notary
+follows Quarkus' lead here instead of building its own: Quarkus has a realm of users in properties files and calls it
+"intended for development and testing purposes"
+(https://quarkus.io/guides/security-properties[Quarkus, Using security with .properties file]), which is exactly this
+purpose.
+
+A deployment chooses one login provider in `audit-notary.yaml`, `oidc` or `local`, never both; the build is the same
+for both. The users file holds Quarkus' own keys of its embedded realm:
+
+[source,yaml]
+----
+login:
+  provider: local
+  local:
+    users-ref: file:/run/secrets/audit-notary/local-users.properties
+----
+
+[source,properties]
+----
+# password: HEX( SHA-512( username ":Quarkus:" password ) ), Quarkus' default
+quarkus.security.users.embedded.users.alice=<128 hex digits>
+quarkus.security.users.embedded.roles.alice=isms-editors,isms-approvers
+----
+
+The operator mounts the file and restarts the application; the application hands its entries to Quarkus through the
+same config source that already derives Token Sheriff's settings from `audit-notary.yaml`
+(xref:../specification/authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]). The application says what it runs on: a `WARN`
+record at every start, and a notice on the login page and in the shell of the web app. It does not try to make the
+file secure: an unsalted digest, no throttling, no lockout, no password rules, no second factor.
+
+What stays as in production, and what does not:
+
+* *Identity.* The application is the issuer (`web.origin`), the username is the `sub`, `amr` is `pwd`. The person
+  directory and the signed trailers work unchanged, and every commit shows that a local user made it.
+* *Rights.* The roles of the users file map to rights through the same `rights` mapping.
+* *Login.* Quarkus' form authentication, whose encrypted cookie holds the user; there is no server-side session, so
+  local users run beside Token Sheriff's planned session layer, not on it. A logout removes the cookie in the browser,
+  but the server cannot withdraw a copy before its idle timeout. Tests of the session itself need an identity provider.
+* *Step-up.* Off by default; switched on, a release asks for the password again and sends it with the release
+  (<<_step_up>>).
+* *Agents.* The MCP server takes Quarkus' Basic authentication, on `/mcp` only (every other path takes the form
+  login only), and the local MCP gateway keeps username and password as it keeps a refresh token (xref:mcp-server.adoc[MCP Server],
+  xref:local-mcp-gateway.adoc#_basic_connections[Local MCP Gateway, Basic Connections]).
+
+=== What Quarkus Provides
+
+The full comparison, checked against Quarkus 3.40.1, is in ADR-0005.
+
+[cols="2,3"]
+|===
+|Quarkus |Use
+
+|Properties-file realm (`quarkus-elytron-security-properties-file`), embedded variant
+|Used: users and roles are runtime configuration, fed from the users file; passwords as Quarkus' default SHA-512
+digest. Switched on in every build, empty with `oidc`
+
+|Properties-file realm, file variant
+|Not used: its file paths are fixed at build time and the boot stops without the files
+
+|Form authentication (`quarkus.http.auth.form.*`)
+|Used for the web login, with its redirects switched off so that the single-page app gets `200` and `401`
+(https://quarkus.io/guides/security-authentication-mechanisms#form-auth[Quarkus, Form-based authentication])
+
+|Basic mechanism
+|Used for the MCP server, restricted to `/mcp` (xref:../specification/mcp-server.adoc#AUN-MCP-8[AUN-MCP-8])
+
+|`quarkus-security-jpa`
+|Not used: users as database entities, and Audit Notary has no database
+|===
+
+What the application adds is small: the config source for the users file, the warnings, the notice, the password
+check of a step-up, and the logout endpoint.
+
 == First Login
 
 The person directory is a library interface (https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/directory-and-catalogs.adoc[Directory and
@@ -108,6 +189,14 @@ the Git server is an operating duty (xref:deployment.adoc#_operating_duties[Depl
 
 [#_step_up]
 == Step-Up
+
+Step-up is a setting (`step-up.enabled`): not every organisation wants a confirmation per release. It is on by default
+with the identity provider and off by default with local users. When it is off, no transition requires step-up and the
+trailers record the authentication of the session. With local users it is a renewed password check of the same user,
+recorded as `amr=pwd` with a fresh `auth_time`, not a second factor
+(xref:../specification/authentication.adoc#AUN-AUTH-4[AUN-AUTH-4],
+xref:../specification/authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]). The rest of this section is the identity provider's
+case.
 
 Every commit is signed by the application with the identity trailers. Where more is needed, the workflow of the
 category decides per transition. The shipped categories keep the library default: *every release requires step-up,
@@ -269,6 +358,13 @@ Open:
   answers (xref:../specification/web-app.adoc#AUN-WEB-9[AUN-WEB-9]).
 . Whether groups arrive by token claim or by SCIM.
 . Deferred: the `Session` trailer, an HMAC of the session id `sid` that would correlate a commit with the login logs.
+. The step-up switch: `step-up.enabled: false` needs a library setting that turns the step-up check of GDR-FORMS-7 off for
+  every transition; today the library decides per transition from the workflow. Requested in the library's
+  orchestrator inbox (`libraries-initial-implementation`, `audit-notary-001`), together with allowing `pwd` in
+  `step-up.amr`.
+. Local users on Token Sheriff's session layer: possible only if the layer offers a public way to create a session from
+  a non-OIDC identity without tokens; its planned record (SESSION-1) and entry point (BFF-1) are OIDC-only. Until then
+  local users run on Quarkus' form authentication.
 
 == Related
 
@@ -279,3 +375,5 @@ Open:
   `TokenSheriff/doc/validation` (audience, scopes, the logout token VALIDATION-13.4 and VALIDATION-13.5); the epic
   `client-framework-aspects` (<<_token_sheriffs_session_layer>>)
 * xref:../adr/0004-Login_and_session_are_designed_against_Token_Sheriffs_planned_session_layer.adoc[ADR-0004]
+* xref:../adr/0005-Local_users_from_a_mounted_file_are_for_evaluation_and_testing_only.adoc[ADR-0005] --
+  local users

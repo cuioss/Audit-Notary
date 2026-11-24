@@ -80,8 +80,16 @@ Validated against `schema/audit-notary.schema.json` (bundled). Top-level keys:
 |Map of identity-provider group → list of `{repository, actions}`; actions from `read`, `edit`, `approve`,
 `administer-catalogs`
 
+|`login`
+|no
+|`provider`: `oidc` (default) or `local`, the one login provider of the deployment
+(xref:authentication.adoc[Authentication]); with `local` the keys `local.users-ref`, required: the users file in
+Quarkus' format (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]), and `local.cookie-key-ref`, the key of the login
+cookie (without it a restart ends every login). `local` is for evaluation and tests only, and
+every start says so
+
 |`oidc`
-|yes
+|with `oidc`
 |Web login through Token Sheriff: `issuer`, `client-id`, `client-credential-ref` (client secret, or the private key
 for `private_key_jwt`), `groups-claim` (default `groups`)
 
@@ -93,10 +101,12 @@ their definitions in the `categories` module and the named extension points
 
 |`step-up`
 |yes
-|`acr` (list of `acr` values that state multi-factor authentication), `amr` (list of `amr` values accepted instead,
+|`enabled` (default `true` with the login provider `oidc`, `false` with `local`; `false` lets no transition require
+step-up), `acr` (list of `acr` values that state multi-factor authentication), `amr` (list of `amr` values accepted instead,
 default `mfa`, the value for multiple-factor authentication; a single method such as `otp`, one-time password, is not
 multi-factor; values as registered in link:https://www.rfc-editor.org/rfc/rfc8176#section-2[RFC 8176, §2]),
-`max-age` (default `PT5M`) (xref:authentication.adoc#AUN-AUTH-4[Authentication, AUN-AUTH-4])
+`max-age` (default `PT5M`) (xref:authentication.adoc#AUN-AUTH-4[Authentication, AUN-AUTH-4]); with `local`, `amr` defaults
+to and may only be `pwd`, `acr` is not set, and step-up is a renewed password check
 
 |`signing`
 |yes
@@ -134,7 +144,8 @@ https://github.com/cuioss/git-document-repository/blob/main/doc/specification/gi
 
 |`mcp`
 |yes
-|`canonical-uri`, `authorization-servers`, `allowed-origins`
+|`allowed-origins`; with the login provider `oidc` also `canonical-uri` and `authorization-servers`, which are not set
+with `local` (xref:mcp-server.adoc#AUN-MCP-8[MCP Server, AUN-MCP-8])
 
 |`web`
 |yes
@@ -160,7 +171,8 @@ differs from the library's (`anchor.provider`, `fetch.interval`, `directory.conf
 application's applies; the library keys not listed here (`anchor.releases`, `anchor.retry-interval`,
 `anchor.signed.max-clock-skew`) are not configurable and keep their library defaults.
 
-Every key ending in `-ref` accepts one of three reference forms; no key accepts a secret value:
+Every key ending in `-ref` accepts one of three reference forms; no key accepts a secret value. The password hashes
+of local users stay in their own file (`login.local.users-ref`), never in `audit-notary.yaml`:
 
 * `file:/run/secrets/...`: a mounted file.
 * `kms:<key-id>`: a key held by the KMS and used there; accepted only by the signing keys (`signing.key-ref`,
@@ -178,7 +190,11 @@ violation stops the boot. Besides the schema, the rules refuse what the schema c
 alias, a `rights` entry or `directory.persons.repository` naming an unknown alias, a `-ref` value in a form its key
 does not accept, an `anchor.signed-key-ref` equal to `signing.key-ref`, an `mcp.canonical-uri` that is not an
 absolute HTTPS URI without fragment, and a `web.origin` that is no HTTPS origin or a `web.session.idle-timeout` longer
-than `web.session.max-lifetime`. `--validate-config <dir>` runs the same rules offline.
+than `web.session.max-lifetime`. By login provider: `oidc` without `oidc`, or with a user of
+Quarkus' embedded realm from any source; `local` without `login.local.users-ref`, with `oidc`, `mcp.canonical-uri`,
+`mcp.authorization-servers` or `step-up.acr` set, or with a `step-up.amr` other than `pwd`; a users file that cannot
+be read or holds a key outside the embedded realm's runtime keys (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]).
+With `local`, the boot and `--validate-config` also log the warning of AUN-AUTH-6; it is no violation. `--validate-config <dir>` runs the same rules offline.
 
 The bootstrap enforces the rules of the keys it reads: `repositories`, `rights`, `oidc`, `web` and `fetch`, the
 placeholders, and `web.origin` and the session lifetimes. Until the Vault adapter is built, `file:` is the only
@@ -186,7 +202,8 @@ reference form it accepts for the references it reads, `repositories[].credentia
 `oidc.client-credential-ref`; `vault:` and `kms:` are refused there at boot. Other `-ref` keys, such as
 `web.information-text-ref`, are not read yet and not checked. The JSON Schema and the rules of `signing`,
 `anchor`, `mcp` and `directory`, with the per-key reference forms, apply once their modules are built; until then a
-value under those keys is not checked.
+value under those keys is not checked. The bootstrap has no local login and does not read `login`
+yet: it logs in through `oidc` only, until AUN-AUTH-6 is built; `step-up.enabled` applies once step-up is built.
 
 [#AUN-CONF-2]
 == AUN-CONF-2: Repositories and Refresh
