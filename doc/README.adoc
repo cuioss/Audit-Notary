@@ -31,8 +31,10 @@ In reading order:
 . xref:concepts/audit-notary-overview.adoc[Overview] -- question, categories, audience, interfaces, positioning
 . xref:concepts/category-samm.adoc[OWASP SAMM Assessments] -- layout, workshop editing, release, scores, targets
 . xref:concepts/category-threat-models.adoc[Threat Models] -- tool landscape, place of a model, life cycle
-. xref:concepts/category-incident-reports.adoc[Incident Response Reports] -- handling versus report, notification
-  deadlines, generated output
+. xref:concepts/category-incident-reports.adoc[Incident Response Reports] -- communication versus decisions, stages
+  of an incident, notification deadlines, generated output
+. xref:concepts/staged-documents.adoc[Staged Documents] -- stages as tabs, part files and sign-offs; conditions,
+  order and status, generic for every document type
 . xref:concepts/category-isms.adoc[ISMS and the Comparison with verinice] -- clause 7.5 on Git, documents and the risk
   register, verinice comparison
 . xref:concepts/service-catalog.adoc[Service Catalog] -- services, protection needs, alignment with Backstage
