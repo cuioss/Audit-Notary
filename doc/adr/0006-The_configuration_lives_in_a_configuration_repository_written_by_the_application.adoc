@@ -97,6 +97,8 @@ configuration cannot make itself administrator of it.
 * `administer-configuration` permits every change; `administer-categories`, granted through `rights`, permits changes
   under `categories/` only. A custom category stays off until a configuration administrator switches it on.
 * A change takes effect with the administrator's own save; there is no second approval.
+* Until the editor is built, the configuration, the custom categories included, is written by hand with commits
+  signed by an operator's key that is listed in the allowed signers for that period only.
 * Agents neither read nor change the configuration; the MCP server has no tool for it. No use case needs one, and the
   configuration names who may do what in which repository, which an agent steered by a prompt injection should not
   learn.
@@ -113,8 +115,9 @@ configuration cannot make itself administrator of it.
   version, and with the newer version it returns to the newer configuration. Every version applies the
   configurations of earlier ones.
 * At the start the application applies the newest commit of `main` that is signed, valid and not written by a newer
-  version, and reports when that is not the head. An empty repository is an empty configuration: no document repositories, no rights; only the
-  configuration administrators can work, and they write the first configuration.
+    version, and reports when that is not the head. An empty repository, or one without such a commit, is the empty
+  configuration: no document repositories, no rights; only the configuration administrators can work, and they write
+  the first configuration or repair the rejected one.
 * `--validate-config <dir>` validates a checkout of the repository offline, for example in the CI of the Git server.
 
 == Consequences
@@ -126,7 +129,9 @@ configuration cannot make itself administrator of it.
 * The deployment is small: a few environment variables and the mounted secrets. The same configuration repository
   can be validated in CI before anyone uses it.
 * No durable state outside Git; the custom categories have their history, and the open point 1 of UC-KND is settled.
-* A push to `configuration` that bypasses the application, by anyone but the technical user's key, is never applied.
+* A commit to `configuration` that is not signed with a key of `signing.allowed-signers` is never applied. The
+  allowed signers hold only the application's commit-signing keys, apart from the operator's key while the editor is
+  not built, so a push that bypasses the application takes no effect.
 
 === Negative
 

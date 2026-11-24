@@ -40,8 +40,10 @@ Flow::
        ▼
   [S] configuration.apply      the configuration repository fetched; the
        │                       newest signed, valid commit applied
-       ├── empty ─► the empty configuration: no documents yet
-       │            ↳ UC-OPS-6 the administrators write the first one
+       ├── empty, or no commit signed and valid
+       │     ─► the empty configuration: no documents yet; an ERROR
+       │        names the rejected head
+       │        ↳ UC-OPS-6 the administrators write or repair it
        ▼
   [S] ready                    every repository has a local copy, the
        ▼                       person directory and the index are built
@@ -256,8 +258,10 @@ Variations::
   the save that the change starts from the applied configuration and leaves out the newer version's changes, which
   stay in the history.
 * *Agents* neither read nor change the configuration; the MCP server has no tool for it.
-* *Until the editor is built*: the first configuration is pushed by hand as a commit signed with a key of the allowed
-  signers.
+* *Until the editor is built*: the configuration, the custom categories included, is pushed by hand as commits
+  signed with an operator's key that is listed in the allowed signers for that period only, each with
+  `application-version` set to the version of the application that will apply it
+  (xref:../specification/configuration.adoc#AUN-CONF-5[AUN-CONF-5]).
 Outcome:: the configuration is changed, recorded as a signed commit, and in effect.
 Requirements:: xref:../specification/configuration.adoc#AUN-CONF-1[AUN-CONF-1] (configuration, validation),
 xref:../specification/configuration.adoc#AUN-CONF-4[AUN-CONF-4] (applying the configuration),

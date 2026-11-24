@@ -116,7 +116,8 @@ whose authorization request cannot be sent (PAR refused) frees its place at once
 * The right *administer configuration* must be derived only from the service-level groups of
   `audit-notary.configuration.administrators`, never from the mapping
   (xref:configuration.adoc#AUN-CONF-5[AUN-CONF-5]).
-* Every request must be checked; a request without a mapped right must be refused (deny by default).
+* Every request must be checked; a request for a repository action without a mapped right, or for a change of the
+  configuration by a user outside the configuration administrators' groups, must be refused (deny by default).
 * No right may be derived from a directory role.
 
 Input with the login provider `local`: the user's roles in the users file (<<AUN-AUTH-6>>).

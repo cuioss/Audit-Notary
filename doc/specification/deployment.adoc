@@ -52,9 +52,10 @@ revision from build arguments `APP_VERSION`, `APP_REVISION`
 == AUN-OPS-2: Ports and Readiness
 
 * The application must serve HTTPS on 8443 and the management interface (readiness, liveness, metrics) on 9000.
-* Readiness must report `UP` only when the configuration repository and every repository of the configuration applied at the start
-  have a valid local repository (fetched in this process or kept from an earlier fetch), a configuration is applied, the person
-  directory is loaded and the index is built; a later fetch failure, or a new configuration that is not applied
+* Readiness must report `UP` only when the configuration repository and every repository of the configuration
+  applied at the start that is still in the applied configuration and not deleted
+  (xref:../use-cases/10-operations.adoc#UC-OPS-4[UC-OPS-4]) have a valid local repository (fetched in this process or
+  kept from an earlier fetch), a configuration is applied, the person directory is loaded and the index is built; a later fetch failure, or a new configuration that is not applied
   (xref:configuration.adoc#AUN-CONF-4[AUN-CONF-4]), must not drop readiness.
 
 [cols="1,1,2"]

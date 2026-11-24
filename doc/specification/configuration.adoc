@@ -346,7 +346,10 @@ of AUN-AUTH-6; it is no violation.
   version, is signed and is valid, and logs one `WARN` record naming the skipped version and the applied commit.
 * Every version of the application must apply a configuration written by an earlier version.
 * At the start the application must apply the newest commit of `main` that is signed, valid and not written by a
-  newer version, and log a record when that is not the head; an empty repository is the empty configuration.
+  newer version, and log a record when that is not the head. An empty repository, or one whose commits are all
+  unsigned, invalid or written by a newer version, is the empty configuration; in the second case one `ERROR` record
+  names the head and why no commit was applied, and a configuration administrator repairs it with a save in the
+  editor (<<AUN-CONF-5>>).
 * The application must report, on the management port, the commit of the applied configuration and whether it is the
   head of `main`, without changing readiness or liveness.
 
@@ -356,7 +359,9 @@ and returns to the newer configuration by itself once the newer version runs aga
 numbers (major, minor, patch); a `-SNAPSHOT` version sorts before its release.
 
 Applying a configuration changes, from the next request or operation on: the served repositories (<<AUN-CONF-2>>);
-the rights, which are mapped again from the groups of every open session; the enabled categories
+the rights, which are mapped again from the groups of every open session, and against which every event of an open
+event stream is checked before it is delivered, so that a user who lost read access to a repository receives none of
+its events (xref:../use-cases/01-access.adoc#change-events[UC-ACC, AUN-WEB-5]); the enabled categories
 (xref:../use-cases/09-categories.adoc#UC-KND-5[UC-KND-5]); the session lifetimes of open sessions; the periodic fetch
 from its next run; and every library setting. A configuration is never applied in part.
 
@@ -369,8 +374,8 @@ one (xref:deployment.adoc#AUN-OPS-2[AUN-OPS-2]).
 [#AUN-CONF-5]
 == AUN-CONF-5: Changing the Configuration
 
-* The application must be the only writer of the configuration repository; the MCP server must have no tool that
-  reads or changes it.
+* The application must be the only writer of the configuration repository, apart from the interim below; the MCP
+  server must have no tool that reads or changes it.
 * A change takes effect with the administrator's own save; it needs no second approval.
 * Every save must set `application-version` to the running application's version.
 * A change must be validated as the whole resulting configuration (<<_validation>>) and saved only when it is valid,
@@ -378,16 +383,21 @@ one (xref:deployment.adoc#AUN-OPS-2[AUN-OPS-2]).
   (xref:authentication.adoc#AUN-AUTH-3[AUN-AUTH-3]), and must require step-up when step-up is enabled
   (xref:authentication.adoc#AUN-AUTH-4[AUN-AUTH-4]).
 * The right `administer-configuration` must permit every change and be held only by the members of
-  `audit-notary.configuration.administrators`; the action `administer-categories` permits changes under
-  `categories/` only (xref:../use-cases/09-categories.adoc#change-auth-2[UC-KND, AUN-AUTH-2]).
+  `audit-notary.configuration.administrators`. Changes under `categories/` are also permitted to the action
+  `administer-categories`, which AUN-AUTH-2 gains with the categories use cases
+  (xref:../use-cases/09-categories.adoc#change-auth-2[UC-KND, AUN-AUTH-2]); it permits nothing outside
+  `categories/`.
 * A save that is overtaken by another change of the repository must be refused, not merged, and offered again on the
   new state.
 * When the head of `main` was written by a newer version, the editor must show it, and a save must say before it is
   made that it starts from the applied configuration and leaves out the changes of the newer version, which stay in
   the history.
 
-The editor is part of the web app (xref:../use-cases/10-operations.adoc#UC-OPS-6[UC-OPS-6]); until it is built, the
-first configuration is pushed by hand as a commit signed with a key of `audit-notary.signing.allowed-signers`.
+The editor is part of the web app (xref:../use-cases/10-operations.adoc#UC-OPS-6[UC-OPS-6]). Until it is built, the
+configuration, the custom categories included, is written by hand: the operator adds a key of their own, with a
+validity period, to `audit-notary.signing.allowed-signers` and pushes commits signed with it, each setting
+`application-version` to the version of the application that will apply it; the key is removed from the allowed
+signers once the editor is built. This is the only exception to the application as the only writer.
 
 [#_bootstrap_state]
 == State of the Bootstrap

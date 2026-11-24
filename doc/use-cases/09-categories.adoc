@@ -19,7 +19,8 @@ categories come from two places: the *delivered* categories inside the applicati
 the organisation under `categories/` of the configuration repository
 (xref:../adr/0006-The_configuration_lives_in_a_configuration_repository_written_by_the_application.adoc[ADR-0006]). The configuration says which categories, and which of their
 document types, are switched on. A category administrator creates and changes custom categories in an editor in the
-web app; until the editor is built they are committed there as files.
+web app; until the editor is built they are pushed there by hand, as the interim of
+xref:../specification/configuration.adoc#AUN-CONF-5[AUN-CONF-5] describes.
 
 [#principles]
 == Principles
@@ -31,7 +32,8 @@ off while another that needs it is on.
 [#the-operator-switches]
 The configuration administrators switch:: Which categories and document types are on is part of the configuration
 (`audit-notary.yaml`), changed by a configuration administrator; the editor creates and changes categories, but a new
-custom category stays off until a configuration administrator switches it on. So no category reaches the users
+custom category, and a document type new to an enabled one, stays off until a configuration administrator switches it
+on. So no category reaches the users
 without that decision.
 [#delivery-apart-from-custom]
 Delivery apart from custom:: The delivered categories ship in the `categories` module and are read-only in the
@@ -225,7 +227,8 @@ Variations::
 * *Sample data* lives only in the preview; it is never saved as a document.
 * *The workflow*: states, transitions, which transition requires step-up and the deadline rules are data; the
   editor checks them against the library's workflow format.
-* *A further document type* is added to a custom category in the same editor; a delivered category takes none.
+* *A further document type* is added to a custom category in the same editor; a delivered category takes none. It
+  stays off until a configuration administrator switches it on (<<UC-KND-5>>).
 * *An agent* cannot create or change a category.
 Outcome:: a new custom category, checked and previewed, waits for activation in the editor's drafts, or is activated
 and waits for a configuration administrator to switch it on.
@@ -272,8 +275,11 @@ Flow::
        │                       pseudonym in its trailers, and applied
        │                       (AUN-CONF-4); if the category is on, its
        │                       document types reloaded without a
-       │                       restart; one audit record with pseudonym,
-       │                       category and the files changed
+       │                       restart, and a document type it did not
+       │                       have before added to its exclude-kinds
+       │                       in the same commit, so it stays off; one
+       │                       audit record with pseudonym, category
+       │                       and the files changed
        ├── invalid by now ─► done, nothing activated, the violations
        ▼
   done                         new forms and saves use the new schema

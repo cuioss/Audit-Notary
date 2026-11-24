@@ -488,6 +488,8 @@ the checks of the transition run again before it is written.
 [[change-events]]AUN-WEB-5 and AUN-WEB-9, the event stream and the session:: Gap: the event stream is one stream for
 every connection, bound to no session, so it stays open after a logout or the end of the session, and it would carry
 the saves of every repository to every user. Fix: each event stream belongs to the session that opened it and is closed
-when that session ends; it carries only the events of repositories the session may read; when its stream closes, the
-web app reads the session again and reloads a tab whose session was replaced by another one
+when that session ends; it carries only the events of repositories the session may read, checked against the
+session's rights when each event is delivered, so that a changed mapping of the configuration
+(xref:../specification/configuration.adoc#AUN-CONF-4[AUN-CONF-4]) applies to open streams too; when its stream
+closes, the web app reads the session again and reloads a tab whose session was replaced by another one
 (xref:../specification/web-app.adoc#AUN-WEB-5[AUN-WEB-5], xref:../specification/web-app.adoc#AUN-WEB-9[AUN-WEB-9]).
