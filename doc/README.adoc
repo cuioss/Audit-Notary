@@ -148,6 +148,10 @@ layout and commands in its own `README.adoc`.
 |xref:adr/0004-Login_and_session_are_designed_against_Token_Sheriffs_planned_session_layer.adoc[ADR-0004]
 |Login and session are designed against Token Sheriff's planned session layer
 |Accepted
+
+|xref:adr/0005-Local_users_from_a_mounted_file_are_for_evaluation_and_testing_only.adoc[ADR-0005]
+|Local users from a mounted file are for evaluation and testing only
+|Accepted
 |===
 
 [#_development]

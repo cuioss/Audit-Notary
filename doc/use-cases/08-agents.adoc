@@ -66,6 +66,11 @@ Variations::
 * *A local gateway* may hold the user's login for agents that cannot (xref:../concepts/local-mcp-gateway.adoc[Local
   MCP Gateway], a proposal).
 * *No credential leaves*: no Git or KMS credential appears in a tool result, an error or a log.
+* *Local test users* (`login.provider: local`, for evaluation and tests only): there is no authorization server and no metadata. The local MCP gateway
+  keeps the user's username and password and sends them as HTTP Basic on every call; a wrong or missing credential is
+  `401` with a Basic challenge, there are no scopes, and the rights alone decide
+  (xref:../specification/mcp-server.adoc#AUN-MCP-8[AUN-MCP-8];
+  xref:../concepts/local-mcp-gateway.adoc#_basic_connections[Local MCP Gateway, Basic Connections]).
 Outcome:: the agent works for the user with exactly the intersection of scopes and rights, and every call is on
 record with pseudonym, client and outcome.
 Open points:: the protocol revisions supported besides 2026-07-28; Client ID Metadata Documents or pre-registered
@@ -76,6 +81,7 @@ xref:../specification/mcp-server.adoc#AUN-MCP-3[AUN-MCP-3] (token validation),
 xref:../specification/mcp-server.adoc#AUN-MCP-4[AUN-MCP-4] (scopes and rights),
 xref:../specification/mcp-server.adoc#AUN-MCP-5[AUN-MCP-5] (no passthrough, no credentials),
 xref:../specification/mcp-server.adoc#AUN-MCP-7[AUN-MCP-7] (audit),
+xref:../specification/mcp-server.adoc#AUN-MCP-8[AUN-MCP-8] (Basic with local users),
 xref:../specification/testing.adoc#AUN-NFR-4[AUN-NFR-4] (token and input tests).
 Design:: none; the agent's side is the client's.
 

@@ -138,7 +138,8 @@ by that role.
 |`UC-ACC`
 |xref:use-cases/01-access.adoc[01-access.adoc]
 |Getting in and out: the login, the logout, the step-up before a release, the first login with the own directory
-entry, keeping that entry current, and the end of a session the user did not end.
+entry, keeping that entry current, the end of a session the user did not end, and the login with a local test
+account for evaluation and tests.
 
 |`UC-DOC`
 |xref:use-cases/02-documents.adoc[02-documents.adoc]
@@ -199,8 +200,10 @@ that needs it.
 |Milestone |Use cases |Why here
 
 |M1 Access
-|UC-ACC-1 to UC-ACC-3, UC-ACC-6
-|Partly built in the bootstrap; every other use case needs a session, and every release needs step-up. Designed against
+|UC-ACC-1 to UC-ACC-3, UC-ACC-6, UC-ACC-7
+|Partly built in the bootstrap; every other use case needs a session, and every release needs step-up where it is
+switched on. The local login (UC-ACC-7), on Quarkus' form authentication, serves evaluation and tests without an identity
+provider. Designed against
 Token Sheriff's planned session layer
 (xref:adr/0004-Login_and_session_are_designed_against_Token_Sheriffs_planned_session_layer.adoc[ADR-0004]) and built on
 it as its releases arrive (xref:use-cases/01-access.adoc#change-session[Access, the session layer]).

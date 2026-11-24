@@ -95,7 +95,12 @@ application sets no other value there.
 |`/run/secrets/tls/{tls.key,tls.crt}`
 
 |OIDC client credential
-|`oidc.client-credential-ref`: the client secret or the `private_key_jwt` key
+|`oidc.client-credential-ref`: the client secret or the `private_key_jwt` key; only with the login provider `oidc`
+
+|Users file of the local users
+|`login.local.users-ref`: the users, their password hashes and roles in Quarkus' format, and the key of the login
+cookie as `quarkus.http.auth.session.encryption-key`; only with the login provider `local`, which is for evaluation
+and tests, not for production (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6])
 
 |Git credential of the technical user
 |`credential-ref` per repository

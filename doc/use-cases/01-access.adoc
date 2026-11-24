@@ -8,7 +8,8 @@ xref:../UseCases.adoc[Use Cases] » Access
 A person gets into the application with the organisation's login and out of it again, confirms a release with a fresh
 multi-factor login, keeps the own entry of the person directory current, and loses access when the organisation
 withdraws it: at once with a back-channel logout, otherwise at the next refused refresh. Nobody needs an account on the Git server: the identity of a change comes from the login and is signed
-into the commit (xref:../concepts/authentication-and-identity.adoc[Authentication and Identity]).
+into the commit (xref:../concepts/authentication-and-identity.adoc[Authentication and Identity]). For evaluation and
+tests without an identity provider, local users can be configured in a file (xref:#UC-ACC-7[UC-ACC-7]).
 
 [#principles]
 == Principles
@@ -17,8 +18,8 @@ into the commit (xref:../concepts/authentication-and-identity.adoc[Authenticatio
 The browser holds no token:: The server is the confidential client of the identity provider; the browser holds only
 cookies, and the server decides every right (xref:../specification/authentication.adoc#AUN-AUTH-1[AUN-AUTH-1]).
 [#rights-from-groups]
-Rights come from groups only:: What a user may do on a repository comes from the groups of the identity provider,
-mapped in the configuration; never from a directory role (xref:../specification/authentication.adoc#AUN-AUTH-2[AUN-AUTH-2]).
+Rights come from groups only:: What a user may do on a repository comes from the groups of the identity provider, or
+of the users file with local users, mapped in the configuration; never from a directory role (xref:../specification/authentication.adoc#AUN-AUTH-2[AUN-AUTH-2]).
 [#session-layer]
 The session is Token Sheriff's:: The login, the session, its end and the step-up run on Token Sheriff's session layer;
 Audit Notary supplies what is its own through the layer's hooks: the canonical return addresses, the mapping of groups
@@ -205,8 +206,16 @@ Variations::
   nothing, because a logout always wins over a step-up still running.
 * *The document changed meanwhile*: a release merges only the reviewed revision, so a save during the step-up makes
   the return answer `CHANGED_SINCE_REVIEW` (xref:02-documents.adoc#UC-DOC-7[UC-DOC-7]).
-Outcome:: the transition is written only with a fresh, verified multi-factor authentication of the same user, only if
-it is still valid when the user returns, and the commit says so.
+* *Step-up switched off* (`step-up.enabled: false`, the default with local users): no transition requires step-up,
+  `stepup.check` always passes, and the trailers record the authentication of the session.
+* *Local users with step-up switched on*: `stepup.reauthenticate` is a password dialog of the web app instead of the
+  provider; the same user enters the password again, the web app sends it with the release, a wrong one writes
+  nothing, and the
+  trailers record the fresh `auth_time` with `amr=pwd`, not a second factor
+  (xref:../specification/authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]).
+Outcome:: the transition is written only with a fresh, verified authentication of the same user, multi-factor with the
+identity provider and a password with local users, only if it is still valid when the user returns, and the commit says
+so.
 Requirements:: xref:../specification/authentication.adoc#AUN-AUTH-4[AUN-AUTH-4] (step-up),
 xref:../specification/authentication.adoc#AUN-AUTH-3[AUN-AUTH-3] (trailers),
 xref:../specification/configuration.adoc#AUN-CONF-1[AUN-CONF-1] (the `step-up` setting); library:
@@ -369,6 +378,65 @@ provider: none yet.
 Changes:: <<change-provider-end>>, <<change-session>>, <<change-events>>.
 Design:: Token Sheriff's session layer, planned: SESSION-2, SESSION-5 to SESSION-7, CLIENT-32 and CLIENT-35; the
 logout token is validated by VALIDATION-13.4 and VALIDATION-13.5, released in Token Sheriff 0.9.10.
+
+[#UC-ACC-7]
+== UC-ACC-7: Log In with a Local Test Account
+
+WARNING: For evaluation, development, tests and demonstrations only; production uses the identity provider
+(xref:../adr/0005-Local_users_from_a_mounted_file_are_for_evaluation_and_testing_only.adoc[ADR-0005]).
+
+Status:: `DRAFT`
+Actor:: an evaluator, a developer or a tester, in the web app, of a deployment with the login provider `local`.
+Goal:: try Audit Notary out without an identity provider, with the username and password the operator configured, and
+see the same behaviour as in production.
+Trigger:: the user opens an address of the web app without a login, or the login cookie expired.
+Preconditions:: `login.provider: local`; the operator has put the user's password digest and roles into the users
+file in Quarkus' format, mounted it and restarted the application (xref:../specification/authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]).
+Flow::
++
+[source,text]
+----
+  [S] login.missing            a request of the web app is answered
+       │                       UNAUTHENTICATED with the login page
+       ▼
+  [U] login.enter              username and password on the app's own
+       │                       login page, which says that it uses local
+       │                       test accounts; the current canonical
+       │                       address is kept as the return address
+       ▼
+  [S] login.check              Quarkus' form login checks the password
+       ├── wrong or unknown ──► 401, back to login.enter
+       ▼
+  [S] login.cookie             Quarkus sets its encrypted login cookie;
+       │                       the rights are mapped from the user's
+       │                       roles in the users file
+       ├── no directory entry yet ──► ↳ UC-ACC-4, then back here
+       ├── entry due for confirmation ─► ↳ UC-ACC-5, then back here
+       ▼
+  [S] login.return             the return address, if it is a canonical
+       ▼                       address of the app; otherwise the Due lens
+  done
+----
+Variations::
+* *The notice stays*: every page of the shell shows that the installation uses local test accounts.
+* *A changed user*: a new password, a new group or a removed user take effect when the operator restarts the
+  application with the changed file. A login cookie stays valid across the restart while the encryption key is the
+  same.
+* *Logout* removes the login cookie and lands on the start page; there is no provider to visit
+  (xref:#UC-ACC-2[UC-ACC-2]). A copy of the cookie stays valid until its idle timeout.
+* *Release*: with step-up switched on, the password is asked again (xref:#UC-ACC-3[UC-ACC-3]).
+* *Through an agent*: the local MCP gateway keeps the user's username and password and sends them as HTTP Basic; the
+  agent never sees them (xref:../specification/mcp-server.adoc#AUN-MCP-8[AUN-MCP-8];
+  xref:08-agents.adoc#UC-AGT-1[UC-AGT-1]).
+Outcome:: the user is logged in by Quarkus' login cookie, beside Token Sheriff's session layer, with the rights of the
+roles the users file gives them, and sees the address they opened; the trailers name the application as issuer
+and `amr=pwd`.
+Requirements:: xref:../specification/authentication.adoc#AUN-AUTH-6[AUN-AUTH-6] (users file, login, warnings),
+xref:../specification/authentication.adoc#AUN-AUTH-2[AUN-AUTH-2] (rights from groups),
+xref:../specification/configuration.adoc#AUN-CONF-1[AUN-CONF-1] (`login`, boot validation),
+xref:../specification/web-app.adoc#AUN-WEB-9[AUN-WEB-9] (the login provider in the status, the refusals).
+Design:: xref:../adr/0005-Local_users_from_a_mounted_file_are_for_evaluation_and_testing_only.adoc[ADR-0005];
+xref:../concepts/authentication-and-identity.adoc#_local_users[Authentication and Identity, Local Users].
 
 [#changes-to-the-specification]
 == Changes to the Specification

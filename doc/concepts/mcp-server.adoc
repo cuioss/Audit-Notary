@@ -34,6 +34,11 @@ normative revision is 2026-07-28 (its published pages
 * *No token passthrough*: the server never forwards the token it received to another service. Upstream calls use
   their own credentials (see <<_git_credentials_never_reach_the_agent>>).
 
+With local users there is no authorization server; the server takes HTTP Basic with the user's username and password,
+which the local MCP gateway keeps, and the rights alone decide, without scopes
+(xref:../specification/mcp-server.adoc#AUN-MCP-8[AUN-MCP-8];
+xref:authentication-and-identity.adoc#_local_users[Authentication and Identity, Local Users]).
+
 The client side of the flow (discovery, PKCE `S256`, `resource` parameter, Client ID Metadata Documents or dynamic
 registration) is the agent's and the authorization server's duty; the server's side is specified in
 xref:../specification/mcp-server.adoc#AUN-MCP-2[MCP Server, AUN-MCP-2] and

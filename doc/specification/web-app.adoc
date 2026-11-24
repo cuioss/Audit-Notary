@@ -132,7 +132,9 @@ Requests:
 * Release: `POST /api/v1/releases/{repository}/{id}`; the outcomes are those of the release in
   xref:architecture-and-modules.adoc#operation-outcomes[Architecture and Modules, Operation Outcomes];
   `STEP_UP_REQUIRED` carries the step-up address (xref:authentication.adoc#AUN-AUTH-4[Authentication, AUN-AUTH-4]).
-  When the release requires step-up, the button reads "Release (confirm with MFA)".
+  When the release requires step-up, the button reads "Release (confirm with MFA)", with local users "Release (confirm
+  with password)": the password is asked in a dialog and sent as `{"password"}` with the release request
+  (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]).
 
 [#AUN-WEB-7]
 == AUN-WEB-7: Texts
@@ -193,8 +195,10 @@ AsciiDoc: rendered by the server in safe mode; the HTML is sanitised against an 
 
 |`GET /api/v1/status`
 |no
-|`{"version", "degraded", "repositories": [{"alias", "fetch"}]}`; `degraded` is `true` while a fetch of a repository
-fails (xref:architecture-and-modules.adoc#AUN-GEN-6[AUN-GEN-6]), `fetch` is `UP` or `DOWN`. Carries no personal data.
+|`{"version", "degraded", "loginProvider", "repositories": [{"alias", "fetch"}]}`; `degraded` is `true` while a fetch
+of a repository fails (xref:architecture-and-modules.adoc#AUN-GEN-6[AUN-GEN-6]), `fetch` is `UP` or `DOWN`;
+`loginProvider` is `oidc` or `local`, and with `local` the shell shows the notice of
+xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6] on every page. Carries no personal data.
 
 |`GET /api/v1/messages?lang=en\|de`
 |no
@@ -225,7 +229,13 @@ Refusals:
 
 |`401`
 |`UNAUTHENTICATED`
-|No session; the body carries `login`, the login address (xref:authentication.adoc#AUN-AUTH-1[AUN-AUTH-1])
+|No session; the body carries `login`, the login address (xref:authentication.adoc#AUN-AUTH-1[AUN-AUTH-1]); with local
+users the web app's login page (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6])
+
+|`401`
+|`INVALID_CREDENTIALS`
+|Local users: a release with a wrong step-up password; nothing is written
+(xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]). A failed login is Quarkus' plain `401` of `/j_security_check`
 
 |`403`
 |`CSRF_REJECTED`

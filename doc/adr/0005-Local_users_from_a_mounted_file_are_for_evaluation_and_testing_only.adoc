@@ -1,0 +1,205 @@
+= ADR-0005: Local users from a mounted file are for evaluation and testing only
+:toc: left
+:toclevels: 3
+:toc-title: Table of Contents
+:sectnums:
+:source-highlighter: highlight.js
+
+// adr-metadata
+// summary: Besides the identity provider through Token Sheriff (login provider oidc, the only recommendation for production), a deployment can choose by configuration (login.provider: local) to authenticate against a mounted users file in Quarkus' embedded-realm format, in the manner of Tomcat's tomcat-users.xml; never both. Local users serve evaluation, development, tests and demonstrations; they follow Quarkus' own mechanisms (the embedded realm, form authentication for the web app, Basic for the MCP server) and are announced as test accounts instead of being hardened. One build: the mechanisms are always built in, the realm stays empty with oidc. Local users run beside Token Sheriff's planned session layer. The local MCP gateway keeps the Basic credential. Step-up becomes switchable; with local users it is off by default and, when switched on, asks for the password again.
+// tags: authentication, local-users, session, mcp, step-up
+// affects: audit-notary, web-app
+// supersedes:
+// end-adr-metadata
+
+== Status
+
+Accepted (2026-11-24, the owner's decisions on the purpose, the mode, Quarkus' realm, the MCP credential and the
+step-up switch).
+
+== Context
+
+xref:0001-Authentication_is_delegated_to_Token_Sheriff_with_a_server-side_session_for_the_web_app.adoc[ADR-0001]
+requires an identity provider. Trying Audit Notary out, developing on it, testing it or showing it should not need one:
+setting up a realm, a client and test users at a provider is more work than the evaluation itself. Servlet containers
+answer this with a file of users; Tomcat's `conf/tomcat-users.xml` names each user with the attributes `username`,
+`password` and `roles` (https://raw.githubusercontent.com/apache/tomcat/main/conf/tomcat-users.xml[the shipped
+`tomcat-users.xml`]).
+
+Such a file is not a production login, and nothing here tries to make it one: it has no second factor, no protection
+against guessing beyond the hash, no self-service, and no central withdrawal of access. Tomcat says the same of its own
+files: the `MemoryRealm` "is not designed for production use", the `UserDatabaseRealm` behind `tomcat-users.xml` "is not
+designed for large-scale production use"
+(https://tomcat.apache.org/tomcat-11.0-doc/realm-howto.html[Tomcat 11, Realm Configuration How-To]).
+
+=== What Quarkus Provides
+
+Checked against Quarkus 3.40.1, the version of the build.
+
+[cols="2,3,2"]
+|===
+|Mechanism |What it does |Fit
+
+|*Properties-file realm*, extension `quarkus-elytron-security-properties-file`, file variant
+(`quarkus.security.users.file.*`)
+|Users and roles in two properties files; a path is read from the file system when it exists, otherwise from the
+class path (`ElytronPropertiesFileRecorder` in the 3.40.1 source). Passwords are plain text or
+`HEX( MD5( username ":" realm ":" password ) )`. The files are read once at boot. Quarkus: "intended for development
+and testing purposes"
+(https://quarkus.io/guides/security-properties[Quarkus, Using security with .properties file])
+|Not used: its two file paths are fixed at build time, and the boot stops when neither file exists, so it cannot be
+switched on by configuration
+
+|*Properties-file realm*, embedded variant (`quarkus.security.users.embedded.*`)
+|Users and roles as keys of `application.properties`; the hash is one of `digest-md5`, `digest-sha`,
+`digest-sha-256`, `digest-sha-384`, `digest-sha-512` (the default) or `digest-sha-512-256` of
+`username:realm:password` (`DigestAlgorithm` in the 3.40.1 source)
+|Used: its users, roles and password format are runtime configuration (`MPRealmRuntimeConfig`, `ConfigPhase.RUN_TIME`);
+the application feeds them from the users file, never from `application.properties`, which AUN-CONF-1 keeps free of
+secrets
+
+|*Form authentication* of `quarkus-vertx-http` (`quarkus.http.auth.form.*`)
+|A `j_security_check` form; the authenticated identity is kept in an encrypted cookie (`quarkus-credential`, keyed by
+`quarkus.http.auth.session.encryption-key`), not in a server-side session; a logout removes the cookie
+(https://quarkus.io/guides/security-authentication-mechanisms#form-auth[Quarkus, Authentication mechanisms, Form-based
+authentication])
+|Used for the web login of local users, with its redirects switched off
+
+|*`quarkus-security-jpa`*
+|Users as Hibernate ORM entities, passwords in bcrypt by default
+(https://quarkus.io/guides/security-jpa#password-storage-and-hashing[Quarkus, Security with Jakarta Persistence])
+|Not used: Audit Notary has no database
+
+|*Basic authentication* of `quarkus-vertx-http` and an `IdentityProvider` for `UsernamePasswordAuthenticationRequest`
+of `quarkus-security`
+|The built-in mechanism reads the `Authorization: Basic` header and hands username and password to the identity
+providers (https://quarkus.io/guides/security-basic-authentication[Quarkus, Basic authentication]); the property
+`quarkus.http.auth.permission."permissions".auth-mechanism` restricts a mechanism to paths
+|Used for the MCP server of local users; the identity provider is the realm's
+|===
+
+Quarkus therefore has users in configuration for this purpose, and declares it for development and testing, which is
+the purpose here. Its weaknesses (an unsalted digest, a cookie the server cannot withdraw) are those of a test login
+and are announced, not repaired.
+
+Two facts of Quarkus and Token Sheriff shape the decision:
+
+* Only the switches of the realms and of form and Basic authentication are fixed at build time
+  (`ConfigPhase.BUILD_AND_RUN_TIME_FIXED` of `SecurityUsersConfig` and `VertxHttpBuildTimeConfig` in the 3.40.1
+  source). The embedded realm's users and roles, the form settings and the path permissions are runtime configuration.
+* Token Sheriff's planned session layer is built for OIDC: its session record holds `iss`, `sub`, `sid`, `acr`, `amr`,
+  `auth_time`, the groups "and the tokens", and the only planned way to create a session is the OIDC callback. All
+  14 plans of the epic `client-framework-aspects` are staged, none built (Token Sheriff main `0545cffd`,
+  `.plan/orchestrator/client-framework-aspects/plans/PLAN-05-session-module-core.md`,
+  `PLAN-09-bff-csrf-identity-and-hooks.md`).
+
+== Decision
+
+*Production uses the identity provider (`login.provider: oidc`, the default). For evaluation, development, tests and
+demonstrations a deployment can authenticate against a mounted users file instead (`login.provider: local`); never
+both. It is a configuration, not a build. Local users follow Quarkus' own mechanisms and are announced as test
+accounts, not hardened.*
+
+* *One build.* `quarkus-elytron-security-properties-file` is a dependency of every build (the owner's approval,
+  2026-11-24), and `application.properties` switches on the embedded realm, form and Basic authentication. With
+  `oidc` the realm stays empty and a user of it from any source stops the boot, so the mechanisms authenticate nobody.
+* *Announced.* Every start with `local` logs one `WARN` record saying that local users are not meant for production;
+  the login page and the web app's shell show a notice; every document that describes local users says so first
+  (xref:../specification/authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]).
+* *The file.* Referenced by `login.local.users-ref`, mounted as a secret, holding Quarkus' own keys of the embedded
+  realm (`quarkus.security.users.embedded.users.<name>` and `.roles.<name>`), read once at boot. The application's
+  `ConfigSourceFactory`, which already derives Token Sheriff's keys from `audit-notary.yaml`, offers the file's
+  entries to Quarkus and refuses any other key. Passwords are Quarkus' default digest; the application has no password
+  code of its own.
+* *Not added:* no throttling, no lockout, no password rules, no second factor, no change of the own password.
+* *The identity.* `iss` is `web.origin`, `sub` the username, `amr` `pwd`
+  (https://www.rfc-editor.org/rfc/rfc8176#section-2[RFC 8176, §2]), no `acr`. The roles are the groups and map to
+  rights through the same `rights` mapping (AUN-AUTH-2). The person directory, the pseudonym and the signed trailers
+  are unchanged, so every commit shows that a local user made it.
+* *The web login* is Quarkus' form authentication (`j_security_check`) with its encrypted cookie, beside Token
+  Sheriff's session layer, not on it. The redirects of the mechanism are switched off, so the single-page app gets
+  `200` and `401`.
+* *The MCP server* takes Quarkus' Basic authentication, restricted to `/mcp`. The local MCP gateway keeps the
+  credential, as it keeps a refresh token; the agent never sees it
+  (xref:0002-A_local_gateway_base_project_holds_the_user_tokens_for_MCP_agents.adoc[ADR-0002]). This deviates from the
+  MCP authorization specification, which makes authorization "OPTIONAL" and which HTTP transports "SHOULD" follow
+  (https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization[MCP 2026-07-28, Authorization,
+  Protocol Requirements]).
+* *Step-up becomes switchable* (`step-up.enabled`) for both providers, because not every organisation wants a
+  confirmation per release. With the identity provider it is on by default; with local users it is off by default and,
+  when switched on, the password is sent again with the transition, checked, and the trailers carry a fresh
+  `auth_time` and `amr=pwd` (`step-up.amr: [pwd]`). When it is off no transition requires step-up, whatever its
+  workflow declares.
+
+== Consequences
+
+=== Positive
+
+* Audit Notary can be tried, developed, tested and shown without an identity provider, with the same rights,
+  directory and signed commits as in production.
+* Little own code: the config source for the users file, the warnings, the step-up password check and the logout
+  endpoint. Quarkus checks the passwords and keeps the login.
+* One artifact for both providers; switching is a line of `audit-notary.yaml` and a restart.
+
+=== Negative
+
+* Every build contains the realm, form and Basic mechanisms. They stay without users under `oidc`, enforced at boot;
+  a production deployment set to `local` by mistake still runs, and only the warnings show it.
+* The web login of local users does not test Token Sheriff's session layer: the session, its server-side end, its
+  absolute lifetime and the session view behave differently. Tests of those run against an identity provider.
+* An unsalted digest, and a login cookie that stays valid until its idle timeout after a logout. The warnings say so.
+* Basic on `/mcp` is not what MCP clients discover; a client without the gateway must be configured with a header.
+
+=== Risks
+
+* Switching step-up off needs a setting of the library: GDR-FORMS-7 lets a workflow declare step-up per transition,
+  but has no switch for all of them. The request is filed in the library's orchestrator inbox
+  (`libraries-initial-implementation`, message `audit-notary-001`, landed with git-document-repository PR #71).
+
+== Alternatives Considered
+
+=== A build variant with the file realm
+
+A Maven profile that adds the extension and switches on the file realm, so that the production artifact does not
+contain it. *Rejected because* the owner wants local users as a configuration of the one artifact, not as a build.
+
+=== An own users file with PBKDF2 hashes
+
+A YAML file with salted PBKDF2-HMAC-SHA256 hashes and an own `IdentityProvider`, the first draft of this record.
+*Not chosen because* it is own code for a purpose Quarkus already serves; the stronger hash buys nothing for test
+accounts.
+
+=== Local users on Token Sheriff's session layer
+
+One session for both providers. *Not now, because* the layer is not built and its planned record and entry point are
+OIDC-only; it would need a public way to create a session from a non-OIDC identity, without tokens. Possible later, if
+Token Sheriff offers it.
+
+=== Harden local users for production
+
+Throttling, lockout, password rules, a TOTP second factor, self-service. *Rejected because* that rebuilds an identity
+provider; production has one.
+
+=== Both providers side by side
+
+A local account beside the identity provider. *Rejected because* one deployment would have two issuers, two subjects
+per person and a choice page in the login flow, and a local account would live on in production.
+
+=== The application as an OAuth authorization server for agents
+
+*Rejected because* issuing tokens, keys and client registration is a product of its own; Basic through the gateway
+keeps the credential away from the agent.
+
+== References
+
+* xref:../concepts/authentication-and-identity.adoc#_local_users[Authentication and Identity, Local Users]
+* xref:../specification/authentication.adoc#AUN-AUTH-6[Authentication, AUN-AUTH-6]
+* xref:0001-Authentication_is_delegated_to_Token_Sheriff_with_a_server-side_session_for_the_web_app.adoc[ADR-0001],
+  xref:0002-A_local_gateway_base_project_holds_the_user_tokens_for_MCP_agents.adoc[ADR-0002],
+  xref:0004-Login_and_session_are_designed_against_Token_Sheriffs_planned_session_layer.adoc[ADR-0004]
+* https://quarkus.io/guides/security-properties[Quarkus, Using security with .properties file];
+  https://quarkus.io/guides/security-authentication-mechanisms[Quarkus, Authentication mechanisms];
+  https://quarkus.io/guides/security-basic-authentication[Quarkus, Basic authentication]
+* https://tomcat.apache.org/tomcat-11.0-doc/realm-howto.html[Tomcat 11, Realm Configuration How-To]
+* https://www.rfc-editor.org/rfc/rfc8176[RFC 8176, Authentication Method Reference Values];
+  https://www.rfc-editor.org/rfc/rfc7617[RFC 7617, The 'Basic' HTTP Authentication Scheme]

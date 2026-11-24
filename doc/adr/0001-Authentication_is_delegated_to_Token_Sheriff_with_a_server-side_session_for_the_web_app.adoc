@@ -76,6 +76,9 @@ option for organisations that run API Sheriff anyway.
 === When this is revisited
 
 * When the claims and step-up results can travel reliably from an API Sheriff BFF.
+* For evaluation and tests a deployment can authenticate against local users instead
+  (xref:0005-Local_users_from_a_mounted_file_are_for_evaluation_and_testing_only.adoc[ADR-0005]); this
+  decision holds for the login provider `oidc`.
 
 == Links
 

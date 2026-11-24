@@ -209,6 +209,27 @@ The same vault serves three ways of use, from the least to the most the gateway 
   from a crafted `authorization_endpoint` (https://jfrog.com/blog/2025-6514-critical-mcp-remote-rce-vulnerability/[JFrog
   analysis]).
 
+[#_basic_connections]
+=== Basic Connections
+
+A server that runs with local test users, for evaluation and tests only, takes HTTP Basic with the username and
+password of a local user
+(xref:../adr/0005-Local_users_from_a_mounted_file_are_for_evaluation_and_testing_only.adoc[ADR-0005],
+xref:../specification/mcp-server.adoc#AUN-MCP-8[AUN-MCP-8]). The gateway owns that credential exactly as it owns a
+refresh token: the agent never sees it.
+
+* *Kind of connection.* A descendant declares `kind: basic` and the server's address instead of issuer, client id and
+  scopes. There is no login at a provider: the local page asks for username and password once and checks them with one
+  request to the server.
+* *The vault.* The password is kept under the same data key in the same OS store as a refresh token (<<_the_vault>>).
+* *Remote side.* `Authorization: Basic` on every request, only to the server of the connection and only over HTTPS. A
+  `401` is not retried with the same credential: the gateway marks the connection as needing the password again and
+  says so on the local page, never to the agent.
+* *Credential helper.* `gateway token <connection>` prints the Basic header; a static header suits a `headersHelper`.
+* *What it is not.* A stolen Basic credential is the user's password: it does not expire, is bound to no key, and opens
+  the web app as well. A refresh token under DPoP gives more; the vault is the only protection here, and the local page
+  says so.
+
 === The Vault
 
 The user's wish is a refresh token stored encrypted, with keys created locally on the first and on every updated
@@ -272,7 +293,8 @@ A gateway that can call the server as the user is worth stealing from. The hones
 === What Changes for the Server
 
 Nothing in the server's requirements: it validates the same audience-bound token and applies the same rights
-(xref:../specification/mcp-server.adoc#AUN-MCP-3[AUN-MCP-3]). Two consequences follow for the documents, and they are
+(xref:../specification/mcp-server.adoc#AUN-MCP-3[AUN-MCP-3]), or, with local users, the same Basic credential
+(xref:../specification/mcp-server.adoc#AUN-MCP-8[AUN-MCP-8]). Two consequences follow for the documents, and they are
 visible in the changes that accompany this page:
 
 * The sentence "a local process could not prove a user" of the MCP server concept is true of a process that presents no
