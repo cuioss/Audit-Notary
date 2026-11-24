@@ -115,8 +115,8 @@ What stays as in production, and what does not:
   but the server cannot withdraw a copy before its idle timeout. Tests of the session itself need an identity provider.
 * *Step-up.* Off by default; switched on, a release asks for the password again and sends it with the release
   (<<_step_up>>).
-* *Agents.* The MCP server takes Quarkus' Basic authentication, and the local MCP gateway keeps username and password
-  as it keeps a refresh token (xref:mcp-server.adoc[MCP Server],
+* *Agents.* The MCP server takes Quarkus' Basic authentication, on `/mcp` only (every other path takes the form
+  login only), and the local MCP gateway keeps username and password as it keeps a refresh token (xref:mcp-server.adoc[MCP Server],
   xref:local-mcp-gateway.adoc#_basic_connections[Local MCP Gateway, Basic Connections]).
 
 === What Quarkus Provides

@@ -106,7 +106,8 @@ State-changing requests carry an anti-CSRF header the `ApiClient` adds; the serv
 `Origin` is another origin than its own. A `401` sends the user through the login and
 back to the same address; a step-up demand opens the identity provider's MFA prompt and returns to the release
 (xref:authentication-and-identity.adoc[Authentication and Identity]). With local users the login is a page of the app
-itself, posted to Quarkus' form authentication, and step-up, where switched on, a password dialog
+itself, posted to Quarkus' form authentication (the one request without the anti-CSRF token, checked by its `Origin`
+instead), and step-up, where switched on, a password dialog
 (xref:authentication-and-identity.adoc#_local_users[Authentication and Identity, Local Users]). The session, the CSRF check and the session view
 are designed against Token Sheriff's planned session layer
 (xref:authentication-and-identity.adoc#_token_sheriffs_session_layer[Authentication and Identity, Token Sheriff's

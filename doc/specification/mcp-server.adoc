@@ -243,10 +243,12 @@ With the login provider `local`
 * Every request must be authenticated by `Authorization: Basic` with the username and password of a user of the
   users file (link:https://www.rfc-editor.org/rfc/rfc7617[RFC 7617]; Quarkus decodes them as UTF-8); a bearer
   token and any credential in the query string must be refused.
-* A request without a valid credential must be answered with `401`; the protected resource metadata of <<AUN-MCP-2>>
-  must not be served. With wrong credentials the answer carries `WWW-Authenticate: Basic realm="audit-notary"`
-  (`quarkus.http.auth.realm`); without any it carries no challenge, because Quarkus runs Basic in silent mode beside
-  form authentication (`AuthConfig` and `BasicAuthenticationMechanism` in the Quarkus 3.40.1 source).
+* A request without a valid credential must be answered with `401` and `WWW-Authenticate: Basic realm="audit-notary"`,
+  as every `401` must carry a challenge
+  (link:https://www.rfc-editor.org/rfc/rfc9110#section-15.5.2[RFC 9110, §15.5.2]); the protected resource metadata of
+  <<AUN-MCP-2>> must not be served. Quarkus runs Basic in silent mode beside form authentication and then challenges
+  only a request that sent credentials (`AuthConfig` and `BasicAuthenticationMechanism` in the Quarkus 3.40.1
+  source), so the application adds the challenge to a `401` of `/mcp` that has none.
 * As at the web login, the answer must not tell an unknown user from a wrong password
   (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]).
 * There are no scopes: the effective permission is the user's rights (xref:authentication.adoc#AUN-AUTH-2[AUN-AUTH-2]),
@@ -259,13 +261,14 @@ With the login provider `local`
 |Engine
 |Quarkus' built-in Basic mechanism of `quarkus-vertx-http`, restricted to `/mcp` by
 `quarkus.http.auth.permission."permissions".auth-mechanism` (`basic`), over Quarkus' embedded realm
-(link:https://quarkus.io/guides/security-basic-authentication[Quarkus, Basic authentication]); no code of the
-application
+(link:https://quarkus.io/guides/security-basic-authentication[Quarkus, Basic authentication]); every other
+protected path takes form authentication only (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6])
 
 |Transport
-|HTTPS only: Basic "SHOULD NOT be used" without it, because it transmits the password in clear text
-(link:https://www.rfc-editor.org/rfc/rfc7617#section-4[RFC 7617, §4]); the application listens on HTTPS only
-(xref:configuration.adoc#AUN-CONF-1[AUN-CONF-1])
+|HTTPS: Basic "SHOULD NOT be used" without it, because it transmits the password in clear text
+(link:https://www.rfc-editor.org/rfc/rfc7617#section-4[RFC 7617, §4]). The application redirects plain HTTP
+(`quarkus.http.insecure-requests=redirect`, xref:configuration.adoc#AUN-CONF-1[AUN-CONF-1]), which comes too late for a
+header already sent; the protection is the client's: the local MCP gateway sends Basic only to an `https:` address
 
 |Identity
 |`iss`, `sub`, `amr` and the groups as in AUN-AUTH-6; `auth_time` the time of the request

@@ -225,7 +225,8 @@ refresh token: the agent never sees it.
 * *Remote side.* `Authorization: Basic` on every request, only to the server of the connection and only over HTTPS. A
   `401` is not retried with the same credential: the gateway marks the connection as needing the password again and
   says so on the local page, never to the agent.
-* *Credential helper.* `gateway token <connection>` prints the Basic header; a static header suits a `headersHelper`.
+* *Bridge only.* A Basic connection is used through the bridge. `gateway token <connection>` refuses it, because a
+  header handed to the MCP client's `headersHelper` would give the client the recoverable password.
 * *What it is not.* A stolen Basic credential is the user's password: it does not expire, is bound to no key, and opens
   the web app as well. A refresh token under DPoP gives more; the vault is the only protection here, and the local page
   says so.

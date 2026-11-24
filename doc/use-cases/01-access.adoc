@@ -213,9 +213,10 @@ Variations::
   nothing, and the
   trailers record the fresh `auth_time` with `amr=pwd`, not a second factor
   (xref:../specification/authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]).
-Outcome:: the transition is written only with a fresh, verified authentication of the same user, multi-factor with the
-identity provider and a password with local users, only if it is still valid when the user returns, and the commit says
-so.
+Outcome:: with step-up switched on, the transition is written only with a fresh, verified authentication of the same
+user, multi-factor with the identity provider and a password with local users, only if it is still valid when the user
+returns, and the commit says so; with step-up switched off it is written with the session's authentication, and the
+commit records that instead.
 Requirements:: xref:../specification/authentication.adoc#AUN-AUTH-4[AUN-AUTH-4] (step-up),
 xref:../specification/authentication.adoc#AUN-AUTH-3[AUN-AUTH-3] (trailers),
 xref:../specification/configuration.adoc#AUN-CONF-1[AUN-CONF-1] (the `step-up` setting); library:
@@ -419,9 +420,9 @@ Flow::
 ----
 Variations::
 * *The notice stays*: every page of the shell shows that the installation uses local test accounts.
-* *A changed user*: a new password, a new group or a removed user take effect when the operator restarts the
-  application with the changed file. A login cookie stays valid across the restart while the encryption key is the
-  same.
+* *A changed user*: the operator changes the file and restarts. A removed user's login cookie is refused from then
+  on and changed groups apply at once, because Quarkus looks the user up again on every request; a new password
+  applies to new logins only, and an existing cookie stays valid until its idle timeout.
 * *Logout* removes the login cookie and lands on the start page; there is no provider to visit
   (xref:#UC-ACC-2[UC-ACC-2]). A copy of the cookie stays valid until its idle timeout.
 * *Release*: with step-up switched on, the password is asked again (xref:#UC-ACC-3[UC-ACC-3]).

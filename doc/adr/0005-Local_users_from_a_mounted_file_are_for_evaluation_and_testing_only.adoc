@@ -100,8 +100,9 @@ demonstrations a deployment can authenticate against a mounted users file instea
 both. It is a configuration, not a build. Local users follow Quarkus' own mechanisms and are announced as test
 accounts, not hardened.*
 
-* *One build.* `quarkus-elytron-security-properties-file` is a dependency of every build (the owner's approval,
-  2026-11-24), and `application.properties` switches on the embedded realm, form and Basic authentication. With
+* *One build.* When AUN-AUTH-6 is built, `quarkus-elytron-security-properties-file` becomes a dependency of every
+  build (the owner's approval, 2026-11-24), and `application.properties` switches on the embedded realm, form and
+  Basic authentication; neither is in the build yet. With
   `oidc` the realm stays empty and a user of it from any source stops the boot, so the mechanisms authenticate nobody.
 * *Announced.* Every start with `local` logs one `WARN` record saying that local users are not meant for production;
   the login page and the web app's shell show a notice; every document that describes local users says so first

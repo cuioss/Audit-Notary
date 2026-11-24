@@ -183,7 +183,8 @@ A request is permitted only if one of the user's groups maps the action on the t
 * With the login provider `local` step-up is a renewed password check of the same user, sent with the transition
   request, not a second factor (<<AUN-AUTH-6>>); `step-up.amr` is `pwd` and `step-up.acr` is not set.
 * The transition must be written only when the session's values pass the check, or when the values of the re-driven
-  authorization or the renewed password check pass it; without such values nothing is written.
+  authorization or the renewed password check pass it; without such values nothing is written. With the login provider
+  `local` the session's values never pass: only the renewed password check sent with that request does.
 * The re-driven authorization or the renewed password check must be for the same issuer and `sub` as the session that
   requested the transition; for another one nothing is written.
 * Through the MCP server a transition that requires step-up must return `STEP_UP_REQUIRED` and write nothing; the
@@ -271,8 +272,9 @@ With `oidc` the realm stays empty and authenticates nobody. With `local`, the ap
 link:https://quarkus.io/guides/config-extending-support#config-source-factory[Quarkus, Extending configuration
 support, ConfigSourceFactory]) reads the users file of `login.local.users-ref` and offers its entries to Quarkus, as it
 offers Token Sheriff's keys derived from `audit-notary.yaml` (xref:configuration.adoc#AUN-CONF-1[AUN-CONF-1]). It also
-derives an HTTP permission for `/mcp` with `auth-mechanism` `basic` (`quarkus.http.auth.permission.<name>.*`) and
-`quarkus.http.auth.realm=audit-notary`, both runtime configuration (`AuthRuntimeConfig`, `ConfigPhase.RUN_TIME`).
+derives the HTTP permissions that bind Basic to `/mcp` and form authentication to every other protected path
+(`quarkus.http.auth.permission.<name>.auth-mechanism`), `quarkus.http.auth.realm=audit-notary` and the key of the login
+cookie, both runtime configuration (`AuthRuntimeConfig`, `ConfigPhase.RUN_TIME`).
 
 [source,yaml]
 ----
@@ -319,8 +321,9 @@ quarkus.security.users.embedded.roles.bob=isms-readers
 |The username
 
 |`auth_time`
-|The time of the password check: of the renewed check of a step-up, at the MCP server of the request; otherwise the time
-of the request, because Quarkus' login cookie records no login time
+|With a step-up, the time of its renewed password check; at the MCP server, the time of the request, whose Basic
+credential is checked. Otherwise the time of the request: Quarkus' login cookie records no login time, so with local
+users `Auth-Time` without step-up states when the login was last valid, not when the password was checked
 
 |`amr`
 |`pwd`, "Password-based authentication"
@@ -358,14 +361,23 @@ redirecting (`FormAuthenticationMechanism` in the Quarkus 3.40.1 source); an unk
 same answer
 
 |Login cookie
-|`quarkus-credential`, encrypted with `quarkus.http.auth.session.encryption-key` from a mounted secret (without it
-Quarkus uses a temporary key and logs a warning, so a restart ends every login); `http-only-cookie` `true`, `SameSite`
+|`quarkus-credential`, encrypted with `quarkus.http.auth.session.encryption-key`, which the config source derives from
+the secret `login.local.cookie-key-ref`, never from the users file (without it Quarkus uses a temporary key and logs a
+warning, so a restart ends every login). On every request Quarkus looks the user up in the realm again
+(`ElytronTrustedIdentityProvider` in the Quarkus 3.40.1 source): after a restart a removed user's cookie is refused
+and changed roles apply; a changed password leaves existing cookies valid. `http-only-cookie` `true`, `SameSite`
 `Strict` (the default), idle timeout `web.session.idle-timeout` (default `PT30M`). There is no absolute lifetime: the
 cookie is renewed while it is used
 
 |CSRF
-|xref:web-app.adoc#AUN-WEB-8[AUN-WEB-8] applies unchanged; with local users the anti-CSRF token of
-`GET /api/v1/session` is bound to the login cookie instead of a server-side session
+|xref:web-app.adoc#AUN-WEB-8[AUN-WEB-8] applies to every request after the login; with local users the anti-CSRF token
+of `GET /api/v1/session` is bound to the login cookie instead of a server-side session. The login request
+`POST /j_security_check` cannot carry that token: it is the one exception, and it is refused unless its `Origin`
+header is present and is `web.origin`
+
+|Mechanism per path
+|Form authentication on every protected path except `/mcp`, Basic only on `/mcp`: the config source derives one HTTP
+permission per side with `auth-mechanism` `form` or `basic`, so a Basic header elsewhere authenticates nobody
 
 |Step-up
 |With `step-up.enabled: true` (<<AUN-AUTH-4>>) the web app asks for the password in a dialog and sends it with the
