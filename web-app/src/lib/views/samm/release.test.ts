@@ -55,7 +55,7 @@ describe('SammReleaseView', () => {
   it('shows what is released: the seal, the change since the last release and the record', async () => {
     await prepare('release');
     render(SammReleaseView, { params: PARAMS });
-    expect(await act()).toHaveTextContent('Release');
+    expect(await act()).toHaveTextContent(/^Release$/);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Release Payments 2026 Q4');
     expect(screen.getByTestId('release-seal')).toBeInTheDocument();
     expect(await screen.findByText('Since Payments 2026 Q2')).toBeInTheDocument();
@@ -95,7 +95,7 @@ describe('SammReleaseView', () => {
     const scenario = await prepare('release#password');
     render(SammReleaseView, { params: PARAMS });
     const button = await act();
-    expect(button).toHaveTextContent('Release');
+    expect(button).toHaveTextContent(/^Release$/);
     expect(screen.getByText('You confirm your identity once more before the release.')).toBeInTheDocument();
     await fireEvent.click(button);
     const dialog = document.querySelector('dialog') as HTMLDialogElement;

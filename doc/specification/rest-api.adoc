@@ -77,10 +77,12 @@ Every request can end with these outcomes (xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9
 |none
 |`{"version", "degraded", "loginProvider", "repositories": [{"alias", "fetch"}]}`; no login, no personal data. The
 member `stepUp` (`mfa`, `password` or `off`; absent means `mfa`) is PROVISIONAL: the release reads how step-up
-confirms before it asks.
+confirms before it asks. The member `loginProvider` (`oidc` or `local`) is specified but not yet implemented: neither
+the mock, the wire type of the web app nor `StatusResource` carries it so far, and the web app does not read it until
+it does.
 |`degraded` while a fetch fails
 |xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]
-|`SPECIFIED`; member `stepUp` `PROVISIONAL`
+|`SPECIFIED`; member `stepUp` `PROVISIONAL`; member `loginProvider` not yet implemented
 
 |`GET /api/v1/messages?lang=en\|de`
 |none
