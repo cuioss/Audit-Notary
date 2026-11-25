@@ -1,0 +1,378 @@
+{
+  "repository": "samm-assessments",
+  "id": "payments-2026-q4",
+  "from": null,
+  "to": "working",
+  "sections": [
+    {
+      "part": "sm",
+      "changes": [
+        {
+          "pointer": "/answers/sm/sm-a-1/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/sm/sm-a-2/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/sm/sm-a-3/answer",
+          "before": null,
+          "after": 0.25
+        },
+        {
+          "pointer": "/answers/sm/sm-b-1/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/sm/sm-b-2/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/sm/sm-b-3/answer",
+          "before": null,
+          "after": 0.25
+        }
+      ]
+    },
+    {
+      "part": "pc",
+      "changes": [
+        {
+          "pointer": "/answers/pc/pc-a-1/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/pc/pc-a-2/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/pc/pc-a-3/answer",
+          "before": null,
+          "after": 0.25
+        },
+        {
+          "pointer": "/answers/pc/pc-b-1/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/pc/pc-b-2/answer",
+          "before": null,
+          "after": 0.25
+        },
+        {
+          "pointer": "/answers/pc/pc-b-3/answer",
+          "before": null,
+          "after": 0.5
+        }
+      ]
+    },
+    {
+      "part": "eg",
+      "changes": [
+        {
+          "pointer": "/answers/eg/eg-a-1/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/eg/eg-a-2/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/eg/eg-a-3/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/eg/eg-b-1/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/eg/eg-b-2/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/eg/eg-b-3/answer",
+          "before": null,
+          "after": 0.5
+        }
+      ]
+    },
+    {
+      "part": "ta",
+      "changes": [
+        {
+          "pointer": "/answers/ta/ta-a-1/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/ta/ta-a-2/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/ta/ta-a-3/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/ta/ta-b-1/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/ta/ta-b-2/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/ta/ta-b-3/answer",
+          "before": null,
+          "after": 0.25
+        }
+      ]
+    },
+    {
+      "part": "sr",
+      "changes": [
+        {
+          "pointer": "/answers/sr/sr-a-1/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/sr/sr-a-2/answer",
+          "before": null,
+          "after": 0.25
+        },
+        {
+          "pointer": "/answers/sr/sr-a-3/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/sr/sr-b-1/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/sr/sr-b-2/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/sr/sr-b-3/answer",
+          "before": null,
+          "after": 0.5
+        }
+      ]
+    },
+    {
+      "part": "sa",
+      "changes": [
+        {
+          "pointer": "/answers/sa/sa-a-1/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/sa/sa-a-2/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/sa/sa-a-3/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/sa/sa-b-1/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/sa/sa-b-2/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/sa/sa-b-3/answer",
+          "before": null,
+          "after": 0.5
+        }
+      ]
+    },
+    {
+      "part": "sb",
+      "changes": [
+        {
+          "pointer": "/answers/sb/sb-a-1/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/sb/sb-a-2/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/sb/sb-a-3/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/sb/sb-b-1/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/sb/sb-b-2/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/sb/sb-b-3/answer",
+          "before": null,
+          "after": 0.5
+        }
+      ]
+    },
+    {
+      "part": "sd",
+      "changes": [
+        {
+          "pointer": "/answers/sd/sd-a-1/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/sd/sd-a-2/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/sd/sd-a-3/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/sd/sd-b-1/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/sd/sd-b-2/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/sd/sd-b-3/answer",
+          "before": null,
+          "after": 0.5
+        }
+      ]
+    },
+    {
+      "part": "dm",
+      "changes": [
+        {
+          "pointer": "/answers/dm/dm-a-1/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/dm/dm-a-2/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/dm/dm-a-3/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/dm/dm-b-1/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/dm/dm-b-2/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/dm/dm-b-3/answer",
+          "before": null,
+          "after": 0.25
+        }
+      ]
+    },
+    {
+      "part": "st",
+      "changes": [
+        {
+          "pointer": "/answers/st/st-a-1/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/st/st-a-2/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/st/st-a-3/answer",
+          "before": null,
+          "after": 0.25
+        },
+        {
+          "pointer": "/answers/st/st-b-1/answer",
+          "before": null,
+          "after": 1
+        }
+      ]
+    },
+    {
+      "part": "im",
+      "changes": [
+        {
+          "pointer": "/answers/im/im-a-1/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/im/im-a-2/answer",
+          "before": null,
+          "after": 0.5
+        },
+        {
+          "pointer": "/answers/im/im-a-3/answer",
+          "before": null,
+          "after": 0.25
+        },
+        {
+          "pointer": "/answers/im/im-b-1/answer",
+          "before": null,
+          "after": 1
+        },
+        {
+          "pointer": "/answers/im/im-b-2/answer",
+          "before": null,
+          "after": 0.5
+        }
+      ]
+    }
+  ]
+}

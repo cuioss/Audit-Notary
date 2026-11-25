@@ -193,7 +193,7 @@
       "body_file": "samm-compare-payments-workshop.json"
     },
     "GET /api/v1/documents/samm-assessments/payments-2026-q4/diff": {
-      "body_file": "samm-diff-payments-2026-q4.json"
+      "body_file": "samm-diff-payments-2026-q4-draft.json"
     },
     "PUT /api/v1/drafts/samm-assessments/payments-2026-q4": {
       "body": {
@@ -208,15 +208,7 @@
     },
     "POST /api/v1/documents/samm-assessments/payments-2026-q4/transitions/samm.submit": {
       "status": 422,
-      "body": {
-        "outcome": "MANDATORY_FIELDS_MISSING",
-        "missing": [
-          "aa",
-          "rt",
-          "em",
-          "om"
-        ]
-      }
+      "body_file": "samm-submit-payments-2026-q4.json"
     }
   },
   "states": {

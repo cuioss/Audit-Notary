@@ -121,6 +121,51 @@ class ProfilesTest {
         }
 
         @Test
+        @DisplayName("refuses the submit of the draft with exactly the answers it lacks")
+        void shouldRefuseSubmitWithMissingAnswers() {
+            try (var client = MockClient.start("workshop").login()) {
+                var model = json(client.get("/api/v1/samm/models/v2.2.0"));
+                var answers = json(client.get("/api/v1/documents/samm-assessments/payments-2026-q4")).path("answers");
+                List<String> expected = new ArrayList<>();
+                for (var fn : model.path("functions")) {
+                    for (var practice : fn.path("practices")) {
+                        for (var stream : practice.path("streams")) {
+                            for (var question : stream.path("questions")) {
+                                String p = practice.path("id").asText();
+                                String q = question.path("id").asText();
+                                if (!answers.path(p).path(q).path("answer").isNumber()) {
+                                    expected.add("/answers/" + p + "/" + q + "/answer");
+                                }
+                            }
+                        }
+                    }
+                }
+                var refused = client.change("POST",
+                        "/api/v1/documents/samm-assessments/payments-2026-q4/transitions/samm.submit", null);
+                List<String> missing = new ArrayList<>();
+                json(refused).path("missing").forEach(pointer -> missing.add(pointer.asText()));
+                assertAll(
+                        () -> assertEquals(422, refused.statusCode()),
+                        () -> assertFalse(expected.isEmpty()),
+                        () -> assertEquals(expected, missing));
+            }
+        }
+
+        @Test
+        @DisplayName("serves in saved-by-other the answers another assessor changed")
+        void shouldServeOtherAnswers() {
+            try (var client = MockClient.start("workshop").login()) {
+                var path = "/api/v1/documents/samm-assessments/payments-2026-q4";
+                var before = json(client.get(path)).path("answers").path("sm");
+                client.send("POST", "/mock/goto/saved-by-other", null, Map.of());
+                var after = json(client.get(path)).path("answers").path("sm");
+                assertAll(
+                        () -> assertFalse(before.path("sm-b-1").equals(after.path("sm-b-1"))),
+                        () -> assertFalse(before.path("sm-b-2").equals(after.path("sm-b-2"))));
+            }
+        }
+
+        @Test
         @DisplayName("keeps a draft, saves for everyone, and answers CONFLICT in the state conflict")
         void shouldSaveAndConflict() {
             try (var client = MockClient.start("workshop").login()) {
@@ -170,8 +215,11 @@ class ProfilesTest {
                 var wrong = client.change("POST", RELEASE, "{\"password\":\"nope\"}");
                 client.send("POST", "/mock/goto/changed", null, Map.of());
                 var changed = client.change("POST", RELEASE, null);
+                var recorded = json(client.get("/mock/acts")).get(0).path("body");
                 assertAll(
                         () -> assertEquals("password", stepUp),
+                        () -> assertEquals("[redacted]", recorded.path("password").asText(),
+                                "a password must not be readable in /mock/acts"),
                         () -> assertEquals("INVALID_CREDENTIALS", json(wrong).path("outcome").asText()),
                         () -> assertEquals("CHANGED_SINCE_REVIEW", json(changed).path("outcome").asText()));
             }
@@ -216,7 +264,10 @@ class ProfilesTest {
                         () -> assertEquals(503, save.statusCode()),
                         () -> assertEquals("GIT_UNAVAILABLE", json(save).path("outcome").asText()),
                         () -> assertEquals(200, client.get("/api/v1/due").statusCode()),
-                        () -> assertFalse(up.path("degraded").asBoolean()));
+                        () -> assertFalse(up.path("degraded").asBoolean()),
+                        () -> assertEquals("SAVED", json(client.change("POST",
+                                "/api/v1/documents/samm-assessments/payments-2026-q4/save", "{}")).path("outcome")
+                                .asText(), "a save succeeds again once the Git server is back"));
             }
         }
     }

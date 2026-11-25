@@ -168,7 +168,7 @@
       "body_file": "samm-compare-payments-workshop.json"
     },
     "GET /api/v1/documents/samm-assessments/payments-2026-q4/diff": {
-      "body_file": "samm-diff-payments-2026-q4.json"
+      "body_file": "samm-diff-payments-2026-q4-draft.json"
     }
   },
   "states": {

@@ -35,7 +35,9 @@ class ScenarioLoaderTest {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final Map<String, String> DATA = Map.of(
             "model.json", "{\"version\": \"v2.2.0\"}",
-            "broken.json", "{nope");
+            "broken.json", "{nope",
+            "blank.json", "  ",
+            "trailing.json", "{\"a\": 1} junk");
     private final ScenarioLoader loader = new ScenarioLoader(MAPPER, name -> Optional.ofNullable(DATA.get(name)));
 
     private static ObjectNode valid() {
@@ -161,11 +163,19 @@ class ScenarioLoaderTest {
             assertTrue(message.contains("names no data file"), message);
         }
 
-        @Test
-        @DisplayName("whose data file is no JSON")
-        void shouldRefuseBrokenFile() {
-            var message = rejectionWith("broken.json", false);
+        @ParameterizedTest
+        @ValueSource(strings = {"broken.json", "trailing.json"})
+        @DisplayName("whose data file is no JSON, or more than one value")
+        void shouldRefuseBrokenFile(String name) {
+            var message = rejectionWith(name, false);
             assertTrue(message.contains("not valid JSON"), message);
+        }
+
+        @Test
+        @DisplayName("whose data file is blank")
+        void shouldRefuseBlankFile() {
+            var message = rejectionWith("blank.json", false);
+            assertTrue(message.contains("holds no JSON value"), message);
         }
 
         @Test

@@ -122,7 +122,7 @@
       "body_file": "samm-model-v2.2.0.json"
     },
     "GET /api/v1/samm/scopes": {
-      "body_file": "samm-scopes.json"
+      "body_file": "samm-scopes-release-review.json"
     },
     "GET /api/v1/samm/scopes/payments": {
       "body_file": "samm-scope-payments-in-review.json"
@@ -302,6 +302,9 @@
         },
         "GET /api/v1/documents/samm-assessments/payments-2026-q4": {
           "body_file": "samm-assessment-payments-2026-q4-released.json"
+        },
+        "GET /api/v1/samm/scopes": {
+          "body_file": "samm-scopes-release-released.json"
         }
       }
     }

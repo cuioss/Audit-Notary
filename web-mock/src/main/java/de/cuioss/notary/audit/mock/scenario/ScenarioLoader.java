@@ -11,6 +11,7 @@
 package de.cuioss.notary.audit.mock.scenario;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -320,11 +321,16 @@ public final class ScenarioLoader {
         }
         String text = dataFiles.apply(name)
                 .orElseThrow(() -> context.fail(fileLocation, "names no data file: " + name));
+        JsonNode body;
         try {
-            return mapper.readTree(text);
+            body = mapper.reader().with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS).readTree(text);
         } catch (JsonProcessingException e) {
             throw context.fail(fileLocation, "data file " + name + " is not valid JSON: " + e.getOriginalMessage());
         }
+        if (body == null || body.isMissingNode()) {
+            throw context.fail(fileLocation, "data file " + name + " holds no JSON value");
+        }
+        return body;
     }
 
     private static JsonNode bodyOf(JsonNode node, String field) {

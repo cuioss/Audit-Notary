@@ -1,0 +1,32 @@
+{
+  "outcome": "MANDATORY_FIELDS_MISSING",
+  "missing": [
+    "/answers/aa/aa-a-1/answer",
+    "/answers/aa/aa-a-2/answer",
+    "/answers/aa/aa-a-3/answer",
+    "/answers/aa/aa-b-1/answer",
+    "/answers/aa/aa-b-2/answer",
+    "/answers/aa/aa-b-3/answer",
+    "/answers/rt/rt-a-1/answer",
+    "/answers/rt/rt-a-2/answer",
+    "/answers/rt/rt-a-3/answer",
+    "/answers/rt/rt-b-1/answer",
+    "/answers/rt/rt-b-2/answer",
+    "/answers/rt/rt-b-3/answer",
+    "/answers/st/st-b-2/answer",
+    "/answers/st/st-b-3/answer",
+    "/answers/im/im-b-3/answer",
+    "/answers/em/em-a-1/answer",
+    "/answers/em/em-a-2/answer",
+    "/answers/em/em-a-3/answer",
+    "/answers/em/em-b-1/answer",
+    "/answers/em/em-b-2/answer",
+    "/answers/em/em-b-3/answer",
+    "/answers/om/om-a-1/answer",
+    "/answers/om/om-a-2/answer",
+    "/answers/om/om-a-3/answer",
+    "/answers/om/om-b-1/answer",
+    "/answers/om/om-b-2/answer",
+    "/answers/om/om-b-3/answer"
+  ]
+}

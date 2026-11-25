@@ -193,7 +193,18 @@
       "body_file": "samm-compare-payments-workshop.json"
     },
     "GET /api/v1/documents/samm-assessments/payments-2026-q4/diff": {
-      "body_file": "samm-diff-payments-2026-q4.json"
+      "body_file": "samm-diff-payments-2026-q4-draft.json"
+    },
+    "PUT /api/v1/drafts/samm-assessments/payments-2026-q4": {
+      "body": {
+        "outcome": "DRAFT_SAVED"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/payments-2026-q4/save": {
+      "body": {
+        "outcome": "SAVED",
+        "parts": {}
+      }
     }
   },
   "states": {
@@ -233,11 +244,6 @@
           "status": 503,
           "body": {
             "outcome": "GIT_UNAVAILABLE"
-          }
-        },
-        "PUT /api/v1/drafts/samm-assessments/payments-2026-q4": {
-          "body": {
-            "outcome": "DRAFT_SAVED"
           }
         },
         "POST /api/v1/documents/samm-assessments/payments-2026-q4/save": {
