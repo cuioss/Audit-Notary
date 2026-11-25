@@ -2,6 +2,7 @@
   import type { Snippet } from 'svelte';
   import { t } from '../i18n';
   import { lensAddress, type Lens } from '../routes';
+  import { streamState } from '../stores/app';
   import BottomBar from './BottomBar.svelte';
   import CommandPalette from './CommandPalette.svelte';
   import NavRail from './NavRail.svelte';
@@ -37,7 +38,7 @@
 </script>
 
 <a class="skip" href="#main">{$t('shell.skip-to-content')}</a>
-<div class="app-shell">
+<div class="app-shell" data-stream={$streamState}>
   <NavRail {activeLens} {collapsed} onToggle={toggle} />
   <div class="app-shell__main">
     <TopBar

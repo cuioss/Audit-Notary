@@ -5,11 +5,14 @@ import { login } from './helpers/login.js';
 /**
  * The event stream (AUN-WEB-5, AUN-WEB-9) and the degraded state (AUN-GEN-6).
  */
-test('the live indicator reports the connected stream', async ({ page, request }) => {
+test('the shell connects the event stream and shows no connection state', async ({
+  page,
+  request,
+}) => {
   await useScenario(request, 'workshop');
   await login(page, '/');
-  await expect(page.getByTestId('live-indicator')).toHaveAttribute('data-state', 'connected');
-  await expect(page.getByTestId('live-indicator')).toHaveText('Live');
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-stream', 'connected');
+  await expect(page.getByText('Live', { exact: true })).toHaveCount(0);
 });
 
 test('an unreachable Git server is shown, and its recovery clears the notice', async ({
@@ -20,7 +23,7 @@ test('an unreachable Git server is shown, and its recovery clears the notice', a
   await login(page, '/');
   const notice = page.getByTestId('notice').filter({ hasText: 'Git server unreachable' });
   await expect(notice).toBeVisible();
-  await expect(page.getByTestId('live-indicator')).toHaveAttribute('data-state', 'connected');
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-stream', 'connected');
   await gotoState(request, 'recovered');
   await expect(notice).toBeHidden();
 });
@@ -28,7 +31,7 @@ test('an unreachable Git server is shown, and its recovery clears the notice', a
 test('a status event switches the degraded state without a reload', async ({ page, request }) => {
   await useScenario(request, 'workshop');
   await login(page, '/');
-  await expect(page.getByTestId('live-indicator')).toHaveAttribute('data-state', 'connected');
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-stream', 'connected');
   await broadcast(request, 'status', {
     version: '0.1.0-SNAPSHOT',
     degraded: true,

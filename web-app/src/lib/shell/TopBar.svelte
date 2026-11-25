@@ -7,11 +7,11 @@
   import { t } from '../i18n';
   import { session } from '../stores/app';
   import { breadcrumb } from '../stores/breadcrumb';
-  import LiveIndicator from './LiveIndicator.svelte';
 
   /**
-   * The top bar: where the user is — the lens and the path below it, the page's one breadcrumb — the search, the live
-   * indicator and the account.
+   * The top bar: where the user is — the lens and the path below it, the page's one breadcrumb — the search and the
+   * account. The state of the event stream is not shown (owner's decision): saves by others and the degraded state
+   * still arrive over it and speak where they matter.
    */
   interface Props {
     /** The catalogue key of the current view's title. */
@@ -71,7 +71,6 @@
         <span class="top-bar__search-label">{$t('shell.search.open')}</span>
       </Button>
     </span>
-    <LiveIndicator />
     {#if $session}
       <span
         class="top-bar__user"

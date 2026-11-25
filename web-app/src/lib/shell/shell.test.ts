@@ -7,7 +7,6 @@ import { textSnippet } from '../test/snippets';
 import AppShell from './AppShell.svelte';
 import BottomBar from './BottomBar.svelte';
 import CommandPalette from './CommandPalette.svelte';
-import LiveIndicator from './LiveIndicator.svelte';
 import NavRail from './NavRail.svelte';
 import TopBar from './TopBar.svelte';
 import {
@@ -62,18 +61,6 @@ describe('NavRail', () => {
   });
 });
 
-describe('LiveIndicator', () => {
-  it('says the state in words and offers a retry when offline', async () => {
-    const retry = vi.spyOn(apiClient, 'retryEvents').mockImplementation(() => {});
-    streamState.set('connected');
-    const { rerender } = render(LiveIndicator);
-    expect(screen.getByTestId('live-indicator')).toHaveTextContent('Live');
-    streamState.set('offline');
-    await rerender({});
-    await fireEvent.click(screen.getByTestId('live-retry'));
-    expect(retry).toHaveBeenCalled();
-  });
-});
 
 describe('TopBar', () => {
   it('shows the view title, the user and signs out', async () => {
@@ -132,18 +119,6 @@ describe('TopBar breadcrumb', () => {
   });
 });
 
-describe('LiveIndicator states', () => {
-  it.each([
-    ['connecting', 'Connecting'],
-    ['reconnecting', 'Reconnecting'],
-  ] as const)('names %s without a retry', (state, word) => {
-    streamState.set(state);
-    render(LiveIndicator);
-    expect(screen.getByTestId('live-indicator')).toHaveTextContent(word);
-    expect(screen.getByTestId('live-indicator')).toHaveAttribute('title', `Live updates: ${word}`);
-    expect(screen.queryByTestId('live-retry')).toBeNull();
-  });
-});
 
 describe('BottomBar', () => {
   it('opens "More" with the remaining lenses', async () => {
@@ -201,5 +176,17 @@ describe('AppShell', () => {
     expect(readRailCollapsed()).toBe(true);
     await fireEvent.click(screen.getByTestId('search-open'));
     expect(screen.getByTestId('search-input')).toBeInTheDocument();
+  });
+
+  it('shows no connection state, but keeps it as a data attribute for the end-to-end suite', () => {
+    streamState.set('connected');
+    const { container } = render(AppShell, {
+      activeLens: 'due',
+      titleKey: 'lens.due',
+      onnavigate: () => {},
+      content: textSnippet('content'),
+    });
+    expect(container.querySelector('.app-shell')).toHaveAttribute('data-stream', 'connected');
+    expect(screen.queryByText('Live')).toBeNull();
   });
 });
