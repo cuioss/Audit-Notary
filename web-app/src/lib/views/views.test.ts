@@ -35,11 +35,61 @@ describe('DueView', () => {
     render(DueView);
     const list = await screen.findByTestId('due-list');
     expect(list.querySelectorAll('li')).toHaveLength(1);
-    expect(screen.getByText('Review')).toBeInTheDocument();
+    expect(screen.getByText('Review in SAMM')).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: 'Open Payments 2026-Q4: Strategy & Metrics' }),
     ).toHaveAttribute('href', '/samm/payments/2026-q4/sm');
-    expect(screen.getByText(/Due Dec 4, 2026/)).toBeInTheDocument();
+    expect(screen.getByText('December 4, 2026')).toBeInTheDocument();
+  });
+
+  it('keeps a daybook: overdue, today, this week and later, one day after the other', async () => {
+    const day = (offset: number): string => {
+      const date = new Date();
+      date.setDate(date.getDate() + offset);
+      const pad = (value: number) => String(value).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    };
+    const entry = (
+      title: string,
+      address: string,
+      due: string,
+      lens: 'samm' | 'threat-models' | 'incidents' | 'isms',
+    ) => ({
+      kind: 'deadline' as const,
+      lens,
+      title,
+      address,
+      due,
+    });
+    vi.spyOn(apiClient, 'getDue').mockResolvedValue({
+      items: [
+        entry('Later one', '/samm/shop', day(20), 'isms'),
+        entry('Overdue one', '/samm/payments', day(-2), 'threat-models'),
+        entry('Overdue two', '/samm/identity', day(-2), 'samm'),
+        entry('Today one', '/samm/organisation', day(0), 'incidents'),
+        entry('Week one', '/samm/payments/2026-q4', day(3), 'samm'),
+      ],
+    });
+    render(DueView);
+    await screen.findByTestId('due-list');
+    expect(
+      screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent?.trim()),
+    ).toEqual(['Overdue', 'Today', 'This week', 'Later']);
+    expect(screen.getAllByTestId('due-overdue')).toHaveLength(2);
+    expect(screen.getAllByTestId('due-overdue')[0]).toHaveTextContent('2 days overdue');
+    expect(screen.getByTestId('due-summary')).toHaveTextContent(
+      '2 entries are overdue. 2 more are due this week.',
+    );
+    expect(screen.getByText('Due today')).toBeInTheDocument();
+    expect(screen.getByText('Due in 3 days')).toBeInTheDocument();
+    const overdue = screen.getByRole('region', { name: 'Overdue' });
+    expect(overdue.querySelectorAll('.daybook__day')).toHaveLength(1);
+  });
+
+  it('shows the loading word until the list arrives', () => {
+    vi.spyOn(apiClient, 'getDue').mockReturnValue(new Promise(() => {}));
+    render(DueView);
+    expect(screen.getByText('Loading…')).toBeInTheDocument();
   });
 
   it('says when nothing is due', async () => {
@@ -121,7 +171,7 @@ describe('WelcomeView', () => {
     vi.spyOn(apiClient, 'getDirectoryMe').mockRejectedValue(new ApiError('NETWORK', 0));
     vi.spyOn(apiClient, 'getCatalog').mockResolvedValue({ entries: [] });
     render(WelcomeView, { onnavigate: () => {} });
-    expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong');
+    expect(await screen.findByRole('alert')).toHaveTextContent('No connection to Audit Notary');
   });
 });
 
@@ -146,12 +196,16 @@ describe('AppRouter', () => {
     ['/welcome', 'welcome-view'],
     ['/settings', 'settings-view'],
     ['/settings/appearance', 'settings-view'],
-    ['/samm/payments/2026-q4/sm', 'lens-view'],
+    ['/samm/payments/2026-q4/sm', 'samm-view'],
+    ['/threat-models/payment-gateway', 'lens-view'],
     ['/nowhere/at/all/here/x', 'not-found-view'],
   ])('renders %s as %s', async (pathname, testId) => {
     vi.spyOn(apiClient, 'getDue').mockResolvedValue({ items: [] });
     vi.spyOn(apiClient, 'getDirectoryMe').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'getCatalog').mockReturnValue(new Promise(() => {}));
+    vi.spyOn(apiClient, 'getSammScopes').mockReturnValue(new Promise(() => {}));
+    vi.spyOn(apiClient, 'getSammScope').mockReturnValue(new Promise(() => {}));
+    vi.spyOn(apiClient, 'subscribeEvents').mockReturnValue(() => {});
     render(AppRouter, { pathname, onnavigate: () => {} });
     expect(await screen.findByTestId(testId)).toBeInTheDocument();
   });

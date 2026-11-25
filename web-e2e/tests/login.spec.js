@@ -15,7 +15,7 @@ test('a deep link without session returns to the same address after the login', 
   await page.goto('/samm/payments/2026-q4');
   await expect(page).toHaveURL('/samm/payments/2026-q4');
   await expect(page.getByTestId('user-name')).toHaveText('Signed in as Alex Example');
-  await expect(page.getByTestId('lens-route')).toHaveAttribute('data-route', 'samm.assessment');
+  await expect(page.getByTestId('assessment-sheet')).toBeVisible();
 });
 
 test('the browser holds the session cookie only, HttpOnly and SameSite=Strict', async ({

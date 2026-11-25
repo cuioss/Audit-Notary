@@ -5,29 +5,30 @@ import { login } from './helpers/login.js';
 /**
  * AUN-WEB-3: the eight lenses on the rail, one canonical address per view, and a reload restores it.
  */
+// [address, view, lens in the breadcrumb, page title]
 const ADDRESSES = [
-  ['/', 'due-view', 'Due'],
-  ['/samm', 'lens-view', 'SAMM'],
-  ['/samm/payments/2026-q4/sm', 'lens-view', 'SAMM'],
-  ['/samm/payments/2026-q4/release', 'lens-view', 'Release'],
-  ['/threat-models/payment-gateway/checkout-flow', 'lens-view', 'Threat models'],
-  ['/incidents/2026/inc-0007', 'lens-view', 'Incidents'],
-  ['/isms/risks/r-012', 'lens-view', 'ISMS'],
-  ['/isms/documents/policy-access', 'lens-view', 'ISMS'],
-  ['/catalogs/team/payments', 'lens-view', 'Catalogs'],
-  ['/reports/trends', 'lens-view', 'Reports'],
-  ['/settings', 'settings-view', 'Settings'],
+  ['/', 'due-view', 'Due', 'Due'],
+  ['/samm', 'samm-view', 'SAMM', 'SAMM'],
+  ['/samm/payments/2026-q4/sm', 'samm-view', 'SAMM', 'SAMM'],
+  ['/samm/payments/2026-q4/release', 'release-view', 'SAMM', 'Release'],
+  ['/threat-models/payment-gateway/checkout-flow', 'lens-view', 'Threat models', 'Threat models'],
+  ['/incidents/2026/inc-0007', 'lens-view', 'Incidents', 'Incidents'],
+  ['/isms/risks/r-012', 'lens-view', 'ISMS', 'ISMS'],
+  ['/isms/documents/policy-access', 'lens-view', 'ISMS', 'ISMS'],
+  ['/catalogs/team/payments', 'lens-view', 'Catalogs', 'Catalogs'],
+  ['/reports/trends', 'lens-view', 'Reports', 'Reports'],
+  ['/settings', 'settings-view', 'Settings', 'Settings'],
 ];
 
 test.beforeEach(async ({ request }) => {
   await useScenario(request, 'workshop');
 });
 
-for (const [address, view, title] of ADDRESSES) {
+for (const [address, view, lens, title] of ADDRESSES) {
   test(`${address} opens and reloads into the same view`, async ({ page }) => {
     await login(page, address);
     await expect(page.getByTestId(view)).toBeVisible();
-    await expect(page.getByTestId('view-title')).toHaveText(title);
+    await expect(page.getByTestId('view-title')).toHaveText(lens);
     await page.reload();
     await expect(page).toHaveURL(address);
     await expect(page.getByTestId(view)).toBeVisible();
