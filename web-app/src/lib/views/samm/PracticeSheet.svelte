@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
+  import { onDestroy, untrack } from 'svelte';
   import AnswerScale from '../../components/AnswerScale.svelte';
   import Button from '../../components/Button.svelte';
   import Disclosure from '../../components/Disclosure.svelte';
@@ -127,10 +127,31 @@
   let score = $derived(practice ? practiceScore({ [practiceId]: shown }, practice) : null);
 
   // Another practice: a fresh sheet.
-  let lastPractice = '';
+  // The work on the sheet belongs to one practice of one assessment. When either changes, unsaved changes are kept
+  // as the draft of the document they were made on, and the sheet starts fresh.
+  let owner = { document: '', practice: '', blob: '' };
   $effect(() => {
-    if (practiceId === lastPractice) return;
-    lastPractice = practiceId;
+    const document = assessment?.id ?? '';
+    if (document === owner.document && practiceId === owner.practice) return;
+    untrack(() => {
+      const pending: Record<string, Edit> = $state.snapshot(edits);
+      if (owner.document && Object.keys(pending).length > 0) {
+        void apiClient
+          .saveDraft(
+            'samm-assessments',
+            owner.document,
+            requestFor(owner.practice, pending, owner.blob),
+          )
+          .catch(() => {});
+      }
+      if (draftTimer) clearTimeout(draftTimer);
+      draftTimer = null;
+    });
+    owner = {
+      document,
+      practice: practiceId,
+      blob: untrack(() => assessment?.parts[practiceId]?.blob ?? ''),
+    };
     edits = {};
     committed = null;
     conflicts = {};
@@ -174,14 +195,24 @@
     draftTimer = setTimeout(() => void keepDraft(), DRAFT_DELAY_MS);
   }
 
-  function partRequest() {
+  /**
+   * @param part the practice
+   * @param pending its changes
+   * @param blob the version of its file the changes are based on
+   * @returns the body of a draft or a save
+   */
+  function requestFor(part: string, pending: Record<string, Edit>, blob: string) {
     const fields: Record<string, unknown> = {};
-    for (const [id, edit] of Object.entries(edits)) {
+    for (const [id, edit] of Object.entries(pending)) {
       if (edit.answer !== undefined) fields[`${id}/answer`] = edit.answer;
       if (edit.comment !== undefined) fields[`${id}/comment`] = edit.comment;
     }
+    return { parts: { [part]: { blob, fields } } };
+  }
+
+  function partRequest() {
     const blob = conflictBlob || assessment?.parts[practiceId]?.blob || '';
-    return { parts: { [practiceId]: { blob, fields } } };
+    return requestFor(practiceId, edits, blob);
   }
 
   async function keepDraft() {
@@ -195,8 +226,11 @@
         stamp = formatTime(answer.at ? new Date(answer.at) : new Date(), $currentLocale);
       }
     } catch (error) {
-      saveState = 'failed';
-      failure = errorMessageKey(error);
+      // A save for everyone started meanwhile keeps its own state.
+      if (saveState === 'drafting') {
+        saveState = 'failed';
+        failure = errorMessageKey(error);
+      }
     }
   }
 
@@ -228,12 +262,18 @@
     failure = null;
     // What this save sends; changes made while it runs stay in `edits` and are kept and saved later.
     const sent: Record<string, Edit> = $state.snapshot(edits);
+    const request = partRequest();
+    // The version this save is based on: until the server shows a newer one, the sent answers stand on the sheet.
+    const base = request.parts[practiceId].blob;
     try {
-      const answer = await apiClient.saveDocument('samm-assessments', assessment.id, partRequest());
-      const replaced = assessment.parts[practiceId]?.blob ?? '';
+      const answer = await apiClient.saveDocument('samm-assessments', assessment.id, request);
       const merged: Record<string, Edit> = { ...committed?.answers };
       for (const [id, edit] of Object.entries(sent)) merged[id] = { ...merged[id], ...edit };
-      committed = { blob: replaced, answers: merged };
+      // A newer version that arrived meanwhile already shows the save, or will with the next read.
+      committed =
+        (assessment?.parts[practiceId]?.blob ?? '') === base
+          ? { blob: base, answers: merged }
+          : null;
       edits = withoutSent(edits, sent);
       conflicts = {};
       conflictBlob = '';
@@ -259,6 +299,9 @@
       } else {
         saveState = 'failed';
         failure = errorMessageKey(error);
+        // The changes are still the person's: they are kept as a draft again.
+        if (draftTimer) clearTimeout(draftTimer);
+        draftTimer = setTimeout(() => void keepDraft(), DRAFT_DELAY_MS);
       }
     }
   }
@@ -367,11 +410,11 @@
   );
   let base = $derived(scope && assessment ? `/samm/${scope.id}/${assessment.slug}` : '');
 
+  // Closing the sheet keeps every unsaved change as a draft, whether or not a draft timer is still running.
   onDestroy(() => {
-    if (draftTimer) {
-      clearTimeout(draftTimer);
-      void keepDraft();
-    }
+    if (draftTimer) clearTimeout(draftTimer);
+    draftTimer = null;
+    if (dirty) void keepDraft();
   });
 </script>
 
@@ -418,7 +461,7 @@
         </div>
       {/if}
 
-      {#each practice.streams as stream, streamIndex (stream.letter)}
+      {#each practice.streams as stream (stream.letter)}
         <section class="stream" aria-labelledby="stream-{stream.letter}">
           <header class="stream__head">
             <h2 class="stream__title" id="stream-{stream.letter}">
@@ -426,11 +469,11 @@
               {stream.name}
             </h2>
             <ScoreMeter
-              value={score.streams[streamIndex]}
-              text={formatScore(score.streams[streamIndex], $currentLocale)}
+              value={score.streams[stream.letter === 'B' ? 1 : 0]}
+              text={formatScore(score.streams[stream.letter === 'B' ? 1 : 0], $currentLocale)}
               label={$t('practice.stream-score', {
                 letter: stream.letter,
-                score: formatScore(score.streams[streamIndex], $currentLocale),
+                score: formatScore(score.streams[stream.letter === 'B' ? 1 : 0], $currentLocale),
               })}
             />
           </header>

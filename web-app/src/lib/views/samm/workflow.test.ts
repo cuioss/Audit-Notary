@@ -28,5 +28,6 @@ describe('previousRelease', () => {
     expect(previousRelease(list, '2026-q4')?.id).toBe('2026-q2');
     expect(previousRelease(list, '2026-q2')?.id).toBe('2025-q4');
     expect(previousRelease(list, '2025-q4')).toBeNull();
+    expect(previousRelease(list, 'unknown')).toBeNull();
   });
 });

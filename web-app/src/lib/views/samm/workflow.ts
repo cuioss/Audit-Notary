@@ -32,6 +32,7 @@ export function previousRelease<T extends { id: string; state: WorkflowState }>(
   id: string,
 ): T | null {
   const index = assessments.findIndex((entry) => entry.id === id);
+  if (index < 0) return null;
   return assessments.slice(index + 1).find((entry) => entry.state === 'released') ?? null;
 }
 

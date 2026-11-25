@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import Notice from '../../components/Notice.svelte';
   import { apiClient } from '../../api/client';
   import { errorMessageKey } from '../../api/errors';
@@ -42,7 +42,22 @@
   let scope = $state<SammScope | null>(null);
   let assessment = $state<SammAssessment | null>(null);
   let model = $state<SammModel | null>(null);
-  let failure = $state<string | null>(null);
+
+  /** The loads of the view; each keeps its own failure, so one that succeeds never hides another that failed. */
+  type Load = 'scopes' | 'scope' | 'model' | 'assessment';
+  let failures = $state<Partial<Record<Load, string>>>({});
+  let failure = $derived(Object.values(failures).find(Boolean) ?? null);
+
+  function fail(load: Load, error: unknown) {
+    failures = { ...failures, [load]: errorMessageKey(error) };
+  }
+
+  function succeed(load: Load) {
+    if (!failures[load]) return;
+    const rest = { ...failures };
+    delete rest[load];
+    failures = rest;
+  }
 
   let summary = $derived(
     scope?.assessments.find((entry) => entry.id === params.assessment) ?? null,
@@ -54,15 +69,20 @@
   onMount(() => {
     apiClient
       .getSammScopes()
-      .then((list) => (scopes = list))
-      .catch((error) => (failure = errorMessageKey(error)));
+      .then((list) => {
+        scopes = list;
+        succeed('scopes');
+      })
+      .catch((error) => fail('scopes', error));
+    // A save to the document of the address is read again, also while its first read is still under way: the reads
+    // are ordered, so the newer snapshot wins.
     const stop = apiClient.subscribeEvents((event, data) => {
       const saved = data as DocumentSavedEvent;
       if (
         event === 'document-saved' &&
         saved?.repository === 'samm-assessments' &&
-        assessment &&
-        saved.id === assessment.id
+        summary &&
+        saved.id === summary.document
       ) {
         void reloadAssessment(saved.id);
       }
@@ -73,23 +93,28 @@
     };
   });
 
-  // The scope of the address.
+  // The scope of the address. Another scope drops the records of the last one at once, so its data never shows
+  // under the new address, whether the new one loads or fails.
   $effect(() => {
     const id = params.scope;
     if (!id) {
       scope = null;
+      succeed('scope');
       return;
     }
-    if (scope?.id === id) return;
+    if (untrack(() => scope?.id) === id) return;
+    scope = null;
+    assessment = null;
     let current = true;
-    failure = null;
     apiClient
       .getSammScope(id)
       .then((loaded) => {
-        if (current) scope = loaded;
+        if (!current) return;
+        scope = loaded;
+        succeed('scope');
       })
       .catch((error) => {
-        if (current) failure = errorMessageKey(error);
+        if (current) fail('scope', error);
       });
     return () => {
       current = false;
@@ -99,30 +124,46 @@
   // The model the scope's assessments are taken with.
   $effect(() => {
     const version = summary?.modelVersion ?? scope?.modelVersion;
-    if (!version || model?.version === version) return;
+    if (!version || untrack(() => model?.version) === version) return;
+    let current = true;
     loadModel(version)
-      .then((loaded) => (model = loaded))
-      .catch((error) => (failure = errorMessageKey(error)));
+      .then((loaded) => {
+        if (!current) return;
+        model = loaded;
+        succeed('model');
+      })
+      .catch((error) => {
+        if (current) fail('model', error);
+      });
+    return () => {
+      current = false;
+    };
   });
 
-  // The assessment of the address.
+  // The assessment of the address; another one drops the last at once.
   $effect(() => {
     const id = summary?.document;
     if (!id) {
       assessment = null;
       return;
     }
-    if (assessment?.id === id) return;
+    if (untrack(() => assessment?.id) === id) return;
+    assessment = null;
     void reloadAssessment(id);
   });
 
+  /** The number of the latest read of the assessment; the answer of an older read is dropped. */
+  let latestRead = 0;
+
   async function reloadAssessment(id: string) {
+    const read = ++latestRead;
     try {
       const loaded = await apiClient.getSammAssessment(id);
-      if (summary?.document === loaded.id) assessment = loaded;
-      failure = null;
+      if (read !== latestRead || summary?.document !== loaded.id) return;
+      assessment = loaded;
+      succeed('assessment');
     } catch (error) {
-      failure = errorMessageKey(error);
+      if (read === latestRead) fail('assessment', error);
     }
   }
 
@@ -132,9 +173,12 @@
     const id = assessment.id;
     try {
       const loaded = await apiClient.getSammScope(params.scope);
-      if (loaded.id === params.scope) scope = loaded;
+      if (loaded.id === params.scope) {
+        scope = loaded;
+        succeed('scope');
+      }
     } catch (error) {
-      failure = errorMessageKey(error);
+      fail('scope', error);
     }
     await reloadAssessment(id);
   }

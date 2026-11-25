@@ -43,6 +43,13 @@ describe('practiceScore', () => {
     expect(score.questions).toBe(6);
   });
 
+  it('keeps stream A first whatever the order of the model', () => {
+    const reversed = { ...sm, streams: [sm.streams[1], sm.streams[0]] };
+    const [a1] = sm.streams[0].questions;
+    const score = practiceScore({ sm: { [a1.id]: { answer: 1 } } }, reversed);
+    expect(score.streams).toEqual([1, 0]);
+  });
+
   it('scores a practice without answers 0', () => {
     expect(practiceScore({}, sm)).toMatchObject({ score: 0, answered: 0, streams: [0, 0] });
   });

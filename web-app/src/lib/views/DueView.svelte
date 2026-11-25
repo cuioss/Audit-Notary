@@ -32,8 +32,8 @@
     isms: 'isms',
   };
 
-  type Group = 'overdue' | 'today' | 'week' | 'later';
-  const GROUPS: Group[] = ['overdue', 'today', 'week', 'later'];
+  const GROUPS = ['overdue', 'today', 'week', 'later'] as const;
+  type Group = (typeof GROUPS)[number];
 
   async function load() {
     failure = null;

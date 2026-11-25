@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { describe, expect, it, vi } from 'vitest';
 import { apiClient } from '../api/client';
+import type { DueItem } from '../api/types';
 import { ApiError } from '../api/errors';
 import { currentLocale } from '../i18n';
 import { session } from '../stores/app';
@@ -49,12 +50,7 @@ describe('DueView', () => {
       const pad = (value: number) => String(value).padStart(2, '0');
       return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
     };
-    const entry = (
-      title: string,
-      address: string,
-      due: string,
-      lens: 'samm' | 'threat-models' | 'incidents' | 'isms',
-    ) => ({
+    const entry = (title: string, address: string, due: string, lens: DueItem['lens']) => ({
       kind: 'deadline' as const,
       lens,
       title,

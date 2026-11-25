@@ -459,6 +459,40 @@ describe('PracticeSheet', () => {
     expect(screen.getByTestId('answer-sm-a-1-3')).toBeChecked();
   });
 
+  it('keeps the changes of one assessment as its draft when another opens', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    const draft = vi
+      .spyOn(apiClient, 'saveDraft')
+      .mockResolvedValue({ outcome: 'DRAFT_SAVED', at: '' });
+    const { rerender } = render(PracticeSheet, { scope, assessment, model, practiceId: 'sm' });
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
+    await rerender({ assessment: { ...assessment, id: 'payments-2026-q2', slug: '2026-q2' } });
+    expect(draft).toHaveBeenCalledWith(
+      'samm-assessments',
+      'payments-2026-q4',
+      expect.objectContaining({
+        parts: { sm: expect.objectContaining({ fields: { 'sm-a-1/answer': 1 } }) },
+      }),
+    );
+    expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'clean');
+  });
+
+  it('keeps unsaved changes as a draft when the sheet closes after a failed save', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    vi.spyOn(apiClient, 'saveDocument').mockRejectedValue(new ApiError('GIT_UNAVAILABLE', 503));
+    const draft = vi
+      .spyOn(apiClient, 'saveDraft')
+      .mockResolvedValue({ outcome: 'DRAFT_SAVED', at: '' });
+    const { unmount } = render(PracticeSheet, { scope, assessment, model, practiceId: 'sm' });
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    await vi.waitFor(() =>
+      expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'failed'),
+    );
+    unmount();
+    expect(draft).toHaveBeenCalledWith('samm-assessments', 'payments-2026-q4', expect.anything());
+  });
+
   it('says when a draft or a save fails and keeps the work', async () => {
     const { scope, assessment, model } = await fixture('workshop');
     vi.spyOn(apiClient, 'saveDocument').mockRejectedValue(new Error('down'));

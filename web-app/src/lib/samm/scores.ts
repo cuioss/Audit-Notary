@@ -49,8 +49,10 @@ export function practiceScore(answers: Answers, practice: SammPractice): Practic
   const own = answers[practice.id] ?? {};
   let answered = 0;
   let questions = 0;
-  const streams = practice.streams.map((stream) =>
-    stream.questions.reduce((sum, question) => {
+  // Summed per stream, then placed by letter: the tuple is always stream A, stream B, whatever the model's order.
+  const byLetter: Record<string, number> = {};
+  practice.streams.forEach((stream) => {
+    byLetter[stream.letter] = stream.questions.reduce((sum, question) => {
       questions += 1;
       const value = own[question.id]?.answer;
       if (typeof value === 'number') {
@@ -58,10 +60,10 @@ export function practiceScore(answers: Answers, practice: SammPractice): Practic
         return sum + value;
       }
       return sum;
-    }, 0),
-  );
-  const a = streams[0] ?? 0;
-  const b = streams[1] ?? 0;
+    }, 0);
+  });
+  const a = byLetter.A ?? 0;
+  const b = byLetter.B ?? 0;
   return { id: practice.id, score: (a + b) / 2, streams: [a, b], answered, questions };
 }
 

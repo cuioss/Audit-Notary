@@ -87,8 +87,16 @@ test('an approver releases with MFA: step-up first, then the seal', async ({ pag
   await useScenario(request, 'release');
   await login(page, '/samm/payments/2026-q4/release');
   await expect(page.getByTestId('release-act')).toHaveText('Release (confirm with MFA)');
+  // The first press answers STEP_UP_REQUIRED and leaves for the step-up address, which returns to the release.
+  const stepUp = page.waitForResponse(
+    (response) => response.url().includes('/api/v1/releases/') && response.status() === 403,
+  );
+  const back = page.waitForURL(/\/api\/v1\/auth\/login\?.*step-up=mfa/);
   await page.getByTestId('release-act').click();
+  await stepUp;
+  await back;
   await expect(page).toHaveURL('/samm/payments/2026-q4/release');
+  await expect(page.getByTestId('release-act')).not.toHaveAttribute('aria-busy', 'true');
   await page.getByTestId('release-act').click();
   await expect(page.getByTestId('release-done')).toContainText('Released as v1');
   await expect(page.getByTestId('release-seal')).toHaveAttribute('data-sealed', 'v1');

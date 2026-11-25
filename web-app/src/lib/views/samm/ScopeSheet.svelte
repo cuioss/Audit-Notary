@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import Link from '../../components/Link.svelte';
   import Notice from '../../components/Notice.svelte';
   import ScoreMeter from '../../components/ScoreMeter.svelte';
@@ -30,6 +31,8 @@
     if (!version) return;
     let current = true;
     failed = false;
+    // Another version: the last model goes at once, so a failed load never shows the old practices.
+    if (untrack(() => model?.version) !== version) model = null;
     loadModel(version)
       .then((loaded) => {
         if (current) model = loaded;

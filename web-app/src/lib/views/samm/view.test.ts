@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiClient, type EventListener } from '../../api/client';
+import { ApiError } from '../../api/errors';
 import { clearModels } from '../../samm/store';
 import { session } from '../../stores/app';
 import { breadcrumb } from '../../stores/breadcrumb';
@@ -137,5 +138,47 @@ describe('SammView', () => {
     await screen.findByTestId('scope-sheet');
     unmount();
     expect(get(breadcrumb)).toEqual([]);
+  });
+
+  it('keeps the failure of the model while the assessment loads', async () => {
+    await useProfile('workshop');
+    vi.spyOn(apiClient, 'getSammModel').mockRejectedValue(new ApiError('NETWORK', 0));
+    const read = vi.spyOn(apiClient, 'getSammAssessment');
+    render(SammView, { params: { scope: 'payments', assessment: '2026-q4' } });
+    expect(await screen.findByRole('alert')).toHaveTextContent('No connection to Audit Notary');
+    // The assessment's own read succeeds after the model failed; the model's failure stays said.
+    await vi.waitFor(() => expect(read).toHaveBeenCalled());
+    await read.mock.results[0].value;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.getByRole('alert')).toHaveTextContent('No connection to Audit Notary');
+  });
+
+  it('reads a save that arrives during the first read, and drops an older answer', async () => {
+    await useProfile('workshop');
+    const original = apiClient.getSammAssessment.bind(apiClient);
+    let releaseFirst: () => void = () => {};
+    const reads: string[] = [];
+    vi.spyOn(apiClient, 'getSammAssessment').mockImplementation(async (id) => {
+      reads.push(id);
+      if (reads.length === 1) {
+        await new Promise<void>((resolve) => (releaseFirst = resolve));
+        return { ...(await original(id)), title: 'Stale' };
+      }
+      return original(id);
+    });
+    render(SammView, { params: { scope: 'payments', assessment: '2026-q4' } });
+    await vi.waitFor(() => expect(reads).toHaveLength(1));
+    for (const listener of listeners) {
+      listener('document-saved', {
+        repository: 'samm-assessments',
+        id: 'payments-2026-q4',
+        fields: [],
+      });
+    }
+    await vi.waitFor(() => expect(reads).toHaveLength(2));
+    expect(await screen.findByTestId('assessment-sheet')).toBeInTheDocument();
+    releaseFirst();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Payments 2026 Q4');
   });
 });
