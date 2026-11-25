@@ -127,8 +127,10 @@ Requests:
 == AUN-WEB-6: Review and Release
 
 * Release must show the diff of the structured data against the last released state.
-* Every control whose transition requires step-up, under the shipped workflows the release control, must say so and
-  start it when needed.
+* Every control whose transition requires step-up, under the shipped workflows the release control, must start it when
+  needed and say so beside the control, in domain words and whatever the method: "You confirm your identity once
+  more before the release." The control itself names the domain act only ("Release"); a mechanism such as MFA,
+  step-up or password is never a label.
 
 Requests:
 
@@ -137,9 +139,9 @@ Requests:
 * Release: `POST /api/v1/releases/{repository}/{id}`; the outcomes are those of the release in
   xref:architecture-and-modules.adoc#operation-outcomes[Architecture and Modules, Operation Outcomes];
   `STEP_UP_REQUIRED` carries the step-up address (xref:authentication.adoc#AUN-AUTH-4[Authentication, AUN-AUTH-4]).
-  When the release requires step-up, the button reads "Release (confirm with MFA)", with local users "Release (confirm
-  with password)": the password is asked in a dialog and sent as `{"password"}` with the release request
-  (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]).
+  The button reads "Release" in every case; when the release requires step-up, the margin says that the user confirms
+  their identity once more. With local users the password is asked in a dialog titled "Confirm your identity" and sent
+  as `{"password"}` with the release request (xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]).
 
 [#AUN-WEB-7]
 == AUN-WEB-7: Texts

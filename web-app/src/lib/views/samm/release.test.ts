@@ -55,7 +55,7 @@ describe('SammReleaseView', () => {
   it('shows what is released: the seal, the change since the last release and the record', async () => {
     await prepare('release');
     render(SammReleaseView, { params: PARAMS });
-    expect(await act()).toHaveTextContent('Release (confirm with MFA)');
+    expect(await act()).toHaveTextContent(/^Release$/);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Release Payments 2026 Q4');
     expect(screen.getByTestId('release-seal')).toBeInTheDocument();
     expect(await screen.findByText('Since Payments 2026 Q2')).toBeInTheDocument();
@@ -63,7 +63,7 @@ describe('SammReleaseView', () => {
     expect(screen.getByTestId('record-sm')).toHaveTextContent('Strategy and Metrics');
     expect(screen.getByText('90 of 90 questions answered')).toBeInTheDocument();
     expect(screen.getByText(/Submitted for review by Alex Example/)).toBeInTheDocument();
-    expect(screen.getByText('You confirm with your second factor.')).toBeInTheDocument();
+    expect(screen.getByText('You confirm your identity once more before the release.')).toBeInTheDocument();
     // The tag is the server's to assign: it shows once the release is done.
     expect(screen.queryByTestId('release-tag')).toBeNull();
     expect(get(breadcrumb).map((crumb) => crumb.label)).toEqual([
@@ -73,7 +73,7 @@ describe('SammReleaseView', () => {
     ]);
   });
 
-  it('steps up with MFA first and releases when back', async () => {
+  it('steps up with the identity provider first and releases when back', async () => {
     const scenario = await prepare('release');
     const stepUp = vi.spyOn(apiClient, 'stepUp').mockImplementation(() => {});
     render(SammReleaseView, { params: PARAMS });
@@ -95,11 +95,12 @@ describe('SammReleaseView', () => {
     const scenario = await prepare('release#password');
     render(SammReleaseView, { params: PARAMS });
     const button = await act();
-    expect(button).toHaveTextContent('Release (confirm with password)');
-    expect(screen.getByText('You confirm with your password.')).toBeInTheDocument();
+    expect(button).toHaveTextContent(/^Release$/);
+    expect(screen.getByText('You confirm your identity once more before the release.')).toBeInTheDocument();
     await fireEvent.click(button);
     const dialog = document.querySelector('dialog') as HTMLDialogElement;
     expect(dialog).toHaveAttribute('open');
+    expect(within(dialog).getByText('Confirm your identity')).toBeInTheDocument();
     await fireEvent.click(within(dialog).getByTestId('release-confirm'));
     expect(within(dialog).getByText('Fill in this field.')).toBeInTheDocument();
     expect(scenario.state()).toBe('password');
@@ -195,7 +196,7 @@ describe('SammReleaseView', () => {
     render(SammReleaseView, { params: PARAMS });
     const button = await act();
     expect(button).toHaveTextContent(/^Release$/);
-    expect(screen.queryByText(/You confirm with/)).toBeNull();
+    expect(screen.queryByText(/You confirm your identity/)).toBeNull();
     await fireEvent.click(button);
     expect(await screen.findByText('Something went wrong. Try again.')).toBeInTheDocument();
   });
@@ -215,7 +216,7 @@ describe('SammReleaseView', () => {
     await vi.waitFor(() => expect(document.querySelector('dialog')).toHaveAttribute('open'));
   });
 
-  it('asks an MFA user for no password when a step-up names no address', async () => {
+  it('asks a user of the identity provider for no password when a step-up names no address', async () => {
     await prepare('release', (path, method) =>
       method === 'POST' && path.startsWith('/api/v1/releases/')
         ? new Response(JSON.stringify({ outcome: 'STEP_UP_REQUIRED' }), { status: 403 })

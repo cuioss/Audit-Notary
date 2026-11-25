@@ -33,8 +33,8 @@
   /**
    * The release of a SAMM assessment (UC-SAMM-4, AUN-WEB-6, AUN-SAMM-4): what the approver releases — the maturity
    * seal, the change since the scope's previous release, and the record itself as the structured diff against the
-   * last released state, grouped by practice — then the act, which says how it is confirmed: "Release (confirm with
-   * MFA)", or with the password of a local user. Released, the seal is pressed into the sheet once, and the notary
+   * last released state, grouped by practice — then the act, which names the domain act only: "Release". That the
+   * person confirms their identity once more is said in the margin, whatever the method (AUN-WEB-6). Released, the seal is pressed into the sheet once, and the notary
    * stands beside it: a finished release is a calm surface (doc/concepts/brand.adoc).
    */
   interface Props {
@@ -154,14 +154,6 @@
     return null;
   });
 
-  let actLabel = $derived(
-    stepUp === 'password'
-      ? $t('release.act.password')
-      : stepUp === 'off'
-        ? $t('release.act.plain')
-        : $t('release.act.mfa'),
-  );
-
   function start() {
     if (stepUp === 'password') {
       password = '';
@@ -187,7 +179,7 @@
           apiClient.stepUp(address);
           return;
         }
-        // Without an address only a local user's password can confirm; an MFA user has none to give.
+        // Without an address only a local user's password can confirm; a user of the identity provider has none to give.
         if (stepUp === 'password') {
           asking = true;
         } else {
@@ -350,7 +342,7 @@
               disabledReason={unavailable}
               data-testid="release-act"
             >
-              {actLabel}
+              {$t('release.act')}
             </Button>
             <Link href={base} look="secondary">{$t('release.back')}</Link>
           {/if}
@@ -403,7 +395,7 @@
                 {#if stepUp !== 'off'}
                   <li class="check">
                     <Icon name="state.lock" size={16} />
-                    <span>{$t(`release.check.step-up.${stepUp}`)}</span>
+                    <span>{$t('release.check.step-up')}</span>
                   </li>
                 {/if}
               </ul>

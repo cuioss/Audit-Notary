@@ -1,0 +1,311 @@
+= Audit Notary: REST API Register
+:toc: left
+:toclevels: 2
+:toc-title: Table of Contents
+:source-highlighter: highlight.js
+
+xref:../README.adoc[Audit Notary documentation] » Specification
+
+The register of every request of `/api/v1` that the web app makes or that a requirement names: one table, one row per
+request. It is the contract between the web app, the mock server (`web-mock`) and the application: a screen is built
+against a row, a mock profile answers a row, and a requirement that fixes a row is linked from it. The shell requests
+and the common refusals are fixed in xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]; the outcomes of the operations are in
+xref:architecture-and-modules.adoc#operation-outcomes[Architecture and Modules, Operation Outcomes].
+
+[#_reading_the_register]
+== Reading the Register
+
+* *Status* is that of the request, its method, path, body and outcomes:
+** `SPECIFIED`: a requirement fixes it; the row links to it.
+** `PROVISIONAL`: the specification is silent. The request is the one the web app and the mock use today; it is
+decided provisionally so that no screen is blocked, and the owner may change it. A requirement that fixes it later
+turns the status into `SPECIFIED` and links it.
+* Where only the shape of an answer is open, the *Answer* column marks it "shape PROVISIONAL"; the request stays
+`SPECIFIED`.
+* *Outcomes* lists those of the request beyond the common refusals below. A refusal names its `outcome` in the JSON
+body, and the web app decides by it, never by the status code alone
+(xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]); the `ApiClient` does not yet follow this for `401 INVALID_CREDENTIALS`
+(see <<_open_questions>>). Statuses are given only where a source fixes them.
+* *Login* is required for every request except `GET /api/v1/status`, `GET /api/v1/messages` and the login endpoints.
+* Every request that changes state carries the anti-CSRF header (xref:web-app.adoc#AUN-WEB-8[AUN-WEB-8]), except
+`POST /j_security_check` of the local login, which is no `/api/v1` request and not in the register.
+* The control routes of the mock (`/mock/*`) and its sign-out page are no part of the API.
+
+[#_common_refusals]
+== Common Refusals
+
+Every request can end with these outcomes (xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9], Refusals):
+
+[cols="1,1,3"]
+|===
+|Status |`outcome` |When
+
+|`401`
+|`UNAUTHENTICATED`
+|No session; the body carries `login`
+
+|`403`
+|`CSRF_REJECTED`
+|Anti-CSRF header missing or wrong, or a foreign `Origin`
+
+|`403`
+|`FORBIDDEN`
+|No mapped right (xref:authentication.adoc#AUN-AUTH-2[AUN-AUTH-2])
+
+|`403`
+|`FIRST_LOGIN_REQUIRED`
+|Outside the first-login allow-list (xref:directory.adoc#AUN-DIR-2[AUN-DIR-2])
+
+|`422`
+|`VALIDATION`
+|`errors`: a list of `{"pointer", "code"}` with a JSON Pointer into the request body
+
+|`503`
+|`GIT_UNAVAILABLE`
+|The Git server is unreachable (xref:architecture-and-modules.adoc#AUN-GEN-6[AUN-GEN-6]); a write keeps the draft
+|===
+
+[#_requests]
+== Requests
+
+[cols="3,2,3,3,2,1"]
+|===
+|Request |Body |Answer |Outcomes |Requirement |Status
+
+6+h|Shell
+
+|`GET /api/v1/status`
+|none
+|`{"version", "degraded", "loginProvider", "repositories": [{"alias", "fetch"}]}`; no login, no personal data. The
+member `stepUp` (`mfa`, `password` or `off`; absent means `mfa`) is PROVISIONAL: the release reads how step-up
+confirms before it asks. The member `loginProvider` (`oidc` or `local`) is specified but not yet implemented: neither
+the mock, the wire type of the web app nor `StatusResource` carries it so far, and the web app does not read it until
+it does.
+|`degraded` while a fetch fails
+|xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]
+|`SPECIFIED`; member `stepUp` `PROVISIONAL`; member `loginProvider` not yet implemented
+
+|`GET /api/v1/messages?lang=en\|de`
+|none
+|The message catalogue: one object from key to text; no login
+|`400` for any other `lang`; a missing `lang` returns English
+|xref:web-app.adoc#AUN-WEB-7[AUN-WEB-7], xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]
+|`SPECIFIED`
+
+|`GET /api/v1/session`
+|none
+|`{"user": {"pseudonym", "name"}, "rights": [{"repository", "actions"}], "csrfToken", "firstLoginRequired"}`
+|none
+|xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]
+|`SPECIFIED`
+
+|`GET /api/v1/due`
+|none
+|`{"items": [{"kind", "lens", "title", "address", "due"}]}`; `kind` is `deadline`, `review` or `release`
+|none
+|xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]
+|`SPECIFIED`
+
+|`GET /api/v1/events`
+|none
+|`text/event-stream`: the event `document-saved` `{"repository", "id", "fields"}` and the event `status` with the body
+of `GET /api/v1/status`
+|none
+|xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5], xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]
+|`SPECIFIED`
+
+6+h|Login and logout
+
+|`GET /api/v1/auth/login?return=<address>`
+|none
+|A redirect to the identity provider; with local users the web app's login page
+|`502 IDENTITY_PROVIDER_UNAVAILABLE`; `503 TOO_MANY_LOGINS` with `Retry-After: 60`
+|xref:authentication.adoc#AUN-AUTH-1[AUN-AUTH-1], xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]
+|`SPECIFIED`
+
+|`GET /api/v1/auth/callback`
+|none (`code`, `state`, `iss` in the query)
+|A page that navigates to the checked `return`
+|none
+|xref:authentication.adoc#AUN-AUTH-1[AUN-AUTH-1]
+|`SPECIFIED`
+
+|`GET <step-up address>`
+|none
+|The step-up address that `STEP_UP_REQUIRED` carries: the web app leaves for it with the current address as `return`
+and comes back after the renewed authentication. The client treats the address as opaque; the mock uses
+`/api/v1/auth/login?step-up=mfa`.
+|none
+|xref:authentication.adoc#AUN-AUTH-4[AUN-AUTH-4]
+|`SPECIFIED`; the address format `PROVISIONAL`
+
+|`POST /api/v1/auth/logout`
+|none
+|`{"redirect"}`: the address the web app navigates to
+|none
+|xref:authentication.adoc#AUN-AUTH-1[AUN-AUTH-1], xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]
+|`SPECIFIED`
+
+6+h|Directory and catalogs
+
+|`GET /api/v1/directory/me`
+|none
+|The prefill of the first-login form: `{"name", "teams", "informationText"}` (shape PROVISIONAL)
+|none
+|xref:directory.adoc#AUN-DIR-2[AUN-DIR-2]
+|`SPECIFIED`
+
+|`PUT /api/v1/directory/me`
+|`{"name", "team", "role"}`, with `binding` (`new` or a pseudonym) after `BINDING_CANDIDATES`
+|`{"outcome": "SAVED", "pseudonym"}`
+|`VALIDATION` with `REFERENCE_NOT_FOUND`; `BINDING_CANDIDATES` with pseudonyms, names and memberships;
+`NOT_BINDABLE`
+|xref:directory.adoc#AUN-DIR-2[AUN-DIR-2], xref:directory.adoc#AUN-DIR-3[AUN-DIR-3]
+|`SPECIFIED`
+
+|`GET /api/v1/catalogs/{catalog}`
+|none
+|`{"entries": [{"id", "name"}]}` (shape PROVISIONAL); `team` and `role` are used today
+|none
+|xref:directory.adoc#AUN-DIR-2[AUN-DIR-2]
+|`SPECIFIED` for `team` and `role`; the other catalogs `PROVISIONAL`
+
+|`PUT /api/v1/catalogs/{catalog}/{id}`
+|The entry
+|The saved entry
+|Right `administer-catalogs`; there is no `DELETE`, retiring sets `retired: true`
+|xref:directory.adoc#AUN-DIR-4[AUN-DIR-4]
+|`SPECIFIED`; body and answer `PROVISIONAL`
+
+|`POST /api/v1/catalogs/import/backstage`
+|The Backstage descriptor documents
+|The import result: created, updated and left out
+|Right `administer-catalogs`
+|xref:directory.adoc#AUN-DIR-6[AUN-DIR-6]
+|`SPECIFIED`; answer shape `PROVISIONAL`
+
+|`POST /api/v1/directory/persons`
+|A list of entries with a name and at least one membership
+|The pseudonyms of the saved, unbound entries
+|Right `administer-catalogs`; `VALIDATION` for a membership that is in no catalog
+|xref:directory.adoc#AUN-DIR-8[AUN-DIR-8]
+|`SPECIFIED`
+
+|`POST /api/v1/directory/erasures`
+|The pseudonym
+|The erasure took effect
+|Right `administer-catalogs`; `409` with the problem type `managed-by-source`
+|xref:data-protection.adoc#AUN-DP-3[AUN-DP-3]
+|`SPECIFIED`
+
+6+h|Documents and release
+
+|`GET /api/v1/documents/{repository}/{id}`
+|none
+|The document with its parts (one file each, with the blob id loaded), its state and its signed history; today
+`samm-assessments` (shape PROVISIONAL)
+|none
+|xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5], xref:category-samm.adoc#AUN-SAMM-1[AUN-SAMM-1]
+|`PROVISIONAL`
+
+|`GET /api/v1/documents/{repository}/{id}/diff?from=released`
+|none
+|The structured diff of the YAML data against the last released state, grouped by schema section: `{"repository",
+"id", "from", "to", "sections": [{"part", "changes": [{"pointer", "before", "after"}]}]}` (shape PROVISIONAL); `from`
+is `null` before the first release
+|none
+|xref:web-app.adoc#AUN-WEB-6[AUN-WEB-6]
+|`SPECIFIED`
+
+|`PUT /api/v1/drafts/{repository}/{id}`
+|`{"parts": {"<part>": {"blob", "fields"}}}`
+|`{"outcome": "DRAFT_SAVED", "at"}`
+|`VALIDATION` per field
+|xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5]
+|`SPECIFIED`; body and answer `PROVISIONAL`
+
+|`POST /api/v1/documents/{repository}/{id}/save`
+|`{"parts": {"<part>": {"blob", "fields"}}}`, the blob ids the form loaded
+|`{"outcome": "SAVED", "at", "parts"}` with the new blob ids
+|`CONFLICT` per part with the fields that differ, own and other value, and who saved them; `VALIDATION`, among them
+`REFERENCE_NOT_FOUND`; `DOCUMENT_RELEASED`; `REJECTED`; `STEP_UP_REQUIRED`
+|xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5], xref:architecture-and-modules.adoc#operation-outcomes[AUN-GEN, Operation Outcomes]
+|`SPECIFIED`; body and answer `PROVISIONAL`
+
+|`POST /api/v1/documents/{repository}/{id}/transitions/{t}`
+|none; `{t}` is a transition of the category's workflow, such as `samm.submit`
+|`{"outcome": "TRANSITIONED", "state"}`
+|`MANDATORY_FIELDS_MISSING` with `missing`, the JSON Pointers of the empty fields; `STEP_UP_REQUIRED` when the
+workflow requires step-up for the transition; `REJECTED`
+|xref:category-samm.adoc#AUN-SAMM-4[AUN-SAMM-4] (the transition), xref:architecture-and-modules.adoc#operation-outcomes[AUN-GEN, Operation Outcomes]
+|`PROVISIONAL`
+
+|`POST /api/v1/releases/{repository}/{id}`
+|none; with local users `{"password"}`
+|`{"outcome": "RELEASED", "tag", "at"}`
+|`STEP_UP_REQUIRED` with `stepUp`, the step-up address (none with local users: the web app asks for the password);
+`INVALID_CREDENTIALS` (`401`, local users, nothing is written); `MANDATORY_FIELDS_MISSING`; `REJECTED`;
+`CHANGED_SINCE_REVIEW` (`409`, PROVISIONAL: someone saved after the release was opened)
+|xref:web-app.adoc#AUN-WEB-6[AUN-WEB-6], xref:authentication.adoc#AUN-AUTH-4[AUN-AUTH-4], xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]
+|`SPECIFIED`; the outcome `CHANGED_SINCE_REVIEW` `PROVISIONAL`
+
+6+h|SAMM
+
+|`GET /api/v1/samm/models/{version}`
+|none
+|A pinned model version: business functions, practices, streams, questions and their answer sets
+|none
+|xref:category-samm.adoc#AUN-SAMM-1[AUN-SAMM-1]
+|`PROVISIONAL`
+
+|`GET /api/v1/samm/scopes`
+|none
+|The scopes with their latest released and their open assessment: `{"scopes": [{"id", "title", "subject", "latest",
+"open", "assessments"}]}`
+|none
+|xref:category-samm.adoc#AUN-SAMM-2[AUN-SAMM-2]
+|`PROVISIONAL`
+
+|`GET /api/v1/samm/scopes/{scope}`
+|none
+|The scope: subject, model version, targets and the assessments with state, score and release
+|none
+|xref:category-samm.adoc#AUN-SAMM-2[AUN-SAMM-2], xref:category-samm.adoc#AUN-SAMM-6[AUN-SAMM-6]
+|`PROVISIONAL`
+
+|`GET /api/v1/samm/{scope}/compare?from=<assessment>&to=<assessment>`
+|none
+|Per business function, practice and stream: score `from`, score `to`, difference (shape PROVISIONAL)
+|`MODEL_VERSIONS_DIFFER`
+|xref:category-samm.adoc#AUN-SAMM-5[AUN-SAMM-5]
+|`SPECIFIED`
+
+6+h|ISMS
+
+|`GET /api/v1/isms/risks?as-of=<tag\|date>`
+|none
+|The risk register as of a tag or a date, released entries only (shape not yet fixed)
+|none
+|xref:category-isms.adoc#AUN-ISMS-3[AUN-ISMS-3]
+|`SPECIFIED`; not yet used by the web app
+|===
+
+[#_notes]
+== Notes
+
+* *The assessment is a document.* The SAMM views read and write an assessment through the generic document requests;
+only the scope list, the scope, the model and the comparison are SAMM-specific.
+* *The release names no reviewed revision yet.* `CHANGED_SINCE_REVIEW` is therefore answered by the state of the
+server, not by a comparison with the revision the approver saw. A request that carries the reviewed revision would
+make the check exact.
+* *Status codes.* The register states a status only where a requirement fixes it. A view never decides by it alone.
+
+[#_open_questions]
+== Open Questions
+
+* *`401 INVALID_CREDENTIALS` and the client.* AUN-WEB-9 answers a wrong step-up password with `401`. The web app's
+`ApiClient` treats every `401` as a lost session and leaves for the login; the mock answers `403` for the same
+outcome. Either the specification moves the outcome to `403`, or the client decides a `401` by its `outcome` first.
+* *The step-up address.* The requirement names "a step-up address" without its format; the client keeps it opaque.
+* *`status.stepUp`.* The shell needs to know the method of the confirmation before the release is pressed; whether the
+member stays in `GET /api/v1/status` or moves into the session is open.

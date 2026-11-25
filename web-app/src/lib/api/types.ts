@@ -37,8 +37,9 @@ export interface Status {
   degraded: boolean;
   repositories: RepositoryStatus[];
   /**
-   * PROVISIONAL: how step-up confirms a release, so the release control can say so before it is pressed
-   * (AUN-WEB-6). Absent means MFA.
+   * PROVISIONAL: how step-up confirms a release, so the release knows whether to ask for the password or to
+   * leave for the identity provider (AUN-WEB-6). Absent means the identity provider's MFA. The method is never
+   * a label.
    */
   stepUp?: StepUpMethod;
 }
