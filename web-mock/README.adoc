@@ -60,9 +60,12 @@ Without the scripts: `java -cp … de.cuioss.notary.audit.mock.cli.WebMockCli --
 |Profile |States |Represents
 
 |`workshop` (default)
-|`ready`, `saved-by-other`, `forbidden`
-|An assessor in a populated installation: Due list with every kind, catalogs; `saved-by-other` pushes a
-`document-saved` event, `forbidden` refuses the Due list
+|`ready`, `saved-by-other`, `conflict`, `forbidden`
+|An assessor in a populated installation: Due list with every kind, catalogs, and the SAMM lens — four scopes, the
+open workshop *Payments 2026 Q4* (draft, eleven practices answered) and released assessments to compare with; a draft
+and a save for everyone succeed. `saved-by-other` pushes a `document-saved` event and serves the assessment with
+another assessor's two answers in *Strategy and Metrics*; `conflict` answers a save with `CONFLICT` and both values;
+`forbidden` refuses the Due list
 
 |`first-login`
 |`form`, `invalid-team`, `registered`
@@ -72,12 +75,12 @@ Without the scripts: `java -cp … de.cuioss.notary.audit.mock.cli.WebMockCli --
 
 |`read-only`
 |`ready`
-|The right `read` only; an edit answers `FORBIDDEN`
+|The right `read` only, with the SAMM data of `workshop`; an edit answers `FORBIDDEN`
 
 |`degraded`
 |`unreachable`, `recovered`
-|The fetch of `samm-assessments` fails: status `degraded`, a save answers `GIT_UNAVAILABLE`; `recovered` pushes the
-`status` event with the healthy status
+|The fetch of `samm-assessments` fails: status `degraded`, a save answers `GIT_UNAVAILABLE` (a draft is still kept);
+`recovered` pushes the `status` event with the healthy status
 
 |`empty`
 |`ready`
@@ -86,6 +89,21 @@ Without the scripts: `java -cp … de.cuioss.notary.audit.mock.cli.WebMockCli --
 
 `src/main/resources/scenarios/primary.txt` lists the primary profiles; a test module can add its own under
 `src/test/resources/scenarios/<name>.json`.
+
+One more profile is not primary, because it serves one flow rather than a kind of installation:
+
+[cols="1,1,3"]
+|===
+|Profile |States |Represents
+
+|`release`
+|`review`, `stepped-up`, `password`, `wrong-password`, `changed`, `released`
+|An approver (right `approve`) releases *Payments 2026 Q4*, which is in review with every practice answered
+(AUN-WEB-6). `review`: the release answers `STEP_UP_REQUIRED` with a step-up address and moves to `stepped-up`, where
+it answers `RELEASED`; `password`: the status names the step-up by password (local users) and the release, sent with
+the password, answers `RELEASED`; `wrong-password` answers `INVALID_CREDENTIALS`; `changed` answers
+`CHANGED_SINCE_REVIEW`; `released` serves the frozen assessment with its tag `assessments/payments-2026-q4/v1`
+|===
 
 == What the Mock Emulates
 
@@ -170,6 +188,35 @@ No login; the Vite dev server forwards `/mock` for loopback clients only.
   and plays that state's events and timed transition), a route of the state, a route of the scenario; otherwise
   `404 MOCK_NO_ROUTE`.
 * Route keys are `"METHOD /path"` without query; `status` defaults to `200`, `body` to `{}`, `after_ms` to `0`.
+* A route or a link answers either its `body` or the JSON of the data file its `body_file` names, below
+  `src/main/resources/scenarios/data/` (`"body_file": "samm-scopes.json"`). Large or shared answers live there once
+  instead of inline in every profile. The file name matches `[a-z0-9][a-z0-9.-]*.json`; a name that resolves to no
+  file, a file that is no JSON, or `body` and `body_file` together fail the load.
+
+=== Data Files
+
+[cols="1,3"]
+|===
+|File |Content
+
+|`samm-model-v2.2.0.json`
+|The OWASP SAMM core model v2.2.0 (business functions, practices, streams, questions, answer sets), converted from
+the YAML of https://github.com/owaspsamm/core/tree/v2.2.0/model[`owaspsamm/core`] with unchanged texts. Licensed
+under CC BY-SA 4.0, not under the licence of this repository: see `samm-model-v2.2.0.NOTICE.txt` beside it
+
+|`samm-scopes.json`, `samm-scope-<scope>.json`
+|The scopes, their targets and assessments (`-in-review`, `-released` for the `release` profile)
+
+|`samm-assessment-<document>.json`
+|The assessments with their answers, parts and signed history; `payments-2026-q4` also as `-saved-by-other`,
+`-in-review` and `-released`
+
+|`samm-compare-payments*.json`, `samm-diff-payments-2026-q4.json`
+|The comparison with *Payments 2026 Q2* and the diff of the release
+|===
+
+The answers are generated once from the model and are consistent with each other: the comparison holds the scores the
+answers give (`web-app` checks this in `scores.test.ts`).
 * Checked on load: format version `1`; name, user name and start present; every `next` names a state; methods `GET`,
   `POST`, `PUT`, `DELETE`; paths below `/api/v1/` without query; status 100 to 599; actions `read`, `edit`,
   `approve`, `administer-catalogs`; no negative delay. A violation names file, location and rule.

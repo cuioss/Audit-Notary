@@ -1,0 +1,2974 @@
+{
+  "model": "OWASP SAMM",
+  "version": "v2.2.0",
+  "source": "https://github.com/owaspsamm/core/tree/v2.2.0/model",
+  "licence": "CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/",
+  "attribution": "OWASP SAMM core model v2.2.0 by the OWASP SAMM project, converted from YAML to JSON without changes to the texts.",
+  "functions": [
+    {
+      "id": "governance",
+      "name": "Governance",
+      "practices": [
+        {
+          "id": "sm",
+          "shortName": "SM",
+          "name": "Strategy and Metrics",
+          "description": "This practice forms the basis of your secure software activities by building an overall plan.",
+          "streams": [
+            {
+              "letter": "A",
+              "name": "Create and Promote",
+              "questions": [
+                {
+                  "id": "sm-a-1",
+                  "level": 1,
+                  "activity": "Identify the organization's risk appetite",
+                  "text": "Do you understand the enterprise-wide risk appetite for your applications?",
+                  "quality": [
+                    "You capture the risk appetite of your organization's executive leadership",
+                    "The organization's leadership vets and approves the set of risks",
+                    "You identify the main business and technical threats to your assets and data",
+                    "You document risks and store them in an accessible location"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, it covers general risks"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, it covers organization-specific risks"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, it covers risks and opportunities"
+                    }
+                  ]
+                },
+                {
+                  "id": "sm-a-2",
+                  "level": 2,
+                  "activity": "Define the security strategy",
+                  "text": "Do you have a strategic plan for application security and use it to make decisions?",
+                  "quality": [
+                    "The plan reflects the organization's business priorities and risk appetite",
+                    "The plan includes measurable milestones and a budget",
+                    "The plan is consistent with the organization's business drivers and risks",
+                    "The plan lays out a roadmap for strategic and tactical initiatives",
+                    "You have buy-in from stakeholders, including development teams"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, we have a plan that can be used for decision making"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, we consult the plan before making significant decisions"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, we consult the plan often, and it is aligned with our application security strategy"
+                    }
+                  ]
+                },
+                {
+                  "id": "sm-a-3",
+                  "level": 3,
+                  "activity": "Align security and business strategies",
+                  "text": "Do you regularly review and update the Strategic Plan for Application Security?",
+                  "quality": [
+                    "You review and update the plan in response to significant changes in the business environment, the organization, or its risk appetite",
+                    "Plan update steps include reviewing the plan with all the stakeholders and updating the business drivers and strategies",
+                    "You adjust the plan and roadmap based on lessons learned from completed roadmap activities",
+                    "You publish progress information on roadmap activities, making sure they are available to all stakeholders"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, but review is ad-hoc"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, we review it regularly"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, we review it continuously"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "letter": "B",
+              "name": "Measure and Improve",
+              "questions": [
+                {
+                  "id": "sm-b-1",
+                  "level": 1,
+                  "activity": "Define basic security metrics",
+                  "text": "Do you use a set of metrics to measure the effectiveness and efficiency of the application security program across applications?",
+                  "quality": [
+                    "You document each metric, including a description of the sources, measurement coverage, and guidance on how to use it to explain application security trends",
+                    "Metrics include measures of effort, results, and environment measurement categories",
+                    "Most of the metrics are frequently measured, easy or inexpensive to gather, and expressed as a cardinal number or a percentage",
+                    "Application security and development teams publish metrics"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for one metrics category"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for two metrics categories"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for all three metrics categories"
+                    }
+                  ]
+                },
+                {
+                  "id": "sm-b-2",
+                  "level": 2,
+                  "activity": "Set strategic KPIs",
+                  "text": "Have you defined Key Performance Indicators (KPIs) from available application security metrics?",
+                  "quality": [
+                    "You define KPIs after gathering enough information to establish realistic objectives",
+                    "You develop KPIs with buy-in from the leadership and teams responsible for application security",
+                    "KPIs are available to the application teams and include acceptability thresholds and guidance in case teams need to take action",
+                    "Success of the application security program is clearly visible based on defined KPIs"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some of the metrics"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the metrics"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the metrics"
+                    }
+                  ]
+                },
+                {
+                  "id": "sm-b-3",
+                  "level": 3,
+                  "activity": "Drive the security program through metrics",
+                  "text": "Do you update the Application Security strategy and roadmap based on application security metrics and KPIs?",
+                  "quality": [
+                    "You review KPIs at least yearly for their efficiency and effectiveness",
+                    "KPIs and application security metrics trigger most of the changes to the application security strategy"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, but review is ad-hoc"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, we review it regularly"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, we review it continuously"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pc",
+          "shortName": "PC",
+          "name": "Policy and Compliance",
+          "description": "This practice drives the adherence to internal and external standards and regulations.",
+          "streams": [
+            {
+              "letter": "A",
+              "name": "Policy and Standards",
+              "questions": [
+                {
+                  "id": "pc-a-1",
+                  "level": 1,
+                  "activity": "Define policies and standards",
+                  "text": "Do you have and apply a common set of policies and standards throughout your organization?",
+                  "quality": [
+                    "You have adapted existing standards appropriate for the organization’s industry to account for domain-specific considerations",
+                    "Your standards are aligned with your policies and incorporate technology-specific implementation guidance"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "pc-a-2",
+                  "level": 2,
+                  "activity": "Develop test procedures",
+                  "text": "Do you publish the organization's policies as test scripts or run-books for easy interpretation by development teams?",
+                  "quality": [
+                    "You create verification checklists and test scripts where applicable, aligned with the policy's requirements and the implementation guidance in the associated standards",
+                    "You create versions adapted to each development methodology and technology the organization uses"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some content"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of the content"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of the content"
+                    }
+                  ]
+                },
+                {
+                  "id": "pc-a-3",
+                  "level": 3,
+                  "activity": "Measure compliance to policies and standards",
+                  "text": "Do you regularly report on policy and standard compliance, and use that information to guide compliance improvement efforts?",
+                  "quality": [
+                    "You have procedures (automated, if possible) to regularly generate compliance reports",
+                    "You deliver compliance reports to all relevant stakeholders",
+                    "Stakeholders use the reported compliance status information to identify areas for improvement"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, but reporting is ad-hoc"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, we report at regular times"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, we report continuously"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "letter": "B",
+              "name": "Compliance Management",
+              "questions": [
+                {
+                  "id": "pc-b-1",
+                  "level": 1,
+                  "activity": "Identify compliance requirements",
+                  "text": "Do you have a complete picture of your external compliance obligations?",
+                  "quality": [
+                    "You have identified all sources of external compliance obligations",
+                    "You have captured and reconciled compliance obligations from all sources"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "pc-b-2",
+                  "level": 2,
+                  "activity": "Standardize policy and compliance requirements",
+                  "text": "Do you have a standard set of security requirements and verification procedures addressing the organization's external compliance obligations?",
+                  "quality": [
+                    "You map each external compliance obligation to a well-defined set of application requirements",
+                    "You define verification procedures, including automated tests, to verify compliance with compliance-related requirements"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some obligations"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the obligations"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the obligations"
+                    }
+                  ]
+                },
+                {
+                  "id": "pc-b-3",
+                  "level": 3,
+                  "activity": "Measure compliance to external requirements",
+                  "text": "Do you regularly report on adherence to external compliance obligations and use that information to guide efforts to close compliance gaps?",
+                  "quality": [
+                    "You have established, well-defined compliance metrics",
+                    "You measure and report on applications' compliance metrics regularly",
+                    "Stakeholders use the reported compliance status information to identify compliance gaps and prioritize gap remediation efforts"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, but reporting is ad-hoc"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, we report at regular times"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, we report continuously"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "eg",
+          "shortName": "EG",
+          "name": "Education and Guidance",
+          "description": "This practice focuses on increasing the knowledge in the organization regarding secure software.",
+          "streams": [
+            {
+              "letter": "A",
+              "name": "Training and Awareness",
+              "questions": [
+                {
+                  "id": "eg-a-1",
+                  "level": 1,
+                  "activity": "Train all stakeholders for awareness",
+                  "text": "Do you require employees involved with application development to take SDLC training?",
+                  "quality": [
+                    "Training is repeatable, consistent, and available to anyone involved with software development lifecycle",
+                    "Training includes relevant content from the latest OWASP Top 10 and covers concepts such as Least Privilege, Defense-in-Depth, Fail Secure (Safe), Complete Mediation, Session Management, Open Design, and Psychological Acceptability",
+                    "Training requires a sign-off or an acknowledgement from attendees",
+                    "You have reviewed the training content within the last 12 months, and have completed any required updates",
+                    "All new covered staff are required to complete training during their onboarding process",
+                    "Existing covered staff are required to complete training when content is added/revised, or complete refresher training at least every 24 months, whichever comes first"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some of them"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of them"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of them"
+                    }
+                  ]
+                },
+                {
+                  "id": "eg-a-2",
+                  "level": 2,
+                  "activity": "Customize security training",
+                  "text": "Is training customized for individual roles such as developers, testers, or security champions?",
+                  "quality": [
+                    "Training includes all topics from maturity level 1, and adds more specific tools, techniques, and demonstrations",
+                    "Training is mandatory for all employees and contractors",
+                    "Training includes input from in-house SMEs and trainees",
+                    "Training includes demonstrations of tools and techniques developed in-house",
+                    "You use feedback to enhance and make future training more relevant"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some of the training"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the training"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the training"
+                    }
+                  ]
+                },
+                {
+                  "id": "eg-a-3",
+                  "level": 3,
+                  "activity": "Standardize security guidance",
+                  "text": "Have you implemented a Learning Management System or equivalent to track employee training and certification processes?",
+                  "quality": [
+                    "A Learning Management System (LMS) is used to track trainings and certifications",
+                    "Training is based on internal standards, policies, and procedures",
+                    "You use certification programs or attendance records to determine access to development systems and resources"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some of the training"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the training"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the training"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "letter": "B",
+              "name": "Organization and Culture",
+              "questions": [
+                {
+                  "id": "eg-b-1",
+                  "level": 1,
+                  "activity": "Identify security champions",
+                  "text": "Have you identified a Security Champion for each development team?",
+                  "quality": [
+                    "Security Champions receive appropriate training",
+                    "Application Security and Development teams receive periodic briefings from Security Champions on the overall status of security initiatives and fixes",
+                    "The Security Champion reviews the results of external testing before adding to the application backlog"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some teams"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the teams"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the teams"
+                    }
+                  ]
+                },
+                {
+                  "id": "eg-b-2",
+                  "level": 2,
+                  "activity": "Implement centers of excellence",
+                  "text": "Does the organization have a Secure Software Center of Excellence (SSCE)?",
+                  "quality": [
+                    "The SSCE has a charter defining its role in the organization",
+                    "Development teams review all significant architectural changes with the SSCE",
+                    "The SSCE publishes SDLC standards and guidelines related to Application Security",
+                    "Product Champions are responsible for promoting the use of specific security tools"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, we started implementing it"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for part of the organization"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for the entire organization"
+                    }
+                  ]
+                },
+                {
+                  "id": "eg-b-3",
+                  "level": 3,
+                  "activity": "Establish a security community",
+                  "text": "Is there a centralized portal where developers and application security professionals from different teams and business units are able to communicate and share information?",
+                  "quality": [
+                    "The organization promotes use of a single portal across different teams and business units",
+                    "The portal is used for timely information such as notification of security incidents, tool updates, architectural standard changes, and other related announcements",
+                    "The portal is widely recognized by developers and architects as a centralized repository of the organization-specific application security information",
+                    "All content is considered persistent and searchable",
+                    "The portal provides access to application-specific security metrics"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, we started implementing it"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for part of the organization"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for the entire organization"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "design",
+      "name": "Design",
+      "practices": [
+        {
+          "id": "ta",
+          "shortName": "TA",
+          "name": "Threat Assessment",
+          "description": "This practice focuses on identifying potential threats in applications.",
+          "streams": [
+            {
+              "letter": "A",
+              "name": "Application Risk Profile",
+              "questions": [
+                {
+                  "id": "ta-a-1",
+                  "level": 1,
+                  "activity": "Perform application risk assessments",
+                  "text": "Do you classify applications according to business risk based on a simple and predefined set of questions?",
+                  "quality": [
+                    "An agreed-upon risk classification exists",
+                    "The application team understands the risk classification",
+                    "The risk classification covers critical aspects of business risks the organization is facing",
+                    "The organization has an inventory for the applications in scope"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some of them"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of them"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of them"
+                    }
+                  ]
+                },
+                {
+                  "id": "ta-a-2",
+                  "level": 2,
+                  "activity": "Inventory risk profiles",
+                  "text": "Do you use centralized and quantified application risk profiles to evaluate business risk?",
+                  "quality": [
+                    "The application risk profile is in line with the organizational risk standard",
+                    "The application risk profile covers impact to security and privacy",
+                    "You validate the quality of the risk profile manually and/or automatically",
+                    "The application risk profiles are stored in a central inventory"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "ta-a-3",
+                  "level": 3,
+                  "activity": "Periodic review of risk profiles",
+                  "text": "Do you regularly review and update the risk profiles for your applications?",
+                  "quality": [
+                    "The organizational risk standard considers historical feedback to improve the evaluation method",
+                    "Significant changes in the application or business context trigger a review of the relevant risk profiles"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, but we do it ad-hoc"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, we do it regularly"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, we do it continuously"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "letter": "B",
+              "name": "Threat Modeling",
+              "questions": [
+                {
+                  "id": "ta-b-1",
+                  "level": 1,
+                  "activity": "Perform basic threat modeling",
+                  "text": "Do you identify and manage architectural design flaws with threat modeling?",
+                  "quality": [
+                    "You perform threat modeling for high-risk applications",
+                    "You use simple threat checklists, such as STRIDE",
+                    "You persist the outcome of a threat model for later use"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some of them"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of them"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of them"
+                    }
+                  ]
+                },
+                {
+                  "id": "ta-b-2",
+                  "level": 2,
+                  "activity": "Standardize and scale threat modeling",
+                  "text": "Do you use a standard methodology, aligned with your application risk levels?",
+                  "quality": [
+                    "You train your architects, security champions, and other stakeholders on how to do practical threat modeling",
+                    "Your threat modeling methodology includes at least diagramming, threat identification, design flaw mitigations, and how to validate your threat model artifacts",
+                    "Changes in the application or business context trigger a review of the relevant threat models",
+                    "You capture the threat modeling artifacts with tools used by your application teams"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "ta-b-3",
+                  "level": 3,
+                  "activity": "Optimize threat modeling",
+                  "text": "Do you regularly review and update the threat modeling methodology for your applications?",
+                  "quality": [
+                    "The threat modeling methodology considers historical feedback for improvement",
+                    "You regularly (e.g., yearly) review the existing threat models to verify that no new threats are relevant for your applications",
+                    "You automate parts of your threat modeling process with threat modeling tools"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, but review is ad-hoc"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, we review it regularly"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, we review it continuously"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "sr",
+          "shortName": "SR",
+          "name": "Security Requirements",
+          "description": "This practice focuses on defining appropriate security requirements for your software and your software suppliers.",
+          "streams": [
+            {
+              "letter": "A",
+              "name": "Software Requirements",
+              "questions": [
+                {
+                  "id": "sr-a-1",
+                  "level": 1,
+                  "activity": "Identify security requirements",
+                  "text": "Do project teams specify security requirements during development?",
+                  "quality": [
+                    "Teams derive security requirements from functional requirements and customer or organization concerns",
+                    "Security requirements are specific, measurable, and reasonable",
+                    "Security requirements are in line with the organizational baseline"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "sr-a-2",
+                  "level": 2,
+                  "activity": "Standardize and integrate security requirements",
+                  "text": "Do you define, structure, and include prioritization in the artifacts of the security requirements gathering process?",
+                  "quality": [
+                    "Security requirements take into consideration domain-specific knowledge when applying policies and guidance to product development",
+                    "Domain experts are involved in the requirements definition process",
+                    "You have an agreed-upon structured notation for security requirements",
+                    "Development teams have a security champion dedicated to reviewing security requirements and outcomes"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some of the time"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of the time"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of the time"
+                    }
+                  ]
+                },
+                {
+                  "id": "sr-a-3",
+                  "level": 3,
+                  "activity": "Develop a security requirements framework",
+                  "text": "Do you use a standard requirements framework to streamline the elicitation of security requirements?",
+                  "quality": [
+                    "A security requirements framework is available for project teams",
+                    "The framework is categorized by common requirements and standards-based requirements",
+                    "The framework gives clear guidance on the quality of requirements and how to describe them",
+                    "The framework is adaptable to specific business requirements"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "letter": "B",
+              "name": "Supplier Security",
+              "questions": [
+                {
+                  "id": "sr-b-1",
+                  "level": 1,
+                  "activity": "Perform vendor assessments",
+                  "text": "Do stakeholders review vendor collaborations for security requirements and methodology?",
+                  "quality": [
+                    "You consider including specific security requirements, activities, and processes when creating third-party agreements",
+                    "A vendor questionnaire is available and used to assess the strengths and weaknesses of your suppliers"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some of the time"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of the time"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of the time"
+                    }
+                  ]
+                },
+                {
+                  "id": "sr-b-2",
+                  "level": 2,
+                  "activity": "Discuss security responsibilities with suppliers",
+                  "text": "Do vendors meet the security responsibilities and quality measures of service level agreements defined by the organization?",
+                  "quality": [
+                    "You discuss security requirements with the vendor when creating vendor agreements",
+                    "Vendor agreements provide specific guidance on security defect remediation within an agreed-upon timeframe",
+                    "The organization has a templated agreement of responsibilities and service levels for key vendor security processes",
+                    "You measure key performance indicators"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some of the time"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of the time"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of the time"
+                    }
+                  ]
+                },
+                {
+                  "id": "sr-b-3",
+                  "level": 3,
+                  "activity": "Align security methodology with suppliers",
+                  "text": "Are vendors aligned with standard security controls and software development tools and processes that the organization utilizes?",
+                  "quality": [
+                    "The vendor has a secure SDLC that includes secure build, secure deployment, defect management, and incident management, meets the security expectations of your organization, and is able to demonstrate operating effectiveness of practices.",
+                    "You verify the solution meets quality and security objectives before every major release",
+                    "When standard verification processes are not available, you use compensating controls such as software composition analysis and independent penetration testing"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some of the time"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of the time"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of the time"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "sa",
+          "shortName": "SA",
+          "name": "Secure Architecture",
+          "description": "The secure architecture practice focuses on managing architectural risks for the software solution.",
+          "streams": [
+            {
+              "letter": "A",
+              "name": "Architecture Design",
+              "questions": [
+                {
+                  "id": "sa-a-1",
+                  "level": 1,
+                  "activity": "Adhere to basic security principles",
+                  "text": "Do teams use security principles during design?",
+                  "quality": [
+                    "You have an agreed upon checklist of security principles",
+                    "You store your checklist in an accessible location",
+                    "Relevant stakeholders understand security principles"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "sa-a-2",
+                  "level": 2,
+                  "activity": "Provide preferred security solutions",
+                  "text": "Do you use shared security services during design?",
+                  "quality": [
+                    "You have a documented list of reusable security services, available to relevant stakeholders",
+                    "You have reviewed the baseline security posture for each selected service",
+                    "Your designers are trained to integrate each selected service following available guidance"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "sa-a-3",
+                  "level": 3,
+                  "activity": "Build reference architectures",
+                  "text": "Do you base your design on available reference architectures?",
+                  "quality": [
+                    "You have one or more approved reference architectures documented and available to stakeholders",
+                    "You improve the reference architectures continuously based on insights and best practices",
+                    "You provide a set of components, libraries, and tools to implement each reference architecture"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "letter": "B",
+              "name": "Technology Management",
+              "questions": [
+                {
+                  "id": "sa-b-1",
+                  "level": 1,
+                  "activity": "Identify tools and technologies",
+                  "text": "Do you evaluate the security quality of important technologies used for development?",
+                  "quality": [
+                    "You have a list of the most important technologies used in, or in support of, each application",
+                    "You identify and track technological risks",
+                    "You ensure the risks to these technologies are in line with the organizational baseline"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "sa-b-2",
+                  "level": 2,
+                  "activity": "Promote preferred tools and technologies",
+                  "text": "Do you have a list of recommended technologies for the organization?",
+                  "quality": [
+                    "The list is based on technologies used in the software portfolio",
+                    "Lead architects and developers review and approve the list",
+                    "You share the list across the organization",
+                    "You review and update the list at least yearly"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some of the technology domains"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the technology domains"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the technology domains"
+                    }
+                  ]
+                },
+                {
+                  "id": "sa-b-3",
+                  "level": 3,
+                  "activity": "Enforce the use of recommended technologies",
+                  "text": "Do you enforce the use of recommended technologies within the organization?",
+                  "quality": [
+                    "You monitor applications regularly for the correct use of the recommended technologies",
+                    "You solve violations against the list according to organizational policies",
+                    "You take action if the number of violations falls outside the yearly objectives"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "implementation",
+      "name": "Implementation",
+      "practices": [
+        {
+          "id": "sb",
+          "shortName": "SB",
+          "name": "Secure Build",
+          "description": "This practice focuses on creating a consistently repeatable build process and accounting for the security of application dependencies.",
+          "streams": [
+            {
+              "letter": "A",
+              "name": "Build Process",
+              "questions": [
+                {
+                  "id": "sb-a-1",
+                  "level": 1,
+                  "activity": "Define a consistent build process",
+                  "text": "Is your full build process formally described?",
+                  "quality": [
+                    "You have enough information to recreate the build processes",
+                    "Your build documentation is up to date",
+                    "Your build documentation is stored in an accessible location",
+                    "Produced artifact checksums are created during build to support later verification",
+                    "You harden the tools that are used within the build process"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "sb-a-2",
+                  "level": 2,
+                  "activity": "Automate the build process",
+                  "text": "Is the build process fully automated?",
+                  "quality": [
+                    "The build process itself doesn't require any human interaction",
+                    "Your build tools are hardened as per best practice and vendor guidance",
+                    "You encrypt the secrets required by the build tools and control access based on the principle of least privilege"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "sb-a-3",
+                  "level": 3,
+                  "activity": "Enforce a security baseline during build",
+                  "text": "Do you enforce automated security checks in your build processes?",
+                  "quality": [
+                    "Builds fail if the application doesn't meet a predefined security baseline",
+                    "You have a maximum accepted severity for vulnerabilities",
+                    "You log warnings and failures in a centralized system",
+                    "You select and configure tools to evaluate each application against its security requirements at least once a year"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "letter": "B",
+              "name": "Software Dependencies",
+              "questions": [
+                {
+                  "id": "sb-b-1",
+                  "level": 1,
+                  "activity": "Identify application dependencies",
+                  "text": "Do you have solid knowledge of the dependencies you rely on?",
+                  "quality": [
+                    "You have a current bill of materials (BOM) for every application",
+                    "You can quickly find out which applications are affected by a particular CVE",
+                    "You have analyzed, addressed, and documented findings from dependencies at least once in the last three months"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "sb-b-2",
+                  "level": 2,
+                  "activity": "Review application dependencies for security",
+                  "text": "Do you handle third-party dependency risk through a formal process?",
+                  "quality": [
+                    "You keep a list of approved dependencies that meet predefined criteria",
+                    "You automatically evaluate dependencies for new CVEs and alert responsible staff",
+                    "You automatically detect and alert to license changes with possible impact on legal application usage",
+                    "You track and alert to usage of unmaintained dependencies",
+                    "You reliably detect and remove unnecessary dependencies from the software"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "sb-b-3",
+                  "level": 3,
+                  "activity": "Test application dependencies",
+                  "text": "Do you prevent the build of software if it is affected by vulnerabilities in dependencies?",
+                  "quality": [
+                    "Your build system is connected to a system for tracking 3rd party dependency risk, causing build to fail unless the vulnerability is evaluated to be a false positive or the risk is explicitly accepted",
+                    "You scan your dependencies using a static analysis tool",
+                    "You report findings back to dependency authors using an established responsible disclosure process",
+                    "Using a new dependency not evaluated for security risks causes the build to fail"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "sd",
+          "shortName": "SD",
+          "name": "Secure Deployment",
+          "description": "This practice focuses on increasing the security of software deployments to the production environment and the supporting secrets.",
+          "streams": [
+            {
+              "letter": "A",
+              "name": "Deployment Process",
+              "questions": [
+                {
+                  "id": "sd-a-1",
+                  "level": 1,
+                  "activity": "Use a repeatable deployment process",
+                  "text": "Do you use repeatable deployment processes?",
+                  "quality": [
+                    "You have enough information to run the deployment processes",
+                    "Your deployment documentation is up to date",
+                    "Your deployment documentation is accessible to relevant stakeholders",
+                    "You ensure that only defined qualified personnel can trigger a deployment",
+                    "You harden the tools that are used within the deployment process"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "sd-a-2",
+                  "level": 2,
+                  "activity": "Automate deployment and integrate security checks",
+                  "text": "Are deployment processes automated and employing security checks?",
+                  "quality": [
+                    "Deployment processes are automated on all stages",
+                    "Deployment includes automated security testing procedures",
+                    "You alert responsible staff to identified vulnerabilities",
+                    "You have logs available for your past deployments for a defined period of time"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "sd-a-3",
+                  "level": 3,
+                  "activity": "Verify the integrity of deployment artifacts",
+                  "text": "Do you consistently validate the integrity of deployed artifacts?",
+                  "quality": [
+                    "You prevent or roll back deployment if you detect an integrity breach",
+                    "The verification is done against signatures created during the build time",
+                    "If checking of signatures is not possible (e.g. externally built software), you introduce compensating measures"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "letter": "B",
+              "name": "Secret Management",
+              "questions": [
+                {
+                  "id": "sd-b-1",
+                  "level": 1,
+                  "activity": "Protect application secrets in configuration and code",
+                  "text": "Do you limit access to application secrets according to the least privilege principle?",
+                  "quality": [
+                    "You store production secrets protected in a secured location",
+                    "Developers do not have access to production secrets",
+                    "Production secrets are not available in non-production environments"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "sd-b-2",
+                  "level": 2,
+                  "activity": "Include application secrets during deployment",
+                  "text": "Do you inject production secrets into configuration files during deployment?",
+                  "quality": [
+                    "Source code files no longer contain active application secrets",
+                    "Under normal circumstances, no humans access secrets during deployment procedures",
+                    "You log and alert when abnormal secrets access is attempted"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "sd-b-3",
+                  "level": 3,
+                  "activity": "Enforce lifecycle management of application secrets",
+                  "text": "Do you practice proper lifecycle management for application secrets?",
+                  "quality": [
+                    "You generate and synchronize secrets using a vetted solution",
+                    "Secrets are different between different application instances",
+                    "Secrets are regularly updated"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dm",
+          "shortName": "DM",
+          "name": "Defect Management",
+          "description": "This practice focuses on managing security defects in software and their associated metrics.",
+          "streams": [
+            {
+              "letter": "A",
+              "name": "Defect Tracking",
+              "questions": [
+                {
+                  "id": "dm-a-1",
+                  "level": 1,
+                  "activity": "Track security defects centrally",
+                  "text": "Do you track all known security defects in accessible locations?",
+                  "quality": [
+                    "You can easily get an overview of all security defects impacting one application",
+                    "You have at least a rudimentary classification scheme in place",
+                    "The process includes a strategy for handling false positives and duplicate entries",
+                    "The defect management system covers defects from various sources and activities"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "dm-a-2",
+                  "level": 2,
+                  "activity": "Rate and track security defects",
+                  "text": "Do you keep an overview of the state of security defects across the organization?",
+                  "quality": [
+                    "A single severity scheme is applied to all defects across the organization",
+                    "The scheme includes SLAs for fixing particular severity classes",
+                    "You regularly report compliance to SLAs"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "dm-a-3",
+                  "level": 3,
+                  "activity": "Enforce an SLA for defect management",
+                  "text": "Do you enforce SLAs for fixing security defects?",
+                  "quality": [
+                    "You automatically generate alerts for SLA breaches and transfer respective defects to the risk management process",
+                    "You integrate relevant tooling (e.g. monitoring, build, deployment) with the defect management system"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "letter": "B",
+              "name": "Metrics and Feedback",
+              "questions": [
+                {
+                  "id": "dm-b-1",
+                  "level": 1,
+                  "activity": "Define basic defect metrics",
+                  "text": "Do you use basic metrics about recorded security defects to carry out quick-win improvement activities?",
+                  "quality": [
+                    "You have analyzed your recorded metrics at least once in the last year",
+                    "At least basic information about this initiative is recorded and available",
+                    "You have identified and carried out at least one quick-win activity based on the data"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "dm-b-2",
+                  "level": 2,
+                  "activity": "Define advanced defect metrics",
+                  "text": "Do you improve your security assurance program upon standardized metrics?",
+                  "quality": [
+                    "You document metrics for defect classification and categorization and keep them up to date",
+                    "Executive management regularly receives information about defects and has acted upon it in the last year",
+                    "You regularly share technical details about security defects among teams"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "dm-b-3",
+                  "level": 3,
+                  "activity": "Use metrics to improve the security strategy",
+                  "text": "Do you regularly evaluate the effectiveness of your security metrics so that their input helps drive your security strategy?",
+                  "quality": [
+                    "You have analyzed the effectiveness of the security metrics at least once in the last year",
+                    "Where possible, you verify the correctness of the data automatically",
+                    "The metrics are aggregated with other sources like threat intelligence or incident management",
+                    "You derived at least one strategic activity from the metrics in the last year"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "verification",
+      "name": "Verification",
+      "practices": [
+        {
+          "id": "aa",
+          "shortName": "AA",
+          "name": "Architecture Assessment",
+          "description": "This practice focuses on validating the security and compliance of the software and supporting infrastructure architecture.",
+          "streams": [
+            {
+              "letter": "A",
+              "name": "Architecture Validation",
+              "questions": [
+                {
+                  "id": "aa-a-1",
+                  "level": 1,
+                  "activity": "Assess application architecture",
+                  "text": "Do you review the application architecture for key security objectives on an ad-hoc basis?",
+                  "quality": [
+                    "You have an agreed upon model of the overall software architecture",
+                    "You include components, interfaces, and integrations in the architecture model",
+                    "You verify the correct provision of general security mechanisms",
+                    "You log missing security controls as defects"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "aa-a-2",
+                  "level": 2,
+                  "activity": "Verify the application architecture for security methodically",
+                  "text": "Do you regularly review the security mechanisms of your architecture?",
+                  "quality": [
+                    "You review compliance with internal and external requirements",
+                    "You systematically review each interface in the system",
+                    "You use a formalized review method and structured validation",
+                    "You log missing security mechanisms as defects"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "aa-a-3",
+                  "level": 3,
+                  "activity": "Verify the effectiveness of security components",
+                  "text": "Do you regularly review the effectiveness of the security controls?",
+                  "quality": [
+                    "You evaluate the preventive, detective, and response capabilities of security controls",
+                    "You evaluate the strategy alignment, appropriate support, and scalability of security controls",
+                    "You evaluate the effectiveness at least yearly",
+                    "You log identified shortcomings as defects"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "letter": "B",
+              "name": "Architecture Mitigation",
+              "questions": [
+                {
+                  "id": "aa-b-1",
+                  "level": 1,
+                  "activity": "Evaluate architecture for typical threats",
+                  "text": "Do you review the application architecture for mitigations of typical threats on an ad-hoc basis?",
+                  "quality": [
+                    "You have an agreed upon model of the overall software architecture",
+                    "Security savvy staff conduct the review",
+                    "You consider different types of threats, including insider and data-related ones"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "aa-b-2",
+                  "level": 2,
+                  "activity": "Structurally verify the architecture for identified threats",
+                  "text": "Do you regularly evaluate the threats to your architecture?",
+                  "quality": [
+                    "You systematically review each threat identified in the Threat Assessment",
+                    "Trained or experienced people lead the review exercise",
+                    "You identify mitigating design-level features for each identified threat",
+                    "You log unhandled threats as defects"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "aa-b-3",
+                  "level": 3,
+                  "activity": "Feed review results back to improve reference architectures",
+                  "text": "Do you regularly update your reference architectures based on architecture assessment findings?",
+                  "quality": [
+                    "You assess your architectures in a standardized, documented manner",
+                    "You use recurring findings to trigger a review of reference architectures",
+                    "You independently review the quality of the architecture assessments on an ad-hoc basis",
+                    "You use reference architecture updates to trigger reviews of relevant shared solutions, in a risk-based manner"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "rt",
+          "shortName": "RT",
+          "name": "Requirements-driven Testing",
+          "description": "This practice focuses on using both positive (control verification) and negative (misuse/abuse testing) security tests based on requirements (user stories).",
+          "streams": [
+            {
+              "letter": "A",
+              "name": "Control Verification",
+              "questions": [
+                {
+                  "id": "rt-a-1",
+                  "level": 1,
+                  "activity": "Test the effectiveness of security controls",
+                  "text": "Do you test applications for the correct functioning of standard security controls?",
+                  "quality": [
+                    "Security testing at least verifies the implementation of authentication, access control, input validation, encoding and escaping data, and encryption controls",
+                    "Security testing executes whenever the application changes its use of the controls"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some of them"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of them"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of them"
+                    }
+                  ]
+                },
+                {
+                  "id": "rt-a-2",
+                  "level": 2,
+                  "activity": "Define and run security test cases from requirements",
+                  "text": "Do you consistently write and execute test scripts to verify the functionality of security requirements?",
+                  "quality": [
+                    "You tailor tests to each application and assert expected security functionality",
+                    "You capture test results as a pass or fail condition",
+                    "Tests use a standardized framework or DSL"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some of them"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of them"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of them"
+                    }
+                  ]
+                },
+                {
+                  "id": "rt-a-3",
+                  "level": 3,
+                  "activity": "Automate security requirements testing",
+                  "text": "Do you automatically test applications for security regressions?",
+                  "quality": [
+                    "You consistently write tests for all identified bugs (possibly exceeding a pre-defined severity threshold)",
+                    "You collect security tests in a test suite that is part of the existing unit testing framework"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "letter": "B",
+              "name": "Misuse/Abuse Testing",
+              "questions": [
+                {
+                  "id": "rt-b-1",
+                  "level": 1,
+                  "activity": "Perform fuzz testing",
+                  "text": "Do you test applications using randomization or fuzzing techniques?",
+                  "quality": [
+                    "Testing covers most or all of the application's main input parameters",
+                    "You record and inspect all application crashes for security impact on a best-effort basis"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "rt-b-2",
+                  "level": 2,
+                  "activity": "Define and run security abuse cases from requirements",
+                  "text": "Do you create abuse cases from functional requirements and use them to drive security tests?",
+                  "quality": [
+                    "Important business functionality has corresponding abuse cases",
+                    "You build abuse stories around relevant personas with well-defined motivations and characteristics",
+                    "You capture identified weaknesses as security requirements"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some of the time"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of the time"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of the time"
+                    }
+                  ]
+                },
+                {
+                  "id": "rt-b-3",
+                  "level": 3,
+                  "activity": "Perform security stress testing",
+                  "text": "Do you perform denial of service and security stress testing?",
+                  "quality": [
+                    "Stress tests target specific application resources (e.g. memory exhaustion by saving large amounts of data to a user session)",
+                    "You design tests around relevant personas with well-defined capabilities (knowledge, resources)",
+                    "You feed the results back to the Design practices"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some of the time"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of the time"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of the time"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "st",
+          "shortName": "ST",
+          "name": "Security Testing",
+          "description": "This practice focuses on the detection and resolution of basic security issues through automation, allowing manual testing to focus on more complex attack vectors.",
+          "streams": [
+            {
+              "letter": "A",
+              "name": "Scalable Baseline",
+              "questions": [
+                {
+                  "id": "st-a-1",
+                  "level": 1,
+                  "activity": "Perform automated security testing",
+                  "text": "Do you scan applications with automated security testing tools?",
+                  "quality": [
+                    "You dynamically generate inputs for security tests using automated tools",
+                    "You choose the security testing tools to fit the organization's architecture and technology stack, and balance depth and accuracy of inspection with usability of findings to the organization"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some of them"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of them"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of them"
+                    }
+                  ]
+                },
+                {
+                  "id": "st-a-2",
+                  "level": 2,
+                  "activity": "Develop application-specific security test cases",
+                  "text": "Do you customize the automated security tools to your applications and technology stacks?",
+                  "quality": [
+                    "You tune and select tool features which match your application or technology stack",
+                    "You minimize false positives by silencing or automatically filtering irrelevant warnings or low-probability findings",
+                    "You minimize false negatives by leveraging tool extensions or DSLs to customize tools for your application or organizational standards"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some of them"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of them"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of them"
+                    }
+                  ]
+                },
+                {
+                  "id": "st-a-3",
+                  "level": 3,
+                  "activity": "Integrate security testing tools in the delivery pipeline",
+                  "text": "Do you integrate automated security testing into the build and deploy process?",
+                  "quality": [
+                    "Management and business stakeholders track and review test results throughout the development cycle",
+                    "You merge test results into a central dashboard and feed them into defect management"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some of it"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of it"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of it"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "letter": "B",
+              "name": "Deep Understanding",
+              "questions": [
+                {
+                  "id": "st-b-1",
+                  "level": 1,
+                  "activity": "Test high risk application components manually",
+                  "text": "Do you manually review the security quality of selected high-risk components?",
+                  "quality": [
+                    "Criteria exist to help the reviewer focus on high-risk components",
+                    "Qualified personnel conduct reviews following documented guidelines",
+                    "You address findings in accordance with the organization's defect management policy"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some components"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the components"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the components"
+                    }
+                  ]
+                },
+                {
+                  "id": "st-b-2",
+                  "level": 2,
+                  "activity": "Establish a penetration testing process",
+                  "text": "Do you perform penetration testing for your applications at regular intervals?",
+                  "quality": [
+                    "Penetration testing uses application-specific security test cases to evaluate security",
+                    "Penetration testing looks for both technical and logical issues in the application",
+                    "Stakeholders review the test results and handle them in accordance with the organization's risk management",
+                    "Qualified personnel perform penetration testing"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "st-b-3",
+                  "level": 3,
+                  "activity": "Establish continuous, scalable security verification",
+                  "text": "Do you use the results of security testing to improve the development lifecycle?",
+                  "quality": [
+                    "You use results from other security activities to improve integrated security testing during development",
+                    "You review test results and incorporate them into security awareness training and security testing playbooks",
+                    "Stakeholders review the test results and handle them in accordance with the organization's risk management"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, but we improve it ad-hoc"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, we improve it regularly"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, we improve it continuously"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "operations",
+      "name": "Operations",
+      "practices": [
+        {
+          "id": "im",
+          "shortName": "IM",
+          "name": "Incident Management",
+          "description": "This practice addresses activities carried out to improve the organization's detection of, and response to, security incidents.",
+          "streams": [
+            {
+              "letter": "A",
+              "name": "Incident Detection",
+              "questions": [
+                {
+                  "id": "im-a-1",
+                  "level": 1,
+                  "activity": "Use best-effort incident detection",
+                  "text": "Do you analyze log data for security incidents periodically?",
+                  "quality": [
+                    "You have a contact point for the creation of security incidents",
+                    "You analyze data in accordance with the log data retention periods",
+                    "The frequency of this analysis is aligned with the criticality of your applications"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "im-a-2",
+                  "level": 2,
+                  "activity": "Define an incident detection process",
+                  "text": "Do you follow a documented process for incident detection?",
+                  "quality": [
+                    "The process has a dedicated owner",
+                    "You store process documentation in an accessible location",
+                    "The process considers an escalation path for further analysis",
+                    "You train employees responsible for incident detection in this process",
+                    "You have a checklist of potential attacks to simplify incident detection"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "im-a-3",
+                  "level": 3,
+                  "activity": "Improve the incident detection process",
+                  "text": "Do you review and update the incident detection process regularly?",
+                  "quality": [
+                    "You perform reviews at least annually",
+                    "You update the checklist of potential attacks with external and internal data"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "letter": "B",
+              "name": "Incident Response",
+              "questions": [
+                {
+                  "id": "im-b-1",
+                  "level": 1,
+                  "activity": "Create an incident response plan",
+                  "text": "Do you respond to detected incidents?",
+                  "quality": [
+                    "You have a defined person or role for incident handling",
+                    "You document security incidents"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some incidents"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the incidents"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the incidents"
+                    }
+                  ]
+                },
+                {
+                  "id": "im-b-2",
+                  "level": 2,
+                  "activity": "Define an incident response process",
+                  "text": "Do you use a repeatable process for incident handling?",
+                  "quality": [
+                    "You have an agreed upon incident classification",
+                    "The process considers Root Cause Analysis for high severity incidents",
+                    "Employees responsible for incident response are trained in this process",
+                    "Forensic analysis tooling is available"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some incident types"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the incident types"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the incident types"
+                    }
+                  ]
+                },
+                {
+                  "id": "im-b-3",
+                  "level": 3,
+                  "activity": "Establish an incident response team",
+                  "text": "Do you have a dedicated incident response team available?",
+                  "quality": [
+                    "The team performs Root Cause Analysis for all security incidents unless there is a specific reason not to do so",
+                    "You review and update the response process at least annually"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some of the time"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of the time"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of the time"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "em",
+          "shortName": "EM",
+          "name": "Environment Management",
+          "description": "This practice describes proactive activities carried out to improve and maintain the security of the environments in which the organization's applications operate.",
+          "streams": [
+            {
+              "letter": "A",
+              "name": "Configuration Hardening",
+              "questions": [
+                {
+                  "id": "em-a-1",
+                  "level": 1,
+                  "activity": "Use best-effort hardening",
+                  "text": "Do you harden configurations for key components of your technology stacks?",
+                  "quality": [
+                    "You have identified the key components in each technology stack used",
+                    "You have an established configuration standard for each key component"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some components"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the components"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the components"
+                    }
+                  ]
+                },
+                {
+                  "id": "em-a-2",
+                  "level": 2,
+                  "activity": "Establish hardening baselines",
+                  "text": "Do you have hardening baselines for your components?",
+                  "quality": [
+                    "You have assigned an owner for each baseline",
+                    "The owner keeps their assigned baselines up to date",
+                    "You store baselines in an accessible location",
+                    "You train employees responsible for configurations in these baselines"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some components"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the components"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the components"
+                    }
+                  ]
+                },
+                {
+                  "id": "em-a-3",
+                  "level": 3,
+                  "activity": "Perform continuous configuration monitoring",
+                  "text": "Do you monitor and enforce conformity with hardening baselines?",
+                  "quality": [
+                    "You perform conformity checks regularly, preferably using automation",
+                    "You store conformity check results in an accessible location",
+                    "You follow an established process to address reported non-conformities",
+                    "You review each baseline at least annually, and update it when required"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some components"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the components"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the components"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "letter": "B",
+              "name": "Patching and Updating",
+              "questions": [
+                {
+                  "id": "em-b-1",
+                  "level": 1,
+                  "activity": "Practice best-effort patching",
+                  "text": "Do you identify and patch vulnerable components?",
+                  "quality": [
+                    "You have an up-to-date list of components, including version information",
+                    "You regularly review public sources for vulnerabilities related to your components"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some components"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the components"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the components"
+                    }
+                  ]
+                },
+                {
+                  "id": "em-b-2",
+                  "level": 2,
+                  "activity": "Formalize patch management",
+                  "text": "Do you follow an established process for updating components of your technology stacks?",
+                  "quality": [
+                    "The process includes vendor information for third-party patches",
+                    "The process considers external sources to gather information about zero day attacks, and includes appropriate risk mitigation steps",
+                    "The process includes guidance for prioritizing component updates"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some components"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the components"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the components"
+                    }
+                  ]
+                },
+                {
+                  "id": "em-b-3",
+                  "level": 3,
+                  "activity": "Enforce timely patch management",
+                  "text": "Do you regularly evaluate components and review patch level status?",
+                  "quality": [
+                    "You update the list with components and versions",
+                    "You identify and apply missing updates according to the existing SLA",
+                    "You review and update the process based on feedback from the people who perform patching"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some components"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the components"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the components"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "om",
+          "shortName": "OM",
+          "name": "Operational Management",
+          "description": "This practice focuses on operational support activities required to maintain security throughout the product lifecycle.",
+          "streams": [
+            {
+              "letter": "A",
+              "name": "Data Protection",
+              "questions": [
+                {
+                  "id": "om-a-1",
+                  "level": 1,
+                  "activity": "Organize basic data protections",
+                  "text": "Do you protect and handle information according to protection requirements for data stored and processed on each application?",
+                  "quality": [
+                    "You know the data elements processed and stored by each application",
+                    "You know the type and sensitivity level of each identified data element",
+                    "You have controls to prevent propagation of unsanitized sensitive data from production to lower environments"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "om-a-2",
+                  "level": 2,
+                  "activity": "Establish a data catalog",
+                  "text": "Do you maintain a data catalog, including types, sensitivity levels, and processing and storage locations?",
+                  "quality": [
+                    "The data catalog is stored in an accessible location",
+                    "You know which data elements are subject to specific regulation",
+                    "You have controls for protecting and preserving data throughout its lifetime",
+                    "You have retention requirements for data, and you destroy backups in a timely manner after the relevant retention period ends"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some of our data"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of our data"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of our data"
+                    }
+                  ]
+                },
+                {
+                  "id": "om-a-3",
+                  "level": 3,
+                  "activity": "Respond to data breaches",
+                  "text": "Do you regularly review and update the data catalog and your data protection policies and procedures?",
+                  "quality": [
+                    "You have automated monitoring to detect attempted or actual violations of the Data Protection Policy",
+                    "You have tools for data loss prevention, access control and tracking, or anomalous behavior detection",
+                    "You periodically audit the operation of automated mechanisms, including backups and record deletions"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, but we do it ad-hoc"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, we do it regularly"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, we do it continuously"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "letter": "B",
+              "name": "System Decommissioning / Legacy Management",
+              "questions": [
+                {
+                  "id": "om-b-1",
+                  "level": 1,
+                  "activity": "Identify unused applications",
+                  "text": "Do you identify and remove systems, applications, application dependencies, or services that are no longer used, have reached end of life, or are no longer actively developed or supported?",
+                  "quality": [
+                    "You do not use unsupported applications or dependencies",
+                    "You manage customer/user migration from older versions for each product and customer/user group"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some applications"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the applications"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the applications"
+                    }
+                  ]
+                },
+                {
+                  "id": "om-b-2",
+                  "level": 2,
+                  "activity": "Formalize decommissioning process",
+                  "text": "Do you follow an established process for removing all associated resources, as part of decommissioning of unused systems, applications, application dependencies, or services?",
+                  "quality": [
+                    "You document the status of support for all released versions of your products, in an accessible location",
+                    "The process includes replacement or upgrade of third-party applications, or application dependencies, that have reached end of life",
+                    "Operating environments do not contain orphaned accounts, firewall rules, or other configuration artifacts"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, some of the time"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, at least half of the time"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, most or all of the time"
+                    }
+                  ]
+                },
+                {
+                  "id": "om-b-3",
+                  "level": 3,
+                  "activity": "Review application lifecycle state regularly",
+                  "text": "Do you regularly evaluate the lifecycle state and support status of every software asset and underlying infrastructure component, and estimate their end of life?",
+                  "quality": [
+                    "Your end of life management process is agreed upon",
+                    "You inform customers and user groups of product timelines to prevent disruption of service or support",
+                    "You review the process at least annually"
+                  ],
+                  "answers": [
+                    {
+                      "value": 0,
+                      "text": "No"
+                    },
+                    {
+                      "value": 0.25,
+                      "text": "Yes, for some of the assets"
+                    },
+                    {
+                      "value": 0.5,
+                      "text": "Yes, for at least half of the assets"
+                    },
+                    {
+                      "value": 1,
+                      "text": "Yes, for most or all of the assets"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -118,14 +118,14 @@
           {
             "kind": "review",
             "lens": "samm",
-            "title": "Payments 2026-Q4: Strategy & Metrics",
+            "title": "Payments 2026 Q4: Strategy and Metrics",
             "address": "/samm/payments/2026-q4/sm",
             "due": "2026-11-27"
           },
           {
             "kind": "release",
             "lens": "samm",
-            "title": "Payments 2026-Q4 assessment",
+            "title": "Payments 2026 Q4 assessment",
             "address": "/samm/payments/2026-q4/release",
             "due": "2026-12-04"
           },
@@ -151,6 +151,59 @@
             "due": "2026-12-15"
           }
         ]
+      }
+    },
+    "GET /api/v1/samm/models/v2.2.0": {
+      "body_file": "samm-model-v2.2.0.json"
+    },
+    "GET /api/v1/samm/scopes": {
+      "body_file": "samm-scopes.json"
+    },
+    "GET /api/v1/samm/scopes/payments": {
+      "body_file": "samm-scope-payments.json"
+    },
+    "GET /api/v1/samm/scopes/identity": {
+      "body_file": "samm-scope-identity.json"
+    },
+    "GET /api/v1/samm/scopes/shop": {
+      "body_file": "samm-scope-shop.json"
+    },
+    "GET /api/v1/samm/scopes/organisation": {
+      "body_file": "samm-scope-organisation.json"
+    },
+    "GET /api/v1/documents/samm-assessments/payments-2026-q4": {
+      "body_file": "samm-assessment-payments-2026-q4.json"
+    },
+    "GET /api/v1/documents/samm-assessments/payments-2026-q2": {
+      "body_file": "samm-assessment-payments-2026-q2.json"
+    },
+    "GET /api/v1/documents/samm-assessments/payments-2025-q4": {
+      "body_file": "samm-assessment-payments-2025-q4.json"
+    },
+    "GET /api/v1/documents/samm-assessments/identity-2026-q4": {
+      "body_file": "samm-assessment-identity-2026-q4.json"
+    },
+    "GET /api/v1/documents/samm-assessments/shop-2026-q3": {
+      "body_file": "samm-assessment-shop-2026-q3.json"
+    },
+    "GET /api/v1/documents/samm-assessments/organisation-2026-h1": {
+      "body_file": "samm-assessment-organisation-2026-h1.json"
+    },
+    "GET /api/v1/samm/payments/compare": {
+      "body_file": "samm-compare-payments-workshop.json"
+    },
+    "GET /api/v1/documents/samm-assessments/payments-2026-q4/diff": {
+      "body_file": "samm-diff-payments-2026-q4-draft.json"
+    },
+    "PUT /api/v1/drafts/samm-assessments/payments-2026-q4": {
+      "body": {
+        "outcome": "DRAFT_SAVED"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/payments-2026-q4/save": {
+      "body": {
+        "outcome": "SAVED",
+        "parts": {}
       }
     }
   },
@@ -188,6 +241,12 @@
           }
         },
         "PUT /api/v1/directory/me": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/payments-2026-q4/save": {
           "status": 503,
           "body": {
             "outcome": "GIT_UNAVAILABLE"

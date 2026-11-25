@@ -1,0 +1,482 @@
+{
+  "id": "shop-2026-q3",
+  "repository": "samm-assessments",
+  "scope": "shop",
+  "slug": "2026-q3",
+  "title": "Web shop 2026 Q3",
+  "date": "2026-09-22",
+  "modelVersion": "v2.2.0",
+  "state": "released",
+  "assessors": [
+    {
+      "pseudonym": "p-61c0d4",
+      "name": "Lea Brandt",
+      "role": "Product Owner"
+    },
+    {
+      "pseudonym": "p-9e33a1",
+      "name": "Sam Okafor",
+      "role": "Developer"
+    }
+  ],
+  "answers": {
+    "sm": {
+      "sm-a-1": {
+        "answer": 0.5
+      },
+      "sm-a-2": {
+        "answer": 0.25
+      },
+      "sm-a-3": {
+        "answer": 0.25
+      },
+      "sm-b-1": {
+        "answer": 0.5
+      },
+      "sm-b-2": {
+        "answer": 0.5
+      },
+      "sm-b-3": {
+        "answer": 0.5
+      }
+    },
+    "pc": {
+      "pc-a-1": {
+        "answer": 0.5
+      },
+      "pc-a-2": {
+        "answer": 0.5
+      },
+      "pc-a-3": {
+        "answer": 0.25
+      },
+      "pc-b-1": {
+        "answer": 0.25
+      },
+      "pc-b-2": {
+        "answer": 0.25
+      },
+      "pc-b-3": {
+        "answer": 0.25
+      }
+    },
+    "eg": {
+      "eg-a-1": {
+        "answer": 0.5
+      },
+      "eg-a-2": {
+        "answer": 0.5
+      },
+      "eg-a-3": {
+        "answer": 0.5
+      },
+      "eg-b-1": {
+        "answer": 1
+      },
+      "eg-b-2": {
+        "answer": 0.25
+      },
+      "eg-b-3": {
+        "answer": 0.25
+      }
+    },
+    "ta": {
+      "ta-a-1": {
+        "answer": 0.5
+      },
+      "ta-a-2": {
+        "answer": 0.5
+      },
+      "ta-a-3": {
+        "answer": 0.25
+      },
+      "ta-b-1": {
+        "answer": 0.25
+      },
+      "ta-b-2": {
+        "answer": 0.5
+      },
+      "ta-b-3": {
+        "answer": 0
+      }
+    },
+    "sr": {
+      "sr-a-1": {
+        "answer": 0.5
+      },
+      "sr-a-2": {
+        "answer": 0.5
+      },
+      "sr-a-3": {
+        "answer": 0.5
+      },
+      "sr-b-1": {
+        "answer": 1
+      },
+      "sr-b-2": {
+        "answer": 0.5
+      },
+      "sr-b-3": {
+        "answer": 0.25
+      }
+    },
+    "sa": {
+      "sa-a-1": {
+        "answer": 1
+      },
+      "sa-a-2": {
+        "answer": 0.5
+      },
+      "sa-a-3": {
+        "answer": 0.5
+      },
+      "sa-b-1": {
+        "answer": 0.5
+      },
+      "sa-b-2": {
+        "answer": 0.25
+      },
+      "sa-b-3": {
+        "answer": 0.5
+      }
+    },
+    "sb": {
+      "sb-a-1": {
+        "answer": 1
+      },
+      "sb-a-2": {
+        "answer": 1
+      },
+      "sb-a-3": {
+        "answer": 0.25
+      },
+      "sb-b-1": {
+        "answer": 1
+      },
+      "sb-b-2": {
+        "answer": 0.5
+      },
+      "sb-b-3": {
+        "answer": 0.5
+      }
+    },
+    "sd": {
+      "sd-a-1": {
+        "answer": 1
+      },
+      "sd-a-2": {
+        "answer": 0.25
+      },
+      "sd-a-3": {
+        "answer": 0.5
+      },
+      "sd-b-1": {
+        "answer": 1
+      },
+      "sd-b-2": {
+        "answer": 0.5
+      },
+      "sd-b-3": {
+        "answer": 0.25
+      }
+    },
+    "dm": {
+      "dm-a-1": {
+        "answer": 0.5
+      },
+      "dm-a-2": {
+        "answer": 0.25
+      },
+      "dm-a-3": {
+        "answer": 0
+      },
+      "dm-b-1": {
+        "answer": 0.5
+      },
+      "dm-b-2": {
+        "answer": 0.25
+      },
+      "dm-b-3": {
+        "answer": 0.25
+      }
+    },
+    "aa": {
+      "aa-a-1": {
+        "answer": 0.5
+      },
+      "aa-a-2": {
+        "answer": 0.25
+      },
+      "aa-a-3": {
+        "answer": 0.25
+      },
+      "aa-b-1": {
+        "answer": 0.25
+      },
+      "aa-b-2": {
+        "answer": 0
+      },
+      "aa-b-3": {
+        "answer": 0
+      }
+    },
+    "rt": {
+      "rt-a-1": {
+        "answer": 0.5
+      },
+      "rt-a-2": {
+        "answer": 0.5
+      },
+      "rt-a-3": {
+        "answer": 0
+      },
+      "rt-b-1": {
+        "answer": 0.25
+      },
+      "rt-b-2": {
+        "answer": 0.25
+      },
+      "rt-b-3": {
+        "answer": 0.25
+      }
+    },
+    "st": {
+      "st-a-1": {
+        "answer": 0.5
+      },
+      "st-a-2": {
+        "answer": 0.5
+      },
+      "st-a-3": {
+        "answer": 0.25
+      },
+      "st-b-1": {
+        "answer": 1
+      },
+      "st-b-2": {
+        "answer": 0.5
+      },
+      "st-b-3": {
+        "answer": 0.5
+      }
+    },
+    "im": {
+      "im-a-1": {
+        "answer": 0.25
+      },
+      "im-a-2": {
+        "answer": 0.5
+      },
+      "im-a-3": {
+        "answer": 0
+      },
+      "im-b-1": {
+        "answer": 0.5
+      },
+      "im-b-2": {
+        "answer": 0.25
+      },
+      "im-b-3": {
+        "answer": 0.25
+      }
+    },
+    "em": {
+      "em-a-1": {
+        "answer": 0.5
+      },
+      "em-a-2": {
+        "answer": 0.25
+      },
+      "em-a-3": {
+        "answer": 0.25
+      },
+      "em-b-1": {
+        "answer": 0.5
+      },
+      "em-b-2": {
+        "answer": 0.5
+      },
+      "em-b-3": {
+        "answer": 0.25
+      }
+    },
+    "om": {
+      "om-a-1": {
+        "answer": 0.5
+      },
+      "om-a-2": {
+        "answer": 0.25
+      },
+      "om-a-3": {
+        "answer": 0
+      },
+      "om-b-1": {
+        "answer": 0.25
+      },
+      "om-b-2": {
+        "answer": 0.25
+      },
+      "om-b-3": {
+        "answer": 0
+      }
+    }
+  },
+  "parts": {
+    "sm": {
+      "blob": "8dc913f",
+      "savedAt": "2026-09-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "pc": {
+      "blob": "1ab5e3f",
+      "savedAt": "2026-09-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "eg": {
+      "blob": "22ea747",
+      "savedAt": "2026-09-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "ta": {
+      "blob": "e852faf",
+      "savedAt": "2026-09-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "sr": {
+      "blob": "55cf3ff",
+      "savedAt": "2026-09-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "sa": {
+      "blob": "2ebe9ff",
+      "savedAt": "2026-09-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "sb": {
+      "blob": "bbea807",
+      "savedAt": "2026-09-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "sd": {
+      "blob": "590015f",
+      "savedAt": "2026-09-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "dm": {
+      "blob": "efbdbdf",
+      "savedAt": "2026-09-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "aa": {
+      "blob": "d7ae45f",
+      "savedAt": "2026-09-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "rt": {
+      "blob": "12882df",
+      "savedAt": "2026-09-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "st": {
+      "blob": "f5fff67",
+      "savedAt": "2026-09-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "im": {
+      "blob": "e21753f",
+      "savedAt": "2026-09-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "em": {
+      "blob": "578723f",
+      "savedAt": "2026-09-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "om": {
+      "blob": "4982b3f",
+      "savedAt": "2026-09-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    }
+  },
+  "history": [
+    {
+      "at": "2026-09-24T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      },
+      "kind": "release",
+      "tag": "assessments/shop-2026-q3/v1"
+    }
+  ],
+  "release": {
+    "tag": "assessments/shop-2026-q3/v1",
+    "at": "2026-09-24T10:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad",
+      "role": "Chief Information Security Officer"
+    }
+  }
+}

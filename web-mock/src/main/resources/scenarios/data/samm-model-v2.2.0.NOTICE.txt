@@ -1,0 +1,14 @@
+samm-model-v2.2.0.json
+
+The OWASP SAMM core model, version v2.2.0, by the OWASP SAMM project:
+https://github.com/owaspsamm/core/tree/v2.2.0/model
+
+Licensed under the Creative Commons Attribution-ShareAlike 4.0 International licence (CC BY-SA 4.0):
+https://creativecommons.org/licenses/by-sa/4.0/
+
+The file converts the model's YAML files (business functions, security practices, streams, activities, questions,
+answer sets, practice and maturity levels) into one JSON document for the web mock. The texts are unchanged; the
+structure is reduced to what the web app shows, and every question carries an id of the form
+<practice>-<stream>-<level>. This file is a test fixture of the web mock and is not part of the application, which
+pins the model versions it serves in samm.yaml (doc/specification/category-samm.adoc, AUN-SAMM-1). The licence of
+this repository (FSL-1.1-ALv2) does not apply to samm-model-v2.2.0.json; CC BY-SA 4.0 does.

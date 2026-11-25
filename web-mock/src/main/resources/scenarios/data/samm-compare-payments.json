@@ -1,0 +1,352 @@
+{
+  "from": "2026-q2",
+  "to": "2026-q4",
+  "modelVersion": "v2.2.0",
+  "overall": {
+    "from": 1.3583333333333332,
+    "to": 1.65,
+    "delta": 0.29166666666666674
+  },
+  "functions": [
+    {
+      "id": "governance",
+      "from": 1.4166666666666667,
+      "to": 1.8333333333333333,
+      "delta": 0.4166666666666665,
+      "practices": [
+        {
+          "id": "sm",
+          "from": 1.25,
+          "to": 1.5,
+          "delta": 0.25,
+          "streams": [
+            {
+              "letter": "A",
+              "from": 1.5,
+              "to": 1.25,
+              "delta": -0.25
+            },
+            {
+              "letter": "B",
+              "from": 1,
+              "to": 1.75,
+              "delta": 0.75
+            }
+          ]
+        },
+        {
+          "id": "pc",
+          "from": 1.125,
+          "to": 1.75,
+          "delta": 0.625,
+          "streams": [
+            {
+              "letter": "A",
+              "from": 1.25,
+              "to": 1.75,
+              "delta": 0.5
+            },
+            {
+              "letter": "B",
+              "from": 1,
+              "to": 1.75,
+              "delta": 0.75
+            }
+          ]
+        },
+        {
+          "id": "eg",
+          "from": 1.875,
+          "to": 2.25,
+          "delta": 0.375,
+          "streams": [
+            {
+              "letter": "A",
+              "from": 1.75,
+              "to": 2,
+              "delta": 0.25
+            },
+            {
+              "letter": "B",
+              "from": 2,
+              "to": 2.5,
+              "delta": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "design",
+      "from": 1.6666666666666667,
+      "to": 1.75,
+      "delta": 0.08333333333333326,
+      "practices": [
+        {
+          "id": "ta",
+          "from": 1.25,
+          "to": 1.375,
+          "delta": 0.125,
+          "streams": [
+            {
+              "letter": "A",
+              "from": 1.25,
+              "to": 1.5,
+              "delta": 0.25
+            },
+            {
+              "letter": "B",
+              "from": 1.25,
+              "to": 1.25,
+              "delta": 0
+            }
+          ]
+        },
+        {
+          "id": "sr",
+          "from": 1.875,
+          "to": 2.125,
+          "delta": 0.25,
+          "streams": [
+            {
+              "letter": "A",
+              "from": 1.75,
+              "to": 1.75,
+              "delta": 0
+            },
+            {
+              "letter": "B",
+              "from": 2,
+              "to": 2.5,
+              "delta": 0.5
+            }
+          ]
+        },
+        {
+          "id": "sa",
+          "from": 1.875,
+          "to": 1.75,
+          "delta": -0.125,
+          "streams": [
+            {
+              "letter": "A",
+              "from": 1.25,
+              "to": 1.5,
+              "delta": 0.25
+            },
+            {
+              "letter": "B",
+              "from": 2.5,
+              "to": 2,
+              "delta": -0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "implementation",
+      "from": 1.5416666666666667,
+      "to": 1.9583333333333333,
+      "delta": 0.4166666666666665,
+      "practices": [
+        {
+          "id": "sb",
+          "from": 2.125,
+          "to": 2.25,
+          "delta": 0.125,
+          "streams": [
+            {
+              "letter": "A",
+              "from": 2.5,
+              "to": 2,
+              "delta": -0.5
+            },
+            {
+              "letter": "B",
+              "from": 1.75,
+              "to": 2.5,
+              "delta": 0.75
+            }
+          ]
+        },
+        {
+          "id": "sd",
+          "from": 1.5,
+          "to": 2.25,
+          "delta": 0.75,
+          "streams": [
+            {
+              "letter": "A",
+              "from": 2,
+              "to": 2.5,
+              "delta": 0.5
+            },
+            {
+              "letter": "B",
+              "from": 1,
+              "to": 2,
+              "delta": 1
+            }
+          ]
+        },
+        {
+          "id": "dm",
+          "from": 1,
+          "to": 1.375,
+          "delta": 0.375,
+          "streams": [
+            {
+              "letter": "A",
+              "from": 1.25,
+              "to": 1.5,
+              "delta": 0.25
+            },
+            {
+              "letter": "B",
+              "from": 0.75,
+              "to": 1.25,
+              "delta": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "verification",
+      "from": 0.9583333333333334,
+      "to": 1.4583333333333333,
+      "delta": 0.4999999999999999,
+      "practices": [
+        {
+          "id": "aa",
+          "from": 0.75,
+          "to": 1.375,
+          "delta": 0.625,
+          "streams": [
+            {
+              "letter": "A",
+              "from": 1,
+              "to": 1.5,
+              "delta": 0.5
+            },
+            {
+              "letter": "B",
+              "from": 0.5,
+              "to": 1.25,
+              "delta": 0.75
+            }
+          ]
+        },
+        {
+          "id": "rt",
+          "from": 0.875,
+          "to": 1.125,
+          "delta": 0.25,
+          "streams": [
+            {
+              "letter": "A",
+              "from": 1,
+              "to": 1.25,
+              "delta": 0.25
+            },
+            {
+              "letter": "B",
+              "from": 0.75,
+              "to": 1,
+              "delta": 0.25
+            }
+          ]
+        },
+        {
+          "id": "st",
+          "from": 1.25,
+          "to": 1.875,
+          "delta": 0.625,
+          "streams": [
+            {
+              "letter": "A",
+              "from": 1.25,
+              "to": 1.75,
+              "delta": 0.5
+            },
+            {
+              "letter": "B",
+              "from": 1.25,
+              "to": 2,
+              "delta": 0.75
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "operations",
+      "from": 1.2083333333333333,
+      "to": 1.25,
+      "delta": 0.04166666666666674,
+      "practices": [
+        {
+          "id": "im",
+          "from": 1,
+          "to": 1.625,
+          "delta": 0.625,
+          "streams": [
+            {
+              "letter": "A",
+              "from": 1,
+              "to": 1.25,
+              "delta": 0.25
+            },
+            {
+              "letter": "B",
+              "from": 1,
+              "to": 2,
+              "delta": 1
+            }
+          ]
+        },
+        {
+          "id": "em",
+          "from": 1.75,
+          "to": 1.375,
+          "delta": -0.375,
+          "streams": [
+            {
+              "letter": "A",
+              "from": 2,
+              "to": 1.25,
+              "delta": -0.75
+            },
+            {
+              "letter": "B",
+              "from": 1.5,
+              "to": 1.5,
+              "delta": 0
+            }
+          ]
+        },
+        {
+          "id": "om",
+          "from": 0.875,
+          "to": 0.75,
+          "delta": -0.125,
+          "streams": [
+            {
+              "letter": "A",
+              "from": 1,
+              "to": 1,
+              "delta": 0
+            },
+            {
+              "letter": "B",
+              "from": 0.75,
+              "to": 0.5,
+              "delta": -0.25
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

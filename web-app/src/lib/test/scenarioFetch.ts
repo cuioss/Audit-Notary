@@ -17,7 +17,12 @@ export const SCENARIO_DIR = path.resolve(
 interface RouteDefinition {
   status?: number;
   body?: unknown;
+  /** A data file below `scenarios/data/` whose JSON is the body, as the mock's `body_file`. */
+  body_file?: string;
 }
+
+/** The name pattern of a data file, the same as the mock's. */
+const DATA_FILE = /^[a-z0-9][a-z0-9.-]*\.json$/;
 
 interface LinkDefinition extends RouteDefinition {
   method: string;
@@ -61,8 +66,25 @@ export function loadScenario(name: string): ScenarioFile {
   ) as ScenarioFile;
 }
 
+/**
+ * The body of a route or link, by the rules of the mock's `ScenarioLoader`: inline, or the JSON of its data file; both
+ * at once, a name outside the pattern, a missing file or a file that is no JSON value are refused.
+ *
+ * @param route a route or link
+ * @returns its body
+ */
+export function bodyOf(route: RouteDefinition): unknown {
+  if (route.body_file === undefined) return route.body ?? {};
+  if (route.body !== undefined) throw new Error('an answer has either body or body_file');
+  if (!DATA_FILE.test(route.body_file)) throw new Error(`refused data file: ${route.body_file}`);
+  const text = fs.readFileSync(path.join(SCENARIO_DIR, 'data', route.body_file), 'utf8');
+  if (text.trim() === '') throw new Error(`data file ${route.body_file} holds no JSON value`);
+  return JSON.parse(text);
+}
+
 function answer(route: RouteDefinition): Response {
-  return new Response(JSON.stringify(route.body ?? {}), {
+  // The body is read first, so a refused data file fails the request before it changes anything.
+  return new Response(JSON.stringify(bodyOf(route)), {
     status: route.status ?? 200,
     headers: { 'Content-Type': 'application/json' },
   });
@@ -78,16 +100,18 @@ export function scenarioFetch(reference: string): { fetch: typeof fetch; state: 
   let state = startState ?? scenario.start;
 
   const fetchImpl = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    const url = new URL(String(input), 'http://localhost');
-    const method = (init?.method ?? 'GET').toUpperCase();
+    const request = input instanceof Request ? input : null;
+    const url = new URL(request ? request.url : String(input), 'http://localhost');
+    const method = (init?.method ?? request?.method ?? 'GET').toUpperCase();
     const current = scenario.states[state] ?? {};
     const key = `${method} ${url.pathname}`;
     const link = Object.values(current.links ?? {}).find(
       (candidate) => candidate.method === method && candidate.path === url.pathname,
     );
     if (link) {
+      const response = answer(link);
       state = link.next;
-      return answer(link);
+      return response;
     }
     if (key === 'GET /api/v1/session') {
       const firstLogin = current.first_login_required ?? scenario.first_login_required;

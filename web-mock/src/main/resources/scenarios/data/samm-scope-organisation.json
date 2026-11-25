@@ -1,0 +1,77 @@
+{
+  "id": "organisation",
+  "title": "Organisation",
+  "subject": {
+    "kind": "organisation",
+    "name": "Organisation"
+  },
+  "modelVersion": "v2.2.0",
+  "targets": {
+    "sm": {
+      "target": 2.5
+    },
+    "pc": {
+      "target": 2.5
+    },
+    "eg": {
+      "target": 2
+    },
+    "ta": {
+      "target": 2
+    },
+    "sr": {
+      "target": 2
+    },
+    "sa": {
+      "target": 2
+    },
+    "sb": {
+      "target": 2
+    },
+    "sd": {
+      "target": 2
+    },
+    "dm": {
+      "target": 2
+    },
+    "aa": {
+      "target": 2
+    },
+    "rt": {
+      "target": 2
+    },
+    "st": {
+      "target": 2
+    },
+    "im": {
+      "target": 2
+    },
+    "em": {
+      "target": 2
+    },
+    "om": {
+      "target": 2
+    }
+  },
+  "assessments": [
+    {
+      "id": "2026-h1",
+      "document": "organisation-2026-h1",
+      "title": "Organisation 2026 H1",
+      "date": "2026-05-04",
+      "state": "released",
+      "modelVersion": "v2.2.0",
+      "overall": 1.2083333333333335,
+      "answered": 90,
+      "release": {
+        "tag": "assessments/organisation-2026-h1/v1",
+        "at": "2026-05-12T08:30:00Z",
+        "by": {
+          "pseudonym": "p-7d2e58",
+          "name": "Noor Haddad",
+          "role": "Chief Information Security Officer"
+        }
+      }
+    }
+  ]
+}

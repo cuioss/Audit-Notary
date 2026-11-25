@@ -60,7 +60,8 @@ public final class WebMock implements AutoCloseable {
     public static WebMock start(String reference, int port, Timing timing) throws IOException {
         var mapper = new ObjectMapper();
         ClassLoader classLoader = WebMock.class.getClassLoader();
-        var registry = new ScenarioRegistry(new ScenarioLoader(mapper), classLoader);
+        var registry = new ScenarioRegistry(
+                new ScenarioLoader(mapper, name -> ScenarioRegistry.readDataFile(classLoader, name)), classLoader);
         var initial = registry.resolve(reference)
                 .orElseThrow(() -> new IllegalArgumentException("No scenario named " + reference));
         var engine = new MockEngine(initial, timing, mapper, registry, CanonicalAddresses.load(mapper, classLoader),

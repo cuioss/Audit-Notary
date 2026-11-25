@@ -180,7 +180,7 @@ public final class MockEngine implements AutoCloseable {
         lock.lock();
         try {
             if (request.isStateChanging()) {
-                acts.add(new Act(request.method(), path, state.id(), parseBody(request)));
+                acts.add(new Act(request.method(), path, state.id(), redacted(parseBody(request))));
             }
             if (scenario.firstLoginRequired(state) && !FIRST_LOGIN_ALLOWED.contains(key)) {
                 return json(403, object().put(OUTCOME, "FIRST_LOGIN_REQUIRED"));
@@ -448,6 +448,35 @@ public final class MockEngine implements AutoCloseable {
             LOGGER.warn(WebMockLogMessages.WARN.MALFORMED_BODY, request.method(), request.path());
             return JsonNodeFactory.instance.textNode(request.body());
         }
+    }
+
+    /** The fields of a request body that carry a credential, such as the step-up password of a release (AUN-WEB-6). */
+    private static final Set<String> CREDENTIAL_FIELDS = Set.of("password");
+
+    /** The text that stands for a credential in a recorded act. */
+    static final String REDACTED = "[redacted]";
+
+    /**
+     * Masks the credentials of a request body before it is recorded: `/mock/acts` answers without login, so a
+     * password sent with a release must not be readable there.
+     *
+     * @param body the parsed body
+     * @return the body, with every credential field at any depth replaced by {@value #REDACTED}
+     */
+    static JsonNode redacted(JsonNode body) {
+        if (body instanceof ObjectNode object) {
+            var copy = JsonNodeFactory.instance.objectNode();
+            object.properties().forEach(entry -> copy.set(entry.getKey(),
+                    CREDENTIAL_FIELDS.contains(entry.getKey()) ? JsonNodeFactory.instance.textNode(REDACTED)
+                            : redacted(entry.getValue())));
+            return copy;
+        }
+        if (body instanceof ArrayNode array) {
+            var copy = JsonNodeFactory.instance.arrayNode();
+            array.forEach(element -> copy.add(redacted(element)));
+            return copy;
+        }
+        return body;
     }
 
     private MockResponse noRoute(MockRequest request) {

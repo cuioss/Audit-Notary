@@ -1,0 +1,622 @@
+{
+  "id": "payments-2026-q4",
+  "repository": "samm-assessments",
+  "scope": "payments",
+  "slug": "2026-q4",
+  "title": "Payments 2026 Q4",
+  "date": "2026-11-24",
+  "modelVersion": "v2.2.0",
+  "state": "released",
+  "assessors": [
+    {
+      "pseudonym": "p-4c1a9e",
+      "name": "Alex Example",
+      "role": "Security Champion"
+    },
+    {
+      "pseudonym": "p-2b7f10",
+      "name": "Jordan Weber",
+      "role": "Team Lead"
+    },
+    {
+      "pseudonym": "p-9e33a1",
+      "name": "Sam Okafor",
+      "role": "Developer"
+    },
+    {
+      "pseudonym": "p-61c0d4",
+      "name": "Lea Brandt",
+      "role": "Product Owner"
+    }
+  ],
+  "answers": {
+    "sm": {
+      "sm-a-1": {
+        "answer": 0.5
+      },
+      "sm-a-2": {
+        "answer": 0.5
+      },
+      "sm-a-3": {
+        "answer": 0.25
+      },
+      "sm-b-1": {
+        "answer": 1
+      },
+      "sm-b-2": {
+        "answer": 0.5
+      },
+      "sm-b-3": {
+        "answer": 0.25
+      }
+    },
+    "pc": {
+      "pc-a-1": {
+        "answer": 1
+      },
+      "pc-a-2": {
+        "answer": 0.5
+      },
+      "pc-a-3": {
+        "answer": 0.25
+      },
+      "pc-b-1": {
+        "answer": 1
+      },
+      "pc-b-2": {
+        "answer": 0.25
+      },
+      "pc-b-3": {
+        "answer": 0.5
+      }
+    },
+    "eg": {
+      "eg-a-1": {
+        "answer": 1
+      },
+      "eg-a-2": {
+        "answer": 0.5
+      },
+      "eg-a-3": {
+        "answer": 0.5
+      },
+      "eg-b-1": {
+        "answer": 1
+      },
+      "eg-b-2": {
+        "answer": 1
+      },
+      "eg-b-3": {
+        "answer": 0.5
+      }
+    },
+    "ta": {
+      "ta-a-1": {
+        "answer": 0.5
+      },
+      "ta-a-2": {
+        "answer": 0.5
+      },
+      "ta-a-3": {
+        "answer": 0.5
+      },
+      "ta-b-1": {
+        "answer": 0.5
+      },
+      "ta-b-2": {
+        "answer": 0.5,
+        "comment": "Threat models exist for the checkout flow and the card vault; the refund service has none yet."
+      },
+      "ta-b-3": {
+        "answer": 0.25
+      }
+    },
+    "sr": {
+      "sr-a-1": {
+        "answer": 1
+      },
+      "sr-a-2": {
+        "answer": 0.25
+      },
+      "sr-a-3": {
+        "answer": 0.5
+      },
+      "sr-b-1": {
+        "answer": 1
+      },
+      "sr-b-2": {
+        "answer": 1
+      },
+      "sr-b-3": {
+        "answer": 0.5
+      }
+    },
+    "sa": {
+      "sa-a-1": {
+        "answer": 0.5
+      },
+      "sa-a-2": {
+        "answer": 0.5
+      },
+      "sa-a-3": {
+        "answer": 0.5
+      },
+      "sa-b-1": {
+        "answer": 1
+      },
+      "sa-b-2": {
+        "answer": 0.5
+      },
+      "sa-b-3": {
+        "answer": 0.5
+      }
+    },
+    "sb": {
+      "sb-a-1": {
+        "answer": 1
+      },
+      "sb-a-2": {
+        "answer": 0.5
+      },
+      "sb-a-3": {
+        "answer": 0.5
+      },
+      "sb-b-1": {
+        "answer": 1,
+        "comment": "Dependency scanning runs in every pipeline; the SBOM is not yet published."
+      },
+      "sb-b-2": {
+        "answer": 1
+      },
+      "sb-b-3": {
+        "answer": 0.5
+      }
+    },
+    "sd": {
+      "sd-a-1": {
+        "answer": 1
+      },
+      "sd-a-2": {
+        "answer": 1
+      },
+      "sd-a-3": {
+        "answer": 0.5
+      },
+      "sd-b-1": {
+        "answer": 1
+      },
+      "sd-b-2": {
+        "answer": 0.5
+      },
+      "sd-b-3": {
+        "answer": 0.5
+      }
+    },
+    "dm": {
+      "dm-a-1": {
+        "answer": 0.5
+      },
+      "dm-a-2": {
+        "answer": 0.5
+      },
+      "dm-a-3": {
+        "answer": 0.5
+      },
+      "dm-b-1": {
+        "answer": 0.5
+      },
+      "dm-b-2": {
+        "answer": 0.5
+      },
+      "dm-b-3": {
+        "answer": 0.25
+      }
+    },
+    "st": {
+      "st-a-1": {
+        "answer": 1
+      },
+      "st-a-2": {
+        "answer": 0.5
+      },
+      "st-a-3": {
+        "answer": 0.25
+      },
+      "st-b-1": {
+        "answer": 1
+      },
+      "st-b-2": {
+        "answer": 0.5
+      },
+      "st-b-3": {
+        "answer": 0.5
+      }
+    },
+    "im": {
+      "im-a-1": {
+        "answer": 0.5
+      },
+      "im-a-2": {
+        "answer": 0.5
+      },
+      "im-a-3": {
+        "answer": 0.25
+      },
+      "im-b-1": {
+        "answer": 1
+      },
+      "im-b-2": {
+        "answer": 0.5
+      },
+      "im-b-3": {
+        "answer": 0.5
+      }
+    },
+    "aa": {
+      "aa-a-1": {
+        "answer": 1
+      },
+      "aa-a-2": {
+        "answer": 0.25
+      },
+      "aa-a-3": {
+        "answer": 0.25
+      },
+      "aa-b-1": {
+        "answer": 0.5
+      },
+      "aa-b-2": {
+        "answer": 0.5
+      },
+      "aa-b-3": {
+        "answer": 0.25
+      }
+    },
+    "rt": {
+      "rt-a-1": {
+        "answer": 0.5
+      },
+      "rt-a-2": {
+        "answer": 0.5
+      },
+      "rt-a-3": {
+        "answer": 0.25
+      },
+      "rt-b-1": {
+        "answer": 0.25
+      },
+      "rt-b-2": {
+        "answer": 0.5
+      },
+      "rt-b-3": {
+        "answer": 0.25
+      }
+    },
+    "em": {
+      "em-a-1": {
+        "answer": 0.5
+      },
+      "em-a-2": {
+        "answer": 0.5
+      },
+      "em-a-3": {
+        "answer": 0.25
+      },
+      "em-b-1": {
+        "answer": 0.5
+      },
+      "em-b-2": {
+        "answer": 0.5
+      },
+      "em-b-3": {
+        "answer": 0.5
+      }
+    },
+    "om": {
+      "om-a-1": {
+        "answer": 0.5
+      },
+      "om-a-2": {
+        "answer": 0.25
+      },
+      "om-a-3": {
+        "answer": 0.25
+      },
+      "om-b-1": {
+        "answer": 0.25
+      },
+      "om-b-2": {
+        "answer": 0.25
+      },
+      "om-b-3": {
+        "answer": 0
+      }
+    }
+  },
+  "parts": {
+    "sm": {
+      "blob": "003db47",
+      "savedAt": "2026-11-25T09:33:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      }
+    },
+    "pc": {
+      "blob": "02453af",
+      "savedAt": "2026-11-24T14:02:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      }
+    },
+    "eg": {
+      "blob": "189c357",
+      "savedAt": "2026-11-25T09:20:00Z",
+      "savedBy": {
+        "pseudonym": "p-61c0d4",
+        "name": "Lea Brandt",
+        "role": "Product Owner"
+      }
+    },
+    "ta": {
+      "blob": "e59db47",
+      "savedAt": "2026-11-25T09:41:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    },
+    "sr": {
+      "blob": "ec2539f",
+      "savedAt": "2026-11-24T14:02:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      }
+    },
+    "sa": {
+      "blob": "bf8611f",
+      "savedAt": "2026-11-24T14:02:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      }
+    },
+    "sb": {
+      "blob": "519209f",
+      "savedAt": "2026-11-25T09:48:00Z",
+      "savedBy": {
+        "pseudonym": "p-9e33a1",
+        "name": "Sam Okafor",
+        "role": "Developer"
+      }
+    },
+    "sd": {
+      "blob": "f63aa1f",
+      "savedAt": "2026-11-24T14:02:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      }
+    },
+    "dm": {
+      "blob": "005359f",
+      "savedAt": "2026-11-24T15:30:00Z",
+      "savedBy": {
+        "pseudonym": "p-9e33a1",
+        "name": "Sam Okafor",
+        "role": "Developer"
+      }
+    },
+    "st": {
+      "blob": "24e9b26",
+      "savedAt": "2026-11-24T16:12:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      }
+    },
+    "im": {
+      "blob": "e20c16f",
+      "savedAt": "2026-11-24T15:55:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    },
+    "aa": {
+      "blob": "c7a2917",
+      "savedAt": "2026-11-25T10:41:00Z",
+      "savedBy": {
+        "pseudonym": "p-9e33a1",
+        "name": "Sam Okafor",
+        "role": "Developer"
+      }
+    },
+    "rt": {
+      "blob": "918d53f",
+      "savedAt": "2026-11-25T10:30:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      }
+    },
+    "em": {
+      "blob": "00c523f",
+      "savedAt": "2026-11-24T14:02:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      }
+    },
+    "om": {
+      "blob": "3ce8b46",
+      "savedAt": "2026-11-25T10:58:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    }
+  },
+  "history": [
+    {
+      "at": "2026-11-25T11:20:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      },
+      "kind": "release",
+      "tag": "assessments/payments-2026-q4/v1"
+    },
+    {
+      "at": "2026-11-25T11:05:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-11-25T10:58:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      },
+      "kind": "save",
+      "part": "om",
+      "count": 6
+    },
+    {
+      "at": "2026-11-25T10:41:00Z",
+      "by": {
+        "pseudonym": "p-9e33a1",
+        "name": "Sam Okafor",
+        "role": "Developer"
+      },
+      "kind": "save",
+      "part": "aa",
+      "count": 6
+    },
+    {
+      "at": "2026-11-25T10:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "kind": "save",
+      "part": "rt",
+      "count": 6
+    },
+    {
+      "at": "2026-11-25T09:48:00Z",
+      "by": {
+        "pseudonym": "p-9e33a1",
+        "name": "Sam Okafor",
+        "role": "Developer"
+      },
+      "kind": "save",
+      "part": "sb",
+      "count": 4
+    },
+    {
+      "at": "2026-11-25T09:41:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      },
+      "kind": "save",
+      "part": "ta",
+      "count": 3
+    },
+    {
+      "at": "2026-11-25T09:33:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "kind": "save",
+      "part": "sm",
+      "count": 6
+    },
+    {
+      "at": "2026-11-25T09:20:00Z",
+      "by": {
+        "pseudonym": "p-61c0d4",
+        "name": "Lea Brandt",
+        "role": "Product Owner"
+      },
+      "kind": "save",
+      "part": "eg",
+      "count": 5
+    },
+    {
+      "at": "2026-11-24T16:12:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "kind": "save",
+      "part": "st",
+      "count": 4
+    },
+    {
+      "at": "2026-11-24T15:55:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      },
+      "kind": "save",
+      "part": "im",
+      "count": 5
+    },
+    {
+      "at": "2026-11-24T15:30:00Z",
+      "by": {
+        "pseudonym": "p-9e33a1",
+        "name": "Sam Okafor",
+        "role": "Developer"
+      },
+      "kind": "save",
+      "part": "dm",
+      "count": 6
+    },
+    {
+      "at": "2026-11-24T14:02:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "assessments/payments-2026-q4/v1",
+    "at": "2026-11-25T11:20:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad",
+      "role": "Chief Information Security Officer"
+    }
+  }
+}

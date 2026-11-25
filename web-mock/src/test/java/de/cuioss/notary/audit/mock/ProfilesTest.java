@@ -37,8 +37,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ProfilesTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final ScenarioRegistry REGISTRY = new ScenarioRegistry(new ScenarioLoader(MAPPER),
-            ProfilesTest.class.getClassLoader());
+    private static final ClassLoader CLASS_LOADER = ProfilesTest.class.getClassLoader();
+    private static final ScenarioRegistry REGISTRY = new ScenarioRegistry(
+            new ScenarioLoader(MAPPER, name -> ScenarioRegistry.readDataFile(CLASS_LOADER, name)), CLASS_LOADER);
 
     static Stream<String> primaries() {
         return REGISTRY.primaryNames().stream();
@@ -90,6 +91,139 @@ class ProfilesTest {
                         () -> assertFalse(json(client.get("/api/v1/catalogs/role")).path("entries").isEmpty()));
             }
         }
+
+        @Test
+        @DisplayName("serves the SAMM model, the scopes and the open assessment from the data files")
+        void shouldServeSamm() {
+            try (var client = MockClient.start("workshop").login()) {
+                var model = json(client.get("/api/v1/samm/models/v2.2.0"));
+                var scope = json(client.get("/api/v1/samm/scopes/payments"));
+                var assessment = json(client.get("/api/v1/documents/samm-assessments/payments-2026-q4"));
+                int questions = 0;
+                for (var fn : model.path("functions")) {
+                    for (var practice : fn.path("practices")) {
+                        for (var stream : practice.path("streams")) {
+                            questions += stream.path("questions").size();
+                        }
+                    }
+                }
+                int total = questions;
+                assertAll(
+                        () -> assertEquals(90, total),
+                        () -> assertEquals(5, model.path("functions").size()),
+                        () -> assertEquals(4, json(client.get("/api/v1/samm/scopes")).path("scopes").size()),
+                        () -> assertEquals("payments-2026-q4", scope.path("assessments").get(0).path("document").asText()),
+                        () -> assertEquals("draft", assessment.path("state").asText()),
+                        () -> assertEquals(200,
+                                client.get("/api/v1/documents/samm-assessments/payments-2026-q4/diff?from=released")
+                                        .statusCode()));
+            }
+        }
+
+        @Test
+        @DisplayName("refuses the submit of the draft with exactly the answers it lacks")
+        void shouldRefuseSubmitWithMissingAnswers() {
+            try (var client = MockClient.start("workshop").login()) {
+                var model = json(client.get("/api/v1/samm/models/v2.2.0"));
+                var answers = json(client.get("/api/v1/documents/samm-assessments/payments-2026-q4")).path("answers");
+                List<String> expected = new ArrayList<>();
+                for (var fn : model.path("functions")) {
+                    for (var practice : fn.path("practices")) {
+                        for (var stream : practice.path("streams")) {
+                            for (var question : stream.path("questions")) {
+                                String p = practice.path("id").asText();
+                                String q = question.path("id").asText();
+                                if (!answers.path(p).path(q).path("answer").isNumber()) {
+                                    expected.add("/answers/" + p + "/" + q + "/answer");
+                                }
+                            }
+                        }
+                    }
+                }
+                var refused = client.change("POST",
+                        "/api/v1/documents/samm-assessments/payments-2026-q4/transitions/samm.submit", null);
+                List<String> missing = new ArrayList<>();
+                json(refused).path("missing").forEach(pointer -> missing.add(pointer.asText()));
+                assertAll(
+                        () -> assertEquals(422, refused.statusCode()),
+                        () -> assertFalse(expected.isEmpty()),
+                        () -> assertEquals(expected, missing));
+            }
+        }
+
+        @Test
+        @DisplayName("serves in saved-by-other the answers another assessor changed")
+        void shouldServeOtherAnswers() {
+            try (var client = MockClient.start("workshop").login()) {
+                var path = "/api/v1/documents/samm-assessments/payments-2026-q4";
+                var before = json(client.get(path)).path("answers").path("sm");
+                client.send("POST", "/mock/goto/saved-by-other", null, Map.of());
+                var after = json(client.get(path)).path("answers").path("sm");
+                assertAll(
+                        () -> assertFalse(before.path("sm-b-1").equals(after.path("sm-b-1"))),
+                        () -> assertFalse(before.path("sm-b-2").equals(after.path("sm-b-2"))));
+            }
+        }
+
+        @Test
+        @DisplayName("keeps a draft, saves for everyone, and answers CONFLICT in the state conflict")
+        void shouldSaveAndConflict() {
+            try (var client = MockClient.start("workshop").login()) {
+                var draft = client.change("PUT", "/api/v1/drafts/samm-assessments/payments-2026-q4", "{}");
+                var saved = client.change("POST", "/api/v1/documents/samm-assessments/payments-2026-q4/save", "{}");
+                client.send("POST", "/mock/goto/conflict", null, Map.of());
+                var conflict = client.change("POST", "/api/v1/documents/samm-assessments/payments-2026-q4/save",
+                        "{}");
+                assertAll(
+                        () -> assertEquals("DRAFT_SAVED", json(draft).path("outcome").asText()),
+                        () -> assertEquals("SAVED", json(saved).path("outcome").asText()),
+                        () -> assertEquals(409, conflict.statusCode()),
+                        () -> assertEquals("sm", json(conflict).path("conflicts").get(0).path("part").asText()));
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("release")
+    class Release {
+
+        private static final String RELEASE = "/api/v1/releases/samm-assessments/payments-2026-q4";
+
+        @Test
+        @DisplayName("asks for step-up first, then releases and serves the frozen assessment")
+        void shouldReleaseAfterStepUp() {
+            try (var client = MockClient.start("release").login()) {
+                var first = client.change("POST", RELEASE, null);
+                var second = client.change("POST", RELEASE, null);
+                var assessment = json(client.get("/api/v1/documents/samm-assessments/payments-2026-q4"));
+                assertAll(
+                        () -> assertEquals(403, first.statusCode()),
+                        () -> assertEquals("STEP_UP_REQUIRED", json(first).path("outcome").asText()),
+                        () -> assertTrue(json(first).path("stepUp").asText().startsWith("/api/v1/auth/login")),
+                        () -> assertEquals("RELEASED", json(second).path("outcome").asText()),
+                        () -> assertEquals("released", assessment.path("state").asText()),
+                        () -> assertEquals("assessments/payments-2026-q4/v1",
+                                assessment.path("release").path("tag").asText()));
+            }
+        }
+
+        @Test
+        @DisplayName("refuses a wrong password and reports a change since the review")
+        void shouldRefuse() {
+            try (var client = MockClient.start("release#wrong-password").login()) {
+                var stepUp = json(client.get("/api/v1/status")).path("stepUp").asText();
+                var wrong = client.change("POST", RELEASE, "{\"password\":\"nope\"}");
+                client.send("POST", "/mock/goto/changed", null, Map.of());
+                var changed = client.change("POST", RELEASE, null);
+                var recorded = json(client.get("/mock/acts")).get(0).path("body");
+                assertAll(
+                        () -> assertEquals("password", stepUp),
+                        () -> assertEquals("[redacted]", recorded.path("password").asText(),
+                                "a password must not be readable in /mock/acts"),
+                        () -> assertEquals("INVALID_CREDENTIALS", json(wrong).path("outcome").asText()),
+                        () -> assertEquals("CHANGED_SINCE_REVIEW", json(changed).path("outcome").asText()));
+            }
+        }
     }
 
     @Nested
@@ -130,7 +264,10 @@ class ProfilesTest {
                         () -> assertEquals(503, save.statusCode()),
                         () -> assertEquals("GIT_UNAVAILABLE", json(save).path("outcome").asText()),
                         () -> assertEquals(200, client.get("/api/v1/due").statusCode()),
-                        () -> assertFalse(up.path("degraded").asBoolean()));
+                        () -> assertFalse(up.path("degraded").asBoolean()),
+                        () -> assertEquals("SAVED", json(client.change("POST",
+                                "/api/v1/documents/samm-assessments/payments-2026-q4/save", "{}")).path("outcome")
+                                .asText(), "a save succeeds again once the Git server is back"));
             }
         }
     }

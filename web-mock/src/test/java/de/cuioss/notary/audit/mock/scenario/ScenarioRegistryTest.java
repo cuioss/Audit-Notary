@@ -31,8 +31,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("ScenarioRegistry")
 class ScenarioRegistryTest {
 
-    private final ScenarioRegistry registry = new ScenarioRegistry(new ScenarioLoader(new ObjectMapper()),
-            ScenarioRegistryTest.class.getClassLoader());
+    private static final ClassLoader CLASS_LOADER = ScenarioRegistryTest.class.getClassLoader();
+    private final ScenarioRegistry registry = new ScenarioRegistry(
+            new ScenarioLoader(new ObjectMapper(), name -> ScenarioRegistry.readDataFile(CLASS_LOADER, name)),
+            CLASS_LOADER);
 
     @Test
     @DisplayName("resolves a name to its start state")

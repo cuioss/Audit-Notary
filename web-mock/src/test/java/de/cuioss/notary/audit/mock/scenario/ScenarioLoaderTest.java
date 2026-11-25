@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -31,7 +33,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ScenarioLoaderTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private final ScenarioLoader loader = new ScenarioLoader(MAPPER);
+    private static final Map<String, String> DATA = Map.of(
+            "model.json", "{\"version\": \"v2.2.0\"}",
+            "broken.json", "{nope",
+            "blank.json", "  ",
+            "trailing.json", "{\"a\": 1} junk");
+    private final ScenarioLoader loader = new ScenarioLoader(MAPPER, name -> Optional.ofNullable(DATA.get(name)));
 
     private static ObjectNode valid() {
         try {
@@ -101,6 +108,87 @@ class ScenarioLoaderTest {
                 () -> assertEquals(200, link.status()),
                 () -> assertTrue(link.body().isObject() && link.body().isEmpty()),
                 () -> assertEquals(0, a.events().getFirst().afterMs()));
+    }
+
+    @Test
+    @DisplayName("answers the JSON of the data file a route or a link names")
+    void shouldReadBodyFile() {
+        // Arrange
+        var root = valid();
+        ((ObjectNode) root.path("routes").path("GET /api/v1/status")).remove("body");
+        ((ObjectNode) root.path("routes").path("GET /api/v1/status")).put("body_file", "model.json");
+        ((ObjectNode) root.path("states").path("a").path("links").path("go")).put("body_file", "model.json");
+        // Act
+        var scenario = loader.read("sample.json", root);
+        // Assert
+        var link = scenario.state("a").orElseThrow().linkFor("PUT", "/api/v1/directory/me").orElseThrow();
+        assertAll(
+                () -> assertEquals("v2.2.0", scenario.routes().get("GET /api/v1/status").body().path("version").asText()),
+                () -> assertEquals("v2.2.0", link.body().path("version").asText()));
+    }
+
+    @Nested
+    @DisplayName("refuses a body_file")
+    class BodyFileRefusals {
+
+        private String rejectionWith(String name, boolean withBody) {
+            return rejectionOf(root -> {
+                var route = (ObjectNode) root.path("routes").path("GET /api/v1/status");
+                if (!withBody) {
+                    route.remove("body");
+                }
+                route.put("body_file", name);
+            });
+        }
+
+        @Test
+        @DisplayName("beside a body")
+        void shouldRefuseBodyAndFile() {
+            var message = rejectionWith("model.json", true);
+            assertTrue(message.contains("either body or body_file"), message);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"../secret.json", "Model.json", "model.yaml", ".json"})
+        @DisplayName("whose name breaks the pattern")
+        void shouldRefuseName(String name) {
+            var message = rejectionWith(name, false);
+            assertTrue(message.contains("body_file"), message);
+        }
+
+        @Test
+        @DisplayName("that names no data file")
+        void shouldRefuseMissingFile() {
+            var message = rejectionWith("absent.json", false);
+            assertTrue(message.contains("names no data file"), message);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"broken.json", "trailing.json"})
+        @DisplayName("whose data file is no JSON, or more than one value")
+        void shouldRefuseBrokenFile(String name) {
+            var message = rejectionWith(name, false);
+            assertTrue(message.contains("not valid JSON"), message);
+        }
+
+        @Test
+        @DisplayName("whose data file is blank")
+        void shouldRefuseBlankFile() {
+            var message = rejectionWith("blank.json", false);
+            assertTrue(message.contains("holds no JSON value"), message);
+        }
+
+        @Test
+        @DisplayName("with a loader that resolves no data file")
+        void shouldRefuseWithoutResolver() {
+            var root = valid();
+            var route = (ObjectNode) root.path("routes").path("GET /api/v1/status");
+            route.remove("body");
+            route.put("body_file", "model.json");
+            var plain = new ScenarioLoader(MAPPER);
+            var thrown = assertThrows(ScenarioValidationException.class, () -> plain.read("sample.json", root));
+            assertTrue(thrown.getMessage().contains("names no data file"), thrown.getMessage());
+        }
     }
 
     @Nested
