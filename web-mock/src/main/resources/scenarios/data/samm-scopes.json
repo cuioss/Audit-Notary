@@ -1,0 +1,74 @@
+{
+  "scopes": [
+    {
+      "id": "payments",
+      "title": "Payments",
+      "subject": {
+        "kind": "team",
+        "id": "payments",
+        "name": "Payments"
+      },
+      "latest": {
+        "assessment": "2026-q2",
+        "title": "Payments 2026 Q2",
+        "date": "2026-06-16",
+        "overall": 1.3583333333333332
+      },
+      "open": {
+        "assessment": "2026-q4",
+        "title": "Payments 2026 Q4",
+        "state": "draft"
+      },
+      "assessments": 3
+    },
+    {
+      "id": "identity",
+      "title": "Identity Platform",
+      "subject": {
+        "kind": "team",
+        "id": "identity",
+        "name": "Identity Platform"
+      },
+      "latest": null,
+      "open": {
+        "assessment": "2026-q4",
+        "title": "Identity Platform 2026 Q4",
+        "state": "in-review"
+      },
+      "assessments": 1
+    },
+    {
+      "id": "shop",
+      "title": "Web shop",
+      "subject": {
+        "kind": "service",
+        "id": "shop",
+        "name": "Web shop"
+      },
+      "latest": {
+        "assessment": "2026-q3",
+        "title": "Web shop 2026 Q3",
+        "date": "2026-09-22",
+        "overall": 1.2333333333333334
+      },
+      "open": null,
+      "assessments": 1
+    },
+    {
+      "id": "organisation",
+      "title": "Organisation",
+      "subject": {
+        "kind": "organisation",
+        "name": "Organisation"
+      },
+      "latest": {
+        "assessment": "2026-h1",
+        "title": "Organisation 2026 H1",
+        "date": "2026-05-04",
+        "overall": 1.2083333333333335
+      },
+      "open": null,
+      "assessments": 1
+    }
+  ]
+}

@@ -35,6 +35,9 @@ public final class ScenarioRegistry {
     /** The class path folder of the scenario files. */
     public static final String FOLDER = "scenarios/";
 
+    /** The class path folder of the data files a {@code body_file} names. */
+    public static final String DATA_FOLDER = FOLDER + "data/";
+
     /** The class path resource that lists the primary profiles, one name per line. */
     public static final String PRIMARY_LIST = FOLDER + "primary.txt";
 
@@ -52,6 +55,17 @@ public final class ScenarioRegistry {
     public ScenarioRegistry(ScenarioLoader loader, ClassLoader classLoader) {
         this.loader = loader;
         this.classLoader = classLoader;
+    }
+
+    /**
+     * Resolves the data file a {@code body_file} names, below {@value #DATA_FOLDER}; the loader validated the name.
+     *
+     * @param classLoader the class loader that holds the scenario resources
+     * @param name        the file name
+     * @return its text, or empty when the class path holds no such file
+     */
+    public static Optional<String> readDataFile(ClassLoader classLoader, String name) {
+        return readResource(classLoader, DATA_FOLDER + name);
     }
 
     /**
@@ -104,6 +118,10 @@ public final class ScenarioRegistry {
     }
 
     private Optional<String> readResource(String resource) {
+        return readResource(classLoader, resource);
+    }
+
+    private static Optional<String> readResource(ClassLoader classLoader, String resource) {
         try (InputStream in = classLoader.getResourceAsStream(resource)) {
             if (in == null) {
                 return Optional.empty();

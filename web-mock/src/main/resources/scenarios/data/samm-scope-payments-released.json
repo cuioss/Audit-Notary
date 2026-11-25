@@ -1,0 +1,118 @@
+{
+  "id": "payments",
+  "title": "Payments",
+  "subject": {
+    "kind": "team",
+    "id": "payments",
+    "name": "Payments"
+  },
+  "modelVersion": "v2.2.0",
+  "targets": {
+    "sm": {
+      "target": 2
+    },
+    "pc": {
+      "target": 2
+    },
+    "eg": {
+      "target": 2
+    },
+    "ta": {
+      "target": 2.5,
+      "due": "2027-03-31"
+    },
+    "sr": {
+      "target": 2
+    },
+    "sa": {
+      "target": 2
+    },
+    "sb": {
+      "target": 2.5
+    },
+    "sd": {
+      "target": 2.5
+    },
+    "dm": {
+      "target": 2
+    },
+    "aa": {
+      "target": 1.5,
+      "due": "2027-06-30"
+    },
+    "rt": {
+      "target": 1.5
+    },
+    "st": {
+      "target": 2
+    },
+    "im": {
+      "target": 2
+    },
+    "em": {
+      "target": 2
+    },
+    "om": {
+      "target": 1.5
+    }
+  },
+  "assessments": [
+    {
+      "id": "2026-q4",
+      "document": "payments-2026-q4",
+      "title": "Payments 2026 Q4",
+      "date": "2026-11-24",
+      "state": "released",
+      "modelVersion": "v2.2.0",
+      "overall": 1.65,
+      "answered": 90,
+      "release": {
+        "tag": "assessments/payments-2026-q4/v1",
+        "at": "2026-11-25T11:20:00Z",
+        "by": {
+          "pseudonym": "p-7d2e58",
+          "name": "Noor Haddad",
+          "role": "Chief Information Security Officer"
+        }
+      }
+    },
+    {
+      "id": "2026-q2",
+      "document": "payments-2026-q2",
+      "title": "Payments 2026 Q2",
+      "date": "2026-06-16",
+      "state": "released",
+      "modelVersion": "v2.2.0",
+      "overall": 1.3583333333333332,
+      "answered": 90,
+      "release": {
+        "tag": "assessments/payments-2026-q2/v1",
+        "at": "2026-06-18T11:20:00Z",
+        "by": {
+          "pseudonym": "p-7d2e58",
+          "name": "Noor Haddad",
+          "role": "Chief Information Security Officer"
+        }
+      }
+    },
+    {
+      "id": "2025-q4",
+      "document": "payments-2025-q4",
+      "title": "Payments 2025 Q4",
+      "date": "2025-12-08",
+      "state": "released",
+      "modelVersion": "v2.2.0",
+      "overall": 0.9583333333333334,
+      "answered": 90,
+      "release": {
+        "tag": "assessments/payments-2025-q4/v1",
+        "at": "2025-12-10T15:02:00Z",
+        "by": {
+          "pseudonym": "p-7d2e58",
+          "name": "Noor Haddad",
+          "role": "Chief Information Security Officer"
+        }
+      }
+    }
+  ]
+}

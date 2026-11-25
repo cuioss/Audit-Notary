@@ -1,0 +1,468 @@
+{
+  "id": "identity-2026-q4",
+  "repository": "samm-assessments",
+  "scope": "identity",
+  "slug": "2026-q4",
+  "title": "Identity Platform 2026 Q4",
+  "date": "2026-11-18",
+  "modelVersion": "v2.2.0",
+  "state": "in-review",
+  "assessors": [
+    {
+      "pseudonym": "p-2b7f10",
+      "name": "Jordan Weber",
+      "role": "Team Lead"
+    }
+  ],
+  "answers": {
+    "sm": {
+      "sm-a-1": {
+        "answer": 1
+      },
+      "sm-a-2": {
+        "answer": 0.5
+      },
+      "sm-a-3": {
+        "answer": 0.5
+      },
+      "sm-b-1": {
+        "answer": 0.5
+      },
+      "sm-b-2": {
+        "answer": 0.5
+      },
+      "sm-b-3": {
+        "answer": 0.25
+      }
+    },
+    "pc": {
+      "pc-a-1": {
+        "answer": 0.5
+      },
+      "pc-a-2": {
+        "answer": 0.5
+      },
+      "pc-a-3": {
+        "answer": 0.25
+      },
+      "pc-b-1": {
+        "answer": 0.5
+      },
+      "pc-b-2": {
+        "answer": 0.5
+      },
+      "pc-b-3": {
+        "answer": 0.25
+      }
+    },
+    "eg": {
+      "eg-a-1": {
+        "answer": 1
+      },
+      "eg-a-2": {
+        "answer": 0.5
+      },
+      "eg-a-3": {
+        "answer": 0.5
+      },
+      "eg-b-1": {
+        "answer": 1
+      },
+      "eg-b-2": {
+        "answer": 0.5
+      },
+      "eg-b-3": {
+        "answer": 0.5
+      }
+    },
+    "ta": {
+      "ta-a-1": {
+        "answer": 1
+      },
+      "ta-a-2": {
+        "answer": 0.5
+      },
+      "ta-a-3": {
+        "answer": 0.25
+      },
+      "ta-b-1": {
+        "answer": 0.5
+      },
+      "ta-b-2": {
+        "answer": 0.5
+      },
+      "ta-b-3": {
+        "answer": 0.5
+      }
+    },
+    "sr": {
+      "sr-a-1": {
+        "answer": 1
+      },
+      "sr-a-2": {
+        "answer": 1
+      },
+      "sr-a-3": {
+        "answer": 0.5
+      },
+      "sr-b-1": {
+        "answer": 1
+      },
+      "sr-b-2": {
+        "answer": 1
+      },
+      "sr-b-3": {
+        "answer": 0.5
+      }
+    },
+    "sa": {
+      "sa-a-1": {
+        "answer": 1
+      },
+      "sa-a-2": {
+        "answer": 0.5
+      },
+      "sa-a-3": {
+        "answer": 0.5
+      },
+      "sa-b-1": {
+        "answer": 1
+      },
+      "sa-b-2": {
+        "answer": 0.5
+      },
+      "sa-b-3": {
+        "answer": 0.5
+      }
+    },
+    "sb": {
+      "sb-a-1": {
+        "answer": 1
+      },
+      "sb-a-2": {
+        "answer": 0.5
+      },
+      "sb-a-3": {
+        "answer": 0.5
+      },
+      "sb-b-1": {
+        "answer": 0.5
+      },
+      "sb-b-2": {
+        "answer": 0.5
+      },
+      "sb-b-3": {
+        "answer": 0.5
+      }
+    },
+    "sd": {
+      "sd-a-1": {
+        "answer": 1
+      },
+      "sd-a-2": {
+        "answer": 1
+      },
+      "sd-a-3": {
+        "answer": 0.5
+      },
+      "sd-b-1": {
+        "answer": 1
+      },
+      "sd-b-2": {
+        "answer": 0.5
+      },
+      "sd-b-3": {
+        "answer": 0.25
+      }
+    },
+    "dm": {
+      "dm-a-1": {
+        "answer": 0.5
+      },
+      "dm-a-2": {
+        "answer": 0.5
+      },
+      "dm-a-3": {
+        "answer": 0.5
+      },
+      "dm-b-1": {
+        "answer": 0.5
+      },
+      "dm-b-2": {
+        "answer": 0.5
+      },
+      "dm-b-3": {
+        "answer": 0.25
+      }
+    },
+    "aa": {
+      "aa-a-1": {
+        "answer": 0.5
+      },
+      "aa-a-2": {
+        "answer": 0.25
+      },
+      "aa-a-3": {
+        "answer": 0.25
+      },
+      "aa-b-1": {
+        "answer": 0.5
+      },
+      "aa-b-2": {
+        "answer": 0.5
+      },
+      "aa-b-3": {
+        "answer": 0.25
+      }
+    },
+    "rt": {
+      "rt-a-1": {
+        "answer": 1
+      },
+      "rt-a-2": {
+        "answer": 0.5
+      },
+      "rt-a-3": {
+        "answer": 0.25
+      },
+      "rt-b-1": {
+        "answer": 0.5
+      },
+      "rt-b-2": {
+        "answer": 0.5
+      },
+      "rt-b-3": {
+        "answer": 0.25
+      }
+    },
+    "st": {
+      "st-a-1": {
+        "answer": 0.5
+      },
+      "st-a-2": {
+        "answer": 0.5
+      },
+      "st-a-3": {
+        "answer": 0.25
+      },
+      "st-b-1": {
+        "answer": 1
+      },
+      "st-b-2": {
+        "answer": 1
+      },
+      "st-b-3": {
+        "answer": 0.25
+      }
+    },
+    "im": {
+      "im-a-1": {
+        "answer": 0.5
+      },
+      "im-a-2": {
+        "answer": 0.5
+      },
+      "im-a-3": {
+        "answer": 0.25
+      },
+      "im-b-1": {
+        "answer": 0.5
+      },
+      "im-b-2": {
+        "answer": 0.5
+      },
+      "im-b-3": {
+        "answer": 0.25
+      }
+    },
+    "em": {
+      "em-a-1": {
+        "answer": 0.5
+      },
+      "em-a-2": {
+        "answer": 0.5
+      },
+      "em-a-3": {
+        "answer": 0.5
+      },
+      "em-b-1": {
+        "answer": 0.5
+      },
+      "em-b-2": {
+        "answer": 0.5
+      },
+      "em-b-3": {
+        "answer": 0.5
+      }
+    },
+    "om": {
+      "om-a-1": {
+        "answer": 0.5
+      },
+      "om-a-2": {
+        "answer": 0.25
+      },
+      "om-a-3": {
+        "answer": 0.25
+      },
+      "om-b-1": {
+        "answer": 0.5
+      },
+      "om-b-2": {
+        "answer": 0.25
+      },
+      "om-b-3": {
+        "answer": 0.25
+      }
+    }
+  },
+  "parts": {
+    "sm": {
+      "blob": "111d7df",
+      "savedAt": "2026-11-21T14:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    },
+    "pc": {
+      "blob": "b9f3067",
+      "savedAt": "2026-11-21T14:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    },
+    "eg": {
+      "blob": "bf7523f",
+      "savedAt": "2026-11-21T14:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    },
+    "ta": {
+      "blob": "0dd8b3f",
+      "savedAt": "2026-11-21T14:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    },
+    "sr": {
+      "blob": "241d047",
+      "savedAt": "2026-11-21T14:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    },
+    "sa": {
+      "blob": "32ba4af",
+      "savedAt": "2026-11-21T14:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    },
+    "sb": {
+      "blob": "5e2c4f7",
+      "savedAt": "2026-11-21T14:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    },
+    "sd": {
+      "blob": "961739f",
+      "savedAt": "2026-11-21T14:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    },
+    "dm": {
+      "blob": "d79011f",
+      "savedAt": "2026-11-21T14:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    },
+    "aa": {
+      "blob": "99d409f",
+      "savedAt": "2026-11-21T14:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    },
+    "rt": {
+      "blob": "d654a1f",
+      "savedAt": "2026-11-21T14:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    },
+    "st": {
+      "blob": "576559f",
+      "savedAt": "2026-11-21T14:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    },
+    "im": {
+      "blob": "b393b1f",
+      "savedAt": "2026-11-21T14:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    },
+    "em": {
+      "blob": "221f29f",
+      "savedAt": "2026-11-21T14:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    },
+    "om": {
+      "blob": "8211427",
+      "savedAt": "2026-11-21T14:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      }
+    }
+  },
+  "history": [
+    {
+      "at": "2026-11-21T14:10:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Team Lead"
+      },
+      "kind": "submit"
+    }
+  ],
+  "release": null
+}

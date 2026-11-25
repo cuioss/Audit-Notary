@@ -109,7 +109,7 @@ class EventStreamTest {
         var saved = awaitEvent("document-saved");
         assertAll(
                 () -> assertTrue(status.data().has("degraded")),
-                () -> assertEquals("payments/2026-q4/sm", saved.data().path("id").asText()),
+                () -> assertEquals("payments-2026-q4", saved.data().path("id").asText()),
                 () -> assertTrue(Long.parseLong(saved.id()) > Long.parseLong(status.id())));
     }
 }

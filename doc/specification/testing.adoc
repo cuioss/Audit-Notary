@@ -62,12 +62,14 @@ xref:../adr/0003-UI_tests_run_against_a_scenario_mock_server.adoc[ADR-0003]
 
 |Scenarios
 |`web-mock/src/main/resources/scenarios/<profile>.json`: a state machine with `user`, `routes` and `states`
-(representations, links, events, timed transitions); the primary profiles are listed in `primary.txt`; a reference
-`<profile>#<state>` starts a profile in a state
+(representations, links, events, timed transitions); an answer is inline or a data file under `scenarios/data/`
+(`body_file`), so a large or shared answer — the SAMM model — is kept once; the primary profiles are listed in
+`primary.txt`; a reference `<profile>#<state>` starts a profile in a state
 
 |Profiles
 |`workshop` (default: populated lenses), `first-login` (no directory entry), `read-only` (right `read` only),
-`degraded` (Git server unreachable), `empty` (a fresh installation)
+`degraded` (Git server unreachable), `empty` (a fresh installation); besides them, profiles for one flow such as
+`release` (an approver releases with step-up)
 
 |Control
 |`GET /mock/state`, `POST /mock/scenario`, `POST /mock/goto/{state}`, `POST /mock/reset`, `POST /mock/broadcast`,

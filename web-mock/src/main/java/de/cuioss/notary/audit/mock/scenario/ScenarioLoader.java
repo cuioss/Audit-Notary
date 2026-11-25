@@ -20,7 +20,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -32,6 +34,11 @@ import java.util.regex.Pattern;
  * {@value #API_PREFIX}; a status lies between 100 and 599; the actions of a right are those of
  * {@link Right#ACTIONS}; a delay is not negative. A violation throws a {@link ScenarioValidationException} naming
  * the source, the location and the rule.
+ * <p>
+ * A route or a link answers its {@code body}, or the JSON of the data file its {@code body_file} names: a file name of
+ * the pattern {@code [a-z0-9][a-z0-9.-]*.json}, resolved by the data resolver the loader was created with (the
+ * registry resolves it below {@code scenarios/data/}). Large or shared answers, such as the SAMM model, live there
+ * once instead of inline in every profile, and a data file under another licence stays a file of its own.
  */
 public final class ScenarioLoader {
 
@@ -47,16 +54,31 @@ public final class ScenarioLoader {
     private static final String ROUTES = "routes";
     private static final String NO_STATE = "names no state: ";
     private static final String STATUS = "status";
+    private static final String BODY = "body";
+    private static final String BODY_FILE = "body_file";
+    private static final Pattern DATA_FILE = Pattern.compile("[a-z0-9][a-z0-9.-]*\\.json");
 
     private final ObjectMapper mapper;
+    private final Function<String, Optional<String>> dataFiles;
 
     /**
-     * Creates a loader.
+     * Creates a loader that resolves no data file: a {@code body_file} is refused.
      *
      * @param mapper the mapper that parses the JSON text
      */
     public ScenarioLoader(ObjectMapper mapper) {
+        this(mapper, name -> Optional.empty());
+    }
+
+    /**
+     * Creates a loader.
+     *
+     * @param mapper    the mapper that parses the JSON text
+     * @param dataFiles resolves the name of a data file to its JSON text, or empty when no such file exists
+     */
+    public ScenarioLoader(ObjectMapper mapper, Function<String, Optional<String>> dataFiles) {
         this.mapper = mapper;
+        this.dataFiles = dataFiles;
     }
 
     /**
@@ -195,7 +217,7 @@ public final class ScenarioLoader {
         String path = requiredText(context.at(location), node, "path");
         checkPath(context, location + ".path", path);
         String next = requiredText(context.at(location), node, "next");
-        return new Link(name, method, path, next, status(context, location, node), bodyOf(node, "body"));
+        return new Link(name, method, path, next, status(context, location, node), answerBody(context, location, node));
     }
 
     private Map<String, Route> readRoutes(Context context, String location, JsonNode node) {
@@ -216,7 +238,7 @@ public final class ScenarioLoader {
             checkMethod(context, routeLocation, matcher.group(1));
             checkPath(context, routeLocation, matcher.group(2));
             routes.put(key, new Route(status(context, routeLocation, entry.getValue()),
-                    bodyOf(entry.getValue(), "body")));
+                    answerBody(context, routeLocation, entry.getValue())));
         });
         return routes;
     }
@@ -278,6 +300,31 @@ public final class ScenarioLoader {
             throw context.fail(field, "must be a boolean");
         }
         return value.asBoolean();
+    }
+
+    /**
+     * The body of an answer: {@code body}, or the JSON of the data file {@code body_file} names.
+     */
+    private JsonNode answerBody(Context context, String location, JsonNode node) {
+        var file = node.path(BODY_FILE);
+        if (file.isMissingNode()) {
+            return bodyOf(node, BODY);
+        }
+        String fileLocation = location + "." + BODY_FILE;
+        if (!node.path(BODY).isMissingNode()) {
+            throw context.fail(fileLocation, "an answer has either body or body_file");
+        }
+        String name = file.asText("");
+        if (!file.isTextual() || !DATA_FILE.matcher(name).matches()) {
+            throw context.fail(fileLocation, "must name a data file of the pattern [a-z0-9][a-z0-9.-]*.json: " + name);
+        }
+        String text = dataFiles.apply(name)
+                .orElseThrow(() -> context.fail(fileLocation, "names no data file: " + name));
+        try {
+            return mapper.readTree(text);
+        } catch (JsonProcessingException e) {
+            throw context.fail(fileLocation, "data file " + name + " is not valid JSON: " + e.getOriginalMessage());
+        }
     }
 
     private static JsonNode bodyOf(JsonNode node, String field) {

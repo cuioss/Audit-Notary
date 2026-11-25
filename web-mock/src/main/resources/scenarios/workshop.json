@@ -118,14 +118,14 @@
           {
             "kind": "review",
             "lens": "samm",
-            "title": "Payments 2026-Q4: Strategy & Metrics",
+            "title": "Payments 2026 Q4: Strategy and Metrics",
             "address": "/samm/payments/2026-q4/sm",
             "due": "2026-11-27"
           },
           {
             "kind": "release",
             "lens": "samm",
-            "title": "Payments 2026-Q4 assessment",
+            "title": "Payments 2026 Q4 assessment",
             "address": "/samm/payments/2026-q4/release",
             "due": "2026-12-04"
           },
@@ -152,6 +152,71 @@
           }
         ]
       }
+    },
+    "GET /api/v1/samm/models/v2.2.0": {
+      "body_file": "samm-model-v2.2.0.json"
+    },
+    "GET /api/v1/samm/scopes": {
+      "body_file": "samm-scopes.json"
+    },
+    "GET /api/v1/samm/scopes/payments": {
+      "body_file": "samm-scope-payments.json"
+    },
+    "GET /api/v1/samm/scopes/identity": {
+      "body_file": "samm-scope-identity.json"
+    },
+    "GET /api/v1/samm/scopes/shop": {
+      "body_file": "samm-scope-shop.json"
+    },
+    "GET /api/v1/samm/scopes/organisation": {
+      "body_file": "samm-scope-organisation.json"
+    },
+    "GET /api/v1/documents/samm-assessments/payments-2026-q4": {
+      "body_file": "samm-assessment-payments-2026-q4.json"
+    },
+    "GET /api/v1/documents/samm-assessments/payments-2026-q2": {
+      "body_file": "samm-assessment-payments-2026-q2.json"
+    },
+    "GET /api/v1/documents/samm-assessments/payments-2025-q4": {
+      "body_file": "samm-assessment-payments-2025-q4.json"
+    },
+    "GET /api/v1/documents/samm-assessments/identity-2026-q4": {
+      "body_file": "samm-assessment-identity-2026-q4.json"
+    },
+    "GET /api/v1/documents/samm-assessments/shop-2026-q3": {
+      "body_file": "samm-assessment-shop-2026-q3.json"
+    },
+    "GET /api/v1/documents/samm-assessments/organisation-2026-h1": {
+      "body_file": "samm-assessment-organisation-2026-h1.json"
+    },
+    "GET /api/v1/samm/payments/compare": {
+      "body_file": "samm-compare-payments-workshop.json"
+    },
+    "GET /api/v1/documents/samm-assessments/payments-2026-q4/diff": {
+      "body_file": "samm-diff-payments-2026-q4.json"
+    },
+    "PUT /api/v1/drafts/samm-assessments/payments-2026-q4": {
+      "body": {
+        "outcome": "DRAFT_SAVED"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/payments-2026-q4/save": {
+      "body": {
+        "outcome": "SAVED",
+        "parts": {}
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/payments-2026-q4/transitions/samm.submit": {
+      "status": 422,
+      "body": {
+        "outcome": "MANDATORY_FIELDS_MISSING",
+        "missing": [
+          "aa",
+          "rt",
+          "em",
+          "om"
+        ]
+      }
     }
   },
   "states": {
@@ -159,20 +224,65 @@
       "description": "Everything is fetched; the Due list is populated."
     },
     "saved-by-other": {
-      "description": "Another assessor saved a practice of the open assessment; a document-saved event follows.",
+      "description": "Another assessor saved two answers of Strategy and Metrics in the open assessment; a document-saved event follows, and the assessment reads with them.",
       "events": [
         {
           "after_ms": 300,
           "event": "document-saved",
           "data": {
             "repository": "samm-assessments",
-            "id": "payments/2026-q4/sm",
+            "id": "payments-2026-q4",
             "fields": [
-              "/answers/0/level"
+              "/answers/sm/sm-b-1/answer",
+              "/answers/sm/sm-b-2/answer"
             ]
           }
         }
-      ]
+      ],
+      "routes": {
+        "GET /api/v1/documents/samm-assessments/payments-2026-q4": {
+          "body_file": "samm-assessment-payments-2026-q4-saved-by-other.json"
+        }
+      }
+    },
+    "conflict": {
+      "description": "Another assessor saved the same answers of Strategy and Metrics first: a save for everyone answers CONFLICT with both values.",
+      "routes": {
+        "POST /api/v1/documents/samm-assessments/payments-2026-q4/save": {
+          "status": 409,
+          "body": {
+            "outcome": "CONFLICT",
+            "conflicts": [
+              {
+                "part": "sm",
+                "blob": "5d1e9a0",
+                "fields": [
+                  {
+                    "pointer": "/answers/sm/sm-a-2/answer",
+                    "own": 0.5,
+                    "other": 1,
+                    "by": {
+                      "pseudonym": "p-2b7f10",
+                      "name": "Jordan Weber",
+                      "role": "Team Lead"
+                    }
+                  },
+                  {
+                    "pointer": "/answers/sm/sm-b-1/answer",
+                    "own": 0.25,
+                    "other": 0.5,
+                    "by": {
+                      "pseudonym": "p-2b7f10",
+                      "name": "Jordan Weber",
+                      "role": "Team Lead"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
     },
     "forbidden": {
       "description": "The rights were withdrawn meanwhile: the Due list is refused.",

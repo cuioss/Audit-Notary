@@ -1,0 +1,309 @@
+{
+  "format_version": 1,
+  "name": "release",
+  "description": "An approver releases the reviewed assessment Payments 2026 Q4: with MFA step-up (start review), with the password of a local user (start password), or after someone saved since the review (start changed).",
+  "user": {
+    "pseudonym": "p-7d2e58",
+    "name": "Noor Haddad",
+    "groups": [
+      "samm-approvers",
+      "isms-readers"
+    ]
+  },
+  "rights": [
+    {
+      "repository": "samm-assessments",
+      "actions": [
+        "read",
+        "edit",
+        "approve"
+      ]
+    },
+    {
+      "repository": "isms-register",
+      "actions": [
+        "read"
+      ]
+    }
+  ],
+  "first_login_required": false,
+  "start": "review",
+  "routes": {
+    "GET /api/v1/status": {
+      "status": 200,
+      "body": {
+        "version": "0.1.0-SNAPSHOT",
+        "degraded": false,
+        "repositories": [
+          {
+            "alias": "samm-assessments",
+            "fetch": "UP"
+          },
+          {
+            "alias": "threat-models",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-register",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-incidents-2026",
+            "fetch": "UP"
+          },
+          {
+            "alias": "directory",
+            "fetch": "UP"
+          }
+        ],
+        "stepUp": "mfa"
+      }
+    },
+    "GET /api/v1/catalogs/team": {
+      "status": 200,
+      "body": {
+        "entries": [
+          {
+            "id": "payments",
+            "name": "Payments"
+          },
+          {
+            "id": "identity",
+            "name": "Identity Platform"
+          },
+          {
+            "id": "mobile",
+            "name": "Mobile Apps"
+          },
+          {
+            "id": "security-office",
+            "name": "Security Office"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/catalogs/role": {
+      "status": 200,
+      "body": {
+        "entries": [
+          {
+            "id": "developer",
+            "name": "Developer"
+          },
+          {
+            "id": "product-owner",
+            "name": "Product Owner"
+          },
+          {
+            "id": "security-champion",
+            "name": "Security Champion"
+          },
+          {
+            "id": "ciso",
+            "name": "Chief Information Security Officer"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/due": {
+      "body": {
+        "items": [
+          {
+            "kind": "release",
+            "lens": "samm",
+            "title": "Payments 2026 Q4 assessment",
+            "address": "/samm/payments/2026-q4/release",
+            "due": "2026-12-04"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/samm/models/v2.2.0": {
+      "body_file": "samm-model-v2.2.0.json"
+    },
+    "GET /api/v1/samm/scopes": {
+      "body_file": "samm-scopes.json"
+    },
+    "GET /api/v1/samm/scopes/payments": {
+      "body_file": "samm-scope-payments-in-review.json"
+    },
+    "GET /api/v1/samm/scopes/identity": {
+      "body_file": "samm-scope-identity.json"
+    },
+    "GET /api/v1/samm/scopes/shop": {
+      "body_file": "samm-scope-shop.json"
+    },
+    "GET /api/v1/samm/scopes/organisation": {
+      "body_file": "samm-scope-organisation.json"
+    },
+    "GET /api/v1/documents/samm-assessments/payments-2026-q4": {
+      "body_file": "samm-assessment-payments-2026-q4-in-review.json"
+    },
+    "GET /api/v1/documents/samm-assessments/payments-2026-q2": {
+      "body_file": "samm-assessment-payments-2026-q2.json"
+    },
+    "GET /api/v1/documents/samm-assessments/payments-2025-q4": {
+      "body_file": "samm-assessment-payments-2025-q4.json"
+    },
+    "GET /api/v1/documents/samm-assessments/identity-2026-q4": {
+      "body_file": "samm-assessment-identity-2026-q4.json"
+    },
+    "GET /api/v1/documents/samm-assessments/shop-2026-q3": {
+      "body_file": "samm-assessment-shop-2026-q3.json"
+    },
+    "GET /api/v1/documents/samm-assessments/organisation-2026-h1": {
+      "body_file": "samm-assessment-organisation-2026-h1.json"
+    },
+    "GET /api/v1/samm/payments/compare": {
+      "body_file": "samm-compare-payments.json"
+    },
+    "GET /api/v1/documents/samm-assessments/payments-2026-q4/diff": {
+      "body_file": "samm-diff-payments-2026-q4.json"
+    }
+  },
+  "states": {
+    "review": {
+      "description": "The assessment is in review; the session has no fresh MFA: the release answers STEP_UP_REQUIRED with the step-up address.",
+      "links": {
+        "release": {
+          "method": "POST",
+          "path": "/api/v1/releases/samm-assessments/payments-2026-q4",
+          "next": "stepped-up",
+          "status": 403,
+          "body": {
+            "outcome": "STEP_UP_REQUIRED",
+            "stepUp": "/api/v1/auth/login?step-up=mfa"
+          }
+        }
+      }
+    },
+    "stepped-up": {
+      "description": "Back from the identity provider with a fresh MFA: the release succeeds.",
+      "links": {
+        "release": {
+          "method": "POST",
+          "path": "/api/v1/releases/samm-assessments/payments-2026-q4",
+          "next": "released",
+          "body": {
+            "outcome": "RELEASED",
+            "tag": "assessments/payments-2026-q4/v1",
+            "at": "2026-11-25T11:20:00Z"
+          }
+        }
+      }
+    },
+    "password": {
+      "description": "Local users: the release asks for the password and sends it with the request.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": false,
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              }
+            ],
+            "stepUp": "password"
+          }
+        }
+      },
+      "links": {
+        "release": {
+          "method": "POST",
+          "path": "/api/v1/releases/samm-assessments/payments-2026-q4",
+          "next": "released",
+          "body": {
+            "outcome": "RELEASED",
+            "tag": "assessments/payments-2026-q4/v1",
+            "at": "2026-11-25T11:20:00Z"
+          }
+        }
+      }
+    },
+    "wrong-password": {
+      "description": "Local users: a wrong password; nothing is released.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": false,
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              }
+            ],
+            "stepUp": "password"
+          }
+        },
+        "POST /api/v1/releases/samm-assessments/payments-2026-q4": {
+          "status": 403,
+          "body": {
+            "outcome": "INVALID_CREDENTIALS"
+          }
+        }
+      }
+    },
+    "changed": {
+      "description": "Someone saved after the review was opened: the release answers CHANGED_SINCE_REVIEW and the view reads the diff again.",
+      "links": {
+        "release": {
+          "method": "POST",
+          "path": "/api/v1/releases/samm-assessments/payments-2026-q4",
+          "next": "stepped-up",
+          "status": 409,
+          "body": {
+            "outcome": "CHANGED_SINCE_REVIEW"
+          }
+        }
+      }
+    },
+    "released": {
+      "description": "The assessment is released as v1 and frozen.",
+      "routes": {
+        "GET /api/v1/samm/scopes/payments": {
+          "body_file": "samm-scope-payments-released.json"
+        },
+        "GET /api/v1/documents/samm-assessments/payments-2026-q4": {
+          "body_file": "samm-assessment-payments-2026-q4-released.json"
+        }
+      }
+    }
+  }
+}

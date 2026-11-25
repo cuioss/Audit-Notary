@@ -1,0 +1,70 @@
+{
+  "id": "identity",
+  "title": "Identity Platform",
+  "subject": {
+    "kind": "team",
+    "id": "identity",
+    "name": "Identity Platform"
+  },
+  "modelVersion": "v2.2.0",
+  "targets": {
+    "sm": {
+      "target": 2
+    },
+    "pc": {
+      "target": 2
+    },
+    "eg": {
+      "target": 2
+    },
+    "ta": {
+      "target": 2
+    },
+    "sr": {
+      "target": 2
+    },
+    "sa": {
+      "target": 2
+    },
+    "sb": {
+      "target": 2
+    },
+    "sd": {
+      "target": 2
+    },
+    "dm": {
+      "target": 2
+    },
+    "aa": {
+      "target": 2
+    },
+    "rt": {
+      "target": 2
+    },
+    "st": {
+      "target": 2
+    },
+    "im": {
+      "target": 2
+    },
+    "em": {
+      "target": 2
+    },
+    "om": {
+      "target": 2
+    }
+  },
+  "assessments": [
+    {
+      "id": "2026-q4",
+      "document": "identity-2026-q4",
+      "title": "Identity Platform 2026 Q4",
+      "date": "2026-11-18",
+      "state": "in-review",
+      "modelVersion": "v2.2.0",
+      "overall": 1.625,
+      "answered": 90,
+      "release": null
+    }
+  ]
+}

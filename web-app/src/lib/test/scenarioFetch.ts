@@ -17,7 +17,12 @@ export const SCENARIO_DIR = path.resolve(
 interface RouteDefinition {
   status?: number;
   body?: unknown;
+  /** A data file below `scenarios/data/` whose JSON is the body, as the mock's `body_file`. */
+  body_file?: string;
 }
+
+/** The name pattern of a data file, the same as the mock's. */
+const DATA_FILE = /^[a-z0-9][a-z0-9.-]*\.json$/;
 
 interface LinkDefinition extends RouteDefinition {
   method: string;
@@ -61,8 +66,18 @@ export function loadScenario(name: string): ScenarioFile {
   ) as ScenarioFile;
 }
 
+/**
+ * @param route a route or link
+ * @returns its body: inline, or the JSON of its data file
+ */
+export function bodyOf(route: RouteDefinition): unknown {
+  if (route.body_file === undefined) return route.body ?? {};
+  if (!DATA_FILE.test(route.body_file)) throw new Error(`refused data file: ${route.body_file}`);
+  return JSON.parse(fs.readFileSync(path.join(SCENARIO_DIR, 'data', route.body_file), 'utf8'));
+}
+
 function answer(route: RouteDefinition): Response {
-  return new Response(JSON.stringify(route.body ?? {}), {
+  return new Response(JSON.stringify(bodyOf(route)), {
     status: route.status ?? 200,
     headers: { 'Content-Type': 'application/json' },
   });
@@ -78,7 +93,7 @@ export function scenarioFetch(reference: string): { fetch: typeof fetch; state: 
   let state = startState ?? scenario.start;
 
   const fetchImpl = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    const url = new URL(String(input), 'http://localhost');
+    const url = new URL(input instanceof Request ? input.url : String(input), 'http://localhost');
     const method = (init?.method ?? 'GET').toUpperCase();
     const current = scenario.states[state] ?? {};
     const key = `${method} ${url.pathname}`;
