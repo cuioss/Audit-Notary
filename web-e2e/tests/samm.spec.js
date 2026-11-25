@@ -115,6 +115,8 @@ test('a local user confirms the release with the password', async ({ page, reque
   await page.getByTestId('release-confirm').click();
   await expect(page.getByRole('dialog')).toContainText('The password is not right');
   await useScenario(request, 'release#password');
+  // The dialog may have cleared the field after the wrong password: the person types it again.
+  await page.getByTestId('release-password').fill('right');
   await page.getByTestId('release-confirm').click();
   await expect(page.getByTestId('release-done')).toBeVisible();
 });
