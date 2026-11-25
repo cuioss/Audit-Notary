@@ -17,8 +17,11 @@ Read the concept first, then the component you are about to change.
    follows from the subject (a workshop, a release, an incident under a deadline), never from a template.
 2. Find the existing piece. `web-app/src/lib/components/` is a closed vocabulary: extend a component before adding
    one, and add one only with its test in `components.test.ts` or a test file beside it.
-3. For a chart, load the `dataviz` skill first and validate any new colour with its validator against both sheet
-   colours (`#ffffff`, `#161d2e`).
+3. For a chart, use the five series colours in model order (`--color-series-1` … `-5`); they are validated for
+   colour-vision and normal-vision separation against both sheet colours (`#ffffff`, `#161d2e`). A new chart colour
+   needs the same validation before it lands: with the validator of the `dataviz` skill where your agent has that
+   skill, otherwise with a colour-vision-deficiency simulation of the chart and the contrast test in `tokens.test.ts`.
+   Never ship one unvalidated.
 4. For a page in a new lens, decide which template it is (`DashboardPage`, `TriagePage`, `ObjectPage`, `WizardPage`)
    and which levels the chain has.
 
@@ -95,7 +98,9 @@ Read the concept first, then the component you are about to change.
 Check each item before you hand a change over.
 
 - [ ] Every new colour pair is in `tokens.test.ts` and passes 4.5:1 for text, 3:1 for graphics and field boundaries,
-      in both themes.
+      in both themes. One documented exception: four of the five chart series stay below 3:1 on the white sheet. A
+      chart that uses them carries every value as text (direct labels) or a table as well, so no value depends on
+      telling a colour apart (`doc/concepts/visual-design.adoc`, Tokens).
 - [ ] Every control is reachable and operable by keyboard. Arrow keys stay with radio groups; shortcut keys are an
       addition, never the only way.
 - [ ] The accessible name contains the visible label (WCAG 2.5.3). A link whose visible text is an abbreviation gets
@@ -112,10 +117,13 @@ Check each item before you hand a change over.
 Run the app against the scenario mock and look at every screen you touched.
 
 ```bash
+# Terminal 1: the mock (in the background), then the dev server (in the foreground).
 web-mock/start.sh -s workshop                 # port 7420; profiles: workshop, read-only, degraded, empty,
                                               # first-login, release (states review, password, wrong-password,
                                               # changed, released); workshop also has saved-by-other, conflict
-(cd web-app && npm run dev)                   # http://127.0.0.1:5173
+(cd web-app && npm run dev)                   # http://127.0.0.1:5173, keeps running
+
+# Terminal 2: switch the profile or the state while the dev server runs.
 curl -X POST http://127.0.0.1:7420/mock/scenario -d '{"scenario":"release#password"}'
 ```
 
@@ -140,8 +148,9 @@ viewport; that is the capture, not the page.
 ## 6. Verify
 
 ```bash
-cd web-app && npm run lint && npm run check && npx vitest run --coverage   # 80 % thresholds
-cd web-e2e && npx playwright test                                           # axe on every view, both themes
+# From the repository root; each module command runs in a subshell, so the next line starts from the root again.
+(cd web-app && npm run lint && npm run check && npx vitest run --coverage)  # 80 % thresholds
+(cd web-e2e && npx playwright test)                                         # axe on every view, both themes
 ./mvnw clean verify                                                         # everything, as CI runs it
 ```
 
