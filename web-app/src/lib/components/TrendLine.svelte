@@ -12,8 +12,9 @@
 <script lang="ts">
   /**
    * One measure over time as a line on a fixed scale: the overall score of a scope's released assessments. One series,
-   * so no legend; the last point carries its value, every point states it on hover or focus, and a table beneath —
-   * visually hidden — states them all (dataviz method: thin line, markers of at least 8 px, recessive grid).
+   * so no legend; the last point carries its value, every point states it under the pointer, and a table beneath —
+   * visually hidden, for assistive technology and the keyboard — states them all (dataviz method: thin line, markers
+   * of at least 8 px, recessive grid). Points are keyed by position: two assessments may carry the same title.
    */
   interface Props {
     /** The points, oldest first. */
@@ -33,7 +34,9 @@
 
   const x = (index: number, count: number) =>
     PAD.left + (count <= 1 ? 0 : (index * (W - PAD.left - PAD.right)) / (count - 1));
-  const y = (value: number) => PAD.top + (1 - value / max) * (H - PAD.top - PAD.bottom);
+  // A scale without range draws every point on the baseline instead of dividing by zero.
+  let top = $derived(max > 0 ? max : 1);
+  const y = (value: number) => PAD.top + (1 - value / top) * (H - PAD.top - PAD.bottom);
 
   let path = $derived(
     points
@@ -42,7 +45,7 @@
       )
       .join(' '),
   );
-  let ticks = $derived(Array.from({ length: max + 1 }, (_, index) => index));
+  let ticks = $derived(Array.from({ length: Math.floor(top) + 1 }, (_, index) => index));
 </script>
 
 <figure class="trend">
@@ -58,7 +61,7 @@
       >
     {/each}
     <path class="trend__line" d={path} />
-    {#each points as point, index (point.label)}
+    {#each points as point, index (index)}
       <g
         class="trend__point"
         class:trend__point--active={active === index}
@@ -85,7 +88,7 @@
   <table class="sr-only">
     <caption>{label}</caption>
     <tbody>
-      {#each points as point (point.label)}
+      {#each points as point, index (index)}
         <tr><th scope="row">{point.label}</th><td>{point.text}</td></tr>
       {/each}
     </tbody>

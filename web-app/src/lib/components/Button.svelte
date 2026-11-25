@@ -55,7 +55,11 @@
   }
 </script>
 
-{#snippet control()}
+<!--
+  One structure whether or not a reason is shown, so the button is never rebuilt when the reason comes or goes and
+  keeps the keyboard focus.
+-->
+<span class="btn-frame" class:btn-with-reason={!!disabledReason}>
   <button
     {...rest}
     {type}
@@ -74,16 +78,10 @@
     {/if}
     <span>{@render children()}</span>
   </button>
-{/snippet}
-
-{#if disabledReason}
-  <span class="btn-with-reason">
-    {@render control()}
+  {#if disabledReason}
     <span class="btn__reason" id={reasonId}>{disabledReason}</span>
-  </span>
-{:else}
-  {@render control()}
-{/if}
+  {/if}
+</span>
 
 <style>
   .btn {
@@ -119,7 +117,11 @@
     cursor: not-allowed;
   }
 
-  .btn-with-reason {
+  .btn-frame {
+    display: contents;
+  }
+
+  .btn-frame.btn-with-reason {
     display: inline-flex;
     flex-direction: column;
     align-items: flex-end;

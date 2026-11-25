@@ -346,16 +346,16 @@ export function windowFor(input: ColumnWindowInput): ColumnWindow {
   if (!sideOpen) {
     nav = navWindow(width, depth, peek, objectMin);
   } else {
-    const wide = navWindow(width - SIDE_WIDE, depth, peek);
-    const narrow = navWindow(width - SIDE_NARROW, depth, peek);
-    const wideKeepsObject = width - SIDE_WIDE >= OBJECT_MIN;
+    const wide = navWindow(width - SIDE_WIDE, depth, peek, objectMin);
+    const narrow = navWindow(width - SIDE_NARROW, depth, peek, objectMin);
+    const wideKeepsObject = width - SIDE_WIDE >= objectMin;
 
     if (wideKeepsObject) {
       // `480` costs the window a column where `400` would show one more.
       const costsColumn = narrow.columns > wide.columns;
       sideWidth = costsColumn ? SIDE_NARROW : SIDE_WIDE;
       nav = costsColumn ? narrow : wide;
-    } else if (width - SIDE_NARROW >= OBJECT_MIN) {
+    } else if (width - SIDE_NARROW >= objectMin) {
       sideWidth = SIDE_NARROW;
       nav = narrow;
     } else {

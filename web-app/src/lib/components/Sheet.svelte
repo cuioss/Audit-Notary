@@ -9,7 +9,8 @@
    * The sheet measures its own width, never the viewport: in a column it is as narrow as the column. From
    * {@link WIDE} pixels the margin stands beside the record, divided by the double rule of a ledger's margin, with the
    * `status` at its top. Below, the `status` stands as a band above the record — the save state and its act must
-   * never scroll out of reach — and the rest of the margin follows the record. Each part is rendered once.
+   * never scroll out of reach — and the rest of the margin follows the record. Each part is rendered once, in one
+   * place: only the grid moves it, so a focused act in the status keeps its focus when the width changes.
    */
   interface Props {
     /** The record: the document's head and its sections. */
@@ -37,21 +38,15 @@
   <div
     class="sheet"
     class:sheet--wide={wide && (!!margin || !!status)}
+    class:sheet--status={!!status}
     class:sheet--narrow={width > 0 && width < 600}
   >
-    {#if status && !wide}
-      <div class="sheet__band">{@render status()}</div>
+    {#if status}
+      <div class="sheet__status">{@render status()}</div>
     {/if}
     <div class="sheet__record">{@render children()}</div>
-    {#if (margin || status) && wide}
-      <aside class="sheet__margin" aria-label={marginLabel}>
-        {#if status}<div class="sheet__status">{@render status()}</div>{/if}
-        {#if margin}{@render margin()}{/if}
-      </aside>
-    {:else if margin}
-      <aside class="sheet__foot" aria-label={marginLabel}>
-        {@render margin()}
-      </aside>
+    {#if margin}
+      <aside class="sheet__margin" aria-label={marginLabel}>{@render margin()}</aside>
     {/if}
   </div>
 </div>
@@ -61,27 +56,30 @@
     inline-size: 100%;
   }
 
+  /* Narrow: status band, record, margin, one below the other in source order. */
   .sheet {
     position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'status' 'record' 'margin';
     background-color: var(--color-bg-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sheet);
     box-shadow: var(--shadow-sheet);
   }
 
-  .sheet--wide {
-    grid-template-columns: minmax(0, 1fr) 16rem;
+  .sheet__record {
+    grid-area: record;
+    min-inline-size: 0;
+    padding: var(--space-8) var(--space-10) var(--space-12);
+  }
+
+  .sheet--narrow .sheet__record {
+    padding: var(--space-5) var(--space-4) var(--space-8);
   }
 
   .sheet__status {
-    padding-block-end: var(--space-6);
-    margin-block-end: var(--space-6);
-    border-block-end: 1px solid var(--color-border);
-  }
-
-  .sheet__band {
+    grid-area: status;
     position: sticky;
     inset-block-start: 56px;
     z-index: var(--layer-sticky);
@@ -92,34 +90,57 @@
     border-start-end-radius: var(--radius-sheet);
   }
 
-  .sheet__foot {
+  .sheet__margin {
+    grid-area: margin;
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
     padding: var(--space-6) var(--space-5) var(--space-8);
     background-color: var(--color-bg-subtle);
     border-block-start: 3px double var(--color-border-strong);
-    color: var(--color-text-muted);
-  }
-
-  .sheet__record {
-    min-inline-size: 0;
-    padding: var(--space-8) var(--space-10) var(--space-12);
-  }
-
-  .sheet--narrow .sheet__record {
-    padding: var(--space-5) var(--space-4) var(--space-8);
-  }
-
-  .sheet__margin {
-    position: relative;
-    padding: var(--space-8) var(--space-6);
-    background-color: var(--color-bg-subtle);
-    border-start-end-radius: var(--radius-sheet);
+    border-end-start-radius: var(--radius-sheet);
     border-end-end-radius: var(--radius-sheet);
+  }
+
+  /* Wide: the margin column beside the record, the status at its top, divided by a ledger's double rule. */
+  .sheet--wide {
+    grid-template-columns: minmax(0, 1fr) 16rem;
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: 'record margin';
+  }
+
+  .sheet--wide.sheet--status {
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas: 'record status' 'record margin';
+  }
+
+  .sheet--wide .sheet__status,
+  .sheet--wide .sheet__margin {
+    position: static;
+    border: none;
+    border-radius: 0;
     box-shadow:
       inset 1px 0 0 var(--color-border-strong),
       inset 4px 0 0 var(--color-bg-subtle),
       inset 5px 0 0 var(--color-border-strong);
+  }
+
+  .sheet--wide .sheet__status {
+    padding: var(--space-8) var(--space-6) var(--space-6);
+    border-start-end-radius: var(--radius-sheet);
+  }
+
+  .sheet--wide .sheet__margin {
+    display: block;
+    padding: var(--space-8) var(--space-6);
+    border-end-end-radius: var(--radius-sheet);
+  }
+
+  .sheet--wide.sheet--status .sheet__margin {
+    padding-block-start: var(--space-2);
+  }
+
+  .sheet--wide:not(.sheet--status) .sheet__margin {
+    border-start-end-radius: var(--radius-sheet);
   }
 </style>

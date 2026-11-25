@@ -454,4 +454,14 @@ describe('the object minimum (Audit Notary deviation)', () => {
       windowFor({ container: 1208, depth: 4 }),
     );
   });
+
+  it('keeps the object minimum with the side column open', () => {
+    const window = windowFor({
+      container: 1920 - RAIL.expanded,
+      depth: 4,
+      sideOpen: true,
+      objectMin: 700,
+    });
+    expect(window.objectWidth).toBeGreaterThanOrEqual(700);
+  });
 });

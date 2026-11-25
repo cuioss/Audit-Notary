@@ -259,7 +259,7 @@ export class ApiClient {
     return () => this.stateListeners.delete(listener);
   }
 
-  /** Reconnects an `offline` stream at once (the live indicator's `Try again`). */
+  /** Reconnects an `offline` stream at once (the shell's recovery, `keepStreamAlive`). */
   retryEvents(): void {
     this.retryStream?.();
   }

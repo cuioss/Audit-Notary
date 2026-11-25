@@ -43,4 +43,10 @@ describe('format', () => {
     expect(initials('Alex Mary Example')).toBe('AE');
     expect(initials('Noor')).toBe('N');
   });
+
+  it('hands back what is no date instead of throwing', () => {
+    expect(formatTime('nope', 'en')).toBe('nope');
+    expect(formatTime(new Date('nope'), 'en')).toBe('');
+    expect(dayParts('nope', 'en')).toEqual({ day: 'nope', month: '', weekday: '' });
+  });
 });

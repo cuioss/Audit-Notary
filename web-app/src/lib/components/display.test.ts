@@ -268,7 +268,7 @@ describe('ScoreMeter', () => {
 });
 
 describe('Sheet', () => {
-  it('puts the status in a band and the margin at the foot while narrow', () => {
+  it('renders status, record and margin once, in source order, while narrow', () => {
     const { container } = render(Sheet, {
       children: textSnippet('Record'),
       margin: textSnippet('History'),
@@ -276,10 +276,14 @@ describe('Sheet', () => {
       marginLabel: 'Register',
       testId: 'sheet',
     });
-    expect(container.querySelector('.sheet__band')).toHaveTextContent('Saved');
-    expect(container.querySelector('.sheet__foot')).toHaveTextContent('History');
-    expect(container.querySelector('.sheet__margin')).toBeNull();
-    expect(container.querySelector('.sheet')).not.toHaveClass('sheet--narrow');
+    const parts = [...container.querySelector('.sheet')!.children].map((child) => child.className);
+    expect(parts.map((name) => name.split(' ')[0])).toEqual([
+      'sheet__status',
+      'sheet__record',
+      'sheet__margin',
+    ]);
+    expect(screen.getByRole('complementary', { name: 'Register' })).toHaveTextContent('History');
+    expect(container.querySelector('.sheet')).not.toHaveClass('sheet--wide');
   });
 
   it('marks a narrow sheet', () => {
@@ -289,7 +293,7 @@ describe('Sheet', () => {
     expect(container.querySelector('aside')).toBeNull();
   });
 
-  it('stands the margin beside the record when wide', () => {
+  it('places the margin beside the record when wide, with the same elements', () => {
     vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(900);
     const { container } = render(Sheet, {
       children: textSnippet('Record'),
@@ -297,30 +301,22 @@ describe('Sheet', () => {
       status: textSnippet('Saved'),
       marginLabel: 'Register',
     });
-    expect(container.querySelector('.sheet')).toHaveClass('sheet--wide');
-    expect(container.querySelector('.sheet__band')).toBeNull();
-    const margin = screen.getByRole('complementary', { name: 'Register' });
-    expect(margin.querySelector('.sheet__status')).toHaveTextContent('Saved');
-    expect(margin).toHaveTextContent('History');
+    expect(container.querySelector('.sheet')).toHaveClass('sheet--wide', 'sheet--status');
+    expect(container.querySelectorAll('.sheet__status')).toHaveLength(1);
+    expect(screen.getByRole('complementary', { name: 'Register' })).toHaveTextContent('History');
   });
 
-  it('shows only the status in a wide margin without one', () => {
+  it('is wide with a status alone, and with a margin alone', () => {
     vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(900);
-    const { container } = render(Sheet, {
-      children: textSnippet('Record'),
-      status: textSnippet('Saved'),
-    });
-    expect(container.querySelector('.sheet__margin')).toHaveTextContent('Saved');
-  });
-
-  it('shows only the margin when wide without a status', () => {
-    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(900);
-    const { container } = render(Sheet, {
+    const first = render(Sheet, { children: textSnippet('Record'), status: textSnippet('Saved') });
+    expect(first.container.querySelector('.sheet')).toHaveClass('sheet--wide');
+    expect(first.container.querySelector('.sheet__margin')).toBeNull();
+    const second = render(Sheet, {
       children: textSnippet('Record'),
       margin: textSnippet('History'),
     });
-    expect(container.querySelector('.sheet__status')).toBeNull();
-    expect(container.querySelector('.sheet__margin')).toHaveTextContent('History');
+    expect(second.container.querySelector('.sheet')).not.toHaveClass('sheet--status');
+    expect(second.container.querySelector('.sheet__status')).toBeNull();
   });
 });
 

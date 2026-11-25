@@ -52,7 +52,7 @@
           >
         {/if}
       </li>
-      {#each $breadcrumb as crumb, index (crumb.href)}
+      {#each $breadcrumb as crumb, index (index)}
         {@const last = index === $breadcrumb.length - 1}
         <li class="crumbs__step" class:crumbs__step--inner={!last}>
           <span class="crumbs__sep" aria-hidden="true"><Icon name="act.next" size={16} /></span>

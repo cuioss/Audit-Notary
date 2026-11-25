@@ -50,6 +50,7 @@ export function formatDateTime(value: string, locale: string): string {
  */
 export function formatTime(value: string | Date, locale: string): string {
   const date = typeof value === 'string' ? parseInstant(value) : value;
+  if (Number.isNaN(date.getTime())) return typeof value === 'string' ? value : '';
   return new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(date);
 }
 
@@ -104,6 +105,7 @@ export function dayParts(
   locale: string,
 ): { day: string; month: string; weekday: string } {
   const date = parseInstant(value);
+  if (Number.isNaN(date.getTime())) return { day: value, month: '', weekday: '' };
   return {
     day: new Intl.DateTimeFormat(locale, { day: 'numeric' }).format(date),
     month: new Intl.DateTimeFormat(locale, { month: 'short' }).format(date),

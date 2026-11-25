@@ -15,7 +15,9 @@ describe('now', () => {
     stop();
   });
 
-  it('gives the present to a one-off read', () => {
-    expect(get(now)).toBeInstanceOf(Date);
+  it('gives the present to a one-off read, not the time the module was loaded', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-26T00:30:00Z'));
+    expect(get(now).toISOString()).toBe('2026-11-26T00:30:00.000Z');
   });
 });
