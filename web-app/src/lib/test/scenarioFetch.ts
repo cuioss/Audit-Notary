@@ -32,13 +32,24 @@ interface LinkDefinition extends RouteDefinition {
 
 interface StateDefinition {
   first_login_required?: boolean;
+  /** On entering: the session gets a new anti-CSRF token (a new login in the same browser replaced it). */
+  session_replaced?: boolean;
+  /** On entering: every session is dropped; the next request answers `UNAUTHENTICATED`. */
+  session_ended?: boolean;
   routes?: Record<string, RouteDefinition>;
   links?: Record<string, LinkDefinition>;
+}
+
+/** The login of a scenario: the provider and, with `local`, the accounts the form login accepts. */
+export interface LoginDefinition {
+  provider: 'oidc' | 'local';
+  users?: { username: string; password: string }[];
 }
 
 /** A scenario file. */
 export interface ScenarioFile {
   name: string;
+  login?: LoginDefinition;
   user: { pseudonym: string | null; name: string };
   rights: unknown[];
   first_login_required: boolean;
@@ -91,13 +102,60 @@ function answer(route: RouteDefinition): Response {
 }
 
 /**
+ * The requests a session without a right still makes: the shell's own (rest-api.adoc, A Session Without Rights).
+ * Every other `/api/v1` request is refused `FORBIDDEN` before any route is looked at.
+ */
+const SHELL_REQUESTS = new Set([
+  'GET /api/v1/status',
+  'GET /api/v1/messages',
+  'GET /api/v1/session',
+  'GET /api/v1/due',
+  'GET /api/v1/events',
+  'POST /api/v1/auth/logout',
+  'GET /api/v1/directory/me',
+  'PUT /api/v1/directory/me',
+  'GET /api/v1/catalogs/team',
+  'GET /api/v1/catalogs/role',
+]);
+
+/** The requests that need no session. */
+const PUBLIC_REQUESTS = new Set(['GET /api/v1/status', 'GET /api/v1/messages']);
+
+/** What `scenarioFetch` returns. */
+export interface ScenarioFetch {
+  /** The fetch over the scenario. */
+  fetch: typeof fetch;
+  /** The current state. */
+  state: () => string;
+  /**
+   * Moves to a state as `POST /mock/goto/{state}` does, with the flags of the state: a replaced session gets a new
+   * `csrfToken`, an ended session answers `UNAUTHENTICATED`.
+   */
+  goto: (next: string) => void;
+}
+
+/**
  * @param reference `name` or `name#state`
  * @returns a fetch over the scenario, and the current state
  */
-export function scenarioFetch(reference: string): { fetch: typeof fetch; state: () => string } {
+export function scenarioFetch(reference: string): ScenarioFetch {
   const [name, startState] = reference.split('#');
   const scenario = loadScenario(name);
   let state = startState ?? scenario.start;
+  let generation = 0;
+  let ended = false;
+  const provider = scenario.login?.provider ?? 'oidc';
+
+  const enter = (next: string): void => {
+    state = next;
+    const entered = scenario.states[next];
+    if (entered?.session_replaced) generation += 1;
+    if (entered?.session_ended) ended = true;
+  };
+
+  // The mock enters its start state the same way, so the flags of a state that is selected by `name#state` hold from
+  // the first request.
+  enter(state);
 
   const fetchImpl = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const request = input instanceof Request ? input : null;
@@ -105,12 +163,43 @@ export function scenarioFetch(reference: string): { fetch: typeof fetch; state: 
     const method = (init?.method ?? request?.method ?? 'GET').toUpperCase();
     const current = scenario.states[state] ?? {};
     const key = `${method} ${url.pathname}`;
+    if (key === 'POST /j_security_check') {
+      // The credentials are in the init's body, or in the body of a `Request` passed instead.
+      const text =
+        init?.body !== undefined && init.body !== null
+          ? String(init.body)
+          : request
+            ? await request.clone().text()
+            : '';
+      const form = new URLSearchParams(text);
+      const known = scenario.login?.users?.some(
+        (user) =>
+          user.username === form.get('j_username') && user.password === form.get('j_password'),
+      );
+      if (provider !== 'local') return answer({ status: 404, body: { outcome: 'MOCK_NO_ROUTE' } });
+      if (known) ended = false;
+      return new Response('', { status: known ? 200 : 401 });
+    }
+    if (url.pathname.startsWith('/api/v1/') && !PUBLIC_REQUESTS.has(key)) {
+      if (ended) {
+        return answer({
+          status: 401,
+          body: {
+            outcome: 'UNAUTHENTICATED',
+            login: provider === 'local' ? '/login' : '/api/v1/auth/login',
+          },
+        });
+      }
+      if (scenario.rights.length === 0 && !SHELL_REQUESTS.has(key)) {
+        return answer({ status: 403, body: { outcome: 'FORBIDDEN' } });
+      }
+    }
     const link = Object.values(current.links ?? {}).find(
       (candidate) => candidate.method === method && candidate.path === url.pathname,
     );
     if (link) {
       const response = answer(link);
-      state = link.next;
+      enter(link.next);
       return response;
     }
     if (key === 'GET /api/v1/session') {
@@ -119,7 +208,7 @@ export function scenarioFetch(reference: string): { fetch: typeof fetch; state: 
         body: {
           user: { ...scenario.user, pseudonym: firstLogin ? null : scenario.user.pseudonym },
           rights: scenario.rights,
-          csrfToken: 'scenario-token',
+          csrfToken: generation === 0 ? 'scenario-token' : `scenario-token-${generation}`,
           firstLoginRequired: firstLogin,
         },
       });
@@ -130,5 +219,5 @@ export function scenarioFetch(reference: string): { fetch: typeof fetch; state: 
       : answer({ status: 404, body: { outcome: 'MOCK_NO_ROUTE', method, path: url.pathname } });
   };
 
-  return { fetch: fetchImpl as typeof fetch, state: () => state };
+  return { fetch: fetchImpl as typeof fetch, state: () => state, goto: enter };
 }

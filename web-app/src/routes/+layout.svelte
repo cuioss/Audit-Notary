@@ -7,26 +7,33 @@
   import Notice from '../lib/components/Notice.svelte';
   import Wordmark from '../lib/brand/Wordmark.svelte';
   import { catalogueReady, t } from '../lib/i18n';
-  import { lensOf, parseAddress, routeTitleKey } from '../lib/routes';
+  import { isOutsideShell, lensOf, parseAddress, routeTitleKey } from '../lib/routes';
+  import AccessNotices from '../lib/shell/AccessNotices.svelte';
   import AppShell from '../lib/shell/AppShell.svelte';
-  import { boot, bootPhase, session, status } from '../lib/stores/app';
+  import { boot, bootOutsideShell, bootPhase, session, status } from '../lib/stores/app';
   import { applyTheme, readThemeChoice, watchSystemTheme } from '../lib/theme';
 
   /**
    * The root of the app: theme, start (status, texts, session, event stream), the first-login rule
-   * (AUN-DIR-2) and the shell around every view.
+   * (AUN-DIR-2) and the shell around every view. The three addresses outside the shell (`/login`, `/signed-out`,
+   * `/login-problem`) start without a session and render without the shell.
    */
   let { children }: { children: Snippet } = $props();
 
   let address = $derived(parseAddress(page.url.pathname));
   let route = $derived(address?.route ?? null);
   let titleKey = $derived(route === null ? 'error.not-found.title' : routeTitleKey(route));
+  let outside = $derived(isOutsideShell(route));
 
   function navigate(href: string) {
     void goto(href);
   }
 
   async function start() {
+    if (outside) {
+      await bootOutsideShell();
+      return () => {};
+    }
     const result = await boot();
     return result.stop;
   }
@@ -49,6 +56,11 @@
     }
   });
 
+  // The app started outside the shell and the address moved into it without a page load: start it properly.
+  $effect(() => {
+    if ($bootPhase === 'outside' && !outside) window.location.reload();
+  });
+
   $effect(() => {
     if ($catalogueReady) {
       document.title = $t('page.title', { view: $t(titleKey) });
@@ -56,9 +68,12 @@
   });
 </script>
 
-{#if $bootPhase === 'ready'}
+{#if outside && ($bootPhase === 'outside' || $bootPhase === 'ready')}
+  {@render children()}
+{:else if $bootPhase === 'ready'}
   <AppShell activeLens={route === null ? null : lensOf(route)} {titleKey} onnavigate={navigate}>
     {#snippet notices()}
+      <AccessNotices />
       {#if $status?.degraded}
         <Notice
           tone="attention"

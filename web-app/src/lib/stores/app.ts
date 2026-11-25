@@ -17,7 +17,7 @@ export const status = writable<Status | null>(null);
 export const streamState = writable<StreamState>('offline');
 
 /** The phases of the start. */
-export type BootPhase = 'starting' | 'ready' | 'signing-in' | 'failed';
+export type BootPhase = 'starting' | 'ready' | 'signing-in' | 'failed' | 'outside';
 
 /** Where the start is. */
 export const bootPhase = writable<BootPhase>('starting');
@@ -31,15 +31,11 @@ export interface BootResult {
 }
 
 /**
- * Starts the app: status, texts, session, event stream (AUN-WEB-9).
+ * Reads the status and the texts, which need no login.
  *
- * The status and the texts need no login, so the login screen of a `401` is never without texts.
- *
- * @param client the client, {@link apiClient} by default
- * @returns what the shell needs to route the first view
+ * @param client the client
  */
-export async function boot(client: ApiClient = apiClient): Promise<BootResult> {
-  bootPhase.set('starting');
+async function readStatusAndTexts(client: ApiClient): Promise<void> {
   let version: string | null = null;
   try {
     const current = await client.getStatus();
@@ -49,6 +45,36 @@ export async function boot(client: ApiClient = apiClient): Promise<BootResult> {
     status.set(null);
   }
   await initI18n(version);
+}
+
+/**
+ * Starts an address outside the shell (`/login`, `/signed-out`, `/login-problem`): only the status and the texts are
+ * read, never the session, so opening the page neither needs nor creates one
+ * (doc/specification/rest-api.adoc, Addresses Outside the Shell).
+ *
+ * @param client the client, {@link apiClient} by default
+ */
+export async function bootOutsideShell(client: ApiClient = apiClient): Promise<void> {
+  bootPhase.set('starting');
+  await readStatusAndTexts(client);
+  bootPhase.set('outside');
+}
+
+/**
+ * Starts the app: status, texts, session, event stream (AUN-WEB-9).
+ *
+ * The status and the texts need no login, so the login screen of a `401` is never without texts.
+ *
+ * @param client the client, {@link apiClient} by default
+ * @param reload reloads the tab at its address, replaced in tests
+ * @returns what the shell needs to route the first view
+ */
+export async function boot(
+  client: ApiClient = apiClient,
+  reload: () => void = () => window.location.reload(),
+): Promise<BootResult> {
+  bootPhase.set('starting');
+  await readStatusAndTexts(client);
   try {
     const current = await client.getSession();
     session.set(current);
@@ -59,6 +85,7 @@ export async function boot(client: ApiClient = apiClient): Promise<BootResult> {
     return { firstLoginRequired: false, stop: () => {} };
   }
   const stopState = keepStreamAlive(client);
+  const stopWatch = watchSession(client, reload);
   const stopEvents = client.subscribeEvents((event, data) => {
     if (event === 'status' && data && typeof data === 'object') {
       status.set(data as Status);
@@ -73,8 +100,79 @@ export async function boot(client: ApiClient = apiClient): Promise<BootResult> {
     firstLoginRequired,
     stop: () => {
       stopEvents();
+      stopWatch();
       stopState();
     },
+  };
+}
+
+/** The pause before a failed session read is repeated while the event stream is connected. */
+export const SESSION_RETRY_MS = 5_000;
+
+/**
+ * Reads the session again after the event stream closed, and reloads the tab when it is another session (UC-ACC-6,
+ * doc/specification/rest-api.adoc, A Session That Is Replaced): the stream belongs to its session and closes with it.
+ *
+ * - `401`: the client leaves for the login by itself.
+ * - The same `csrfToken` the tab started with: a transient break, the stream opens again by itself.
+ * - Another `csrfToken`: a new login in the same browser replaced the session (PROVISIONAL: the token is the
+ *   identity of a session), so the tab reloads at its address and shows the new session.
+ * - A read that fails otherwise (network, timeout) is repeated once the stream is `connected` again, or after
+ *   {@link SESSION_RETRY_MS} when it is connected already: a reconnecting stream emits no end, so nothing else would
+ *   read the session of the tab again.
+ *
+ * @param client the client
+ * @param reload reloads the tab at its address
+ * @returns the function that stops watching
+ */
+export function watchSession(client: ApiClient, reload: () => void): () => void {
+  let reading = false;
+  let stopped = false;
+  let retryPending = false;
+  let state: StreamState = 'offline';
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  const clearTimer = (): void => {
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+  };
+
+  const read = (): void => {
+    if (reading || stopped) return;
+    reading = true;
+    retryPending = false;
+    clearTimer();
+    const known = peek(session)?.csrfToken;
+    client
+      .getSession()
+      .then((current) => {
+        if (known !== undefined && current.csrfToken !== known) {
+          reload();
+        } else {
+          session.set(current);
+        }
+      })
+      .catch((error: unknown) => {
+        // `401` already led to the login; any other failure is read again once the stream is back.
+        if (stopped || (isApiError(error) && error.outcome === 'UNAUTHENTICATED')) return;
+        retryPending = true;
+        if (state === 'connected') timer = setTimeout(read, SESSION_RETRY_MS);
+      })
+      .finally(() => {
+        reading = false;
+      });
+  };
+
+  const stopEnd = client.subscribeStreamEnd(read);
+  const stopState = client.subscribeStreamState((next) => {
+    state = next;
+    if (next === 'connected' && retryPending) read();
+  });
+  return () => {
+    stopped = true;
+    clearTimer();
+    stopEnd();
+    stopState();
   };
 }
 

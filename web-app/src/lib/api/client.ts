@@ -5,7 +5,8 @@
  * adds the anti-CSRF header to every state-changing request, follows the login address of a `401` with
  * the current canonical address as `return`, and keeps one shared event stream.
  */
-import { ApiError, isOutcome, type FieldError } from './errors';
+import { loginStartAddress } from '../access/access';
+import { ApiError, isApiError, isOutcome, type FieldError } from './errors';
 import type {
   CatalogList,
   DirectoryEntry,
@@ -14,6 +15,7 @@ import type {
   DocumentDiff,
   DraftSaved,
   DueList,
+  LoginProvider,
   LogoutAnswer,
   Released,
   SammAssessment,
@@ -102,6 +104,7 @@ export class ApiClient {
   private csrfToken: string | null = null;
   private readonly listeners = new Set<EventListener>();
   private readonly stateListeners = new Set<(state: StreamState) => void>();
+  private readonly endListeners = new Set<() => void>();
   private streamState: StreamState = 'offline';
   private stopStream: (() => void) | null = null;
   private retryStream: (() => void) | null = null;
@@ -235,13 +238,19 @@ export class ApiClient {
    * @param repository the repository
    * @param id the document id
    * @param body the changed parts with their loaded blob ids
+   * @param password the renewed password of a local user, if step-up asks for it
    * @returns the new blob ids
    */
-  saveDocument(repository: string, id: string, body: SaveRequest): Promise<Saved> {
+  saveDocument(
+    repository: string,
+    id: string,
+    body: SaveRequest,
+    password?: string,
+  ): Promise<Saved> {
     return this.request<Saved>(
       'POST',
       `/api/v1/documents/${seg(repository)}/${seg(id)}/save`,
-      body,
+      password === undefined ? body : { ...body, password },
     );
   }
 
@@ -252,12 +261,19 @@ export class ApiClient {
    * @param repository the repository
    * @param id the document id
    * @param transition the transition of the category's workflow
+   * @param password the renewed password of a local user, if step-up asks for it
    * @returns the new state
    */
-  transition(repository: string, id: string, transition: string): Promise<Transitioned> {
+  transition(
+    repository: string,
+    id: string,
+    transition: string,
+    password?: string,
+  ): Promise<Transitioned> {
     return this.request<Transitioned>(
       'POST',
       `/api/v1/documents/${seg(repository)}/${seg(id)}/transitions/${seg(transition)}`,
+      password === undefined ? undefined : { password },
     );
   }
 
@@ -284,6 +300,69 @@ export class ApiClient {
    */
   stepUp(address: string): void {
     this.navigate(this.loginAddress(address));
+  }
+
+  /**
+   * Leaves for an address of this origin: the page itself, not a request.
+   *
+   * @param address the address; one that could leave the origin is refused
+   */
+  go(address: string): void {
+    if (
+      !address.startsWith('/') ||
+      address.startsWith('//') ||
+      address.includes('\\') ||
+      // eslint-disable-next-line no-control-regex -- a browser strips tab and line breaks from an address
+      /[\u0000-\u001f\u007f-\u009f]/.test(address)
+    ) {
+      throw new Error(`refused address: ${address}`);
+    }
+    this.navigate(address);
+  }
+
+  /**
+   * Starts the login (UC-ACC-1, UC-ACC-7): with the identity provider the server's login start, with local users the
+   * web app's own page. The return address is the caller's to check (`checkReturn`).
+   *
+   * @param provider how the installation logs in
+   * @param returnAddress the checked address to come back to
+   */
+  startLogin(provider: LoginProvider, returnAddress: string): void {
+    this.go(loginStartAddress(provider, returnAddress));
+  }
+
+  /**
+   * Posts the username and the password of a local test account to Quarkus' form login (AUN-AUTH-6). The answer
+   * carries no body: `200` is the login, `401` a wrong password or an unknown user (the same answer). The browser
+   * adds the `Origin` the server checks; no anti-CSRF header is needed. The password is never kept or logged.
+   *
+   * To be replaced by Token Sheriff's session layer with the login provider `oidc` (ADR-0004); with `local` it stays.
+   *
+   * @param username the username
+   * @param password the password
+   * @returns whether the login was accepted
+   * @throws ApiError `NETWORK`, `TIMEOUT` or `UNEXPECTED` when no usable answer came
+   */
+  async localLogin(username: string, password: string): Promise<boolean> {
+    let response: Response;
+    try {
+      response = await fetch('/j_security_check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ j_username: username, j_password: password }),
+        credentials: 'same-origin',
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+    } catch (error) {
+      const timedOut = error instanceof DOMException && error.name === 'TimeoutError';
+      throw new ApiError(timedOut ? 'TIMEOUT' : 'NETWORK', 0);
+    }
+    if (response.status === 200) {
+      this.csrfToken = null;
+      return true;
+    }
+    if (response.status === 401) return false;
+    throw new ApiError('UNEXPECTED', response.status);
   }
 
   /**
@@ -400,6 +479,17 @@ export class ApiClient {
     return () => this.stateListeners.delete(listener);
   }
 
+  /**
+   * @param listener called whenever a stream that had connected ends without the client closing it: the server closed
+   * it with the session, or the connection broke. The client opens it again by itself; the listener decides whether
+   * the session changed (UC-ACC-6).
+   * @returns the unsubscribe function
+   */
+  subscribeStreamEnd(listener: () => void): () => void {
+    this.endListeners.add(listener);
+    return () => this.endListeners.delete(listener);
+  }
+
   /** Reconnects an `offline` stream at once (the shell's recovery, `keepStreamAlive`). */
   retryEvents(): void {
     this.retryStream?.();
@@ -417,6 +507,12 @@ export class ApiClient {
     this.streamState = state;
     for (const listener of this.stateListeners) {
       listener(state);
+    }
+  }
+
+  private notifyStreamEnd(): void {
+    for (const listener of this.endListeners) {
+      listener();
     }
   }
 
@@ -459,6 +555,7 @@ export class ApiClient {
 
   private openStream(): () => void {
     let active = true;
+    let closed = false;
     let failures = 0;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let controller: AbortController | null = null;
@@ -478,6 +575,7 @@ export class ApiClient {
 
     const connect = async (): Promise<void> => {
       if (!active) return;
+      let connected = false;
       controller = new AbortController();
       this.setStreamState(failures === 0 ? 'connecting' : 'reconnecting');
       try {
@@ -489,18 +587,39 @@ export class ApiClient {
         if (response.status === 401) {
           active = false;
           this.setStreamState('offline');
-          this.navigate(this.loginAddress(DEFAULT_LOGIN));
+          // The session read names the login this installation uses (`/login` with local users); a read that
+          // is no 401 after all leaves for the default login. A read that fails for another reason (network, timeout)
+          // says nothing about the session: the stream stays `offline` but retryable, so `retryEvents` and the shell's
+          // recovery open it again; a 401 has led to the login already and keeps the stream closed.
+          this.getSession().then(
+            () => this.navigate(this.loginAddress(DEFAULT_LOGIN)),
+            (probeError: unknown) => {
+              if (
+                !closed &&
+                !(isApiError(probeError) && probeError.outcome === 'UNAUTHENTICATED')
+              ) {
+                active = true;
+              }
+            },
+          );
           return;
         }
         if (!response.ok || !response.body) {
           throw new Error(`event stream refused: ${response.status}`);
         }
         this.setStreamState('connected');
+        connected = true;
         failures = 0;
         await this.readFrames(response.body.getReader(), () => active);
-        if (active) schedule();
+        if (active) {
+          this.notifyStreamEnd();
+          schedule();
+        }
       } catch {
-        if (active) schedule();
+        if (active) {
+          if (connected) this.notifyStreamEnd();
+          schedule();
+        }
       }
     };
 
@@ -514,6 +633,7 @@ export class ApiClient {
 
     return () => {
       active = false;
+      closed = true;
       if (timer !== null) clearTimeout(timer);
       controller?.abort();
     };

@@ -24,6 +24,9 @@ Read the concept first, then the component you are about to change.
    Never ship one unvalidated.
 4. For a page in a new lens, decide which template it is (`DashboardPage`, `TriagePage`, `ObjectPage`, `WizardPage`)
    and which levels the chain has.
+5. A page of the access flows (`/login`, `/signed-out`, `/login-problem`) stands outside the shell: it is a `WizardPage`
+   in the `GateFrame` (the name above one column on the desk, no rail, no session), with the notice of local test
+   accounts when the installation has them. It is built, not designed again.
 
 ## 2. The rules of the register
 
@@ -61,6 +64,9 @@ Read the concept first, then the component you are about to change.
 **Acts**
 
 - One primary act per screen, on the object.
+- A confirmation is asked by the step-up handler (`src/lib/stepup/`: `StepUpHandler` and `StepUpDialog`), never by a view
+  of its own. A view that sends a request which can ask mounts the dialog and sends the request through `run`; it keeps
+  only the transition's own refusals.
 - An act that cannot be taken now stays focusable and says why (`Button disabledReason`).
 - Navigation that is the screen's act is a `Link look="primary"`.
 - Destructive acts live behind a confirmation.
@@ -72,7 +78,7 @@ Read the concept first, then the component you are about to change.
 
 **The mascot**
 
-- Only on calm surfaces: an empty Due list, a finished release.
+- Only on calm surfaces: an empty Due list, a finished release, the signed-out page.
 - Never in incidents, deadlines, warnings or errors.
 
 **CSP and markup**
@@ -122,8 +128,10 @@ Run the app against the scenario mock and look at every screen you touched.
 ```bash
 # Terminal 1: the mock (in the background), then the dev server (in the foreground).
 web-mock/start.sh -s workshop                 # port 7420; profiles: workshop, read-only, degraded, empty,
-                                              # first-login, release (states review, password, wrong-password,
-                                              # changed, released); workshop also has saved-by-other, conflict
+                                              # first-login, no-rights, release (states review, password,
+                                              # wrong-password, changed, too-many-logins, released); workshop also
+                                              # has saved-by-other, conflict, session-replaced, session-ended;
+                                              # flow profiles: local (own login page), login-trouble
 (cd web-app && npm run dev)                   # http://127.0.0.1:5173, keeps running
 
 # Terminal 2: switch the profile or the state while the dev server runs.
@@ -134,7 +142,8 @@ Capture each screen at 1440, 1024 and 390 px, light and dark, English and German
 
 - With Claude in Chrome when it is connected.
 - Otherwise with a short Playwright script from `web-e2e/node_modules` that logs in through
-  `/api/v1/auth/login?return=<path>` and takes full-page screenshots. Keep the script in `.plan/temp/`.
+  `/api/v1/auth/login?return=<path>` and takes full-page screenshots. Keep the script in `.plan/temp/`. The pages
+  outside the shell need no login: open `/login` (profile `local`), `/signed-out` and `/login-problem?reason=` directly.
 
 For every screenshot ask:
 

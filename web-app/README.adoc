@@ -31,12 +31,17 @@ addresses (`canonical-addresses.json`)
 |`src/lib/api/`
 |The one `ApiClient`: same-origin `/api/v1`, anti-CSRF header, login on `401`, one shared event stream
 
+|`src/lib/access/`, `src/lib/stepup/`
+|Access: what the shell reads from the status and the session (login provider, step-up method, no rights); the step-up
+handler (`StepUpHandler`, `StepUpDialog`) through which every request that can ask for a confirmation is sent
+
 |`src/lib/shell/`, `src/lib/templates/`, `src/lib/components/`
 |The shell (rail, top bar, bottom bar, command palette), the page templates and the closed vocabulary
 of components
 
 |`src/lib/views/`, `src/routes/`
-|The views and the router; one catch-all route stub renders `AppRouter`
+|The views and the router; one catch-all route stub renders `AppRouter`. `src/lib/views/access/` holds the pages outside
+the shell (`/login`, `/signed-out`, `/login-problem`) and the empty state of a session without rights
 |===
 
 == Commands

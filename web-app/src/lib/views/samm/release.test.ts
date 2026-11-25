@@ -63,7 +63,9 @@ describe('SammReleaseView', () => {
     expect(screen.getByTestId('record-sm')).toHaveTextContent('Strategy and Metrics');
     expect(screen.getByText('90 of 90 questions answered')).toBeInTheDocument();
     expect(screen.getByText(/Submitted for review by Alex Example/)).toBeInTheDocument();
-    expect(screen.getByText('You confirm your identity once more before the release.')).toBeInTheDocument();
+    expect(
+      screen.getByText('You confirm your identity once more before the release.'),
+    ).toBeInTheDocument();
     // The tag is the server's to assign: it shows once the release is done.
     expect(screen.queryByTestId('release-tag')).toBeNull();
     expect(get(breadcrumb).map((crumb) => crumb.label)).toEqual([
@@ -96,7 +98,9 @@ describe('SammReleaseView', () => {
     render(SammReleaseView, { params: PARAMS });
     const button = await act();
     expect(button).toHaveTextContent(/^Release$/);
-    expect(screen.getByText('You confirm your identity once more before the release.')).toBeInTheDocument();
+    expect(
+      screen.getByText('You confirm your identity once more before the release.'),
+    ).toBeInTheDocument();
     await fireEvent.click(button);
     const dialog = document.querySelector('dialog') as HTMLDialogElement;
     expect(dialog).toHaveAttribute('open');
@@ -123,9 +127,22 @@ describe('SammReleaseView', () => {
     });
     await fireEvent.click(within(dialog).getByTestId('release-confirm'));
     expect(
-      await within(dialog).findByText('The password is not right. Nothing was released.'),
+      await within(dialog).findByText('The password is not right. Nothing was changed.'),
     ).toBeInTheDocument();
     expect(screen.queryByTestId('release-done')).toBeNull();
+  });
+
+  it('says that many people are logging in when no step-up can start, and writes nothing', async () => {
+    const scenario = await prepare('release#too-many-logins');
+    render(SammReleaseView, { params: PARAMS });
+    await fireEvent.click(await act());
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Many people are logging in right now. Try again in a minute.',
+    );
+    expect(screen.queryByTestId('release-done')).toBeNull();
+    expect(scenario.state()).toBe('too-many-logins');
+    expect(screen.getByTestId('release-act')).not.toHaveAttribute('aria-disabled');
+    expect(screen.getByTestId('release-seal')).toBeInTheDocument();
   });
 
   it('closes the password dialog on cancel', async () => {

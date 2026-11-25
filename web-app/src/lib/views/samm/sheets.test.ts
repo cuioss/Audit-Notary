@@ -2,9 +2,9 @@ import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '../../api/client';
 import { ApiError } from '../../api/errors';
-import type { SammAssessment, SammComparison, SammModel, SammScope } from '../../api/types';
+import type { SammAssessment, SammComparison, SammModel, SammScope, Status } from '../../api/types';
 import { clearModels, loadModel } from '../../samm/store';
-import { session } from '../../stores/app';
+import { session, status } from '../../stores/app';
 import { scenarioFetch } from '../../test/scenarioFetch';
 import AssessmentListColumn from './AssessmentListColumn.svelte';
 import AssessmentSheet from './AssessmentSheet.svelte';
@@ -63,6 +63,7 @@ beforeEach(() => clearModels());
 
 afterEach(() => {
   session.set(null);
+  status.set(null);
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
@@ -640,5 +641,140 @@ describe('SinceList', () => {
     );
     expect(screen.getByText('unknown')).toBeInTheDocument();
     expect(container.querySelectorAll('.since__span--down')).toHaveLength(1);
+  });
+});
+
+describe('the sheets and the step-up handler (UC-ACC-3)', () => {
+  const PASSWORD: Status = {
+    version: '1',
+    degraded: false,
+    repositories: [],
+    stepUp: 'password',
+  };
+
+  it('asks a local user for the password before it submits, and sends it with the transition', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    status.set({ ...PASSWORD });
+    const transition = vi.spyOn(apiClient, 'transition').mockResolvedValue({
+      outcome: 'TRANSITIONED',
+      state: 'in-review',
+    });
+    const onchanged = vi.fn();
+    render(AssessmentSheet, {
+      scope,
+      assessment: answeredFully(model, assessment),
+      model,
+      onchanged,
+    });
+    await fireEvent.click(screen.getByTestId('assessment-submit'));
+    const dialog = document.querySelector('dialog') as HTMLDialogElement;
+    await vi.waitFor(() => expect(dialog).toHaveAttribute('open'));
+    expect(within(dialog).getByText('Confirm your identity')).toBeInTheDocument();
+    expect(within(dialog).getByTestId('assessment-confirm')).toHaveTextContent(
+      /^Submit for review$/,
+    );
+    await fireEvent.input(within(dialog).getByTestId('assessment-password'), {
+      target: { value: 'secret' },
+    });
+    await fireEvent.click(within(dialog).getByTestId('assessment-confirm'));
+    await vi.waitFor(() => expect(onchanged).toHaveBeenCalled());
+    expect(transition).toHaveBeenCalledWith(
+      'samm-assessments',
+      assessment.id,
+      'samm.submit',
+      'secret',
+    );
+  });
+
+  it('says that many people are logging in when a submit cannot start its step-up', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    vi.spyOn(apiClient, 'transition').mockRejectedValue(new ApiError('TOO_MANY_LOGINS', 503));
+    const onchanged = vi.fn();
+    render(AssessmentSheet, {
+      scope,
+      assessment: answeredFully(model, assessment),
+      model,
+      onchanged,
+    });
+    await fireEvent.click(screen.getByTestId('assessment-submit'));
+    expect(await screen.findByText(/Many people are logging in right now/)).toBeInTheDocument();
+    expect(onchanged).not.toHaveBeenCalled();
+  });
+
+  it('asks for the password before it saves for everyone, and the number keys do not answer meanwhile', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    status.set({ ...PASSWORD });
+    const save = vi.spyOn(apiClient, 'saveDocument');
+    render(PracticeSheet, { scope, assessment, model, practiceId: 'sm' });
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    const dialog = document.querySelector('dialog') as HTMLDialogElement;
+    await vi.waitFor(() => expect(dialog).toHaveAttribute('open'));
+    const field = within(dialog).getByTestId('practice-password');
+    await fireEvent.input(field, { target: { value: '2' } });
+    await fireEvent.keyDown(field, { key: '2' });
+    expect(screen.getByTestId('answer-sm-a-1-3')).toBeChecked();
+    await fireEvent.click(within(dialog).getByTestId('practice-confirm'));
+    await vi.waitFor(() =>
+      expect(screen.getByTestId('save-state')).toHaveTextContent(/Saved for everyone at/),
+    );
+    expect(save.mock.calls[0][3]).toBe('2');
+  });
+
+  it('keeps the changes as the own when the password is not given', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    status.set({ ...PASSWORD });
+    const save = vi.spyOn(apiClient, 'saveDocument');
+    render(PracticeSheet, { scope, assessment, model, practiceId: 'sm' });
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    const dialog = document.querySelector('dialog') as HTMLDialogElement;
+    await vi.waitFor(() => expect(dialog).toHaveAttribute('open'));
+    await fireEvent.click(within(dialog).getAllByRole('button', { name: 'Cancel' }).at(-1)!);
+    await vi.waitFor(() => expect(dialog).not.toHaveAttribute('open'));
+    expect(save).not.toHaveBeenCalled();
+    expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'changed');
+    expect(screen.getByTestId('answer-sm-a-1-3')).toBeChecked();
+  });
+
+  it('keeps the changes as the draft before the app leaves for the identity provider', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    status.set({ ...PASSWORD, stepUp: 'mfa' });
+    const order: string[] = [];
+    vi.spyOn(apiClient, 'saveDocument').mockRejectedValue(
+      new ApiError('STEP_UP_REQUIRED', 403, [], { stepUp: '/api/v1/auth/login?step-up=mfa' }),
+    );
+    vi.spyOn(apiClient, 'saveDraft').mockImplementation(() => {
+      order.push('draft');
+      return Promise.resolve({ outcome: 'DRAFT_SAVED' as const, at: '2026-11-26T10:00:00Z' });
+    });
+    vi.spyOn(apiClient, 'stepUp').mockImplementation(() => {
+      order.push('leave');
+    });
+    render(PracticeSheet, { scope, assessment, model, practiceId: 'sm' });
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    await vi.waitFor(() => expect(order).toEqual(['draft', 'leave']));
+  });
+
+  it('stays on the page, with the failure shown, when the draft cannot be kept before the departure', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    status.set({ ...PASSWORD, stepUp: 'mfa' });
+    vi.spyOn(apiClient, 'saveDocument').mockRejectedValue(
+      new ApiError('STEP_UP_REQUIRED', 403, [], { stepUp: '/api/v1/auth/login?step-up=mfa' }),
+    );
+    const draft = vi.spyOn(apiClient, 'saveDraft').mockRejectedValue(new ApiError('NETWORK', 0));
+    const leave = vi.spyOn(apiClient, 'stepUp').mockImplementation(() => {});
+    render(PracticeSheet, { scope, assessment, model, practiceId: 'sm' });
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    await vi.waitFor(() => expect(draft).toHaveBeenCalled());
+    await vi.waitFor(() =>
+      expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'failed'),
+    );
+    expect(leave).not.toHaveBeenCalled();
+    // The sheet takes edits again.
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-2'));
+    expect(screen.getByTestId('answer-sm-a-1-2')).toBeChecked();
   });
 });

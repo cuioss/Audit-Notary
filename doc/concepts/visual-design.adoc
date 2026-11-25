@@ -160,6 +160,21 @@ vocabulary of components with no raw control in a view, the tag grammar (a box m
 information"), one primary act per screen, a disabled control that stays focusable and says why, the column window,
 the focus moved to a new object and announced, light, dark and system themes.
 
+== The Access Pages
+
+Three pages stand outside the shell, because there is no session to show a shell for: `/login` (the form of local test
+accounts; with the identity provider it only starts the login), `/signed-out` and `/login-problem`
+(xref:../specification/rest-api.adoc#_addresses_outside_the_shell[REST API Register, Addresses Outside the Shell]). Each
+is the flow template (`WizardPage`) in the `GateFrame`: the name above one column on the desk, no rail, no top bar, no
+sheet. The notice of local test accounts stands above the column of each page and, with local users, above every view of
+the shell (the same `AccessNotices`); it is an attention notice, because the installation is not meant for production. A
+user logged in without any right sees a notice and, in place of every view on a repository, an empty state with a lock;
+the shell and the settings stay. The signed-out page is a calm surface and shows the notary; the login problem and the
+empty state without access are refusals and show none.
+
+The confirmation of a release, a transition or a save is one dialog, "Confirm your identity", owned by the step-up
+handler (`src/lib/stepup/`); its button names the domain act ("Release", "Submit for review"), never the method.
+
 == Accessibility
 
 * WCAG 2.1 AA in both themes, checked by `tokens.test.ts` and by axe-core on every view in `web-e2e`; no violation of
@@ -177,7 +192,7 @@ the focus moved to a new object and announced, light, dark and system themes.
 == The Mascot
 
 As the brand rules have it (xref:brand.adoc#_the_mascot[Name and Brand, The Mascot]): only on calm surfaces — the empty
-Due list and a finished release, where the notary stands beside the seal. Never in an incident, a deadline or a
+Due list, the signed-out page and a finished release, where the notary stands beside the seal. Never in an incident, a deadline or a
 warning.
 
 == Open Questions
