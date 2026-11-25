@@ -222,7 +222,7 @@ xref:../specification/authentication.adoc#AUN-AUTH-3[AUN-AUTH-3] (trailers),
 xref:../specification/configuration.adoc#AUN-CONF-1[AUN-CONF-1] (the `step-up` setting); library:
 https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-7[GDR-FORMS-7].
 Changes:: <<change-step-up>>.
-Design:: xref:../specification/web-app.adoc#AUN-WEB-6[AUN-WEB-6] (the control says "confirm with MFA"); Token Sheriff:
+Design:: xref:../specification/web-app.adoc#AUN-WEB-6[AUN-WEB-6] (the control says "Release" only; the margin says that the user confirms their identity once more); Token Sheriff:
 CLIENT-12 (step-up), and planned SESSION-3 (the same session updated, not a new one), SESSION-8 (step-up with a
 pending action), BFF-6 (`StepUpRequirement`) and CLIENT-34 (the result bound to the session's `iss` and `sub`).
 

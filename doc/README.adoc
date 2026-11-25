@@ -106,6 +106,10 @@ configuration, repositories and refresh
 |`AUN-WEB`
 |Stack, visual language, navigation, forms, editing, review, texts, page security
 
+|xref:specification/rest-api.adoc[REST API Register]
+|`AUN-WEB`, `AUN-DIR`, `AUN-SAMM`
+|Every `/api/v1` request in one table: body, answer, outcomes, requirement, and whether it is specified or provisional
+
 |xref:specification/category-samm.adoc[SAMM]
 |`AUN-SAMM`
 |Layout, scope, editing, release, scores and comparison, targets, evidence

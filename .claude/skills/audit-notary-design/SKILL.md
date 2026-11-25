@@ -86,8 +86,11 @@ Read the concept first, then the component you are about to change.
   (`web-app/src/main/resources/META-INF/audit-notary/messages/`). Write the German yourself, in the same plain register
   as the English. Never leave a literal in markup: `npm run lint` fails.
 - The voice is a notary's office: plain, calm, accountable. Say what happened and what to do; no apology, no jokes.
-- Buttons say exactly what happens ("Save for everyone", "Release (confirm with MFA)"), and the result repeats the
+- Buttons say exactly what happens ("Save for everyone", "Release"), and the result repeats the
   verb ("Saved for everyone at 09:52").
+- A control names the domain act only. A mechanism (MFA, step-up, password, token) is never a label: where a
+  confirmation is needed, a line beside the control says so in domain words ("You confirm your identity once more
+  before the release."), whatever the method (AUN-WEB-6).
 - "Saved for you" (draft) and "saved for everyone" (signed commit) must never be confused.
 - Never use the words *notarised* or *certified* for what the app does.
 - Texts of a document type's model (SAMM answers, quality criteria) are data served with the model, not catalogue

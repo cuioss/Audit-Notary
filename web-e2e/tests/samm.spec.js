@@ -83,10 +83,13 @@ test('a person with the right read only reads the practice', async ({ page, requ
   await expect(page.getByTestId('save-everyone')).toHaveCount(0);
 });
 
-test('an approver releases with MFA: step-up first, then the seal', async ({ page, request }) => {
+test('an approver releases: the identity is confirmed first, then the seal', async ({
+  page,
+  request,
+}) => {
   await useScenario(request, 'release');
   await login(page, '/samm/payments/2026-q4/release');
-  await expect(page.getByTestId('release-act')).toHaveText('Release (confirm with MFA)');
+  await expect(page.getByTestId('release-act')).toHaveText('Release');
   // The first press answers STEP_UP_REQUIRED and leaves for the step-up address, which returns to the release.
   const stepUp = page.waitForResponse(
     (response) => response.url().includes('/api/v1/releases/') && response.status() === 403,
@@ -106,7 +109,7 @@ test('an approver releases with MFA: step-up first, then the seal', async ({ pag
 test('a local user confirms the release with the password', async ({ page, request }) => {
   await useScenario(request, 'release#wrong-password');
   await login(page, '/samm/payments/2026-q4/release');
-  await expect(page.getByTestId('release-act')).toHaveText('Release (confirm with password)');
+  await expect(page.getByTestId('release-act')).toHaveText('Release');
   await page.getByTestId('release-act').click();
   await page.getByTestId('release-password').fill('wrong');
   await page.getByTestId('release-confirm').click();

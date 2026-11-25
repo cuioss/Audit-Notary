@@ -112,7 +112,7 @@ token. The server is the confidential client of the identity provider (Token She
 gives the browser only cookies (xref:../specification/authentication.adoc#AUN-AUTH-1[Authentication, AUN-AUTH-1]).
 State-changing requests carry an anti-CSRF header the `ApiClient` adds; the server also refuses them when their
 `Origin` is another origin than its own. A `401` sends the user through the login and
-back to the same address; a step-up demand opens the identity provider's MFA prompt and returns to the release
+back to the same address; a step-up demand opens the identity provider's multi-factor prompt and returns to the release
 (xref:authentication-and-identity.adoc[Authentication and Identity]). With local users the login is a page of the app
 itself, posted to Quarkus' form authentication (the one request without the anti-CSRF token, checked by its `Origin`
 instead), and step-up, where switched on, a password dialog
@@ -139,8 +139,10 @@ stream; a practice another assessor saved refreshes in place.
 === Review and Release
 
 Release shows the diff against the last released state, generated from the YAML, not from the AsciiDoc output. A
-control whose transition requires step-up, under the shipped workflows the release button, says so and triggers the
-renewed MFA login before the transition is written.
+control whose transition requires step-up, under the shipped workflows the release button, triggers the renewed
+multi-factor login before the transition is written. The control names the domain act only ("Release"); a line in the
+margin says, in domain words and whatever the method, that the user confirms their identity once more. A mechanism
+(MFA, step-up, password) is never a label.
 
 == Security of the Page
 

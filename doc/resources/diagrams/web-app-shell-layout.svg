@@ -73,7 +73,7 @@
   <text x="604" y="282" class="label">question 2  answer ▾</text>
   <text x="596" y="316" class="label">saved for you · 12:04</text>
   <rect class="stroke" x="596" y="392" width="236" height="32" rx="4"/>
-  <text x="604" y="412" class="label">Release (confirm with MFA)</text>
+  <text x="604" y="412" class="label">Release</text>
 
   <!-- caption -->
   <text x="450" y="500" class="caption">Shell, templates and components from pm-web-app; on phones a BottomBar replaces the NavRail.</text>
