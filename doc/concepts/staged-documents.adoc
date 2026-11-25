@@ -1,0 +1,279 @@
+= Staged Documents
+:toc: left
+:toclevels: 3
+:toc-title: Table of Contents
+:sectnums:
+:source-highlighter: highlight.js
+
+xref:../README.adoc[Audit Notary documentation] » Concepts
+
+Some documents are not written in one go after the fact. They follow a process: an incident file starts with a triage
+that decides what kind of incident it is, continues with the actions taken and the notifications sent, and ends with
+a review of what happened. Different people fill in the parts at different times, a later part depends on the
+decisions of an earlier one, and some parts apply only to some cases: a data protection assessment only when personal
+data are affected. A supplier assessment, an exception approval or a threat model built by a recipe have the same
+shape.
+
+This concept defines one generic structure for such documents: the *stage*. It does not define a process. A process
+is configuration of a document type; the application knows only the building blocks.
+
+== Why No Process Is Built In
+
+The recognised incident models differ and change. NIST SP 800-61 Revision 3 (April 2025) supersedes Revision 2 and no
+longer has its own life cycle; it arranges incident response along the six functions of the Cybersecurity Framework 2.0
+(https://csrc.nist.gov/pubs/sp/800/61/r3/final[NIST SP 800-61 Rev. 3]). ISO/IEC 27035-1:2023 describes the principles
+and the process of information security incident management with its key activities
+(https://www.iso.org/standard/78973.html[ISO/IEC 27035-1:2023]). Organisations add steps of their own, such as an
+assessment by the data protection officer. A process built into the code would be wrong for most of them, and would
+be wrong again with the next revision of a standard.
+
+So a document type declares its stages, and an organisation that needs other stages copies the delivered category
+under a new id and changes the declaration (xref:../use-cases/09-categories.adoc#UC-KND-2[UC-KND-2]); a custom
+category adds, it never overrides (xref:../use-cases/09-categories.adoc#add-never-override[Categories, Principles]).
+
+== Building Blocks
+
+A staged document has four levels:
+
+[cols="1,2,2"]
+|===
+|Level |What it is |In the web app
+
+|Document
+|The whole file: its identity, its workflow state (draft, review, released) and its deadlines
+|Header above the tabs
+
+|Stage
+|A unit of work and of sign-off: one top-level object of the schema, stored as a part of its own, with a status, an
+optional condition and predecessors
+|One tab
+
+|Section
+|A group of fields within a stage: an object property of the stage's object. It has no status and no rule; it is
+layout taken from the nesting of the schema
+|A headed group of fields within the tab
+
+|Field
+|A field of the schema, with the markers the form knows (`x-catalog`, `x-person`, `x-asciidoc`, `x-free-text`,
+xref:../specification/web-app.adoc#AUN-WEB-4[AUN-WEB-4])
+|A form component
+|===
+
+Only the stage carries rules. Sections and fields come from the JSON Schema as they do for every document; the
+schema stays plain JSON Schema.
+
+=== A Stage Is a Part
+
+Each stage is one top-level property of `"type": "object"` in the schema, marked with the library's `"gdr-split":
+true`, so it is stored in a file of its own
+(https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-3[GDR-FORMS-3]):
+
+----
+<collection>/<ulid>/
+  document.yaml          ← the document: title, workflow state; no stage owns it
+  <stage-part>.yaml      ← one file per stage: its fields and its completion
+  narrative/*.adoc       ← free-text fragments, each declared by one stage
+  report.adoc            ← generated
+----
+
+One file per stage gives the property the SAMM practices already rely on: two people working on different stages never
+conflict (xref:category-samm.adoc[SAMM]). The responder recording actions and the data protection officer filling in
+the assessment save side by side.
+
+=== The Declaration
+
+The stages are process, so they are declared in the document type's `workflow.yaml`, beside its states, transitions
+and deadlines. The example is the incident file of
+xref:category-incident-reports.adoc#_stages_of_an_incident[Incident Reports]:
+
+[source,yaml]
+----
+stages:
+  - id: triage
+    part: triage                           # top-level property of the schema, gdr-split
+  - id: privacy-assessment
+    part: privacy-assessment
+    after: [triage]
+    when: /triage/personal-data-affected
+  - id: response
+    part: response
+    after: [triage]
+  - id: notifications
+    part: notifications
+    after: [triage]
+    when: { any: [/triage/personal-data-affected, /triage/nis2-significant] }
+  - id: review
+    part: review
+    after: [response]
+    narrative: [course, root-cause-analysis, lessons]
+    complete: { step-up: true }
+----
+
+[cols="1,3"]
+|===
+|Key |Meaning
+
+|`id`
+|The stage's id, unique within the document type; its name and its guidance are the message keys `stage.<id>` and
+`stage.<id>.guidance` of the category
+
+|`part`
+|The top-level schema property the stage owns, which must carry `gdr-split: true`; a property belongs to at most one
+stage
+
+|`after`
+|Stages that must be completed, or not applicable, before this one can be completed. The order of the list of stages
+is the order of the tabs; `after` is the order of the sign-offs
+
+|`when`
+|The condition under which the stage applies; without it the stage always applies. It uses the condition language of
+the deadline rules (a field that is `true` or present, a comparison of two times, xref:../specification/category-incident-reports.adoc#AUN-IR-2[AUN-IR-2]),
+extended by `any` and `all`, so that a document type has one condition language, not two
+
+|`narrative`
+|The free-text fragments that belong to the stage
+
+|`complete`
+|How the stage is completed; `step-up` as for a transition
+(https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-7[GDR-FORMS-7]),
+default `false`
+|===
+
+A stage's deadlines are ordinary deadline rules of the workflow: a rule's due time may start from a field of a part
+(`/triage/aware-at`), and a rule may be met by the completion of a stage (`/triage/completion/at`). No second deadline
+mechanism exists.
+
+== Stage Status
+
+A stage has one of three statuses. Two are derived, one is stored:
+
+[cols="1,1,3"]
+|===
+|Status |Kept |Meaning
+
+|`not-applicable`
+|derived
+|`when` is false for the current data
+
+|`open`
+|derived
+|The stage applies and is not completed
+
+|`completed`
+|stored
+|The part holds `completion` with the time (`at`) and the pseudonym of the person (`by`) who completed it
+|===
+
+The rules:
+
+. *Editing is never gated.* Every applicable stage can be filled in at any time. During an incident whoever knows
+  something writes it down, in whatever tab it belongs to; the order of the stages does not hold that back.
+. *Completion is gated.* A stage can be completed only when every stage of its `after` is completed or not applicable,
+  and when the mandatory fields of its part are filled in. These are the `required` findings of the library whose JSON
+  Pointer is the part (`/triage`) or starts with it (`/triage/…`); the library already reports them per pointer
+  (https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-2[GDR-FORMS-2]).
+  The library applies the sub-schema of a property only to a property the data hold, so the mandatory fields of an
+  absent part would not be reported. The check therefore treats an absent part as an empty part (`{}`): its mandatory
+  fields are missing, and a stage whose part is absent cannot be completed unless its part declares no mandatory field.
+. *Completion is a save*, onto the working branch, so that everyone sees it: the signed commit names the person, and
+  `completion` records the time in the data, where deadline rules and the index can read it. With `step-up: true` it
+  requires step-up like a release.
+. *Only the complete and reopen operations write `completion`.* Every other save, by a person in the form or by an
+  agent through `write_draft` and `save`, is refused when it sets, changes or removes `completion`, so that no save
+  passes around the gates above.
+. *A completed stage is read-only until it is reopened.* Reopening removes `completion` in a save; the earlier
+  completion stays in the history as evidence that the stage was changed after its sign-off. Reopening a stage reopens
+  no other stage; a completed stage whose predecessor was reopened is marked in the form.
+. *Data of a stage that no longer applies stay.* When a change of the triage makes a stage not applicable, its part is
+  kept, not checked and shown as not applicable; documents are never rewritten by a rule
+  (xref:../use-cases/09-categories.adoc#documents-survive[Categories, Principles]).
+. *The document's workflow builds on the stages.* The transition out of the first state (submitting for review) and
+  every release require every applicable stage to be completed. The mandatory fields of a stage that is not applicable
+  are not required.
+
+The last rule gives document types *conditional mandatory fields*, which the schema alone cannot express: the library
+refuses `required` under `if`, `then` and `else`
+(https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-2[GDR-FORMS-2]).
+A field that is mandatory only for a data protection incident belongs to a stage whose `when` names that case.
+
+=== Stages and the Workflow States
+
+Stages and states are two dimensions, not one. The workflow states (draft, review, released) describe the document as
+evidence: whether it is approved and frozen. The stages describe its content as work: which parts are done. A process
+modelled as workflow states would be a single line of states, one at a time; stages run side by side (the response and
+the notifications are worked on in parallel), apply or not by condition, and are completed by different people.
+Workflow states remain for review and release only.
+
+=== Agents
+
+An agent fills in stages through `write_draft` like any part of a document
+(xref:../specification/mcp-server.adoc#AUN-MCP-6[AUN-MCP-6]) and reads their status with the document. Completing a
+stage is a sign-off and stays a person's act, as the release does
+(xref:../use-cases/02-documents.adoc#UC-DOC-8[UC-DOC-8]). The MCP server offers no complete or reopen operation, and
+`write_draft` and `save` refuse a change of `completion` like every other save (<<_stage_status>>). AUN-MCP-6 states
+this when the specification is aligned with this concept.
+
+== In the Web App
+
+* *Header*: the document's title, workflow state, deadlines and the status of every stage at a glance.
+* *Tabs*: one per stage in the declared order, each with its status. A stage that does not apply is shown greyed with
+  the condition that excludes it, not hidden, so that a reader sees that it was considered.
+* *Within a tab*: the sections as headed groups, the stage's guidance, its fragments, and the controls *Complete*
+  (naming the missing mandatory fields and the open predecessors when it is refused) and *Reopen*.
+* *Review and release*: the diff of the structured data (xref:../specification/web-app.adoc#AUN-WEB-6[AUN-WEB-6]) is
+  grouped by stage, then by section.
+* *Lists and lenses*: a document's stage statuses are part of the index, so a lens can show "triage open" or list
+  every incident whose review is still open.
+
+== What It Needs from the Library
+
+[cols="2,3"]
+|===
+|Need |State
+
+|One file per stage
+|Present: `gdr-split` (https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-3[GDR-FORMS-3])
+
+|Mandatory fields of one stage
+|Present: the `required` findings, filtered by the part's JSON Pointer
+(https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-2[GDR-FORMS-2])
+
+|Release without the mandatory fields of a stage that does not apply
+|Missing: the library checks `required` on the whole document at the transition out of the first state and at every
+release (https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-2[GDR-FORMS-2]);
+it has to accept parts excluded from that check
+
+|Conditions on fields
+|Missing: the same extension of the deadline rules that
+xref:../specification/category-incident-reports.adoc#AUN-IR-2[AUN-IR-2] already needs
+(https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/schema-driven-documents.adoc#_open_questions[Schema-Driven Documents, Open Questions])
+|===
+
+Because stages are generic, need the workflow and change what a release checks, they belong in the library's
+`git-forms` rather than in Audit Notary (see <<_open_questions>>).
+
+[#_open_questions]
+== Open Questions
+
+. Decide whether stages become a concept of the library (`git-forms`, beside the workflow of
+  https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-5[GDR-FORMS-5])
+  or stay an Audit Notary layer. The library is the proposal: the release check of
+  https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-2[GDR-FORMS-2]
+  has to know them either way.
+. Decide whether completing a stage may also release a checkpoint (a tag of the document at that moment), for example
+  the triage decision as evidence of when the classification was made. Without it the signed commit of the completion
+  is the evidence.
+. Decide whether completing a stage needs a right of its own (for example only `role:dpo` completes the data
+  protection assessment), or whether the right to edit the repository suffices.
+. Repeating stages are left out on purpose: what repeats (a round of actions, an intermediate report) is an array
+  within a stage. Decide whether a case needs more.
+. Relate stages and recipes: a recipe guides the filling in step by step (`title`, `guidance`, `fills`,
+  xref:../specification/mcp-server.adoc#AUN-MCP-6[AUN-MCP-6]) without rules; a stage structures the document with
+  rules. Decide whether a recipe's steps may point at stages.
+
+== Related
+
+* xref:category-incident-reports.adoc[Incident Response Reports] -- the first staged document type
+* https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/schema-driven-documents.adoc[Schema-Driven Documents]
+  -- schema, parts, workflow and deadlines the stages build on
+* xref:../use-cases/09-categories.adoc[Categories and Document Types] -- where a document type's files live

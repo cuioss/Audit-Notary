@@ -9,18 +9,82 @@ xref:../README.adoc[Audit Notary documentation] » Concepts
 
 Where incident response reports are written as Confluence pages, the 72-hour notification deadline is kept outside the
 report, the template's mandatory fields are not enforced, and the question "how often did this root cause recur" is
-answered by reading free text. This category replaces the report, not the handling.
+answered by reading free text. This category replaces the incident file: the decisions taken from the triage to the
+review, not the live communication.
 
-== Handling and Report Are Two Things
+== Communication and Decisions Are Two Things
 
-* *Handling the incident* (alerting, coordination, escalation in real time) does not belong in Git. Chat, ticket
-  system, on-call service and Confluence do that.
-* *The report on the incident* (course, cause, impact, lessons, measures, notification duties) is a document with
-  structure, review and approval, the kind of document the schema-driven approach on Git is made for.
+* *The live communication* (alerting, coordination, escalation, chat in real time) does not belong in Git. Chat,
+  ticket system, on-call service and Confluence do that.
+* *The decisions and their results* (the triage, the actions decided, the notifications sent, the review of course,
+  cause, impact and lessons) are a document with structure, review and approval, the kind of document the
+  schema-driven approach on Git is made for.
 
-Only the report moves into Audit Notary. Handling the live phase there would not work: Git is no real-time medium, and
-a commit per chat message would bury the report. The application connects to none of the systems of the live phase:
-the report refers to tickets and to measures (issues) by the ids the user or an agent enters.
+The incident file moves into Audit Notary from the triage on, not only after the live phase: a notification deadline
+starts at awareness (<<_the_deadline_clock>>), so the classification that decides it has to be recorded at once. The
+file grows at the pace of decisions, minutes and hours apart, not at the pace of messages: Git is no real-time
+medium, and a commit per chat message would bury the file. The application connects to none of the systems of the live
+phase: the file refers to tickets and to measures (issues) by the ids the user or an agent enters.
+
+[#_stages_of_an_incident]
+== Stages of an Incident
+
+The file is a xref:staged-documents.adoc[staged document]: its parts are stages, each a tab of the form, a part file of
+its own and a sign-off. The category delivers the stages below as its default; an organisation that follows another
+model (NIST, ISO/IEC 27035, a process of its own) copies the category and declares its own stages, without code
+(xref:staged-documents.adoc#_why_no_process_is_built_in[Staged Documents, Why No Process Is Built In]).
+
+[cols="1,1,1,3"]
+|===
+|Stage |After |Applies when |Content
+
+|`triage`
+|—
+|always
+|The times (`occurred-at`, `detected-at`, `aware-at`), the classification (security incident, personal data breach or
+both; `severity`; `personal-data-affected`; `nis2-significant`), the affected services and the derived protection
+needs, the ticket ids
+
+|`privacy-assessment`
+|`triage`
+|personal data are affected
+|The categories and approximate numbers of data subjects and records (GDPR Art. 33(3)(a)), the assessment of the risk
+to the rights and freedoms of natural persons, which decides whether the supervisory authority is notified
+(Art. 33(1)) and whether the data subjects are informed (Art. 34(1),
+https://eur-lex.europa.eu/eli/reg/2016/679/oj[Regulation (EU) 2016/679])
+
+|`response`
+|`triage`
+|always
+|The actions decided (containment, recovery, others) with their issue ids and the responsible role, the timeline of
+decisions, `resolved-at`
+
+|`notifications`
+|`triage`
+|personal data are affected or the incident is significant under NIS2
+|Each notification sent, with its time and recipient; the deadlines of <<_the_deadline_clock>> are met here
+
+|`review`
+|`response`
+|always
+|Root causes, the follow-up measures with issue ids, the links to risks; the narrative `course`,
+`root-cause-analysis` and `lessons`
+|===
+
+`response` and `notifications` run side by side once the triage is done; the review closes the file. The document is
+submitted for review and released only when every stage that applies is completed. The mandatory fields of the
+`privacy-assessment` count only for a personal data breach, a condition the schema alone could not express
+(xref:staged-documents.adoc#_stage_status[Staged Documents, Stage Status]).
+
+[NOTE]
+====
+The specification does not follow the stages yet:
+xref:../specification/category-incident-reports.adoc#AUN-IR-1[AUN-IR-1] to
+xref:../specification/category-incident-reports.adoc#AUN-IR-3[AUN-IR-3] still describe one `document.yaml` with
+`aware-at`, `personal-data-affected` and `nis2-significant` at its root, and the deadline rules of AUN-IR-2 read them
+there. They are deferred until this layout is agreed. The change that aligns them moves the field paths and the
+deadline inputs into the parts (`/triage/aware-at`) in one step.
+====
 
 == What a Form Gains over Confluence
 
@@ -84,8 +148,12 @@ AsciiDoc output is generated:
 
 ----
 incidents/<ulid>/
-  document.yaml        ← structured fields (schema): times, category, severity, affected services (service:…),
-                         notifications, measures
+  document.yaml        ← title and workflow state
+  triage.yaml          ← one part per stage (gdr-split), each with its completion:
+  privacy-assessment.yaml  times, classification, affected services (service:…),
+  response.yaml            data subjects, actions, notifications, root causes,
+  notifications.yaml       measures
+  review.yaml
   narrative/*.adoc     ← free-text sections (course, root-cause analysis, lessons) as AsciiDoc fragments
   report.adoc          ← generated: a template joins the YAML and the fragments
 ----
@@ -145,13 +213,16 @@ them to the ISMS, the threat models and the notification duties. The gap is the 
 == Open Questions
 
 . Draft the schema of incident response reports with the notification deadlines (GDPR Art. 33; NIS2 where it
-  applies).
+  applies), one part per stage of <<_stages_of_an_incident>>.
+. Confirm the delivered stages and whether a deadline rule for the triage itself (completed within a period after
+  `aware-at`) ships by default.
 . Deferred: import of the timeline from the ticket system or the chat.
 . Deferred: proposing further affected services along `dependsOn` of the service catalog.
 . Deferred: evaluations across incidents (median times to detection and resolution, recurring root causes).
 
 == Related
 
+* xref:staged-documents.adoc[Staged Documents] — stages, tabs and sign-offs of the incident file
 * xref:category-isms.adoc[ISMS] — risks and measures from incidents
 * xref:data-protection-and-repository-layout.adoc[Data Protection and Repository Layout] — the yearly repository
 * https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/schema-driven-documents.adoc[Schema-Driven Documents]
