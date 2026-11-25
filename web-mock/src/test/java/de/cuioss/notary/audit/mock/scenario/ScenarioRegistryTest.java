@@ -17,13 +17,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -85,8 +90,27 @@ class ScenarioRegistryTest {
     }
 
     @Test
-    @DisplayName("lists the primary profiles in file order")
-    void shouldListPrimaries() {
-        assertEquals(List.of("workshop", "first-login", "read-only", "degraded", "empty"), registry.primaryNames());
+    @DisplayName("lists the primary profiles in file order, without comments and blank lines")
+    void shouldListPrimaries(@TempDir Path dir) throws IOException {
+        // Arrange: a controlled inventory, independent of the one the mock ships
+        Files.createDirectories(dir.resolve("scenarios"));
+        Files.writeString(dir.resolve("scenarios/primary.txt"), "# comment\nzulu\n\n  alpha  \n# another\nmike\n");
+        try (var classLoader = new URLClassLoader(new URL[]{dir.toUri().toURL()}, null)) {
+            var controlled = new ScenarioRegistry(new ScenarioLoader(new ObjectMapper(), name -> Optional.empty()),
+                    classLoader);
+            // Act & Assert
+            assertEquals(List.of("zulu", "alpha", "mike"), controlled.primaryNames());
+        }
+    }
+
+    @Test
+    @DisplayName("resolves every primary profile of the shipped inventory")
+    void shouldResolveEveryShippedPrimary() {
+        // Act
+        var names = registry.primaryNames();
+        // Assert
+        assertAll(
+                () -> assertFalse(names.isEmpty()),
+                () -> assertTrue(names.stream().allMatch(name -> registry.resolve(name).isPresent())));
     }
 }

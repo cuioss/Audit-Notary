@@ -132,7 +132,7 @@ class ControlRoutesTest {
     @Test
     @DisplayName("GET /mock/scenarios lists the primary profiles")
     void shouldListScenarios() {
-        assertEquals(5, json(client.get("/mock/scenarios")).path("primary").size());
+        assertEquals(6, json(client.get("/mock/scenarios")).path("primary").size());
     }
 
     @Test

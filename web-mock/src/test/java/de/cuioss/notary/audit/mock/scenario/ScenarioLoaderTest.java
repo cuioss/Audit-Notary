@@ -25,6 +25,7 @@ import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -91,6 +92,30 @@ class ScenarioLoaderTest {
                 () -> assertEquals(200, scenario.route(a, "GET /api/v1/status").orElseThrow().status()),
                 () -> assertEquals(403, scenario.route(b, "GET /api/v1/due").orElseThrow().status()),
                 () -> assertEquals("a", b.auto().next()));
+    }
+
+    @Test
+    @DisplayName("reads the login and the session flags, and defaults to the identity provider")
+    void shouldReadLoginAndSessionFlags() {
+        // Arrange
+        var root = valid();
+        var login = root.putObject("login").put("provider", "local");
+        login.putArray("users").addObject().put("username", "alex").put("password", "local-password");
+        ((ObjectNode) root.path("states").path("a")).put("session_replaced", true);
+        ((ObjectNode) root.path("states").path("b")).put("session_ended", true);
+        // Act
+        var local = loader.read("sample.json", root);
+        var defaulted = loader.read("sample.json", valid());
+        // Assert
+        assertAll(
+                () -> assertTrue(local.login().isLocal()),
+                () -> assertEquals("alex", local.login().authenticate("alex", "local-password").orElseThrow().username()),
+                () -> assertTrue(local.login().authenticate("alex", "wrong").isEmpty()),
+                () -> assertTrue(local.state("a").orElseThrow().sessionReplaced()),
+                () -> assertTrue(local.state("b").orElseThrow().sessionEnded()),
+                () -> assertEquals("oidc", defaulted.login().provider()),
+                () -> assertTrue(defaulted.login().users().isEmpty()),
+                () -> assertFalse(defaulted.state("a").orElseThrow().sessionReplaced()));
     }
 
     @Test
@@ -318,6 +343,41 @@ class ScenarioLoaderTest {
             var message = rejectionOf(root -> ((ObjectNode) root.path("states").path("b"))
                     .put("first_login_required", "yes"));
             assertTrue(message.contains("first_login_required"), message);
+        }
+
+        @Test
+        @DisplayName("a login provider other than oidc and local")
+        void shouldRefuseUnknownProvider() {
+            var message = rejectionOf(root -> root.putObject("login").put("provider", "saml"));
+            assertTrue(message.contains("login.provider"), message);
+        }
+
+        @Test
+        @DisplayName("users of the provider oidc")
+        void shouldRefuseUsersWithoutLocalProvider() {
+            var message = rejectionOf(root -> {
+                var login = root.putObject("login").put("provider", "oidc");
+                login.putArray("users").addObject().put("username", "alex").put("password", "x");
+            });
+            assertTrue(message.contains("login.users"), message);
+        }
+
+        @Test
+        @DisplayName("a local user without password")
+        void shouldRefuseUserWithoutPassword() {
+            var message = rejectionOf(root -> {
+                var login = root.putObject("login").put("provider", "local");
+                login.putArray("users").addObject().put("username", "alex");
+            });
+            assertTrue(message.contains("login.users[0]") && message.contains("password"), message);
+        }
+
+        @Test
+        @DisplayName("a session flag that is no boolean")
+        void shouldRefuseSessionFlag() {
+            var message = rejectionOf(root -> ((ObjectNode) root.path("states").path("a"))
+                    .put("session_replaced", "yes"));
+            assertTrue(message.contains("states.a.session_replaced"), message);
         }
 
         @Test

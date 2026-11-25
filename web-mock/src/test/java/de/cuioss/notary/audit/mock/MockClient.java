@@ -19,9 +19,11 @@ import org.jspecify.annotations.Nullable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -73,11 +75,45 @@ public final class MockClient implements AutoCloseable {
      * @return this client
      */
     public MockClient login() {
-        var login = send("GET", "/api/v1/auth/login?return=/", null, Map.of());
+        return adopt(send("GET", "/api/v1/auth/login?return=/", null, Map.of()));
+    }
+
+    /**
+     * Takes over the session a login answer started (the emulated login, or {@code /j_security_check}) and reads the
+     * anti-CSRF token of the session.
+     *
+     * @param login the answer that carries the session cookie
+     * @return this client
+     */
+    public MockClient adopt(HttpResponse<String> login) {
         String setCookie = login.headers().firstValue("Set-Cookie").orElseThrow();
         cookie = setCookie.substring(0, setCookie.indexOf(';'));
         csrfToken = json(send("GET", "/api/v1/session", null, Map.of())).path("csrfToken").asText();
         return this;
+    }
+
+    /**
+     * Logs in with a username and a password through the form login of local users.
+     *
+     * @param username the username
+     * @param password the password
+     * @return this client
+     */
+    public MockClient loginLocal(String username, String password) {
+        return adopt(sendForm(username, password));
+    }
+
+    /**
+     * Posts the form login of local users with the own origin.
+     *
+     * @param username the username
+     * @param password the password
+     * @return the response
+     */
+    public HttpResponse<String> sendForm(String username, String password) {
+        return send("POST", "/j_security_check", "j_username=" + URLEncoder.encode(username, StandardCharsets.UTF_8) + "&j_password="
+                        + URLEncoder.encode(password, StandardCharsets.UTF_8),
+                Map.of("Origin", mock.baseUrl(), "Content-Type", "application/x-www-form-urlencoded"));
     }
 
     /**

@@ -4,3 +4,4 @@ first-login
 read-only
 degraded
 empty
+no-rights

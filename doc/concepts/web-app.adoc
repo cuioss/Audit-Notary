@@ -171,6 +171,20 @@ margin says, in domain words and whatever the method, that the user confirms the
   reviewed and refused with `CHANGED_SINCE_REVIEW` when the working branch has moved since
   (xref:../specification/web-app.adoc#AUN-WEB-6[AUN-WEB-6] names the outcome, not yet the request field).
 
+Decided provisionally with the access use cases (UC-ACC-1, -2, -3, -6, -7), recorded with their reasons in
+xref:../specification/rest-api.adoc#_open_questions[REST API Register, Open Questions]; the owner may change each one:
+
+. Three pages outside the shell: `/login` (local users; with the identity provider it starts the login), `/signed-out`
+  (the landing of every logout, in place of "the start page") and `/login-problem?reason=` (the provider cannot be
+  reached, too many logins, an unknown login transaction). None is a valid `return` of a login.
+. One step-up handler for every transition that asks (release, completion of a stage, save of the configuration,
+  activation of a category): it reads how the confirmation works from the status, asks for the password in a dialog or
+  leaves for the provider, and keeps no pending act across the redirect, so the user chooses the act again after the
+  return (Token Sheriff's planned pending action, SESSION-8, replaces this).
+. A session without rights is a session: a notice and empty states, never a login loop.
+. A session that another login in the same browser replaced is recognised by its changed anti-CSRF token when the event
+  stream closes, and the tab reloads.
+
 == Related
 
 * xref:authentication-and-identity.adoc[Authentication and Identity]

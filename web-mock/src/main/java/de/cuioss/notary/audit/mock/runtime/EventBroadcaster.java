@@ -83,10 +83,15 @@ public final class EventBroadcaster implements AutoCloseable {
         return subscriptions.size();
     }
 
+    /** Ends every open stream; a client that reconnects opens a fresh subscription. */
+    public void endStreams() {
+        subscriptions.forEach(Subscription::close);
+    }
+
     /** Ends every subscription. */
     @Override
     public void close() {
-        subscriptions.forEach(Subscription::close);
+        endStreams();
     }
 
     /**

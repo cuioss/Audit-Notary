@@ -33,7 +33,9 @@ import java.util.regex.Pattern;
  * every {@code next} of a link or a timed transition name an existing state; a route key is {@code "METHOD /path"}
  * and every method is {@code GET}, {@code POST}, {@code PUT} or {@code DELETE}; every path starts with
  * {@value #API_PREFIX}; a status lies between 100 and 599; the actions of a right are those of
- * {@link Right#ACTIONS}; a delay is not negative. A violation throws a {@link ScenarioValidationException} naming
+ * {@link Right#ACTIONS}; a delay is not negative; the login provider is {@code oidc} or {@code local} and only
+ * {@code local} has users, each with a username and a password; the state flags {@code session_replaced} and
+ * {@code session_ended} are booleans. A violation throws a {@link ScenarioValidationException} naming
  * the source, the location and the rule.
  * <p>
  * A route or a link answers its {@code body}, or the JSON of the data file its {@code body_file} names: a file name of
@@ -51,6 +53,8 @@ public final class ScenarioLoader {
 
     private static final Set<String> METHODS = Set.of("GET", "POST", "PUT", "DELETE");
     private static final Pattern ROUTE_KEY = Pattern.compile("([A-Z]+) (\\S+)");
+    private static final String LOGIN = "login";
+    private static final Set<String> LOGIN_PROVIDERS = Set.of(ScenarioLogin.OIDC, ScenarioLogin.LOCAL);
     private static final String STATES = "states";
     private static final String ROUTES = "routes";
     private static final String NO_STATE = "names no state: ";
@@ -119,6 +123,7 @@ public final class ScenarioLoader {
         }
         String name = requiredText(context, root, "name");
         String description = root.path("description").asText("");
+        var login = readLogin(context, root.path("login"));
         var user = readUser(context, root.path("user"));
         var rights = readRights(context, root.path("rights"));
         boolean firstLogin = readBoolean(context, root, "first_login_required", false);
@@ -137,7 +142,38 @@ public final class ScenarioLoader {
         for (var state : states.values()) {
             checkTargets(context, state, states);
         }
-        return new Scenario(name, description, user, rights, firstLogin, start, routes, states);
+        return new Scenario(name, description, login, user, rights, firstLogin, start, routes, states);
+    }
+
+    private static ScenarioLogin readLogin(Context context, JsonNode node) {
+        if (node.isMissingNode()) {
+            return ScenarioLogin.DEFAULT;
+        }
+        if (!node.isObject()) {
+            throw context.fail(LOGIN, "must be an object");
+        }
+        var provider = node.path("provider");
+        if (!provider.isTextual() || !LOGIN_PROVIDERS.contains(provider.asText())) {
+            throw context.fail(LOGIN + ".provider", "must be one of oidc, local");
+        }
+        var usersNode = node.path("users");
+        List<ScenarioLogin.LocalUser> users = new ArrayList<>();
+        if (!usersNode.isMissingNode()) {
+            if (!ScenarioLogin.LOCAL.equals(provider.asText())) {
+                throw context.fail(LOGIN + ".users", "only the provider local has users");
+            }
+            if (!usersNode.isArray()) {
+                throw context.fail(LOGIN + ".users", "must be an array");
+            }
+            int index = 0;
+            for (var entry : usersNode) {
+                var at = context.at(LOGIN + ".users[" + index + "]");
+                users.add(new ScenarioLogin.LocalUser(requiredText(at, entry, "username"),
+                        requiredText(at, entry, "password")));
+                index++;
+            }
+        }
+        return new ScenarioLogin(provider.asText(), users);
     }
 
     private static ScenarioUser readUser(Context context, JsonNode node) {
@@ -209,7 +245,9 @@ public final class ScenarioLoader {
             auto = new AutoTransition(delay(context, autoLocation, autoNode),
                     requiredText(context.at(autoLocation), autoNode, "next"));
         }
-        return new ScenarioState(id, node.path("description").asText(""), firstLogin, routes, links, events, auto);
+        var at = context.at(location);
+        return new ScenarioState(id, node.path("description").asText(""), firstLogin, routes, links, events, auto,
+                readBoolean(at, node, "session_replaced", false), readBoolean(at, node, "session_ended", false));
     }
 
     private Link readLink(Context context, String location, String name, JsonNode node) {

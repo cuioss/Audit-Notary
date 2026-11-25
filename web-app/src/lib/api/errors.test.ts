@@ -15,7 +15,7 @@ describe('errors', () => {
     expect(errorMessageKey(new ApiError('UNEXPECTED', 500))).toBe('error.unexpected');
     expect(errorMessageKey(new ApiError('DOCUMENT_RELEASED', 409))).toBe('error.document-released');
     expect(errorMessageKey(new ApiError('REJECTED', 409))).toBe('error.rejected');
-    expect(errorMessageKey(new ApiError('INVALID_CREDENTIALS', 403))).toBe(
+    expect(errorMessageKey(new ApiError('INVALID_CREDENTIALS', 401))).toBe(
       'error.invalid-credentials',
     );
     expect(errorMessageKey(new ApiError('MANDATORY_FIELDS_MISSING', 422))).toBe(
@@ -24,6 +24,7 @@ describe('errors', () => {
     expect(errorMessageKey(new ApiError('CHANGED_SINCE_REVIEW', 409))).toBe(
       'error.changed-since-review',
     );
+    expect(errorMessageKey(new ApiError('TOO_MANY_LOGINS', 503))).toBe('error.too-many-logins');
     expect(errorMessageKey(new ApiError('CONFLICT', 409))).toBe('error.conflict');
     expect(errorMessageKey(new Error('x'))).toBe('error.unexpected');
     expect(isApiError(new ApiError('VALIDATION', 422))).toBe(true);

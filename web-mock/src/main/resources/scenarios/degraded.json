@@ -41,6 +41,7 @@
       "body": {
         "version": "0.1.0-SNAPSHOT",
         "degraded": false,
+        "loginProvider": "oidc",
         "repositories": [
           {
             "alias": "samm-assessments",
@@ -216,6 +217,7 @@
           "body": {
             "version": "0.1.0-SNAPSHOT",
             "degraded": true,
+            "loginProvider": "oidc",
             "repositories": [
               {
                 "alias": "samm-assessments",
@@ -263,6 +265,7 @@
           "data": {
             "version": "0.1.0-SNAPSHOT",
             "degraded": false,
+            "loginProvider": "oidc",
             "repositories": [
               {
                 "alias": "samm-assessments",

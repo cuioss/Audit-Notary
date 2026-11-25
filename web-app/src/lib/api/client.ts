@@ -347,7 +347,8 @@ export class ApiClient {
   private refusal(status: number, body: unknown): ApiError {
     const record = body && typeof body === 'object' ? (body as Record<string, unknown>) : {};
     const outcome = isOutcome(record.outcome) ? record.outcome : 'UNEXPECTED';
-    if (status === 401 || outcome === 'UNAUTHENTICATED') {
+    // A wrong step-up password is a 401 too, but no lost session (rest-api.adoc, decided provisionally).
+    if ((status === 401 && outcome !== 'INVALID_CREDENTIALS') || outcome === 'UNAUTHENTICATED') {
       this.csrfToken = null;
       const login = typeof record.login === 'string' ? record.login : DEFAULT_LOGIN;
       this.navigate(this.loginAddress(login));

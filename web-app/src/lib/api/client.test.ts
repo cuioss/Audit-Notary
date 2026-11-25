@@ -102,6 +102,15 @@ describe('requests', () => {
     );
   });
 
+  it('does not leave for the login on a 401 INVALID_CREDENTIALS', async () => {
+    fetchMock.mockResolvedValue(json(401, { outcome: 'INVALID_CREDENTIALS' }));
+    await expect(client.getDue()).rejects.toMatchObject({
+      outcome: 'INVALID_CREDENTIALS',
+      status: 401,
+    });
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it('never follows a login address of another origin', () => {
     expect(client.loginAddress('https://evil.example/login')).toMatch(
       /^\/api\/v1\/auth\/login\?return=/,

@@ -11,11 +11,12 @@ import WelcomeView from './WelcomeView.svelte';
 afterEach(() => vi.unstubAllGlobals());
 
 describe('the profiles', () => {
-  it('are the five of AUN-TEST-1', () => {
+  it('are the six of AUN-TEST-1', () => {
     expect(primaryScenarios().sort()).toEqual([
       'degraded',
       'empty',
       'first-login',
+      'no-rights',
       'read-only',
       'workshop',
     ]);

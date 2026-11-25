@@ -24,12 +24,15 @@ turns the status into `SPECIFIED` and links it.
 `SPECIFIED`.
 * *Outcomes* lists those of the request beyond the common refusals below. A refusal names its `outcome` in the JSON
 body, and the web app decides by it, never by the status code alone
-(xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]); the `ApiClient` does not yet follow this for `401 INVALID_CREDENTIALS`
+(xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]); a `401 INVALID_CREDENTIALS` is therefore no lost session
 (see <<_open_questions>>). Statuses are given only where a source fixes them.
 * *Login* is required for every request except `GET /api/v1/status`, `GET /api/v1/messages` and the login endpoints.
 * Every request that changes state carries the anti-CSRF header (xref:web-app.adoc#AUN-WEB-8[AUN-WEB-8]), except
-`POST /j_security_check` of the local login, which is no `/api/v1` request and not in the register.
-* The control routes of the mock (`/mock/*`) and its sign-out page are no part of the API.
+`POST /j_security_check` of the local login. It is the one row that is no `/api/v1` request; it is in the register
+because the web app posts it.
+* The pages of the web app outside the shell (`/login`, `/signed-out`, `/login-problem`) are no requests of the API;
+<<_addresses_outside_the_shell>> lists them with the requests they make.
+* The control routes of the mock (`/mock/*`) are no part of the API.
 
 [#_common_refusals]
 == Common Refusals
@@ -77,13 +80,16 @@ Every request can end with these outcomes (xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9
 |`GET /api/v1/status`
 |none
 |`{"version", "degraded", "loginProvider", "repositories": [{"alias", "fetch"}]}`; no login, no personal data. The
-member `stepUp` (`mfa`, `password` or `off`; absent means `mfa`) is PROVISIONAL: the release reads how step-up
-confirms before it asks. The member `loginProvider` (`oidc` or `local`) is specified but not yet implemented: neither
-the mock, the wire type of the web app nor `StatusResource` carries it so far, and the web app does not read it until
-it does.
+member `loginProvider` (`oidc` or `local`) says how the login works: with `local` the shell shows the notice of local
+test accounts on every page and the login is the web app's page `/login`
+(xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]). A status without it reads as `oidc` (PROVISIONAL tolerance, so that
+an older server does not break the shell). The member `stepUp` (`mfa`, `password` or `off`) is PROVISIONAL: the
+confirmation reads how step-up confirms before it asks; absent means `mfa` with `oidc` and `off` with `local`, the
+defaults of xref:authentication.adoc#AUN-AUTH-4[AUN-AUTH-4]. The web app and the mock carry and read `loginProvider`;
+`StatusResource` of the server does not carry it yet.
 |`degraded` while a fetch fails
 |xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]
-|`SPECIFIED`; member `stepUp` `PROVISIONAL`; member `loginProvider` not yet implemented
+|`SPECIFIED`; member `stepUp` `PROVISIONAL`; member `loginProvider` not yet carried by the server
 
 |`GET /api/v1/messages?lang=en\|de`
 |none
@@ -94,10 +100,13 @@ it does.
 
 |`GET /api/v1/session`
 |none
-|`{"user": {"pseudonym", "name"}, "rights": [{"repository", "actions"}], "csrfToken", "firstLoginRequired"}`
+|`{"user": {"pseudonym", "name"}, "rights": [{"repository", "actions"}], "csrfToken", "firstLoginRequired"}`; a session
+without a mapped right answers `"rights": []` and is a session like any other (<<_a_session_without_rights>>);
+`csrfToken` belongs to the session, so another value on a later read means another session
+(<<_a_session_that_is_replaced>>, PROVISIONAL)
 |none
 |xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]
-|`SPECIFIED`
+|`SPECIFIED`; the use of `csrfToken` as the identity of the session `PROVISIONAL`
 
 |`GET /api/v1/due`
 |none
@@ -109,42 +118,70 @@ it does.
 |`GET /api/v1/events`
 |none
 |`text/event-stream`: the event `document-saved` `{"repository", "id", "fields"}` and the event `status` with the body
-of `GET /api/v1/status`
+of `GET /api/v1/status`. The stream belongs to the session that opened it and closes when that session ends: a
+logout, a back-channel logout, a refused refresh, the end of idle time or lifetime, a bound, or a new login in the same
+browser that replaced it (xref:../use-cases/01-access.adoc#change-events[UC-ACC changes, event stream])
 |none
 |xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5], xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]
-|`SPECIFIED`
+|`SPECIFIED`; the closing with the session `PROVISIONAL` until the use cases are agreed
 
 6+h|Login and logout
 
 |`GET /api/v1/auth/login?return=<address>`
 |none
-|A redirect to the identity provider; with local users the web app's login page
-|`502 IDENTITY_PROVIDER_UNAVAILABLE`; `503 TOO_MANY_LOGINS` with `Retry-After: 60`
+|A redirect to the identity provider; with local users a `302` to the web app's login page,
+`/login?return=<checked address>` (PROVISIONAL: the register said only "the web app's login page"). `return` is checked
+against the canonical addresses and never against the addresses outside the shell
+|`502 IDENTITY_PROVIDER_UNAVAILABLE`; `503 TOO_MANY_LOGINS` with `Retry-After: 60`. For a navigation of the browser
+(`Accept` contains `text/html`) the same two refusals are answered as `303` to
+`/login-problem?reason=idp-unavailable` and `/login-problem?reason=too-many-logins` (PROVISIONAL), so that a person
+never reads raw JSON; any other client gets the JSON
 |xref:authentication.adoc#AUN-AUTH-1[AUN-AUTH-1], xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]
-|`SPECIFIED`
+|`SPECIFIED`; the redirect with local users and the `303` to `/login-problem` `PROVISIONAL`
 
 |`GET /api/v1/auth/callback`
 |none (`code`, `state`, `iss` in the query)
 |A page that navigates to the checked `return`
-|none
+|`400 UNKNOWN_TRANSACTION` (PROVISIONAL): the login transaction is not found, because it expired, was taken, or was
+dropped as the oldest of a source that started too many; nothing is created, the transaction cookie is cleared. For a
+navigation of the browser a `303` to `/login-problem?reason=unknown-transaction`, which offers a new login
+(xref:../use-cases/01-access.adoc#UC-ACC-1[UC-ACC-1])
 |xref:authentication.adoc#AUN-AUTH-1[AUN-AUTH-1]
-|`SPECIFIED`
+|`SPECIFIED`; the outcome and the `303` `PROVISIONAL`
 
 |`GET <step-up address>`
 |none
 |The step-up address that `STEP_UP_REQUIRED` carries: the web app leaves for it with the current address as `return`
 and comes back after the renewed authentication. The client treats the address as opaque; the mock uses
-`/api/v1/auth/login?step-up=mfa`.
-|none
+`/api/v1/auth/login?step-up=mfa`. Its refusals are those of the login start: `502 IDENTITY_PROVIDER_UNAVAILABLE`, `503
+TOO_MANY_LOGINS`, and for a navigation the `303` to `/login-problem`
+|as the login start
 |xref:authentication.adoc#AUN-AUTH-4[AUN-AUTH-4]
 |`SPECIFIED`; the address format `PROVISIONAL`
 
+|`POST /j_security_check`
+|`application/x-www-form-urlencoded`: `j_username` and `j_password`; no anti-CSRF header, because the request has no
+session to take a token from (xref:web-app.adoc#AUN-WEB-8[AUN-WEB-8])
+|Only with the login provider `local`. `200` with an empty body and the login cookie; the web app then navigates to the
+checked `return`. A user without a directory entry or with an entry due for confirmation meets
+xref:../use-cases/01-access.adoc#UC-ACC-4[UC-ACC-4] and xref:../use-cases/01-access.adoc#UC-ACC-5[UC-ACC-5] afterwards,
+as with the identity provider
+|`401` with an empty body and no `outcome` for an unknown user or a wrong password, the same answer for both (Quarkus'
+form authentication, xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]); `403` `{"outcome": "CSRF_REJECTED"}` when the
+`Origin` header is missing or is not the application's own origin (the body is PROVISIONAL: the requirement says
+"refused")
+|xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6], xref:web-app.adoc#AUN-WEB-8[AUN-WEB-8], xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]
+|`SPECIFIED`; the body of the `403` `PROVISIONAL`
+
 |`POST /api/v1/auth/logout`
 |none
-|`{"redirect"}`: the address the web app navigates to
+|`{"redirect"}`: the address the web app navigates to. PROVISIONAL: with the identity provider the provider's
+`end_session_endpoint` (the provider returns to `/signed-out`); without a usable one, and with local users, `/signed-out`
+instead of the start page. The answer clears the session cookie. A `401` to a logout (the session had ended) counts
+as signed out: the web app navigates to `/signed-out`
 |none
 |xref:authentication.adoc#AUN-AUTH-1[AUN-AUTH-1], xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]
-|`SPECIFIED`
+|`SPECIFIED`; the landing `/signed-out` `PROVISIONAL`
 
 6+h|Directory and catalogs
 
@@ -236,18 +273,21 @@ is `null` before the first release
 |none; `{t}` is a transition of the category's workflow, such as `samm.submit`
 |`{"outcome": "TRANSITIONED", "state"}`
 |`MANDATORY_FIELDS_MISSING` with `missing`, the JSON Pointers of the empty fields; `STEP_UP_REQUIRED` when the
-workflow requires step-up for the transition; `REJECTED`
+workflow requires step-up for the transition, and `503 TOO_MANY_LOGINS` when it cannot be started
+(<<_the_step_up_handler>>); `REJECTED`
 |xref:category-samm.adoc#AUN-SAMM-4[AUN-SAMM-4] (the transition), xref:architecture-and-modules.adoc#operation-outcomes[AUN-GEN, Operation Outcomes]
 |`PROVISIONAL`
 
 |`POST /api/v1/releases/{repository}/{id}`
 |none; with local users `{"password"}`
 |`{"outcome": "RELEASED", "tag", "at"}`
-|`STEP_UP_REQUIRED` with `stepUp`, the step-up address (none with local users: the web app asks for the password);
-`INVALID_CREDENTIALS` (`401`, local users, nothing is written); `MANDATORY_FIELDS_MISSING`; `REJECTED`;
-`CHANGED_SINCE_REVIEW` (`409`, PROVISIONAL: someone saved after the release was opened)
+|`STEP_UP_REQUIRED` (`403`, PROVISIONAL) with `stepUp`, the step-up address (none with local users: the web app asks for
+the password); `503 TOO_MANY_LOGINS` with `Retry-After: 60` when the step-up cannot be started because every place of
+pending logins is taken (nothing is written, PROVISIONAL status); `INVALID_CREDENTIALS` (`401`, local users, nothing is
+written); `MANDATORY_FIELDS_MISSING`; `REJECTED`; `CHANGED_SINCE_REVIEW` (`409`, PROVISIONAL: someone saved after the
+release was opened). The handling of the step-up outcomes is the contract of <<_the_step_up_handler>>
 |xref:web-app.adoc#AUN-WEB-6[AUN-WEB-6], xref:authentication.adoc#AUN-AUTH-4[AUN-AUTH-4], xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]
-|`SPECIFIED`; the outcome `CHANGED_SINCE_REVIEW` `PROVISIONAL`
+|`SPECIFIED`; the outcome `CHANGED_SINCE_REVIEW` and the status of `STEP_UP_REQUIRED` and `TOO_MANY_LOGINS` `PROVISIONAL`
 
 6+h|SAMM
 
@@ -290,6 +330,164 @@ workflow requires step-up for the transition; `REJECTED`
 |`SPECIFIED`; not yet used by the web app
 |===
 
+[#_the_step_up_handler]
+== The Step-Up Handler
+
+One module of the web app handles every request that can ask for step-up; no view has its own handling
+(xref:authentication.adoc#AUN-AUTH-4[AUN-AUTH-4], xref:../use-cases/01-access.adoc#UC-ACC-3[UC-ACC-3]). The whole
+section is PROVISIONAL where it says so: the requirements fix the outcomes and the method per login provider, not the
+shape of the web app's handling.
+
+*Which requests ask.* A request asks when the workflow of its category declares step-up for the transition, and
+`step-up.enabled` is `true`; under the shipped workflows that is every release. The handler serves, as their rows exist:
+
+[cols="2,3,1"]
+|===
+|Transition |Request |Row
+
+|Release
+|`POST /api/v1/releases/{repository}/{id}`
+|above
+
+|Any other transition a workflow declares
+|`POST /api/v1/documents/{repository}/{id}/transitions/{t}`, and the save
+`POST /api/v1/documents/{repository}/{id}/save`
+|above
+
+|Completion of a stage (the stage that closes the incident review)
+|`POST /api/v1/documents/{repository}/{id}/stages/{stage}/complete` (PROVISIONAL, added with the incident reports)
+|with its step
+
+|Save of the configuration
+|The request that writes the configuration repository (PROVISIONAL, added with the configuration editor)
+|with its step
+
+|Activation of a category
+|The request that activates a category (PROVISIONAL, added with the category editor)
+|with its step
+|===
+
+*The method* comes from `status.stepUp` (see `GET /api/v1/status`), read before the control is pressed:
+
+[cols="1,3"]
+|===
+|`stepUp` |What the handler does
+
+|`mfa`
+|Sends the request. On `403 STEP_UP_REQUIRED` with `stepUp`, the step-up address, the web app leaves for it with the
+address of the current view as `return`. It keeps nothing across the redirect (PROVISIONAL): the user comes back to the
+view, the session now holds the fresh values, and the act is chosen again, which passes `stepup.check`. Token Sheriff's
+planned pending action (SESSION-8) would complete the act itself; the handler is to be replaced by it. A step-up that
+was cancelled or failed at the provider, or was met by another user, comes back without fresh values, and the same
+request answers `STEP_UP_REQUIRED` again; the handler has no page for it
+
+|`password`
+|Asks first, in a dialog titled "Confirm your identity", and sends the password as the member `password` of the JSON
+body of the request (PROVISIONAL generalisation: the release's `{"password"}` is the body member of any request that
+can ask; the other members stay). `401 INVALID_CREDENTIALS` keeps the dialog open with the error and writes nothing; any
+other answer closes the dialog and is the view's. The password is never kept, logged or shown
+
+|`off`
+|Sends the request; there is no dialog and no line in the margin
+|===
+
+*The line in the margin* ("You confirm your identity once more before the release.") is shown whenever `stepUp` is not
+`off` and the control asks; the control itself names the domain act only
+(xref:web-app.adoc#AUN-WEB-6[AUN-WEB-6]).
+
+*The outcomes the handler owns:*
+
+[cols="1,1,3"]
+|===
+|Status |`outcome` |Handling
+
+|`403` (PROVISIONAL)
+|`STEP_UP_REQUIRED`
+|As above. With `stepUp: "password"` the status has already told the web app to ask; a server that answers it without
+an address is answered by opening the dialog
+
+|`401`
+|`INVALID_CREDENTIALS`
+|A wrong password; not a lost session: the client decides a `401` by its `outcome` first and leaves for the login only
+for `UNAUTHENTICATED` (decided provisionally, see <<_open_questions>>)
+
+|`503` (PROVISIONAL status)
+|`TOO_MANY_LOGINS`
+|Every place of pending logins is taken, so no step-up can start; nothing is written, `Retry-After: 60`. The view shows
+a notice that many people are logging in and the act can be tried again in a minute; the draft and the view stay
+as they were
+
+|`401`
+|`UNAUTHENTICATED`
+|The session ended meanwhile; the normal path to the login, back to the same address; a logout always wins over a
+step-up still running
+|===
+
+The outcomes after the fresh values passed are those of the transition, and they are the view's, not the handler's:
+`CHANGED_SINCE_REVIEW` when the document was saved meanwhile, `FORBIDDEN` when the right was withdrawn,
+`MANDATORY_FIELDS_MISSING`, `REJECTED`. Nothing is written for any of them
+(xref:../use-cases/01-access.adoc#UC-ACC-3[UC-ACC-3], `stepup.recheck`).
+
+[#_a_session_without_rights]
+== A Session Without Rights
+
+A user whom no group maps to a right is logged in; the session answers `"rights": []` and `firstLoginRequired` as
+usual (xref:../use-cases/01-access.adoc#UC-ACC-1[UC-ACC-1]). Every request that acts on a repository is refused
+`403 FORBIDDEN`, the lists of the lenses included (the shell cannot read a list it has no right to). The shell's own
+requests work: status, messages, session, events, logout, and with the default person directory the first login. The
+Due list is not a request on a repository: it answers `{"items": []}` (PROVISIONAL: nothing is due for a user without
+rights). The web app decides by `rights` being empty and `firstLoginRequired` being `false`: it shows a notice that the
+organisation has granted no access yet, and the empty state in place of every list, and it never asks the user for
+another login.
+
+[#_a_session_that_is_replaced]
+== A Session That Is Replaced
+
+A new login in the same browser ends the session that browser held; the tabs of the old session carry the new session's
+cookie with their next request (xref:../use-cases/01-access.adoc#UC-ACC-6[UC-ACC-6]). What the web app does:
+
+. The event stream of the old session closes (<<_requests>>, `GET /api/v1/events`).
+. The tab reads `GET /api/v1/session`. `401 UNAUTHENTICATED` is the normal path to the login. A `200` with the same
+`csrfToken` the tab started with is a transient break: the tab opens the stream again. A `200` with another
+`csrfToken` is another session: the tab reloads at its own address, so no tab goes on showing the state of the
+replaced session. The token is the identity of the session in the contract (PROVISIONAL): the session view has no
+session id, and the cookie is `HttpOnly`.
+. A state-changing request of the old tab, sent before it noticed, carries the old token and answers `403 CSRF_REJECTED`;
+the client reads the session again, as it already does.
+
+[#_addresses_outside_the_shell]
+== Addresses Outside the Shell
+
+Three addresses of the web app are shown without the shell (no navigation rail, no session): `/login`, `/signed-out`
+and `/login-problem`. They are listed in `canonical-addresses.json` under `outsideShell`, not under `addresses`, so that
+the web app routes them but the check of a login's `return` (AUN-AUTH-1) never accepts them: a login never returns to
+the page that started it. They read the status and the message catalogue, nothing else, and keep the notice of local
+test accounts when `status.loginProvider` is `local`. All of this is PROVISIONAL except what AUN-AUTH-6 fixes
+(`/login?return=<address>` with local users).
+
+[cols="2,4,3"]
+|===
+|Address |Content |Requests
+
+|`/login?return=<address>`
+|With `local`: a form with username and password and the notice of local test accounts. The `return` is checked
+against the canonical addresses on the client too (`/` when it fails). With `oidc` the page is not shown: it starts the
+login by navigating to `/api/v1/auth/login?return=<address>` (PROVISIONAL)
+|`POST /j_security_check`: `200` navigates to the checked `return`; `401` shows "The username or the password is wrong."
+and keeps the form; the password field is cleared
+
+|`/signed-out`
+|"You are signed out." and one action, "Log in", which starts the login with `return=/`. No session is needed and none
+is created by opening the page
+|none
+
+|`/login-problem?reason=<reason>`
+|The reasons `idp-unavailable` (the login service of the organisation cannot be reached), `too-many-logins` (many
+people are logging in; try again in a minute) and `unknown-transaction` (the login took too long or was interrupted).
+Another or no `reason` is shown as the general failure. One action: "Try again", which starts the login with `return=/`
+|none
+|===
+
 [#_notes]
 == Notes
 
@@ -299,13 +497,44 @@ only the scope list, the scope, the model and the comparison are SAMM-specific.
 server, not by a comparison with the revision the approver saw. A request that carries the reviewed revision would
 make the check exact.
 * *Status codes.* The register states a status only where a requirement fixes it. A view never decides by it alone.
+* *Local users and the shell.* `status.loginProvider` is the only place the shell learns the provider from: the
+`login` member of a `401` is `/login` with `local` and `/api/v1/auth/login` with `oidc`, and the logout lands on
+`/signed-out` in both.
 
 [#_open_questions]
 == Open Questions
 
-* *`401 INVALID_CREDENTIALS` and the client.* AUN-WEB-9 answers a wrong step-up password with `401`. The web app's
-`ApiClient` treats every `401` as a lost session and leaves for the login; the mock answers `403` for the same
-outcome. Either the specification moves the outcome to `403`, or the client decides a `401` by its `outcome` first.
 * *The step-up address.* The requirement names "a step-up address" without its format; the client keeps it opaque.
 * *`status.stepUp`.* The shell needs to know the method of the confirmation before the release is pressed; whether the
 member stays in `GET /api/v1/status` or moves into the session is open.
+
+*Decided provisionally* with the access use cases (UC-ACC-1, -2, -3, -6, -7), so that no screen is blocked; the owner
+may change each one:
+
+. *`401 INVALID_CREDENTIALS` and the client.* AUN-WEB-9 answers a wrong step-up password with `401`; the specification
+keeps it. The `ApiClient` decides a `401` by its `outcome` first and leaves for the login only for `UNAUTHENTICATED`;
+the mock answers `401`, as the specification says (it answered `403` before). Replaces the earlier open question.
+. *`status.loginProvider` absent* reads as `oidc`; *`status.stepUp` absent* reads as `mfa` with `oidc` and `off` with
+`local`.
+. *Login refusals for a browser.* A navigation (`Accept` contains `text/html`) to the login start or the callback is
+answered with a `303` to `/login-problem?reason=` instead of raw JSON; the JSON, the statuses and `Retry-After` stay for
+every other client. The outcome `UNKNOWN_TRANSACTION` (`400`) is new. The server's own error page for the callback
+stays until the web app page exists, and goes away with the bootstrap login (ADR-0004).
+. *`/signed-out` as the landing of a logout*, in place of "the start page" of AUN-AUTH-1 and AUN-AUTH-6. With the
+identity provider the post-logout redirect address `/signed-out` must be registered at the provider, which is a duty
+of the operator.
+. *`/login` with `oidc`* starts the provider login at once; the page exists for `local` only in substance.
+. *The identity of a session* in the browser is its `csrfToken`: there is no session id member, and no member would
+be safe in a cookie-less answer.
+. *The event stream* belongs to its session and closes with it (use case change `change-events`), and a closed stream
+makes the tab read the session again.
+. *The step-up carries no pending action across the redirect;* the user chooses the act again after the return. The
+member `password` of the body generalises the release's `{"password"}` to every request that can ask.
+. *`STEP_UP_REQUIRED` is `403`; `TOO_MANY_LOGINS` of a step-up is `503` with `Retry-After: 60`,* the status of the
+login start.
+. *A session without rights* gets an empty Due list and `FORBIDDEN` for every repository request; the shell decides by
+`rights` being empty.
+. *The refusal of `POST /j_security_check` for a foreign `Origin`* answers `403` with `CSRF_REJECTED`.
+
+For the owner: whether `/signed-out` replaces the start page (4), whether `/login` should exist for `oidc` (5), and
+whether the session needs an explicit identity member instead of the token (6).

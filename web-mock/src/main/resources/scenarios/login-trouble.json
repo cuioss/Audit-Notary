@@ -1,0 +1,115 @@
+{
+  "format_version": 1,
+  "name": "login-trouble",
+  "description": "The login cannot start or complete: the provider's metadata is unreadable, too many logins are pending, or the callback finds no login transaction.",
+  "user": {
+    "pseudonym": "p-4c1a9e",
+    "name": "Alex Example",
+    "groups": [
+      "samm-assessors",
+      "threat-modelers",
+      "isms-readers"
+    ]
+  },
+  "rights": [
+    {
+      "repository": "samm-assessments",
+      "actions": [
+        "read",
+        "edit"
+      ]
+    },
+    {
+      "repository": "threat-models",
+      "actions": [
+        "read",
+        "edit"
+      ]
+    },
+    {
+      "repository": "isms-register",
+      "actions": [
+        "read"
+      ]
+    }
+  ],
+  "first_login_required": false,
+  "start": "idp-unavailable",
+  "routes": {
+    "GET /api/v1/status": {
+      "status": 200,
+      "body": {
+        "version": "0.1.0-SNAPSHOT",
+        "degraded": false,
+        "loginProvider": "oidc",
+        "repositories": [
+          {
+            "alias": "samm-assessments",
+            "fetch": "UP"
+          },
+          {
+            "alias": "threat-models",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-register",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-incidents-2026",
+            "fetch": "UP"
+          },
+          {
+            "alias": "directory",
+            "fetch": "UP"
+          }
+        ],
+        "stepUp": "mfa"
+      }
+    },
+    "GET /api/v1/due": {
+      "status": 200,
+      "body": {
+        "items": []
+      }
+    }
+  },
+  "states": {
+    "idp-unavailable": {
+      "description": "The login start cannot read the metadata of the identity provider: 502 IDENTITY_PROVIDER_UNAVAILABLE; a browser is sent to the login-problem page.",
+      "routes": {
+        "GET /api/v1/auth/login": {
+          "status": 502,
+          "body": {
+            "outcome": "IDENTITY_PROVIDER_UNAVAILABLE"
+          }
+        }
+      }
+    },
+    "too-many-logins": {
+      "description": "Every place of pending logins is taken: 503 TOO_MANY_LOGINS with Retry-After 60; a browser is sent to the login-problem page.",
+      "routes": {
+        "GET /api/v1/auth/login": {
+          "status": 503,
+          "body": {
+            "outcome": "TOO_MANY_LOGINS"
+          }
+        }
+      }
+    },
+    "unknown-transaction": {
+      "description": "The login starts, but the callback finds no login transaction: 400 UNKNOWN_TRANSACTION; a browser is sent to the login-problem page.",
+      "routes": {
+        "GET /api/v1/auth/callback": {
+          "status": 400,
+          "body": {
+            "outcome": "UNKNOWN_TRANSACTION"
+          }
+        }
+      }
+    },
+    "recovered": {
+      "description": "The login works again: the built-in login signs in."
+    }
+  }
+}

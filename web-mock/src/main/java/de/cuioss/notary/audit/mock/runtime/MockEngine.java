@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.cuioss.notary.audit.mock.WebMockLogMessages;
 import de.cuioss.notary.audit.mock.scenario.Link;
+import de.cuioss.notary.audit.mock.scenario.Route;
 import de.cuioss.notary.audit.mock.scenario.Scenario;
 import de.cuioss.notary.audit.mock.scenario.ScenarioReference;
 import de.cuioss.notary.audit.mock.scenario.ScenarioRegistry;
@@ -26,9 +27,13 @@ import de.cuioss.notary.audit.mock.scenario.ScenarioValidationException;
 import de.cuioss.tools.logging.CuiLogger;
 import org.jspecify.annotations.Nullable;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -44,8 +49,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * The engine of the web mock: answers the requests of the web app from the active scenario and emulates what the
  * browser sees of the real application (doc/specification/testing.adoc, AUN-TEST-1).
  * <p>
- * Order of handling: the control routes under {@code /mock/}; the public requests (status, messages, login); the
- * session check; the anti-CSRF and {@code Origin} check of state-changing requests; the first-login restriction;
+ * Order of handling: the control routes under {@code /mock/}; the form login {@code /j_security_check}; the public
+ * requests (status, messages, login, callback); the session check; the anti-CSRF and {@code Origin} check of
+ * state-changing requests; the first-login restriction; the refusal of a session without a right outside the shell;
  * the built-in session, logout and event stream; the links of the current state; the routes of the state, then of
  * the scenario; otherwise {@code 404 MOCK_NO_ROUTE}.
  */
@@ -60,11 +66,20 @@ public final class MockEngine implements AutoCloseable {
     /** The prefix of every request of the web app. */
     private static final String API = "/api/v1/";
 
-    /** The login address the {@code 401} answer names. */
+    /** The login address the {@code 401} answer names with the identity provider. */
     public static final String LOGIN_PATH = API + "auth/login";
 
-    /** The page the emulated logout leads to. */
-    public static final String SIGNED_OUT_PATH = API + "auth/mock-signed-out";
+    /** The callback of the identity provider, answered only when the scenario defines a route for it. */
+    public static final String CALLBACK_PATH = API + "auth/callback";
+
+    /** The login address the {@code 401} answer names, and the page of the login, with local users. */
+    public static final String LOCAL_LOGIN_PAGE = "/login";
+
+    /** The form login of local users; no {@code /api/v1} request (doc/specification/rest-api.adoc). */
+    public static final String SECURITY_CHECK_PATH = "/j_security_check";
+
+    /** The page of the web app the emulated logout leads to. */
+    public static final String SIGNED_OUT_PATH = "/signed-out";
 
     private static final CuiLogger LOGGER = new CuiLogger(MockEngine.class);
 
@@ -73,6 +88,17 @@ public final class MockEngine implements AutoCloseable {
     private static final String POST = "POST";
     private static final String OUTCOME = "outcome";
     private static final String STATUS_ROUTE = GET + " " + API + "status";
+    private static final String LOGIN_ROUTE = GET + " " + LOGIN_PATH;
+    private static final String CALLBACK_ROUTE = GET + " " + CALLBACK_PATH;
+    private static final String LOGIN_PROBLEM = "/login-problem?reason=";
+    private static final String TOO_MANY_LOGINS = "TOO_MANY_LOGINS";
+    private static final String LOCATION = "Location";
+    private static final String SET_COOKIE = "Set-Cookie";
+    private static final String FORM = "application/x-www-form-urlencoded";
+
+    /** What a browser navigation is told, instead of the JSON, when the login start or the callback is refused. */
+    private static final Map<String, String> LOGIN_PROBLEMS = Map.of("IDENTITY_PROVIDER_UNAVAILABLE",
+            "idp-unavailable", TOO_MANY_LOGINS, "too-many-logins", "UNKNOWN_TRANSACTION", "unknown-transaction");
     private static final String SCENARIO_FIELD = "scenario";
     private static final String EVENTS_PATH = API + "events";
     private static final int ORDERED_DEPTH_LIMIT = 64;
@@ -81,7 +107,13 @@ public final class MockEngine implements AutoCloseable {
     private static final Set<String> FIRST_LOGIN_ALLOWED = Set.of("GET /api/v1/directory/me",
             "PUT /api/v1/directory/me", "GET /api/v1/catalogs/team", "GET /api/v1/catalogs/role",
             "GET /api/v1/session", "GET /api/v1/messages", STATUS_ROUTE, "POST /api/v1/auth/logout",
-            "GET " + EVENTS_PATH, "GET " + LOGIN_PATH, "GET " + SIGNED_OUT_PATH);
+            "GET " + EVENTS_PATH, LOGIN_ROUTE);
+
+    /** The requests a session without a right still makes: the shell and the first login. */
+    private static final Set<String> SHELL = Set.of("GET /api/v1/status", "GET /api/v1/messages",
+            "GET /api/v1/session", "GET /api/v1/due", "GET " + EVENTS_PATH, "POST /api/v1/auth/logout",
+            "GET /api/v1/directory/me", "PUT /api/v1/directory/me", "GET /api/v1/catalogs/team",
+            "GET /api/v1/catalogs/role", LOGIN_ROUTE, CALLBACK_ROUTE);
 
     private final ObjectMapper mapper;
     private final ScenarioRegistry registry;
@@ -162,6 +194,9 @@ public final class MockEngine implements AutoCloseable {
         if (path.startsWith(MOCK)) {
             return control(request);
         }
+        if (SECURITY_CHECK_PATH.equals(path)) {
+            return securityCheck(request);
+        }
         if (!path.startsWith(API)) {
             return noRoute(request);
         }
@@ -170,20 +205,25 @@ public final class MockEngine implements AutoCloseable {
         if (open.isPresent()) {
             return open.get();
         }
-        var session = request.cookie(SESSION_COOKIE).map(sessions::get);
-        if (session.isEmpty()) {
-            return json(401, object().put(OUTCOME, "UNAUTHENTICATED").put("login", LOGIN_PATH));
-        }
-        if (request.isStateChanging() && !passesCsrf(request, session.get())) {
-            return json(403, object().put(OUTCOME, "CSRF_REJECTED"));
-        }
         lock.lock();
         try {
+            // The session and the CSRF token are read under the lock: a transition (enter) that ends or replaces the
+            // sessions cannot run between the check and the act.
+            var session = request.cookie(SESSION_COOKIE).map(sessions::get);
+            if (session.isEmpty()) {
+                return json(401, object().put(OUTCOME, "UNAUTHENTICATED").put("login", loginAddress()));
+            }
+            if (request.isStateChanging() && !passesCsrf(request, session.get())) {
+                return json(403, object().put(OUTCOME, "CSRF_REJECTED"));
+            }
             if (request.isStateChanging()) {
                 acts.add(new Act(request.method(), path, state.id(), redacted(parseBody(request))));
             }
             if (scenario.firstLoginRequired(state) && !FIRST_LOGIN_ALLOWED.contains(key)) {
                 return json(403, object().put(OUTCOME, "FIRST_LOGIN_REQUIRED"));
+            }
+            if (scenario.rights().isEmpty() && !scenario.firstLoginRequired(state) && !SHELL.contains(key)) {
+                return json(403, object().put(OUTCOME, "FORBIDDEN"));
             }
             return builtIn(key, session.get()).orElseGet(() -> scenarioAnswer(request, key));
         } finally {
@@ -202,10 +242,8 @@ public final class MockEngine implements AutoCloseable {
                 }
             }
             case "GET /api/v1/messages" -> Optional.of(messages(request));
-            case "GET " + LOGIN_PATH -> Optional.of(login(request));
-            case "GET " + SIGNED_OUT_PATH -> Optional.of(MockResponse.text(200, MockResponse.HTML, page(
-                    "Audit Notary mock: signed out", "<p>The mock session ended.</p><p><a href=\"" + LOGIN_PATH
-                    + "?return=/\">Sign in again</a></p>", null)));
+            case LOGIN_ROUTE -> Optional.of(login(request));
+            case CALLBACK_ROUTE -> callback(request);
             default -> Optional.empty();
         };
     }
@@ -215,7 +253,7 @@ public final class MockEngine implements AutoCloseable {
             case "GET /api/v1/session" -> Optional.of(json(200, sessionBody(session)));
             case "POST /api/v1/auth/logout" -> {
                 sessions.remove(session.id());
-                yield Optional.of(json(200, object().put("redirect", SIGNED_OUT_PATH)).withHeader("Set-Cookie",
+                yield Optional.of(json(200, object().put("redirect", SIGNED_OUT_PATH)).withHeader(SET_COOKIE,
                         SESSION_COOKIE + "=; Max-Age=0; HttpOnly; SameSite=Strict; Path=/"));
             }
             case "GET " + EVENTS_PATH -> Optional.of(MockResponse.openEventStream());
@@ -230,9 +268,9 @@ public final class MockEngine implements AutoCloseable {
             if (!taken.next().equals(state.id())) {
                 enter(scenario.state(taken.next()).orElseThrow(), 0);
             }
-            return json(taken.status(), taken.body());
+            return answer(taken.status(), taken.body());
         }
-        return scenario.route(state, key).map(route -> json(route.status(), route.body()))
+        return scenario.route(state, key).map(route -> answer(route.status(), route.body()))
                 .orElseGet(() -> noRoute(request));
     }
 
@@ -268,14 +306,107 @@ public final class MockEngine implements AutoCloseable {
         }).orElseGet(() -> validation("/lang", "UNSUPPORTED"));
     }
 
+    /**
+     * The login start. A route of the scenario for it is the answer, as it is for the callback; otherwise, with the
+     * identity provider, the mock signs in without asking, and with local users it sends the browser to the web
+     * app's login page.
+     */
     private MockResponse login(MockRequest request) {
-        String target = addresses.checkReturn(request.queryParameter("return").orElse(null));
+        lock.lock();
+        try {
+            var route = scenario.route(state, LOGIN_ROUTE);
+            if (route.isPresent()) {
+                return navigation(request, route.get());
+            }
+            String target = addresses.checkReturn(request.queryParameter("return").orElse(null));
+            if (scenario.login().isLocal()) {
+                return MockResponse.text(302, MockResponse.HTML, "").withHeader(LOCATION,
+                        LOCAL_LOGIN_PAGE + "?return=" + URLEncoder.encode(target, StandardCharsets.UTF_8));
+            }
+            if (scenario.route(state, CALLBACK_ROUTE).isPresent()) {
+                String callback = escapeHtml(CALLBACK_PATH + "?code=mock&state=mock&iss=mock");
+                return MockResponse.text(200, MockResponse.HTML, page("Audit Notary mock login",
+                        "<p><a href=\"" + callback + "\">Continue</a></p>", callback));
+            }
+            String escaped = escapeHtml(target);
+            return MockResponse.text(200, MockResponse.HTML, page("Audit Notary mock login",
+                    "<p><a href=\"" + escaped + "\">Continue</a></p>", escaped))
+                    .withHeader(SET_COOKIE, startSession());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** The callback of the identity provider: only a scenario that defines it answers; the mock has no built-in one. */
+    private Optional<MockResponse> callback(MockRequest request) {
+        lock.lock();
+        try {
+            return scenario.route(state, CALLBACK_ROUTE).map(route -> navigation(request, route));
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Answers the route of the login start or the callback. A refusal that has a page of its own is answered to a
+     * browser navigation ({@code Accept} contains {@code text/html}) as {@code 303} to {@code /login-problem}, and to
+     * every other client as the JSON of the route.
+     */
+    private MockResponse navigation(MockRequest request, Route route) {
+        String reason = LOGIN_PROBLEMS.get(route.body().path(OUTCOME).asText(""));
+        boolean browser = request.header("Accept").map(accept -> accept.contains("text/html")).orElse(false);
+        if (reason != null && browser) {
+            return MockResponse.text(303, MockResponse.HTML, "").withHeader(LOCATION, LOGIN_PROBLEM + reason);
+        }
+        return answer(route.status(), route.body());
+    }
+
+    /**
+     * {@code POST /j_security_check} of the local login: the origin must be the own one, then a known user gets a
+     * session and an empty {@code 200}, anyone else an empty {@code 401}. The password is never logged or recorded.
+     */
+    private MockResponse securityCheck(MockRequest request) {
+        lock.lock();
+        try {
+            if (!POST.equals(request.method()) || !scenario.login().isLocal()) {
+                return noRoute(request);
+            }
+            if (!request.header("Origin").map(ownOrigin(request)::equals).orElse(false)) {
+                return json(403, object().put(OUTCOME, "CSRF_REJECTED"));
+            }
+            var form = formFields(request.body());
+            var user = scenario.login().authenticate(form.getOrDefault("j_username", ""),
+                    form.getOrDefault("j_password", ""));
+            if (user.isEmpty()) {
+                return MockResponse.text(401, MockResponse.TEXT, "");
+            }
+            return MockResponse.text(200, MockResponse.TEXT, "").withHeader(SET_COOKIE, startSession());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Creates a session and returns its {@code Set-Cookie} value. */
+    private String startSession() {
         var session = new MockSession(token(), token());
         sessions.put(session.id(), session);
-        String escaped = escapeHtml(target);
-        return MockResponse.text(200, MockResponse.HTML, page("Audit Notary mock login",
-                "<p><a href=\"" + escaped + "\">Continue</a></p>", escaped))
-                .withHeader("Set-Cookie", SESSION_COOKIE + "=" + session.id() + "; HttpOnly; SameSite=Strict; Path=/");
+        return SESSION_COOKIE + "=" + session.id() + "; HttpOnly; SameSite=Strict; Path=/";
+    }
+
+    private String loginAddress() {
+        lock.lock();
+        try {
+            return scenario.login().isLocal() ? LOCAL_LOGIN_PAGE : LOGIN_PATH;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** A JSON answer of the scenario; a refused step-up or login carries {@code Retry-After}. */
+    private MockResponse answer(int status, JsonNode body) {
+        var response = json(status, body);
+        return status == 503 && TOO_MANY_LOGINS.equals(body.path(OUTCOME).asText()) ? response.withHeader(
+                "Retry-After", "60") : response;
     }
 
     private boolean passesCsrf(MockRequest request, MockSession session) {
@@ -405,6 +536,14 @@ public final class MockEngine implements AutoCloseable {
     private void enter(ScenarioState target, int depth) {
         state = target;
         long current = ++generation;
+        if (target.sessionEnded()) {
+            sessions.clear();
+            broadcaster.endStreams();
+        }
+        if (target.sessionReplaced()) {
+            sessions.replaceAll((id, session) -> new MockSession(id, token()));
+            broadcaster.endStreams();
+        }
         if (timing == Timing.ORDERED) {
             target.events().forEach(event -> broadcaster.publish(event.event(), event.data()));
             var auto = target.auto();
@@ -442,6 +581,11 @@ public final class MockEngine implements AutoCloseable {
         if (request.body().isBlank()) {
             return JsonNodeFactory.instance.nullNode();
         }
+        if (request.header("Content-Type").map(type -> type.startsWith(FORM)).orElse(false)) {
+            ObjectNode form = object();
+            formFields(request.body()).forEach(form::put);
+            return form;
+        }
         try {
             return mapper.readTree(request.body());
         } catch (JsonProcessingException e) {
@@ -450,8 +594,26 @@ public final class MockEngine implements AutoCloseable {
         }
     }
 
-    /** The fields of a request body that carry a credential, such as the step-up password of a release (AUN-WEB-6). */
-    private static final Set<String> CREDENTIAL_FIELDS = Set.of("password");
+    /**
+     * The fields of a request body that carry a credential: the step-up password of a release (AUN-WEB-6) and the
+     * password of the local login.
+     */
+    private static final Set<String> CREDENTIAL_FIELDS = Set.of("password", "j_password");
+
+    /** The fields of a form body, decoded, in the order they were sent. */
+    private static Map<String, String> formFields(String body) {
+        Map<String, String> fields = new LinkedHashMap<>();
+        for (String pair : body.split("&")) {
+            if (pair.isEmpty()) {
+                continue;
+            }
+            int equals = pair.indexOf('=');
+            String name = URLDecoder.decode(equals < 0 ? pair : pair.substring(0, equals), StandardCharsets.UTF_8);
+            fields.putIfAbsent(name, equals < 0 ? "" : URLDecoder.decode(pair.substring(equals + 1),
+                    StandardCharsets.UTF_8));
+        }
+        return fields;
+    }
 
     /** The text that stands for a credential in a recorded act. */
     static final String REDACTED = "[redacted]";
