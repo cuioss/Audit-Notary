@@ -165,8 +165,11 @@
   function change(id: string, edit: Edit) {
     if (readonly) return;
     edits = { ...edits, [id]: { ...edits[id], ...edit } };
-    saveState = 'changed';
     failure = null;
+    // While a save for everyone runs, it stays the state: the act stays busy, and the save keeps this change for
+    // the next one when it returns.
+    if (saveState === 'saving') return;
+    saveState = 'changed';
     if (draftTimer) clearTimeout(draftTimer);
     draftTimer = setTimeout(() => void keepDraft(), DRAFT_DELAY_MS);
   }
@@ -197,31 +200,58 @@
     }
   }
 
+  /**
+   * @param current the changes now
+   * @param sent the changes a save sent
+   * @returns the changes the save did not carry: fields changed since, or never sent
+   */
+  function withoutSent(
+    current: Record<string, Edit>,
+    sent: Record<string, Edit>,
+  ): Record<string, Edit> {
+    const rest: Record<string, Edit> = {};
+    for (const [id, edit] of Object.entries(current)) {
+      const left: Edit = {};
+      if (edit.answer !== undefined && edit.answer !== sent[id]?.answer) left.answer = edit.answer;
+      if (edit.comment !== undefined && edit.comment !== sent[id]?.comment)
+        left.comment = edit.comment;
+      if (Object.keys(left).length > 0) rest[id] = left;
+    }
+    return rest;
+  }
+
   async function saveForEveryone() {
     if (!assessment || !dirty) return;
     if (draftTimer) clearTimeout(draftTimer);
     draftTimer = null;
     saveState = 'saving';
     failure = null;
+    // What this save sends; changes made while it runs stay in `edits` and are kept and saved later.
+    const sent: Record<string, Edit> = $state.snapshot(edits);
     try {
       const answer = await apiClient.saveDocument('samm-assessments', assessment.id, partRequest());
       const replaced = assessment.parts[practiceId]?.blob ?? '';
-      committed = { blob: replaced, answers: { ...committed?.answers, ...edits } };
-      edits = {};
+      const merged: Record<string, Edit> = { ...committed?.answers };
+      for (const [id, edit] of Object.entries(sent)) merged[id] = { ...merged[id], ...edit };
+      committed = { blob: replaced, answers: merged };
+      edits = withoutSent(edits, sent);
       conflicts = {};
       conflictBlob = '';
-      saveState = 'saved';
+      saveState = Object.keys(edits).length > 0 ? 'changed' : 'saved';
       stamp = formatTime(answer.at ? new Date(answer.at) : new Date(), $currentLocale);
+      if (saveState === 'changed') draftTimer = setTimeout(() => void keepDraft(), DRAFT_DELAY_MS);
       onsaved?.();
     } catch (error) {
       if (isApiError(error) && error.outcome === 'CONFLICT') {
         const part = (
           error.details.conflicts as { part: string; blob: string; fields: ConflictField[] }[]
         )?.find((entry) => entry.part === practiceId);
+        // Keyed by question and field: `<question>` for the answer, `<question>/comment` for the comment.
         const found: Record<string, ConflictField> = {};
         for (const field of part?.fields ?? []) {
-          const id = field.pointer.split('/').at(-2) ?? '';
-          found[id] = field;
+          const segments = field.pointer.split('/');
+          const id = segments.at(-2) ?? '';
+          found[segments.at(-1) === 'comment' ? `${id}/comment` : id] = field;
         }
         conflicts = found;
         conflictBlob = part?.blob ?? '';
@@ -233,15 +263,39 @@
     }
   }
 
-  function resolve(id: string, keep: 'own' | 'other') {
-    const field = conflicts[id];
+  /**
+   * Decides one conflict: keeps the own value, or takes the other into the field it belongs to.
+   *
+   * @param key `<question>` for the answer, `<question>/comment` for the comment
+   * @param keep which value stays
+   */
+  function resolve(key: string, keep: 'own' | 'other') {
+    const field = conflicts[key];
     if (!field) return;
+    const [id, name] = key.split('/');
     if (keep === 'other') {
-      edits = { ...edits, [id]: { ...edits[id], answer: field.other as number } };
+      const value: Edit =
+        name === 'comment'
+          ? { comment: typeof field.other === 'string' ? field.other : '' }
+          : { answer: typeof field.other === 'number' ? field.other : null };
+      edits = { ...edits, [id]: { ...edits[id], ...value } };
     }
     const rest = { ...conflicts };
-    delete rest[id];
+    delete rest[key];
     conflicts = rest;
+  }
+
+  /** The conflicts of one question: its answer first, then its comment. */
+  function conflictsOf(
+    id: string,
+  ): { key: string; field: 'answer' | 'comment'; conflict: ConflictField }[] {
+    return [
+      { key: id, field: 'answer' as const, conflict: conflicts[id] },
+      { key: `${id}/comment`, field: 'comment' as const, conflict: conflicts[`${id}/comment`] },
+    ].filter(
+      (entry): entry is { key: string; field: 'answer' | 'comment'; conflict: ConflictField } =>
+        Boolean(entry.conflict),
+    );
   }
 
   let open = $derived(Object.keys(conflicts).length);
@@ -383,11 +437,11 @@
           <ol class="questions">
             {#each stream.questions as question (question.id)}
               {@const index = questions.indexOf(question)}
-              {@const conflict = conflicts[question.id]}
+              {@const questionConflicts = conflictsOf(question.id)}
               <li
                 class="question"
                 class:question--active={active === index}
-                class:question--conflict={!!conflict}
+                class:question--conflict={questionConflicts.length > 0}
                 bind:this={questionElements[index]}
                 onfocusin={() => (active = index)}
                 data-question={question.id}
@@ -413,25 +467,41 @@
                     hints={hints && active === index}
                     testId="answer-{question.id}"
                   />
-                  {#if conflict}
-                    <div class="conflict" data-testid="conflict-{question.id}">
+                  {#each questionConflicts as { key, field, conflict } (key)}
+                    <div class="conflict" data-testid="conflict-{key.replace('/', '-')}">
                       <p class="conflict__text">
-                        {$t('practice.conflict.field', {
-                          name: conflict.by.name,
-                          other: answerText(question, conflict.other),
-                          own: answerText(question, conflict.own),
-                        })}
+                        {$t(
+                          field === 'comment'
+                            ? 'practice.conflict.comment'
+                            : 'practice.conflict.field',
+                          {
+                            name: conflict.by.name,
+                            other:
+                              field === 'comment'
+                                ? String(conflict.other ?? '')
+                                : answerText(question, conflict.other),
+                            own:
+                              field === 'comment'
+                                ? String(conflict.own ?? '')
+                                : answerText(question, conflict.own),
+                          },
+                        )}
                       </p>
                       <div class="conflict__acts">
-                        <Button onclick={() => resolve(question.id, 'own')}>
+                        <Button onclick={() => resolve(key, 'own')}>
                           {$t('practice.conflict.keep-own')}
                         </Button>
-                        <Button onclick={() => resolve(question.id, 'other')}>
-                          {$t('practice.conflict.take-other', { name: conflict.by.name })}
+                        <Button onclick={() => resolve(key, 'other')}>
+                          {$t(
+                            field === 'comment'
+                              ? 'practice.conflict.take-other-comment'
+                              : 'practice.conflict.take-other',
+                            { name: conflict.by.name },
+                          )}
                         </Button>
                       </div>
                     </div>
-                  {/if}
+                  {/each}
                   <div class="question__more">
                     <Disclosure>
                       {#snippet summary()}{$t('practice.quality')}{/snippet}

@@ -28,7 +28,7 @@
   import { breadcrumb } from '../../stores/breadcrumb';
   import WizardPage from '../../templates/WizardPage.svelte';
   import SinceList from './SinceList.svelte';
-  import { versionOf } from './workflow';
+  import { previousRelease, versionOf } from './workflow';
 
   /**
    * The release of a SAMM assessment (UC-SAMM-4, AUN-WEB-6, AUN-SAMM-4): what the approver releases — the maturity
@@ -59,11 +59,7 @@
   let summary = $derived(
     scope?.assessments.find((entry) => entry.id === params.assessment) ?? null,
   );
-  let previous = $derived(
-    scope?.assessments.find(
-      (entry) => entry.state === 'released' && entry.id !== params.assessment,
-    ) ?? null,
-  );
+  let previous = $derived(scope ? previousRelease(scope.assessments, params.assessment) : null);
   let base = $derived(`/samm/${params.scope}/${params.assessment}`);
   let stepUp = $derived($status?.stepUp ?? 'mfa');
   let rights = $derived(
@@ -84,9 +80,7 @@
       assessment = doc;
       model = loadedModel;
       diff = loadedDiff;
-      const before = scope.assessments.find(
-        (item) => item.state === 'released' && item.id !== entry.id,
-      );
+      const before = previousRelease(scope.assessments, entry.id);
       comparison = before
         ? await apiClient.compareSamm(scope.id, before.id, entry.id).catch(() => null)
         : null;
@@ -118,7 +112,6 @@
   let score = $derived(model && assessment ? assessmentScore(model, assessment.answers) : null);
   let complete = $derived(score ? score.answered === score.questions : false);
   let submitted = $derived(assessment?.history.find((line) => line.kind === 'submit') ?? null);
-  let tag = $derived(released?.tag ?? `assessments/${assessment?.id ?? ''}/v1`);
 
   let functions: SealFunction[] = $derived.by(() => {
     const targets = scope?.targets;
@@ -194,7 +187,12 @@
           apiClient.stepUp(address);
           return;
         }
-        asking = true;
+        // Without an address only a local user's password can confirm; an MFA user has none to give.
+        if (stepUp === 'password') {
+          asking = true;
+        } else {
+          notice = { tone: 'danger', key: 'error.unexpected' };
+        }
       } else if (isApiError(error) && error.outcome === 'INVALID_CREDENTIALS') {
         passwordError = $t('error.invalid-credentials');
       } else if (isApiError(error) && error.outcome === 'CHANGED_SINCE_REVIEW') {
@@ -411,10 +409,12 @@
               </ul>
             </section>
           {/if}
-          <section class="margin__block">
-            <h2 class="margin__title">{$t('sheet.tag')}</h2>
-            <Chip value={tag} label={$t('sheet.tag')} testId="release-tag" />
-          </section>
+          {#if released}
+            <section class="margin__block">
+              <h2 class="margin__title">{$t('sheet.tag')}</h2>
+              <Chip value={released.tag} label={$t('sheet.tag')} testId="release-tag" />
+            </section>
+          {/if}
         </div>
       {/snippet}
     </Sheet>

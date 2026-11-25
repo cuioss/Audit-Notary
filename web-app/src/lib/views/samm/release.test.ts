@@ -64,7 +64,8 @@ describe('SammReleaseView', () => {
     expect(screen.getByText('90 of 90 questions answered')).toBeInTheDocument();
     expect(screen.getByText(/Submitted for review by Alex Example/)).toBeInTheDocument();
     expect(screen.getByText('You confirm with your second factor.')).toBeInTheDocument();
-    expect(screen.getByTestId('release-tag')).toHaveTextContent('assessments/payments-2026-q4/v1');
+    // The tag is the server's to assign: it shows once the release is done.
+    expect(screen.queryByTestId('release-tag')).toBeNull();
     expect(get(breadcrumb).map((crumb) => crumb.label)).toEqual([
       'Payments',
       'Payments 2026 Q4',
@@ -199,7 +200,22 @@ describe('SammReleaseView', () => {
     expect(await screen.findByText('Something went wrong. Try again.')).toBeInTheDocument();
   });
 
-  it('asks for the password when a step-up names no address', async () => {
+  it('asks a local user for the password when a step-up names no address', async () => {
+    await prepare('release#password', (path, method) =>
+      method === 'POST' && path.startsWith('/api/v1/releases/')
+        ? new Response(JSON.stringify({ outcome: 'STEP_UP_REQUIRED' }), { status: 403 })
+        : null,
+    );
+    render(SammReleaseView, { params: PARAMS });
+    await fireEvent.click(await act());
+    await fireEvent.input(await screen.findByTestId('release-password'), {
+      target: { value: 'secret' },
+    });
+    await fireEvent.click(screen.getByTestId('release-confirm'));
+    await vi.waitFor(() => expect(document.querySelector('dialog')).toHaveAttribute('open'));
+  });
+
+  it('asks an MFA user for no password when a step-up names no address', async () => {
     await prepare('release', (path, method) =>
       method === 'POST' && path.startsWith('/api/v1/releases/')
         ? new Response(JSON.stringify({ outcome: 'STEP_UP_REQUIRED' }), { status: 403 })
@@ -207,7 +223,8 @@ describe('SammReleaseView', () => {
     );
     render(SammReleaseView, { params: PARAMS });
     await fireEvent.click(await act());
-    await vi.waitFor(() => expect(document.querySelector('dialog')).toHaveAttribute('open'));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong');
+    expect(document.querySelector('dialog')).not.toHaveAttribute('open');
   });
 
   it('shows the changes since the last release with the earlier answer', async () => {

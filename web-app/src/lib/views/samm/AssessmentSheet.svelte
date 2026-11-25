@@ -21,7 +21,7 @@
   import { now } from '../../stores/clock';
   import { session } from '../../stores/app';
   import SinceList from './SinceList.svelte';
-  import { stateTone, versionOf } from './workflow';
+  import { previousRelease, stateTone, versionOf } from './workflow';
 
   /**
    * An assessment as a sheet (UC-SAMM-3, UC-SAMM-4, UC-SAMM-6): its maturity seal — or the same figures as a table —
@@ -47,11 +47,7 @@
 
   let score = $derived(model && assessment ? assessmentScore(model, assessment.answers) : null);
   let previous = $derived(
-    scope && assessment
-      ? (scope.assessments.find(
-          (entry) => entry.state === 'released' && entry.id !== assessment.slug,
-        ) ?? null)
-      : null,
+    scope && assessment ? previousRelease(scope.assessments, assessment.slug) : null,
   );
   let rights = $derived(
     $session?.rights.find((right) => right.repository === 'samm-assessments')?.actions ?? [],

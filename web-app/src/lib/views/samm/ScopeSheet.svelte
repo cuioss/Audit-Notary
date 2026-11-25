@@ -1,5 +1,6 @@
 <script lang="ts">
   import Link from '../../components/Link.svelte';
+  import Notice from '../../components/Notice.svelte';
   import ScoreMeter from '../../components/ScoreMeter.svelte';
   import Sheet from '../../components/Sheet.svelte';
   import SheetHead from '../../components/SheetHead.svelte';
@@ -23,8 +24,22 @@
   let { scope }: Props = $props();
 
   let model = $state<SammModel | null>(null);
+  let failed = $state(false);
   $effect(() => {
-    if (scope) void loadModel(scope.modelVersion).then((loaded) => (model = loaded));
+    const version = scope?.modelVersion;
+    if (!version) return;
+    let current = true;
+    failed = false;
+    loadModel(version)
+      .then((loaded) => {
+        if (current) model = loaded;
+      })
+      .catch(() => {
+        if (current) failed = true;
+      });
+    return () => {
+      current = false;
+    };
   });
 
   let released = $derived(
@@ -120,6 +135,10 @@
             {/each}
           </tbody>
         </table>
+      </section>
+    {:else if failed}
+      <section class="section">
+        <Notice tone="danger" title={$t('error.unexpected')} live />
       </section>
     {/if}
   </Sheet>

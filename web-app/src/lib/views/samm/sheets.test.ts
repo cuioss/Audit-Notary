@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '../../api/client';
+import { ApiError } from '../../api/errors';
 import type { SammAssessment, SammComparison, SammModel, SammScope } from '../../api/types';
 import { clearModels, loadModel } from '../../samm/store';
 import { session } from '../../stores/app';
@@ -371,6 +372,91 @@ describe('PracticeSheet', () => {
     );
     expect(screen.queryByTestId('conflict-sm-b-1')).not.toBeInTheDocument();
     expect(screen.getByTestId('answer-sm-b-1-2')).toBeChecked();
+  });
+
+  it('takes the other comment into the comment, not into the answer', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    vi.spyOn(apiClient, 'saveDocument').mockRejectedValueOnce(
+      new ApiError('CONFLICT', 409, [], {
+        outcome: 'CONFLICT',
+        conflicts: [
+          {
+            part: 'sm',
+            blob: 'b2',
+            fields: [
+              {
+                pointer: '/answers/sm/sm-a-1/comment',
+                own: 'Mine.',
+                other: 'Theirs.',
+                by: { pseudonym: 'p-2b7f10', name: 'Jordan Weber' },
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    render(PracticeSheet, { scope, assessment, model, practiceId: 'sm' });
+    await fireEvent.input(screen.getByTestId('comment-sm-a-1'), { target: { value: 'Mine.' } });
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    const conflict = await screen.findByTestId('conflict-sm-a-1-comment');
+    expect(conflict).toHaveTextContent(
+      'Jordan Weber saved the comment "Theirs.". Yours is "Mine.".',
+    );
+    await fireEvent.click(
+      within(conflict).getByRole('button', { name: 'Take the comment of Jordan Weber' }),
+    );
+    expect(screen.getByTestId('comment-sm-a-1')).toHaveValue('Theirs.');
+    // The answer is untouched: the loaded 0.5, the third answer.
+    expect(screen.getByTestId('answer-sm-a-1-2')).toBeChecked();
+  });
+
+  it('keeps a change made while a save for everyone runs', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    let finish: (value: {
+      outcome: 'SAVED';
+      at: string;
+      parts: Record<string, never>;
+    }) => void = () => {};
+    const save = vi
+      .spyOn(apiClient, 'saveDocument')
+      .mockImplementation(() => new Promise((resolve) => (finish = resolve)));
+    render(PracticeSheet, { scope, assessment, model, practiceId: 'sm' });
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    await fireEvent.click(screen.getByTestId('answer-sm-a-2-0'));
+    // The save still runs: its act stays busy, so no second save can start beside it.
+    expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'saving');
+    expect(screen.getByTestId('save-everyone')).toHaveAttribute('aria-busy', 'true');
+    finish({ outcome: 'SAVED', at: '2026-11-25T10:00:00Z', parts: {} });
+    await vi.waitFor(() =>
+      expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'changed'),
+    );
+    expect(screen.getByTestId('answer-sm-a-1-3')).toBeChecked();
+    expect(screen.getByTestId('answer-sm-a-2-0')).toBeChecked();
+    expect(save.mock.calls[0][2].parts.sm.fields).toEqual({ 'sm-a-1/answer': 1 });
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    expect(save.mock.calls[1][2].parts.sm.fields).toEqual({ 'sm-a-2/answer': 0 });
+  });
+
+  it('keeps an answer saved before when only the comment is saved after', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    vi.spyOn(apiClient, 'saveDocument').mockResolvedValue({
+      outcome: 'SAVED',
+      at: '2026-11-25T10:00:00Z',
+      parts: {},
+    });
+    render(PracticeSheet, { scope, assessment, model, practiceId: 'sm' });
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    await vi.waitFor(() =>
+      expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'saved'),
+    );
+    await fireEvent.input(screen.getByTestId('comment-sm-a-1'), { target: { value: 'Why.' } });
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    await vi.waitFor(() =>
+      expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'saved'),
+    );
+    expect(screen.getByTestId('answer-sm-a-1-3')).toBeChecked();
   });
 
   it('says when a draft or a save fails and keeps the work', async () => {

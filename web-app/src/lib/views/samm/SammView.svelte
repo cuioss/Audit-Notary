@@ -82,6 +82,7 @@
     }
     if (scope?.id === id) return;
     let current = true;
+    failure = null;
     apiClient
       .getSammScope(id)
       .then((loaded) => {
@@ -119,9 +120,23 @@
     try {
       const loaded = await apiClient.getSammAssessment(id);
       if (summary?.document === loaded.id) assessment = loaded;
+      failure = null;
     } catch (error) {
       failure = errorMessageKey(error);
     }
+  }
+
+  /** After an act changed the assessment (a submit): its scope is read again too, so the list shows its new state. */
+  async function reloadAfterChange() {
+    if (!assessment || !params.scope) return;
+    const id = assessment.id;
+    try {
+      const loaded = await apiClient.getSammScope(params.scope);
+      if (loaded.id === params.scope) scope = loaded;
+    } catch (error) {
+      failure = errorMessageKey(error);
+    }
+    await reloadAssessment(id);
   }
 
   const loading = $derived($t('common.loading'));
@@ -216,14 +231,7 @@
       {/if}
     {:else if level.kind === 'assessment'}
       {#if object}
-        <AssessmentSheet
-          {scope}
-          {assessment}
-          {model}
-          onchanged={() => {
-            if (assessment) void reloadAssessment(assessment.id);
-          }}
-        />
+        <AssessmentSheet {scope} {assessment} {model} onchanged={() => void reloadAfterChange()} />
       {:else}
         <PracticeListColumn {scope} {assessment} {model} selected={params.practice ?? null} />
       {/if}
