@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   LENSES,
+  OUTSIDE_ROUTES,
   ROUTES,
+  checkReturn,
   compileAddresses,
   formatAddress,
+  isOutsideShell,
   lensAddress,
   lensOf,
   parseAddress,
@@ -107,5 +110,66 @@ describe('lenses', () => {
     expect(compiled.names).toEqual(['n', 'name']);
     expect(compiled.regex.test('/x/12/abc')).toBe(true);
     expect(compiled.regex.test('/x/ab/abc')).toBe(false);
+  });
+});
+
+describe('the addresses outside the shell', () => {
+  it.each([
+    ['/login', 'login'],
+    ['/signed-out', 'signed-out'],
+    ['/login-problem', 'login-problem'],
+  ])('routes %s as %s and writes it back', (path, route) => {
+    expect(parseAddress(path)).toEqual({ route, params: {} });
+    expect(formatAddress({ route, params: {} })).toBe(path);
+    expect(isOutsideShell(route)).toBe(true);
+    expect(routeTitleKey(route)).toBe(`${route}.title`);
+    expect(lensOf(route)).toBeNull();
+  });
+
+  it('are no canonical addresses: not among the routes, never a valid return', () => {
+    expect(OUTSIDE_ROUTES).toEqual(['login', 'signed-out', 'login-problem']);
+    for (const route of OUTSIDE_ROUTES) {
+      expect(ROUTES).not.toContain(route);
+    }
+    expect(isOutsideShell('due')).toBe(false);
+    expect(isOutsideShell(null)).toBe(false);
+  });
+
+  it('compile from their own section, and an absent section is empty', () => {
+    const file = {
+      segment: '[a-z]+',
+      params: {},
+      addresses: [{ route: 'x', pattern: '/x' }],
+      outsideShell: [{ route: 'y', pattern: '/y' }],
+    };
+    expect(compileAddresses(file, 'outsideShell').map((entry) => entry.route)).toEqual(['y']);
+    expect(compileAddresses({ ...file, outsideShell: undefined }, 'outsideShell')).toEqual([]);
+  });
+});
+
+describe('checkReturn', () => {
+  it.each(['/', '/samm/payments/2026-q4', '/settings/appearance', '/incidents/2026/inc-0007'])(
+    'lets the canonical address %s pass',
+    (address) => {
+      expect(checkReturn(address)).toBe(address);
+    },
+  );
+
+  it.each([
+    null,
+    undefined,
+    '',
+    'samm',
+    '//evil.example/x',
+    'https://evil.example/',
+    '/samm\\x',
+    '/samm/x\u0007',
+    '/unknown',
+    '/samm/payments?x=1',
+    '/login',
+    '/signed-out',
+    '/login-problem',
+  ])('replaces %j by the start page', (candidate) => {
+    expect(checkReturn(candidate)).toBe('/');
   });
 });

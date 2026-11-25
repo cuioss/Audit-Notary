@@ -40,18 +40,27 @@ interface CanonicalFile {
   segment: string;
   params: Record<string, string>;
   addresses: { route: string; pattern: string }[];
+  /**
+   * The addresses shown without the shell: routed by the web app, never a valid `return` of a login
+   * (doc/specification/rest-api.adoc, Addresses Outside the Shell).
+   */
+  outsideShell?: { route: string; pattern: string }[];
 }
 
 const PLACEHOLDER = /\{([a-z][a-z0-9]*)\}/g;
 
 /**
- * Compiles the address patterns.
+ * Compiles the address patterns of one section of the file.
  *
  * @param file the content of `canonical-addresses.json`
+ * @param section the section: `addresses`, the canonical addresses, or `outsideShell`
  * @returns the addresses in file order, each with an anchored expression
  */
-export function compileAddresses(file: CanonicalFile): CompiledAddress[] {
-  return file.addresses.map(({ route, pattern }) => {
+export function compileAddresses(
+  file: CanonicalFile,
+  section: 'addresses' | 'outsideShell' = 'addresses',
+): CompiledAddress[] {
+  return (file[section] ?? []).map(({ route, pattern }) => {
     const names: string[] = [];
     const source = pattern.replace(PLACEHOLDER, (_, name: string) => {
       names.push(name);
@@ -64,9 +73,21 @@ export function compileAddresses(file: CanonicalFile): CompiledAddress[] {
 }
 
 const ADDRESSES = compileAddresses(canonical as CanonicalFile);
+const OUTSIDE = compileAddresses(canonical as CanonicalFile, 'outsideShell');
 
-/** The route ids of every canonical address. */
+/** The route ids of every canonical address; the addresses outside the shell are not among them. */
 export const ROUTES: readonly string[] = ADDRESSES.map((address) => address.route);
+
+/** The route ids of the addresses shown without the shell: `login`, `signed-out`, `login-problem`. */
+export const OUTSIDE_ROUTES: readonly string[] = OUTSIDE.map((address) => address.route);
+
+/**
+ * @param route a route id
+ * @returns whether the route is shown without the shell, and without a session
+ */
+export function isOutsideShell(route: string | null): boolean {
+  return route !== null && OUTSIDE_ROUTES.includes(route);
+}
 
 /**
  * Reads the address of a path.
@@ -82,7 +103,7 @@ export function parseAddress(pathname: string): Address | null {
   while (path.length > 1 && path.endsWith('/')) {
     path = path.slice(0, -1);
   }
-  for (const candidate of ADDRESSES) {
+  for (const candidate of [...ADDRESSES, ...OUTSIDE]) {
     const match = candidate.regex.exec(path);
     if (match) {
       const params: Record<string, string> = {};
@@ -103,7 +124,7 @@ export function parseAddress(pathname: string): Address | null {
  * @throws Error for an unknown route, a missing value or a value the pattern does not admit
  */
 export function formatAddress(address: Address): string {
-  const candidate = ADDRESSES.find((entry) => entry.route === address.route);
+  const candidate = [...ADDRESSES, ...OUTSIDE].find((entry) => entry.route === address.route);
   if (!candidate) {
     throw new Error(`unknown route: ${address.route}`);
   }
@@ -143,8 +164,34 @@ export function lensAddress(lens: Lens): string {
  * @returns the catalogue key of the view's title
  */
 export function routeTitleKey(route: string): string {
+  if (isOutsideShell(route)) return `${route}.title`;
   if (route === 'welcome') return 'lens.welcome';
   if (route.endsWith('.release') || route === 'release') return 'lens.release';
   const lens = lensOf(route);
   return lens ? `lens.${lens}` : 'error.not-found.title';
+}
+
+/** The address a refused `return` is replaced by: the start page. */
+export const RETURN_FALLBACK = '/';
+
+/**
+ * Checks the `return` of a login on the client, as the server does (AUN-AUTH-1): a same-origin path that starts
+ * with a single `/`, holds no backslash and no control character, and is a canonical address of the shell. The
+ * addresses outside the shell are no canonical addresses, so a login never returns to the page that started it.
+ *
+ * @param candidate the requested value, if any
+ * @returns the value when it passes, `/` otherwise
+ */
+export function checkReturn(candidate: string | null | undefined): string {
+  if (
+    !candidate ||
+    !candidate.startsWith('/') ||
+    candidate.startsWith('//') ||
+    candidate.includes('\\') ||
+    // eslint-disable-next-line no-control-regex -- control characters are exactly what is refused
+    /[\u0000-\u001f\u007f-\u009f]/.test(candidate)
+  ) {
+    return RETURN_FALLBACK;
+  }
+  return ADDRESSES.some((entry) => entry.regex.test(candidate)) ? candidate : RETURN_FALLBACK;
 }

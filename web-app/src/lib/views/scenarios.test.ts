@@ -36,6 +36,39 @@ describe('the profiles', () => {
   });
 });
 
+describe('the access profiles (UC-ACC)', () => {
+  it('name the login provider in their status, as the shell reads it', async () => {
+    for (const [name, provider] of [
+      ['local', 'local'],
+      ['no-rights', 'oidc'],
+      ['login-trouble', 'oidc'],
+      ['workshop', 'oidc'],
+    ]) {
+      const status = (await (await scenarioFetch(name).fetch('/api/v1/status')).json()) as {
+        loginProvider: string;
+      };
+      expect(status.loginProvider, name).toBe(provider);
+      expect(loadScenario(name).login?.provider ?? 'oidc', name).toBe(provider);
+    }
+  });
+
+  it('keep the flow profiles out of the primary list, and the states the access views need', () => {
+    expect(primaryScenarios()).not.toContain('local');
+    expect(primaryScenarios()).not.toContain('login-trouble');
+    expect(Object.keys(loadScenario('login-trouble').states).sort()).toEqual([
+      'idp-unavailable',
+      'recovered',
+      'too-many-logins',
+      'unknown-transaction',
+    ]);
+    expect(loadScenario('workshop').states['session-replaced']).toMatchObject({
+      session_replaced: true,
+    });
+    expect(loadScenario('workshop').states['session-ended']).toMatchObject({ session_ended: true });
+    expect(loadScenario('no-rights').rights).toEqual([]);
+  });
+});
+
 describe('DueView against the profiles', () => {
   it('lists the workshop entries', async () => {
     vi.stubGlobal('fetch', scenarioFetch('workshop').fetch);

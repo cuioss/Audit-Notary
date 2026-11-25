@@ -87,6 +87,9 @@
   }
 
   .app-shell__notices {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
     padding: var(--space-4) var(--space-6) 0;
   }
 

@@ -18,6 +18,8 @@
   import { currentLocale, t } from '../../i18n';
   import { historyEntries } from '../../samm/history';
   import { assessmentScore, formatDelta, formatScore, gapsOf } from '../../samm/scores';
+  import { StepUpHandler } from '../../stepup/stepUp';
+  import StepUpDialog from '../../stepup/StepUpDialog.svelte';
   import { now } from '../../stores/clock';
   import { session } from '../../stores/app';
   import SinceList from './SinceList.svelte';
@@ -44,6 +46,8 @@
   let submitting = $state(false);
   let failure = $state<string | null>(null);
   let missing: string[] = $state([]);
+  // A transition may ask for step-up (UC-ACC-3): the handler decides whether and how.
+  const stepUp = new StepUpHandler();
 
   let score = $derived(model && assessment ? assessmentScore(model, assessment.answers) : null);
   let previous = $derived(
@@ -132,8 +136,12 @@
     failure = null;
     missing = [];
     try {
-      await apiClient.transition('samm-assessments', assessment.id, 'samm.submit');
-      onchanged?.();
+      const id = assessment.id;
+      const result = await stepUp.run((password) =>
+        apiClient.transition('samm-assessments', id, 'samm.submit', password),
+      );
+      if (result.status === 'refused') throw result.error;
+      if (result.status === 'done') onchanged?.();
     } catch (error) {
       failure = errorMessageKey(error);
       const details = (error as { details?: { missing?: string[] } }).details;
@@ -200,6 +208,14 @@
         {/if}
       {/snippet}
     </SheetHead>
+
+    <StepUpDialog
+      handler={stepUp}
+      lede={$t('stepup.lede.submit', { title: assessment.title })}
+      actLabel={$t('samm.submit')}
+      icon="act.next"
+      testId="assessment"
+    />
 
     {#if failure}
       <div class="notice">

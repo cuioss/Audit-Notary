@@ -26,6 +26,8 @@
   import { currentLocale, t } from '../../i18n';
   import { historyEntries } from '../../samm/history';
   import { findPractice, formatScore, practiceScore, practicesInOrder } from '../../samm/scores';
+  import { StepUpHandler } from '../../stepup/stepUp';
+  import StepUpDialog from '../../stepup/StepUpDialog.svelte';
   import { session } from '../../stores/app';
   import { now } from '../../stores/clock';
   import { stateTone } from './workflow';
@@ -67,6 +69,8 @@
   let saveState: SaveStateKind = $state('clean');
   let stamp = $state('');
   let failure = $state<string | null>(null);
+  // A save may ask for step-up (UC-ACC-3): the handler decides whether and how.
+  const stepUp = new StepUpHandler();
   let conflicts: Record<string, ConflictField> = $state({});
   let conflictBlob = $state('');
   let announcement = $state('');
@@ -266,7 +270,19 @@
     // The version this save is based on: until the server shows a newer one, the sent answers stand on the sheet.
     const base = request.parts[practiceId].blob;
     try {
-      const answer = await apiClient.saveDocument('samm-assessments', assessment.id, request);
+      const documentId = assessment.id;
+      const result = await stepUp.run((password) =>
+        apiClient.saveDocument('samm-assessments', documentId, request, password),
+      );
+      if (result.status === 'handled') {
+        // Nothing was saved for everyone (cancelled, left for the provider, too many logins): the changes stay the
+        // person's and are kept as a draft.
+        saveState = 'changed';
+        draftTimer = setTimeout(() => void keepDraft(), DRAFT_DELAY_MS);
+        return;
+      }
+      if (result.status === 'refused') throw result.error;
+      const answer = result.value;
       const merged: Record<string, Edit> = { ...committed?.answers };
       for (const [id, edit] of Object.entries(sent)) merged[id] = { ...merged[id], ...edit };
       // A newer version that arrived meanwhile already shows the save, or will with the next read.
@@ -377,7 +393,7 @@
   function handleKeydown(event: KeyboardEvent) {
     const target = event.target as HTMLElement | null;
     if (!target || !questionElements[0]?.closest('[data-practice-sheet]')?.contains(target)) return;
-    if (target.closest('textarea, input[type="text"], [contenteditable]')) return;
+    if (target.closest('textarea, input[type="text"], [contenteditable], dialog')) return;
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     const question = questions[active];
     if (/^[1-4]$/.test(event.key) && question && !readonly) {
@@ -446,6 +462,14 @@
           />
         {/snippet}
       </SheetHead>
+
+      <StepUpDialog
+        handler={stepUp}
+        lede={$t('stepup.lede.save', { title: assessment.title })}
+        actLabel={$t('practice.save')}
+        icon="act.save"
+        testId="practice"
+      />
 
       {#if failure}
         <div class="notice"><Notice tone="danger" title={$t(failure)} live /></div>

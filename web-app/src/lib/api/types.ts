@@ -31,15 +31,27 @@ export interface RepositoryStatus {
  */
 export type StepUpMethod = 'mfa' | 'password' | 'off';
 
+/**
+ * How the installation logs users in: the identity provider (`oidc`), or the local test accounts of a users file
+ * (`local`, AUN-AUTH-6).
+ */
+export type LoginProvider = 'oidc' | 'local';
+
 /** `GET /api/v1/status`, and the body of the event `status`. */
 export interface Status {
   version: string;
   degraded: boolean;
   repositories: RepositoryStatus[];
   /**
-   * PROVISIONAL: how step-up confirms a release, so the release knows whether to ask for the password or to
-   * leave for the identity provider (AUN-WEB-6). Absent means the identity provider's MFA. The method is never
-   * a label.
+   * How the login works (rest-api.adoc, `GET /api/v1/status`). Absent reads as `oidc`: PROVISIONAL tolerance, so an
+   * older server does not break the shell. With `local` the shell shows the notice of local test accounts and the
+   * login is the web app's page `/login`.
+   */
+  loginProvider?: LoginProvider;
+  /**
+   * PROVISIONAL: how step-up confirms a transition, so the step-up handler knows whether to ask for the password
+   * or to leave for the identity provider (AUN-WEB-6). Absent means `mfa` with the identity provider and `off`
+   * with local users. The method is never a label.
    */
   stepUp?: StepUpMethod;
 }

@@ -6,4 +6,8 @@
   // The one route stub (AUN-WEB-3): every address renders the router, which reads it.
 </script>
 
-<AppRouter pathname={page.url.pathname} onnavigate={(href: string) => void goto(href)} />
+<AppRouter
+  pathname={page.url.pathname}
+  search={page.url.search}
+  onnavigate={(href: string) => void goto(href)}
+/>

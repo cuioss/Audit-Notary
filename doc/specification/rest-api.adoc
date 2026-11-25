@@ -391,6 +391,12 @@ other answer closes the dialog and is the view's. The password is never kept, lo
 |Sends the request; there is no dialog and no line in the margin
 |===
 
+*Where it lives in the web app.* `src/lib/stepup/stepUp.ts` (`StepUpHandler`: `run(request)` answers `done`, `refused` with
+the view's own refusal, or `handled`) and `StepUpDialog.svelte` (the dialog and the notice). The release, the submit
+for review (`transition`) and the save for everyone of a SAMM practice send through it; `POST
+/api/v1/documents/{repository}/{id}/transitions/{t}` and `.../save` carry the member `password` like the release. The
+rows of stage completion, configuration save and category activation use it when their steps add them.
+
 *The line in the margin* ("You confirm your identity once more before the release.") is shown whenever `stepUp` is not
 `off` and the control asks; the control itself names the domain act only
 (xref:web-app.adoc#AUN-WEB-6[AUN-WEB-6]).
@@ -535,6 +541,19 @@ login start.
 . *A session without rights* gets an empty Due list and `FORBIDDEN` for every repository request; the shell decides by
 `rights` being empty.
 . *The refusal of `POST /j_security_check` for a foreign `Origin`* answers `403` with `CSRF_REJECTED`.
+
+. *The pages outside the shell read the status and the texts only,* never the session; opening one neither needs nor
+creates a session. A page moved into the shell without a page load reloads the tab so that the shell starts properly.
+. *The local login posts by `fetch`,* not by a native form post: the page decides by `200` or `401` itself, and then
+leaves by a full page load at the checked `return`. The dev server proxies `/j_security_check` to the mock.
+. *The wrong-password text is general:* "The password is not right. Nothing was changed." serves every request that
+asks, in place of the release's "Nothing was released."
+. *A session without rights* shows both the notice and the empty state in place of every view on a repository, except
+the first-login form and the settings; the empty view makes no request that the server would refuse.
+. *Only a stream that had connected* makes the tab read the session again when it ends; a stream that never connected
+is the ordinary retry.
+. *The mascot* stands on `/signed-out` only; the login page, the login problem and the empty state without access show
+none.
 
 For the owner: whether `/signed-out` replaces the start page (4), whether `/login` should exist for `oidc` (5), and
 whether the session needs an explicit identity member instead of the token (6).

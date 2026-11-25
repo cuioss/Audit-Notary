@@ -95,6 +95,12 @@ export default defineConfig({
         // with its own origin (AUN-WEB-8, AUN-TEST-1).
         xfwd: true,
       },
+      // The local login's form post (AUN-AUTH-6), the one request outside `/api/v1`.
+      '/j_security_check': {
+        target: ports.mockTarget,
+        changeOrigin: true,
+        xfwd: true,
+      },
       '/mock': {
         target: ports.mockTarget,
         changeOrigin: true,

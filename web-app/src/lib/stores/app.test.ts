@@ -1,10 +1,12 @@
 import { get } from 'svelte/store';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiClient, type StreamState } from '../api/client';
 import { ApiError } from '../api/errors';
 import type { Session, Status } from '../api/types';
+import { scenarioFetch } from '../test/scenarioFetch';
 import {
   boot,
+  bootOutsideShell,
   bootPhase,
   completeFirstLogin,
   keepStreamAlive,
@@ -13,6 +15,7 @@ import {
   status,
   STREAM_RECOVERY_MS,
   streamState,
+  watchSession,
 } from './app';
 
 const STATUS: Status = { version: '1.0', degraded: false, repositories: [] };
@@ -131,5 +134,109 @@ describe('keepStreamAlive', () => {
     state('offline');
     window.dispatchEvent(new Event('online'));
     expect(retry).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('bootOutsideShell', () => {
+  it('reads the status and the texts and never the session', async () => {
+    const getSession = vi.fn();
+    const client = fakeClient({ getStatus: vi.fn().mockResolvedValue(STATUS), getSession });
+    await bootOutsideShell(client);
+    expect(get(bootPhase)).toBe('outside');
+    expect(get(status)).toEqual(STATUS);
+    expect(getSession).not.toHaveBeenCalled();
+  });
+
+  it('starts without a status too', async () => {
+    const client = fakeClient({ getStatus: vi.fn().mockRejectedValue(new Error('down')) });
+    await bootOutsideShell(client);
+    expect(get(bootPhase)).toBe('outside');
+    expect(get(status)).toBeNull();
+  });
+});
+
+describe('a session that is replaced or ended (UC-ACC-6), against workshop', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    session.set(null);
+  });
+
+  /**
+   * Starts the app against the workshop profile with an event stream the test closes by hand.
+   *
+   * @returns the scenario, the client, the navigation and reload spies and the function that closes the stream
+   */
+  async function start() {
+    const scenario = scenarioFetch('workshop');
+    let closeStream: () => void = () => {};
+    const events = vi.fn(async () => {
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          closeStream = () => controller.close();
+        },
+      });
+      return new Response(body, { status: 200 });
+    });
+    vi.stubGlobal('fetch', (input: RequestInfo | URL, init?: RequestInit) =>
+      String(input) === '/api/v1/events' ? events() : scenario.fetch(input, init),
+    );
+    const navigate = vi.fn();
+    const client = new ApiClient(navigate);
+    const reload = vi.fn();
+    const result = await boot(client, reload);
+    await vi.waitFor(() => expect(events).toHaveBeenCalled());
+    return { scenario, client, navigate, reload, result, events, close: () => closeStream() };
+  }
+
+  it('reloads the tab when the stream closes and the session has another anti-CSRF token', async () => {
+    const { scenario, reload, result, close } = await start();
+    expect(peek(session)?.csrfToken).toBe('scenario-token');
+    scenario.goto('session-replaced');
+    close();
+    await vi.waitFor(() => expect(reload).toHaveBeenCalledTimes(1));
+    result.stop();
+  });
+
+  it('goes on with the same session when the token is the one the tab started with', async () => {
+    const { reload, result, events, close } = await start();
+    close();
+    await vi.waitFor(() => expect(events).toHaveBeenCalledTimes(1));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(reload).not.toHaveBeenCalled();
+    expect(peek(session)?.user.name).toBe('Alex Example');
+    result.stop();
+  });
+
+  it('leaves for the login when the session ended', async () => {
+    const { scenario, navigate, reload, result, close } = await start();
+    scenario.goto('session-ended');
+    close();
+    await vi.waitFor(() => expect(navigate).toHaveBeenCalled());
+    expect(navigate.mock.calls[0][0]).toMatch(/^\/api\/v1\/auth\/login\?return=/);
+    expect(reload).not.toHaveBeenCalled();
+    result.stop();
+  });
+
+  it('reads the session once at a time and ignores a read that fails', async () => {
+    const client = new ApiClient(() => {});
+    let end: () => void = () => {};
+    vi.spyOn(client, 'subscribeStreamEnd').mockImplementation((listener) => {
+      end = listener;
+      return () => {};
+    });
+    const getSession = vi
+      .spyOn(client, 'getSession')
+      .mockRejectedValueOnce(new ApiError('NETWORK', 0))
+      .mockResolvedValue({ ...SESSION, csrfToken: 'again' });
+    session.set(SESSION);
+    const reload = vi.fn();
+    watchSession(client, reload);
+    end();
+    end();
+    await vi.waitFor(() => expect(getSession).toHaveBeenCalledTimes(1));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    end();
+    await vi.waitFor(() => expect(reload).toHaveBeenCalledTimes(1));
+    expect(getSession).toHaveBeenCalledTimes(2);
   });
 });

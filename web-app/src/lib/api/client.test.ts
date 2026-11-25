@@ -255,7 +255,7 @@ describe('the SAMM and document requests', () => {
     fetchMock
       .mockResolvedValueOnce(json(200, SESSION))
       .mockImplementation(async () => json(200, { outcome: 'SAVED' }));
-    const body = { parts: [] } as unknown as Parameters<ApiClient['saveDraft']>[2];
+    const body = { parts: {} } as unknown as Parameters<ApiClient['saveDraft']>[2];
     await client.saveDraft('samm-assessments', 'p', body);
     await client.saveDocument('samm-assessments', 'p', body);
     const [draftPath, draftInit] = fetchMock.mock.calls[1];
@@ -265,7 +265,7 @@ describe('the SAMM and document requests', () => {
     const [savePath, saveInit] = fetchMock.mock.calls[2];
     expect(savePath).toBe('/api/v1/documents/samm-assessments/p/save');
     expect(saveInit.method).toBe('POST');
-    expect(JSON.parse(saveInit.body)).toEqual({ parts: [] });
+    expect(JSON.parse(saveInit.body)).toEqual({ parts: {} });
   });
 
   it('moves along the workflow and releases with or without a password', async () => {
@@ -300,5 +300,160 @@ describe('the SAMM and document requests', () => {
       outcome: 'STEP_UP_REQUIRED',
       status: 403,
     });
+  });
+});
+
+describe('the local login and the start of the login', () => {
+  it('posts the form to the form login without an anti-CSRF header and accepts 200', async () => {
+    fetchMock.mockResolvedValue(new Response('', { status: 200 }));
+    expect(await client.localLogin('alex', 'local-password')).toBe(true);
+    const [path, init] = fetchMock.mock.calls[0];
+    expect(path).toBe('/j_security_check');
+    expect(init.method).toBe('POST');
+    expect(init.headers[CSRF_HEADER]).toBeUndefined();
+    expect(init.headers['Content-Type']).toBe('application/x-www-form-urlencoded');
+    expect(String(init.body)).toBe('j_username=alex&j_password=local-password');
+    expect(init.credentials).toBe('same-origin');
+  });
+
+  it('answers false for a wrong password, with no navigation and no refusal', async () => {
+    fetchMock.mockResolvedValue(new Response('', { status: 401 }));
+    expect(await client.localLogin('alex', 'wrong')).toBe(false);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('reports a missing network, a timeout and any other status as client failures', async () => {
+    fetchMock.mockRejectedValueOnce(new TypeError('offline'));
+    await expect(client.localLogin('a', 'b')).rejects.toMatchObject({ outcome: 'NETWORK' });
+    fetchMock.mockRejectedValueOnce(new DOMException('slow', 'TimeoutError'));
+    await expect(client.localLogin('a', 'b')).rejects.toMatchObject({ outcome: 'TIMEOUT' });
+    fetchMock.mockResolvedValueOnce(new Response('', { status: 500 }));
+    await expect(client.localLogin('a', 'b')).rejects.toMatchObject({
+      outcome: 'UNEXPECTED',
+      status: 500,
+    });
+  });
+
+  it('reads the session again after a login, so no token of the old session is sent', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json(200, SESSION))
+      .mockResolvedValueOnce(new Response('', { status: 200 }))
+      .mockResolvedValueOnce(json(200, { ...SESSION, csrfToken: 'token-2' }))
+      .mockResolvedValue(json(200, { outcome: 'SAVED', pseudonym: 'p' }));
+    await client.getSession();
+    await client.localLogin('alex', 'local-password');
+    await client.putDirectoryMe({ name: 'a', team: 't', role: 'r' });
+    expect(fetchMock.mock.calls[3][1].headers[CSRF_HEADER]).toBe('token-2');
+  });
+
+  it('starts the login at the provider or on the own page, and never leaves the origin', () => {
+    client.startLogin('oidc', '/samm');
+    expect(navigate).toHaveBeenLastCalledWith('/api/v1/auth/login?return=%2Fsamm');
+    client.startLogin('local', '/');
+    expect(navigate).toHaveBeenLastCalledWith('/login?return=%2F');
+    expect(() => client.go('//evil.example/')).toThrow('refused address');
+    expect(() => client.go('https://evil.example/')).toThrow('refused address');
+    expect(() => client.go('/a\\b')).toThrow('refused address');
+  });
+
+  it('leaves for the own login page when the server names it', async () => {
+    fetchMock.mockResolvedValue(json(401, { outcome: 'UNAUTHENTICATED', login: '/login' }));
+    await expect(client.getDue()).rejects.toMatchObject({ outcome: 'UNAUTHENTICATED' });
+    expect(navigate).toHaveBeenCalledWith(
+      `/login?return=${encodeURIComponent('/samm/payments?x=1')}`,
+    );
+  });
+});
+
+describe('a step-up that carries the password', () => {
+  it('sends it as a member of the transition and of the save', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json(200, SESSION))
+      .mockImplementation(async () => json(200, { outcome: 'OK' }));
+    await client.transition('samm-assessments', 'p', 'samm.submit', 'secret');
+    await client.saveDocument('samm-assessments', 'p', { parts: {} }, 'secret');
+    await client.saveDocument('samm-assessments', 'p', { parts: {} });
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({ password: 'secret' });
+    expect(JSON.parse(fetchMock.mock.calls[2][1].body)).toEqual({ parts: {}, password: 'secret' });
+    expect(JSON.parse(fetchMock.mock.calls[3][1].body)).toEqual({ parts: {} });
+  });
+});
+
+describe('the end of the event stream', () => {
+  it('tells the listeners when a connected stream ends, and reopens it', async () => {
+    vi.useFakeTimers();
+    let open = 0;
+    fetchMock.mockImplementation(async () => {
+      open += 1;
+      return open === 1 ? new Response('event: x\ndata: 1\n\n', { status: 200 }) : stream([], null);
+    });
+    const ended = vi.fn();
+    client.subscribeStreamEnd(ended);
+    const stop = client.subscribeEvents(() => {});
+    await vi.advanceTimersByTimeAsync(0);
+    expect(ended).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(open).toBe(2);
+    stop();
+  });
+
+  it('tells the listeners when a connected stream breaks, but not when it never connected', async () => {
+    vi.useFakeTimers();
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.error(new Error('broken'));
+      },
+    });
+    fetchMock
+      .mockResolvedValueOnce(new Response(body, { status: 200 }))
+      .mockResolvedValue(new Response('', { status: 503 }));
+    const ended = vi.fn();
+    const unsubscribe = client.subscribeStreamEnd(ended);
+    const stop = client.subscribeEvents(() => {});
+    await vi.advanceTimersByTimeAsync(0);
+    expect(ended).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(6_000);
+    expect(ended).toHaveBeenCalledTimes(1);
+    unsubscribe();
+    stop();
+  });
+
+  it('does not tell the listeners about a stream the client closed itself', async () => {
+    fetchMock.mockImplementation(async (_path: string, init: RequestInit) =>
+      stream([], init.signal),
+    );
+    const ended = vi.fn();
+    client.subscribeStreamEnd(ended);
+    const stop = client.subscribeEvents(() => {});
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    stop();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(ended).not.toHaveBeenCalled();
+  });
+
+  it('leaves for the login the server names when the stream is refused with 401', async () => {
+    fetchMock.mockImplementation(async (path: string) =>
+      path === '/api/v1/events'
+        ? new Response('', { status: 401 })
+        : json(401, { outcome: 'UNAUTHENTICATED', login: '/login' }),
+    );
+    client.subscribeEvents(() => {});
+    await vi.waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith(
+        `/login?return=${encodeURIComponent('/samm/payments?x=1')}`,
+      ),
+    );
+  });
+
+  it('leaves for the default login when the session read after a refused stream is no 401', async () => {
+    fetchMock.mockImplementation(async (path: string) =>
+      path === '/api/v1/events' ? new Response('', { status: 401 }) : json(200, SESSION),
+    );
+    client.subscribeEvents(() => {});
+    await vi.waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith(
+        `/api/v1/auth/login?return=${encodeURIComponent('/samm/payments?x=1')}`,
+      ),
+    );
   });
 });

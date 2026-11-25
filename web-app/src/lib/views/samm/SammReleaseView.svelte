@@ -2,17 +2,16 @@
   import { onDestroy } from 'svelte';
   import Button from '../../components/Button.svelte';
   import Chip from '../../components/Chip.svelte';
-  import Dialog from '../../components/Dialog.svelte';
   import Disclosure from '../../components/Disclosure.svelte';
   import Icon from '../../components/Icon.svelte';
   import Link from '../../components/Link.svelte';
   import MaturitySeal, { type SealFunction } from '../../components/MaturitySeal.svelte';
   import Notice from '../../components/Notice.svelte';
   import Sheet from '../../components/Sheet.svelte';
-  import TextField from '../../components/TextField.svelte';
   import MascotFigure from '../../brand/MascotFigure.svelte';
   import { apiClient } from '../../api/client';
   import { errorMessageKey, isApiError } from '../../api/errors';
+  import { stepUpMethodOf } from '../../access/access';
   import type {
     DocumentDiff,
     SammAssessment,
@@ -24,6 +23,8 @@
   import { currentLocale, t } from '../../i18n';
   import { assessmentScore, findPractice, formatScore } from '../../samm/scores';
   import { loadModel } from '../../samm/store';
+  import { StepUpHandler } from '../../stepup/stepUp';
+  import StepUpDialog from '../../stepup/StepUpDialog.svelte';
   import { session, status } from '../../stores/app';
   import { breadcrumb } from '../../stores/breadcrumb';
   import WizardPage from '../../templates/WizardPage.svelte';
@@ -50,18 +51,18 @@
   let comparison = $state<SammComparison | null>(null);
   let failure = $state<string | null>(null);
   let notice = $state<{ tone: 'attention' | 'danger'; key: string } | null>(null);
-  let releasing = $state(false);
   let released = $state<{ tag: string; at: string } | null>(null);
-  let asking = $state(false);
-  let password = $state('');
-  let passwordError = $state<string | null>(null);
+
+  // The step-up handler decides whether the release asks and how (UC-ACC-3); this view keeps the release's own outcomes.
+  const stepUp = new StepUpHandler();
+  const stepUpState = stepUp.state;
 
   let summary = $derived(
     scope?.assessments.find((entry) => entry.id === params.assessment) ?? null,
   );
   let previous = $derived(scope ? previousRelease(scope.assessments, params.assessment) : null);
   let base = $derived(`/samm/${params.scope}/${params.assessment}`);
-  let stepUp = $derived($status?.stepUp ?? 'mfa');
+  let confirms = $derived(stepUpMethodOf($status) !== 'off');
   let rights = $derived(
     $session?.rights.find((right) => right.repository === 'samm-assessments')?.actions ?? [],
   );
@@ -154,59 +155,24 @@
     return null;
   });
 
-  function start() {
-    if (stepUp === 'password') {
-      password = '';
-      passwordError = null;
-      asking = true;
-    } else {
-      void release();
-    }
-  }
-
-  async function release(withPassword?: string) {
+  async function release() {
     if (!assessment) return;
-    releasing = true;
+    const id = assessment.id;
     notice = null;
-    try {
-      const answer = await apiClient.release('samm-assessments', assessment.id, withPassword);
-      asking = false;
-      released = { tag: answer.tag, at: answer.at };
-    } catch (error) {
-      if (isApiError(error) && error.outcome === 'STEP_UP_REQUIRED') {
-        const address = typeof error.details.stepUp === 'string' ? error.details.stepUp : null;
-        if (address) {
-          apiClient.stepUp(address);
-          return;
-        }
-        // Without an address only a local user's password can confirm; a user of the identity provider has none to give.
-        if (stepUp === 'password') {
-          asking = true;
-        } else {
-          notice = { tone: 'danger', key: 'error.unexpected' };
-        }
-      } else if (isApiError(error) && error.outcome === 'INVALID_CREDENTIALS') {
-        passwordError = $t('error.invalid-credentials');
-      } else if (isApiError(error) && error.outcome === 'CHANGED_SINCE_REVIEW') {
-        asking = false;
+    const result = await stepUp.run((password) =>
+      apiClient.release('samm-assessments', id, password),
+    );
+    if (result.status === 'done') {
+      released = { tag: result.value.tag, at: result.value.at };
+    } else if (result.status === 'refused') {
+      const { error } = result;
+      if (isApiError(error) && error.outcome === 'CHANGED_SINCE_REVIEW') {
         notice = { tone: 'attention', key: 'error.changed-since-review' };
         await load();
       } else {
-        asking = false;
         notice = { tone: 'danger', key: errorMessageKey(error) };
       }
-    } finally {
-      releasing = false;
     }
-  }
-
-  function confirmPassword(event: SubmitEvent) {
-    event.preventDefault();
-    if (password === '') {
-      passwordError = $t('error.validation.REQUIRED');
-      return;
-    }
-    void release(password);
   }
 
   function questionOf(pointer: string) {
@@ -235,6 +201,12 @@
   intro={released ? $t('release.done.intro') : $t('release.intro')}
   testId="release-view"
 >
+  <StepUpDialog
+    handler={stepUp}
+    lede={$t('release.password.lede', { title: assessment?.title ?? '' })}
+    actLabel={$t('release.act')}
+    testId="release"
+  />
   {#if failure}
     <Notice tone="danger" title={$t(failure)} live />
   {:else if !assessment || !model || !score || !diff}
@@ -337,8 +309,8 @@
             <Button
               variant="primary"
               icon="act.stamp"
-              busy={releasing && !asking}
-              onclick={start}
+              busy={$stepUpState.working}
+              onclick={release}
               disabledReason={unavailable}
               data-testid="release-act"
             >
@@ -392,7 +364,7 @@
                   <Icon name="state.seal" size={16} />
                   <span>{$t('release.check.freeze')}</span>
                 </li>
-                {#if stepUp !== 'off'}
+                {#if confirms}
                   <li class="check">
                     <Icon name="state.lock" size={16} />
                     <span>{$t('release.check.step-up')}</span>
@@ -412,33 +384,6 @@
     </Sheet>
   {/if}
 </WizardPage>
-
-<Dialog bind:open={asking} title={$t('release.password.title')} closeLabel={$t('common.cancel')}>
-  <form class="password" onsubmit={confirmPassword} novalidate>
-    <p class="password__lede">{$t('release.password.lede', { title: assessment?.title ?? '' })}</p>
-    <TextField
-      label={$t('release.password.label')}
-      type="password"
-      autocomplete="current-password"
-      bind:value={password}
-      error={passwordError}
-      required
-      testId="release-password"
-    />
-    <div class="password__acts">
-      <Button variant="ghost" onclick={() => (asking = false)}>{$t('common.cancel')}</Button>
-      <Button
-        type="submit"
-        variant="primary"
-        icon="act.stamp"
-        busy={releasing}
-        data-testid="release-confirm"
-      >
-        {$t('release.password.confirm')}
-      </Button>
-    </div>
-  </form>
-</Dialog>
 
 <style>
   .muted {
@@ -618,22 +563,6 @@
 
   .check--open :global(.ui-icon) {
     color: var(--color-attention);
-  }
-
-  .password {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-  }
-
-  .password__lede {
-    color: var(--color-text-secondary);
-  }
-
-  .password__acts {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--space-2);
   }
 
   @media (max-width: 767px) {
