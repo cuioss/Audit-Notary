@@ -59,10 +59,10 @@ const themes = {
 const TEXT_TOKENS = ['--color-text-primary', '--color-text-secondary', '--color-text-muted'];
 const SURFACES = [
   '--color-bg-app',
-  '--color-bg-rail',
   '--color-bg-surface',
   '--color-bg-raised',
   '--color-bg-subtle',
+  '--color-bg-sunken',
 ];
 /** Colours used as text or as a link on the surfaces (brand links, state words). */
 const STATE_TEXT = [
@@ -75,6 +75,16 @@ const STATE_TEXT = [
   '--color-kind-threat-model',
   '--color-kind-incident',
   '--color-kind-isms',
+  '--color-seal-text',
+];
+
+/** The rail is the register's dark spine in both themes: its own texts on its own grounds. */
+const RAIL_PAIRS: [string, string, number][] = [
+  ['--color-rail-text', '--color-bg-rail', 4.5],
+  ['--color-rail-text-muted', '--color-bg-rail', 4.5],
+  ['--color-rail-text', '--color-rail-hover', 4.5],
+  ['--color-rail-text-strong', '--color-rail-active', 4.5],
+  ['--color-rail-focus', '--color-bg-rail', 3],
 ];
 
 describe('tokens.css', () => {
@@ -123,7 +133,24 @@ describe('tokens.css', () => {
         ).toBeGreaterThanOrEqual(4.5);
       });
 
-      for (const state of ['--color-attention', '--color-neutral']) {
+      for (const [text, ground, minimum] of RAIL_PAIRS) {
+        it(`${text} on ${ground} reaches ${minimum}:1`, () => {
+          expect(contrastRatio(palette[text], palette[ground])).toBeGreaterThanOrEqual(minimum);
+        });
+      }
+
+      it('the field boundary stands out from the sheet by 3:1 (WCAG 1.4.11)', () => {
+        expect(
+          contrastRatio(palette['--color-border-field'], palette['--color-bg-surface']),
+        ).toBeGreaterThanOrEqual(3);
+      });
+
+      for (const state of [
+        '--color-attention',
+        '--color-neutral',
+        '--color-danger',
+        '--color-success',
+      ]) {
         it(`${state} as a graphic on the surface reaches 3:1`, () => {
           expect(
             contrastRatio(palette[state], palette['--color-bg-surface']),

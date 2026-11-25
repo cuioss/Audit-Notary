@@ -51,6 +51,16 @@ if (typeof HTMLDialogElement !== 'undefined') {
   };
 }
 
+// jsdom measures no layout and has no ResizeObserver, which `bind:clientWidth` uses: a silent one stands in, so a
+// measuring component falls back to its documented default width.
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = class {
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+  } as unknown as typeof ResizeObserver;
+}
+
 const english = loadMessages('en');
 
 beforeEach(() => {

@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import { apiClient } from '../api/client';
 import { session, streamState } from '../stores/app';
+import { breadcrumb } from '../stores/breadcrumb';
 import { textSnippet } from '../test/snippets';
 import AppShell from './AppShell.svelte';
 import BottomBar from './BottomBar.svelte';
@@ -92,6 +93,55 @@ describe('TopBar', () => {
     await fireEvent.click(screen.getByTestId('sign-out'));
     expect(logout).toHaveBeenCalled();
     session.set(null);
+  });
+});
+
+describe('TopBar breadcrumb', () => {
+  it('links the lens and the inner steps and marks the last step current', () => {
+    breadcrumb.set([
+      { label: 'Payments', href: '/samm/payments' },
+      { label: '2026 Q4', href: '/samm/payments/2026-q4' },
+    ]);
+    render(TopBar, {
+      titleKey: 'lens.samm',
+      lensHref: '/samm',
+      lensKey: 'lens.samm',
+      onSearch: () => {},
+    });
+    expect(screen.getByRole('link', { name: 'SAMM' })).toHaveAttribute('href', '/samm');
+    expect(screen.getByRole('link', { name: 'Payments' })).toHaveAttribute(
+      'href',
+      '/samm/payments',
+    );
+    expect(screen.getByText('2026 Q4')).toHaveAttribute('aria-current', 'page');
+    breadcrumb.set([]);
+  });
+
+  it('falls back to the title as lens name and shows no link without a path', () => {
+    breadcrumb.set([{ label: 'Payments', href: '/samm/payments' }]);
+    const { unmount } = render(TopBar, {
+      titleKey: 'lens.due',
+      lensHref: '/due',
+      onSearch: () => {},
+    });
+    expect(screen.getByRole('link', { name: 'Due' })).toHaveAttribute('href', '/due');
+    unmount();
+    breadcrumb.set([]);
+    render(TopBar, { titleKey: 'lens.due', lensHref: '/due', onSearch: () => {} });
+    expect(screen.getByTestId('view-title')).toHaveAttribute('aria-current', 'page');
+  });
+});
+
+describe('LiveIndicator states', () => {
+  it.each([
+    ['connecting', 'Connecting'],
+    ['reconnecting', 'Reconnecting'],
+  ] as const)('names %s without a retry', (state, word) => {
+    streamState.set(state);
+    render(LiveIndicator);
+    expect(screen.getByTestId('live-indicator')).toHaveTextContent(word);
+    expect(screen.getByTestId('live-indicator')).toHaveAttribute('title', `Live updates: ${word}`);
+    expect(screen.queryByTestId('live-retry')).toBeNull();
   });
 });
 

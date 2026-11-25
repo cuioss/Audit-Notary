@@ -39,8 +39,27 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    font-size: var(--text-sm);
+    min-block-size: 26px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    background-color: var(--color-bg-surface);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
     color: var(--color-text-secondary);
+  }
+
+  .live--reconnecting,
+  .live--connecting {
+    border-color: var(--color-attention);
+    background-color: var(--color-attention-subtle);
+    color: var(--color-attention-text);
+  }
+
+  .live--offline {
+    border-color: var(--color-danger);
+    background-color: var(--color-danger-subtle);
+    color: var(--color-danger);
   }
 
   .live__dot {

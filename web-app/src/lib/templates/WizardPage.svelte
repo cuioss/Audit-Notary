@@ -16,12 +16,14 @@
     children: Snippet;
     /** The acts at the end of the step. */
     actions?: Snippet;
+    /** A wide flow (the release, which shows the document it releases): up to 1120 px instead of 720 px. */
+    wide?: boolean;
   }
 
-  let { title, intro, testId, children, actions }: Props = $props();
+  let { title, intro, testId, children, actions, wide = false }: Props = $props();
 </script>
 
-<div class="wizard" data-testid={testId}>
+<div class="wizard" class:wizard--wide={wide} data-testid={testId}>
   <header class="wizard__header">
     <h1 class="wizard__title">{title}</h1>
     {#if intro}
@@ -42,18 +44,28 @@
     padding: var(--space-8) var(--space-6);
   }
 
+  .wizard--wide {
+    max-inline-size: 1120px;
+  }
+
   .wizard__header {
     margin-block-end: var(--space-6);
   }
 
   .wizard__title {
-    font-size: var(--text-2xl);
-    line-height: var(--line-height-2xl);
+    font-family: var(--font-serif);
+    font-size: var(--text-display);
+    line-height: var(--line-height-display);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.01em;
   }
 
   .wizard__intro {
+    max-inline-size: var(--measure);
     margin-block-start: var(--space-2);
     color: var(--color-text-secondary);
+    font-size: var(--text-md);
+    line-height: var(--line-height-md);
   }
 
   .wizard__body {
@@ -74,6 +86,11 @@
   @media (max-width: 767px) {
     .wizard {
       padding: var(--space-6) var(--space-4);
+    }
+
+    .wizard__title {
+      font-size: var(--text-2xl);
+      line-height: var(--line-height-2xl);
     }
   }
 </style>
