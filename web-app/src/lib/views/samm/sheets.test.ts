@@ -2,13 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '../../api/client';
 import { ApiError } from '../../api/errors';
-import type {
-  SammAssessment,
-  SammComparison,
-  SammModel,
-  SammScope,
-  Status,
-} from '../../api/types';
+import type { SammAssessment, SammComparison, SammModel, SammScope, Status } from '../../api/types';
 import { clearModels, loadModel } from '../../samm/store';
 import { session, status } from '../../stores/app';
 import { scenarioFetch } from '../../test/scenarioFetch';
@@ -741,5 +735,25 @@ describe('the sheets and the step-up handler (UC-ACC-3)', () => {
     expect(save).not.toHaveBeenCalled();
     expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'changed');
     expect(screen.getByTestId('answer-sm-a-1-3')).toBeChecked();
+  });
+
+  it('keeps the changes as the draft before the app leaves for the identity provider', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    status.set({ ...PASSWORD, stepUp: 'mfa' });
+    const order: string[] = [];
+    vi.spyOn(apiClient, 'saveDocument').mockRejectedValue(
+      new ApiError('STEP_UP_REQUIRED', 403, [], { stepUp: '/api/v1/auth/login?step-up=mfa' }),
+    );
+    vi.spyOn(apiClient, 'saveDraft').mockImplementation(() => {
+      order.push('draft');
+      return Promise.resolve({ outcome: 'DRAFT_SAVED' as const, at: '2026-11-26T10:00:00Z' });
+    });
+    vi.spyOn(apiClient, 'stepUp').mockImplementation(() => {
+      order.push('leave');
+    });
+    render(PracticeSheet, { scope, assessment, model, practiceId: 'sm' });
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    await vi.waitFor(() => expect(order).toEqual(['draft', 'leave']));
   });
 });

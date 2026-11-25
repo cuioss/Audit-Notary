@@ -37,15 +37,29 @@
   let password = $state('');
   let emptyError = $state<string | null>(null);
 
+  // Only the transitions count, not every patch of the state: a derived boolean notifies when its value changes.
+  const asking = $derived($view.asking);
+  const refused = $derived($view.dialogError !== null);
+
+  // Each question starts with an empty field and no error of its own.
   $effect(() => {
-    const asking = $view.asking;
+    const isAsking = asking;
     untrack(() => {
-      if (asking) {
+      if (isAsking) {
         password = '';
         emptyError = null;
       }
-      open = asking;
+      open = isAsking;
     });
+  });
+
+  // A wrong password is cleared on purpose, as on the login page; nothing else clears the field while it is open.
+  $effect(() => {
+    if (refused) {
+      untrack(() => {
+        password = '';
+      });
+    }
   });
 
   function confirm(event: SubmitEvent) {

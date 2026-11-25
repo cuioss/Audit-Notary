@@ -375,7 +375,8 @@ shape of the web app's handling.
 
 |`mfa`
 |Sends the request. On `403 STEP_UP_REQUIRED` with `stepUp`, the step-up address, the web app leaves for it with the
-address of the current view as `return`. It keeps nothing across the redirect (PROVISIONAL): the user comes back to the
+address of the current view as `return`. It keeps nothing across the redirect (PROVISIONAL), except that a view with
+unsaved changes keeps them as its draft before it leaves: the user comes back to the
 view, the session now holds the fresh values, and the act is chosen again, which passes `stepup.check`. Token Sheriff's
 planned pending action (SESSION-8) would complete the act itself; the handler is to be replaced by it. A step-up that
 was cancelled or failed at the provider, or was met by another user, comes back without fresh values, and the same

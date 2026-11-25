@@ -354,6 +354,7 @@ describe('the local login and the start of the login', () => {
     expect(() => client.go('//evil.example/')).toThrow('refused address');
     expect(() => client.go('https://evil.example/')).toThrow('refused address');
     expect(() => client.go('/a\\b')).toThrow('refused address');
+    expect(() => client.go('/\t/evil.example')).toThrow('refused address');
   });
 
   it('leaves for the own login page when the server names it', async () => {

@@ -78,10 +78,13 @@ export class StepUpHandler {
   /**
    * @param client the client, for the redirect to the identity provider
    * @param method how step-up confirms now; reads the status by default
+   * @param beforeLeave what the view keeps before the app leaves for the identity provider, which keeps nothing
+   *   across the redirect (PROVISIONAL): a view with unsaved changes keeps them as its draft
    */
   constructor(
     private readonly client: ApiClient = apiClient,
     private readonly method: () => StepUpMethod = () => stepUpMethodOf(get(status)),
+    private readonly beforeLeave: () => Promise<void> = () => Promise.resolve(),
   ) {}
 
   /** @returns the state the views render */
@@ -113,7 +116,7 @@ export class StepUpHandler {
     try {
       return { status: 'done', value: await request() };
     } catch (error) {
-      return this.classify<T>(error);
+      return await this.classify<T>(error);
     } finally {
       this.patch({ working: false });
     }
@@ -151,10 +154,10 @@ export class StepUpHandler {
       }
       if (isApiError(error) && error.outcome === 'STEP_UP_REQUIRED' && !stepUpAddress(error)) {
         // A server that asks without an address is answered by the dialog, which stays open.
-        this.patch({ sending: false });
+        this.patch({ sending: false, dialogError: 'error.unexpected' });
         return;
       }
-      this.finish(this.classify(error));
+      this.finish(await this.classify(error));
     }
   }
 
@@ -176,12 +179,14 @@ export class StepUpHandler {
    * @param error what the request threw
    * @returns the result
    */
-  private classify<T>(error: unknown): StepUpResult<T> {
+  private async classify<T>(error: unknown): Promise<StepUpResult<T>> {
     if (!isApiError(error)) return { status: 'refused', error: new ApiError('UNEXPECTED', 0) };
     switch (error.outcome) {
       case 'STEP_UP_REQUIRED': {
         const address = stepUpAddress(error);
         if (address) {
+          // A failed keep must not hold the user back from the step-up.
+          await this.beforeLeave().catch(() => undefined);
           this.client.stepUp(address);
         } else {
           // No address and no dialog: a user of the identity provider has no password to give.

@@ -308,7 +308,13 @@ export class ApiClient {
    * @param address the address; one that could leave the origin is refused
    */
   go(address: string): void {
-    if (!address.startsWith('/') || address.startsWith('//') || address.includes('\\')) {
+    if (
+      !address.startsWith('/') ||
+      address.startsWith('//') ||
+      address.includes('\\') ||
+      // eslint-disable-next-line no-control-regex -- a browser strips tab and line breaks from an address
+      /[\u0000-\u001f\u007f-\u009f]/.test(address)
+    ) {
       throw new Error(`refused address: ${address}`);
     }
     this.navigate(address);

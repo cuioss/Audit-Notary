@@ -79,6 +79,32 @@ describe('StepUpDialog', () => {
     expect(dialog).toHaveAttribute('open');
   });
 
+  it('keeps the typed password while the request runs and clears it only after a wrong one', async () => {
+    const handler = new StepUpHandler(apiClient, () => 'password');
+    show(handler);
+    const dialog = document.querySelector('dialog') as HTMLDialogElement;
+    let refuse: (error: ApiError) => void = () => {};
+    void handler.run(
+      () =>
+        new Promise<string>((_, reject) => {
+          refuse = reject;
+        }),
+    );
+    await vi.waitFor(() => expect(dialog).toHaveAttribute('open'));
+    const field = within(dialog).getByTestId('x-password');
+    await fireEvent.input(field, { target: { value: 'no' } });
+    await fireEvent.click(within(dialog).getByTestId('x-confirm'));
+    await vi.waitFor(() =>
+      expect(within(dialog).getByTestId('x-confirm')).toHaveAttribute('aria-busy', 'true'),
+    );
+    expect(field).toHaveValue('no');
+    refuse(new ApiError('INVALID_CREDENTIALS', 401));
+    expect(
+      await within(dialog).findByText('The password is not right. Nothing was changed.'),
+    ).toBeInTheDocument();
+    expect(field).toHaveValue('');
+  });
+
   it('ends the question when the dialog is closed by its own close button', async () => {
     const handler = new StepUpHandler(apiClient, () => 'password');
     show(handler);

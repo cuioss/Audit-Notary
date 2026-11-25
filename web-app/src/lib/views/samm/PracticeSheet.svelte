@@ -70,7 +70,10 @@
   let stamp = $state('');
   let failure = $state<string | null>(null);
   // A save may ask for step-up (UC-ACC-3): the handler decides whether and how.
-  const stepUp = new StepUpHandler();
+  // The identity provider keeps nothing of this page, so the changes are kept as the draft before the app leaves.
+  const stepUp = new StepUpHandler(apiClient, undefined, async () => {
+    await keepDraft();
+  });
   let conflicts: Record<string, ConflictField> = $state({});
   let conflictBlob = $state('');
   let announcement = $state('');
@@ -275,8 +278,8 @@
         apiClient.saveDocument('samm-assessments', documentId, request, password),
       );
       if (result.status === 'handled') {
-        // Nothing was saved for everyone (cancelled, left for the provider, too many logins): the changes stay the
-        // person's and are kept as a draft.
+        // Nothing was saved for everyone (cancelled, too many logins; or the app is leaving for the provider, after
+        // the changes were kept as a draft): the changes stay the person's and are kept as a draft.
         saveState = 'changed';
         draftTimer = setTimeout(() => void keepDraft(), DRAFT_DELAY_MS);
         return;

@@ -50,6 +50,29 @@ describe('the method mfa', () => {
     expect(get(handler.state)).toMatchObject({ working: false, asking: false, notice: null });
   });
 
+  it('lets the view keep its changes before the app leaves, and leaves even when that fails', async () => {
+    await prepare('release');
+    const leave = vi.spyOn(apiClient, 'stepUp').mockImplementation(() => {});
+    const order: string[] = [];
+    leave.mockImplementation(() => {
+      order.push('leave');
+    });
+    const keep = vi.fn(() => {
+      order.push('keep');
+      return Promise.resolve();
+    });
+    await new StepUpHandler(apiClient, () => 'mfa', keep).run(release);
+    expect(order).toEqual(['keep', 'leave']);
+    await prepare('release');
+    const failing = new StepUpHandler(
+      apiClient,
+      () => 'mfa',
+      () => Promise.reject(new Error('x')),
+    );
+    expect(await failing.run(release)).toEqual({ status: 'handled' });
+    expect(leave).toHaveBeenCalledTimes(2);
+  });
+
   it('shows the work of a request that is running', async () => {
     await prepare('release#stepped-up');
     const handler = new StepUpHandler();
@@ -155,11 +178,15 @@ describe('the method password', () => {
     expect(get(handler.state).asking).toBe(false);
   });
 
-  it('stays open when the server asks again without an address', async () => {
+  it('stays open and says so when the server asks again without an address', async () => {
     const handler = new StepUpHandler(apiClient, () => 'password');
     const run = handler.run(() => Promise.reject(new ApiError('STEP_UP_REQUIRED', 403)));
     await handler.submit('secret');
-    expect(get(handler.state)).toMatchObject({ asking: true, sending: false });
+    expect(get(handler.state)).toMatchObject({
+      asking: true,
+      sending: false,
+      dialogError: 'error.unexpected',
+    });
     handler.cancel();
     expect(await run).toEqual({ status: 'handled' });
   });
