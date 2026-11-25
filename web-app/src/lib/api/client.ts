@@ -6,7 +6,7 @@
  * the current canonical address as `return`, and keeps one shared event stream.
  */
 import { loginStartAddress } from '../access/access';
-import { ApiError, isOutcome, type FieldError } from './errors';
+import { ApiError, isApiError, isOutcome, type FieldError } from './errors';
 import type {
   CatalogList,
   DirectoryEntry,
@@ -555,6 +555,7 @@ export class ApiClient {
 
   private openStream(): () => void {
     let active = true;
+    let closed = false;
     let failures = 0;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let controller: AbortController | null = null;
@@ -587,10 +588,19 @@ export class ApiClient {
           active = false;
           this.setStreamState('offline');
           // The session read names the login this installation uses (`/login` with local users); a read that
-          // is no 401 after all leaves for the default login.
+          // is no 401 after all leaves for the default login. A read that fails for another reason (network, timeout)
+          // says nothing about the session: the stream stays `offline` but retryable, so `retryEvents` and the shell's
+          // recovery open it again; a 401 has led to the login already and keeps the stream closed.
           this.getSession().then(
             () => this.navigate(this.loginAddress(DEFAULT_LOGIN)),
-            () => {},
+            (probeError: unknown) => {
+              if (
+                !closed &&
+                !(isApiError(probeError) && probeError.outcome === 'UNAUTHENTICATED')
+              ) {
+                active = true;
+              }
+            },
           );
           return;
         }
@@ -623,6 +633,7 @@ export class ApiClient {
 
     return () => {
       active = false;
+      closed = true;
       if (timer !== null) clearTimeout(timer);
       controller?.abort();
     };

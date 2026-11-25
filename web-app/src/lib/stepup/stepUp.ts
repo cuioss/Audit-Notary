@@ -79,7 +79,8 @@ export class StepUpHandler {
    * @param client the client, for the redirect to the identity provider
    * @param method how step-up confirms now; reads the status by default
    * @param beforeLeave what the view keeps before the app leaves for the identity provider, which keeps nothing
-   *   across the redirect (PROVISIONAL): a view with unsaved changes keeps them as its draft
+   *   across the redirect (PROVISIONAL): a view with unsaved changes keeps them as its draft. When it rejects, the
+   *   changes could not be kept: the app does not leave and the view shows why
    */
   constructor(
     private readonly client: ApiClient = apiClient,
@@ -142,11 +143,17 @@ export class StepUpHandler {
   async submit(password: string): Promise<void> {
     const current = this.pending;
     if (!current || get(this.store).sending) return;
+    // A cancel or a new run while the request is awaited replaces `pending`: the late answer then belongs to a
+    // request nobody waits for any more and must neither resolve nor change the dialog of the next one. Its result
+    // is dropped: the dialog it was asked in is gone, and its caller was answered `handled` then.
+    const stale = (): boolean => this.pending !== current;
     this.patch({ sending: true, dialogError: null });
     try {
       const value = await current.request(password);
+      if (stale()) return;
       this.finish({ status: 'done', value });
     } catch (error) {
+      if (stale()) return;
       if (isApiError(error) && error.outcome === 'INVALID_CREDENTIALS') {
         // A wrong password is no lost session: the dialog stays open, nothing was written.
         this.patch({ sending: false, dialogError: 'error.invalid-credentials' });
@@ -157,7 +164,9 @@ export class StepUpHandler {
         this.patch({ sending: false, dialogError: 'error.unexpected' });
         return;
       }
-      this.finish(await this.classify(error));
+      const result = await this.classify(error, stale);
+      if (stale()) return;
+      this.finish(result);
     }
   }
 
@@ -177,16 +186,28 @@ export class StepUpHandler {
    * Sorts a refusal into the handler's and the view's.
    *
    * @param error what the request threw
+   * @param stale whether the request was replaced meanwhile (cancelled, or another run took its place): a stale
+   *   refusal has no effect, neither a notice nor the redirect
    * @returns the result
    */
-  private async classify<T>(error: unknown): Promise<StepUpResult<T>> {
+  private async classify<T>(
+    error: unknown,
+    stale: () => boolean = () => false,
+  ): Promise<StepUpResult<T>> {
+    if (stale()) return { status: 'handled' };
     if (!isApiError(error)) return { status: 'refused', error: new ApiError('UNEXPECTED', 0) };
     switch (error.outcome) {
       case 'STEP_UP_REQUIRED': {
         const address = stepUpAddress(error);
         if (address) {
-          // A failed keep must not hold the user back from the step-up.
-          await this.beforeLeave().catch(() => undefined);
+          // The changes must be kept before the app leaves, because the provider keeps nothing of the page: a view
+          // that cannot keep them stays where it is, with its own message, and the app does not leave.
+          try {
+            await this.beforeLeave();
+          } catch {
+            return { status: 'handled' };
+          }
+          if (stale()) return { status: 'handled' };
           this.client.stepUp(address);
         } else {
           // No address and no dialog: a user of the identity provider has no password to give.

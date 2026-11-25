@@ -67,6 +67,30 @@ describe('scenarioFetch', () => {
     expect(oidc.status).toBe(404);
   });
 
+  it('reads the form credentials from a Request passed instead of an init body', async () => {
+    const local = scenarioFetch('local');
+    const login = (password: string) =>
+      new Request('http://localhost/j_security_check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ j_username: 'alex', j_password: password }),
+      });
+    expect((await local.fetch(login('local-password'))).status).toBe(200);
+    expect((await local.fetch(login('nope'))).status).toBe(401);
+  });
+
+  it('applies the flags of the selected state from the first request', async () => {
+    const ended = scenarioFetch('workshop#session-ended');
+    const refused = await ended.fetch('/api/v1/session');
+    expect(refused.status).toBe(401);
+    expect((await refused.json()).outcome).toBe('UNAUTHENTICATED');
+    const ordinary = scenarioFetch('workshop');
+    expect((await ordinary.fetch('/api/v1/session')).status).toBe(200);
+    const replaced = scenarioFetch('workshop#session-replaced');
+    const first = (await (await replaced.fetch('/api/v1/session')).json()).csrfToken;
+    expect(first).not.toBe((await (await ordinary.fetch('/api/v1/session')).json()).csrfToken);
+  });
+
   it('replaces the anti-CSRF token when a state replaces the session, and ends it with session-ended', async () => {
     const scenario = scenarioFetch('workshop');
     const token = async () => (await (await scenario.fetch('/api/v1/session')).json()).csrfToken;

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import canonical from '../main/resources/META-INF/audit-notary/canonical-addresses.json';
 import {
   LENSES,
   OUTSIDE_ROUTES,
@@ -127,7 +128,9 @@ describe('the addresses outside the shell', () => {
   });
 
   it('are no canonical addresses: not among the routes, never a valid return', () => {
-    expect(OUTSIDE_ROUTES).toEqual(['login', 'signed-out', 'login-problem']);
+    // The inventory is the bundled definition's own; the three public routes are pinned by the contract tests above.
+    expect(OUTSIDE_ROUTES).toEqual(canonical.outsideShell.map((entry) => entry.route));
+    expect(OUTSIDE_ROUTES.length).toBeGreaterThan(0);
     for (const route of OUTSIDE_ROUTES) {
       expect(ROUTES).not.toContain(route);
     }

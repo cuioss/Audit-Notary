@@ -71,8 +71,17 @@
   let failure = $state<string | null>(null);
   // A save may ask for step-up (UC-ACC-3): the handler decides whether and how.
   // The identity provider keeps nothing of this page, so the changes are kept as the draft before the app leaves.
+  // A draft that cannot be kept keeps the person on the page (the hook rejects), and no edit is accepted from the
+  // moment the draft is read until the app has left, so every accepted edit is in the draft.
+  let leaving = $state(false);
   const stepUp = new StepUpHandler(apiClient, undefined, async () => {
-    await keepDraft();
+    leaving = true;
+    try {
+      await keepDraft(true);
+    } catch (error) {
+      leaving = false;
+      throw error;
+    }
   });
   let conflicts: Record<string, ConflictField> = $state({});
   let conflictBlob = $state('');
@@ -95,6 +104,8 @@
   let readonly = $derived(
     !assessment || assessment.state === 'released' || !rights.includes('edit'),
   );
+  /** Whether the controls refuse a change: the sheet is read-only, or the departure for the provider has begun. */
+  let locked = $derived(readonly || leaving);
   let target = $derived(scope?.targets[practiceId]?.target ?? null);
   let dirty = $derived(Object.keys(edits).length > 0);
 
@@ -191,7 +202,7 @@
   });
 
   function change(id: string, edit: Edit) {
-    if (readonly) return;
+    if (locked) return;
     edits = { ...edits, [id]: { ...edits[id], ...edit } };
     failure = null;
     // While a save for everyone runs, it stays the state: the act stays busy, and the save keeps this change for
@@ -222,7 +233,13 @@
     return requestFor(practiceId, edits, blob);
   }
 
-  async function keepDraft() {
+  /**
+   * Keeps the changes as the person's draft.
+   *
+   * @param rethrow whether a failed write is thrown after it was shown, for the caller that must not go on without
+   *   a draft (the departure for the identity provider); the timer and the blur swallow it
+   */
+  async function keepDraft(rethrow = false) {
     draftTimer = null;
     if (!assessment || !dirty) return;
     saveState = 'drafting';
@@ -238,6 +255,7 @@
         saveState = 'failed';
         failure = errorMessageKey(error);
       }
+      if (rethrow) throw error;
     }
   }
 
@@ -280,7 +298,9 @@
       if (result.status === 'handled') {
         // Nothing was saved for everyone (cancelled, too many logins; or the app is leaving for the provider, after
         // the changes were kept as a draft): the changes stay the person's and are kept as a draft.
-        saveState = 'changed';
+        // A draft that failed before the departure keeps its message until the next write.
+        // (`keepDraft` set the state meanwhile, which the compiler cannot see.)
+        if ((saveState as SaveStateKind) !== 'failed') saveState = 'changed';
         draftTimer = setTimeout(() => void keepDraft(), DRAFT_DELAY_MS);
         return;
       }
@@ -399,7 +419,7 @@
     if (target.closest('textarea, input[type="text"], [contenteditable], dialog')) return;
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     const question = questions[active];
-    if (/^[1-4]$/.test(event.key) && question && !readonly) {
+    if (/^[1-4]$/.test(event.key) && question && !locked) {
       const option = question.answers[Number(event.key) - 1];
       if (option) {
         event.preventDefault();
@@ -533,7 +553,7 @@
                     options={question.answers}
                     value={answerOf(question.id)}
                     onchange={(value) => change(question.id, { answer: value })}
-                    {readonly}
+                    readonly={locked}
                     hints={hints && active === index}
                     testId="answer-{question.id}"
                   />
@@ -589,7 +609,7 @@
                         label={$t('practice.comment')}
                         hint={$t('field.free-text.hint')}
                         value={commentOf(question.id)}
-                        {readonly}
+                        readonly={locked}
                         oninput={(value) => change(question.id, { comment: value })}
                         testId="comment-{question.id}"
                       />

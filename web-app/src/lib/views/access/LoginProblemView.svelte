@@ -1,7 +1,7 @@
 <script lang="ts">
   import Link from '../../components/Link.svelte';
-  import Notice, { type NoticeTone } from '../../components/Notice.svelte';
-  import { loginProviderOf, loginStartAddress } from '../../access/access';
+  import Notice from '../../components/Notice.svelte';
+  import { LOGIN_PROBLEM_REASONS, loginProviderOf, loginStartAddress } from '../../access/access';
   import { t } from '../../i18n';
   import GateFrame from '../../shell/GateFrame.svelte';
   import { status } from '../../stores/app';
@@ -20,17 +20,10 @@
 
   let { search }: Props = $props();
 
-  /** The reasons and the tone of their notice: a service that is down is a fault, the others pass with a wait. */
-  const REASONS: Record<string, NoticeTone> = {
-    'idp-unavailable': 'danger',
-    'too-many-logins': 'attention',
-    'unknown-transaction': 'attention',
-  };
-
   let provider = $derived(loginProviderOf($status));
   let reason = $derived.by(() => {
     const asked = new URLSearchParams(search).get('reason') ?? '';
-    return Object.hasOwn(REASONS, asked) ? asked : 'general';
+    return Object.hasOwn(LOGIN_PROBLEM_REASONS, asked) ? asked : 'general';
   });
 </script>
 
@@ -41,7 +34,7 @@
     testId="login-problem-view"
   >
     <Notice
-      tone={REASONS[reason] ?? 'danger'}
+      tone={LOGIN_PROBLEM_REASONS[reason] ?? 'danger'}
       title={$t(`login-problem.reason.${reason}.title`)}
       body={$t(`login-problem.reason.${reason}.body`)}
       live

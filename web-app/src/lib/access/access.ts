@@ -2,6 +2,7 @@
  * What the shell reads from the status and the session about access (doc/specification/rest-api.adoc: `GET
  * /api/v1/status`, A Session Without Rights).
  */
+import type { NoticeTone } from '../components/Notice.svelte';
 import type { LoginProvider, Session, Status, StepUpMethod } from '../api/types';
 
 /**
@@ -44,3 +45,15 @@ export function loginStartAddress(provider: LoginProvider, returnAddress: string
   const target = provider === 'local' ? '/login' : PROVIDER_LOGIN;
   return `${target}?return=${encodeURIComponent(returnAddress)}`;
 }
+
+/**
+ * The reasons of `/login-problem?reason=<reason>` the page names, and the tone of their notice: a service that is down
+ * is a fault, the others pass with a wait. Every reason has the catalogue keys `login-problem.reason.<reason>.title`
+ * and `.body` in both languages, and is named by doc/specification/rest-api.adoc, Addresses Outside the Shell; a test
+ * holds the three together. Any other reason, or none, is the general failure.
+ */
+export const LOGIN_PROBLEM_REASONS: Readonly<Record<string, NoticeTone>> = {
+  'idp-unavailable': 'danger',
+  'too-many-logins': 'attention',
+  'unknown-transaction': 'attention',
+};

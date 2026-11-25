@@ -756,4 +756,25 @@ describe('the sheets and the step-up handler (UC-ACC-3)', () => {
     await fireEvent.click(screen.getByTestId('save-everyone'));
     await vi.waitFor(() => expect(order).toEqual(['draft', 'leave']));
   });
+
+  it('stays on the page, with the failure shown, when the draft cannot be kept before the departure', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    status.set({ ...PASSWORD, stepUp: 'mfa' });
+    vi.spyOn(apiClient, 'saveDocument').mockRejectedValue(
+      new ApiError('STEP_UP_REQUIRED', 403, [], { stepUp: '/api/v1/auth/login?step-up=mfa' }),
+    );
+    const draft = vi.spyOn(apiClient, 'saveDraft').mockRejectedValue(new ApiError('NETWORK', 0));
+    const leave = vi.spyOn(apiClient, 'stepUp').mockImplementation(() => {});
+    render(PracticeSheet, { scope, assessment, model, practiceId: 'sm' });
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    await vi.waitFor(() => expect(draft).toHaveBeenCalled());
+    await vi.waitFor(() =>
+      expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'failed'),
+    );
+    expect(leave).not.toHaveBeenCalled();
+    // The sheet takes edits again.
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-2'));
+    expect(screen.getByTestId('answer-sm-a-1-2')).toBeChecked();
+  });
 });

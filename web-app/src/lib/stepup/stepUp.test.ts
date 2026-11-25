@@ -50,7 +50,7 @@ describe('the method mfa', () => {
     expect(get(handler.state)).toMatchObject({ working: false, asking: false, notice: null });
   });
 
-  it('lets the view keep its changes before the app leaves, and leaves even when that fails', async () => {
+  it('lets the view keep its changes before the app leaves, and stays when it cannot', async () => {
     await prepare('release');
     const leave = vi.spyOn(apiClient, 'stepUp').mockImplementation(() => {});
     const order: string[] = [];
@@ -70,7 +70,8 @@ describe('the method mfa', () => {
       () => Promise.reject(new Error('x')),
     );
     expect(await failing.run(release)).toEqual({ status: 'handled' });
-    expect(leave).toHaveBeenCalledTimes(2);
+    expect(leave).toHaveBeenCalledTimes(1);
+    expect(get(failing.state)).toMatchObject({ working: false, asking: false, notice: null });
   });
 
   it('shows the work of a request that is running', async () => {
@@ -224,5 +225,38 @@ describe('the method password', () => {
     finish(7);
     await first;
     expect(await run).toEqual({ status: 'done', value: 7 });
+  });
+
+  it('does not let a request that was replaced resolve or change the one that replaced it', async () => {
+    const handler = new StepUpHandler(apiClient, () => 'password');
+    let finishFirst: (value: number) => void = () => {};
+    const first = handler.run(() => new Promise<number>((resolve) => (finishFirst = resolve)));
+    const sending = handler.submit('secret');
+    handler.cancel();
+    expect(await first).toEqual({ status: 'handled' });
+    const second = handler.run(() => Promise.resolve(2));
+    finishFirst(1);
+    await sending;
+    // The late value of the first request is dropped; the dialog of the second stays as it was asked.
+    expect(get(handler.state)).toMatchObject({ asking: true, sending: false, dialogError: null });
+    await handler.submit('secret');
+    expect(await second).toEqual({ status: 'done', value: 2 });
+  });
+
+  it('does not let a late refusal of a replaced request change the dialog or leave for the provider', async () => {
+    const leave = vi.spyOn(apiClient, 'stepUp').mockImplementation(() => {});
+    const handler = new StepUpHandler(apiClient, () => 'password');
+    let refuse: (error: unknown) => void = () => {};
+    const first = handler.run(() => new Promise<number>((_, reject) => (refuse = reject)));
+    const sending = handler.submit('secret');
+    handler.cancel();
+    await first;
+    const second = handler.run(() => Promise.resolve(2));
+    refuse(new ApiError('STEP_UP_REQUIRED', 403, [], { stepUp: '/api/v1/auth/login?step-up=mfa' }));
+    await sending;
+    expect(leave).not.toHaveBeenCalled();
+    expect(get(handler.state)).toMatchObject({ asking: true, dialogError: null });
+    handler.cancel();
+    expect(await second).toEqual({ status: 'handled' });
   });
 });

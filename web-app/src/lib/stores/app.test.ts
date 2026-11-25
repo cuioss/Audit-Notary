@@ -12,6 +12,7 @@ import {
   keepStreamAlive,
   peek,
   session,
+  SESSION_RETRY_MS,
   status,
   STREAM_RECOVERY_MS,
   streamState,
@@ -238,5 +239,66 @@ describe('a session that is replaced or ended (UC-ACC-6), against workshop', () 
     end();
     await vi.waitFor(() => expect(reload).toHaveBeenCalledTimes(1));
     expect(getSession).toHaveBeenCalledTimes(2);
+  });
+
+  it('reads the session again once the stream is connected after a read that failed', async () => {
+    const client = new ApiClient(() => {});
+    let end: () => void = () => {};
+    let setState: (state: StreamState) => void = () => {};
+    vi.spyOn(client, 'subscribeStreamEnd').mockImplementation((listener) => {
+      end = listener;
+      return () => {};
+    });
+    vi.spyOn(client, 'subscribeStreamState').mockImplementation((listener) => {
+      setState = listener;
+      listener('connected');
+      return () => {};
+    });
+    const getSession = vi
+      .spyOn(client, 'getSession')
+      .mockRejectedValueOnce(new ApiError('NETWORK', 0))
+      .mockResolvedValue({ ...SESSION, csrfToken: 'again' });
+    session.set(SESSION);
+    const reload = vi.fn();
+    const stop = watchSession(client, reload);
+    setState('reconnecting');
+    end();
+    await vi.waitFor(() => expect(getSession).toHaveBeenCalledTimes(1));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(reload).not.toHaveBeenCalled();
+    setState('connected');
+    await vi.waitFor(() => expect(reload).toHaveBeenCalledTimes(1));
+    expect(getSession).toHaveBeenCalledTimes(2);
+    stop();
+  });
+
+  it('repeats a failed read after a pause when the stream is connected already, and not after a 401', async () => {
+    vi.useFakeTimers();
+    try {
+      const client = new ApiClient(() => {});
+      vi.spyOn(client, 'subscribeStreamEnd').mockImplementation((listener) => {
+        queueMicrotask(listener);
+        return () => {};
+      });
+      vi.spyOn(client, 'subscribeStreamState').mockImplementation((listener) => {
+        listener('connected');
+        return () => {};
+      });
+      const getSession = vi
+        .spyOn(client, 'getSession')
+        .mockRejectedValueOnce(new ApiError('TIMEOUT', 0))
+        .mockRejectedValueOnce(new ApiError('UNAUTHENTICATED', 401));
+      session.set(SESSION);
+      const stop = watchSession(client, vi.fn());
+      await vi.advanceTimersByTimeAsync(0);
+      expect(getSession).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(SESSION_RETRY_MS);
+      expect(getSession).toHaveBeenCalledTimes(2);
+      await vi.advanceTimersByTimeAsync(SESSION_RETRY_MS * 3);
+      expect(getSession).toHaveBeenCalledTimes(2);
+      stop();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

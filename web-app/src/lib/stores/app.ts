@@ -106,6 +106,9 @@ export async function boot(
   };
 }
 
+/** The pause before a failed session read is repeated while the event stream is connected. */
+export const SESSION_RETRY_MS = 5_000;
+
 /**
  * Reads the session again after the event stream closed, and reloads the tab when it is another session (UC-ACC-6,
  * doc/specification/rest-api.adoc, A Session That Is Replaced): the stream belongs to its session and closes with it.
@@ -114,6 +117,9 @@ export async function boot(
  * - The same `csrfToken` the tab started with: a transient break, the stream opens again by itself.
  * - Another `csrfToken`: a new login in the same browser replaced the session (PROVISIONAL: the token is the
  *   identity of a session), so the tab reloads at its address and shows the new session.
+ * - A read that fails otherwise (network, timeout) is repeated once the stream is `connected` again, or after
+ *   {@link SESSION_RETRY_MS} when it is connected already: a reconnecting stream emits no end, so nothing else would
+ *   read the session of the tab again.
  *
  * @param client the client
  * @param reload reloads the tab at its address
@@ -121,9 +127,21 @@ export async function boot(
  */
 export function watchSession(client: ApiClient, reload: () => void): () => void {
   let reading = false;
-  return client.subscribeStreamEnd(() => {
-    if (reading) return;
+  let stopped = false;
+  let retryPending = false;
+  let state: StreamState = 'offline';
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  const clearTimer = (): void => {
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+  };
+
+  const read = (): void => {
+    if (reading || stopped) return;
     reading = true;
+    retryPending = false;
+    clearTimer();
     const known = peek(session)?.csrfToken;
     client
       .getSession()
@@ -134,13 +152,28 @@ export function watchSession(client: ApiClient, reload: () => void): () => void 
           session.set(current);
         }
       })
-      .catch(() => {
-        // `401` already led to the login; any other failure is a break the stream recovery handles.
+      .catch((error: unknown) => {
+        // `401` already led to the login; any other failure is read again once the stream is back.
+        if (stopped || (isApiError(error) && error.outcome === 'UNAUTHENTICATED')) return;
+        retryPending = true;
+        if (state === 'connected') timer = setTimeout(read, SESSION_RETRY_MS);
       })
       .finally(() => {
         reading = false;
       });
+  };
+
+  const stopEnd = client.subscribeStreamEnd(read);
+  const stopState = client.subscribeStreamState((next) => {
+    state = next;
+    if (next === 'connected' && retryPending) read();
   });
+  return () => {
+    stopped = true;
+    clearTimer();
+    stopEnd();
+    stopState();
+  };
 }
 
 /** The pause between two attempts to bring an `offline` event stream back. */

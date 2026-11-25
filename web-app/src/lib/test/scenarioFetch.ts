@@ -153,6 +153,10 @@ export function scenarioFetch(reference: string): ScenarioFetch {
     if (entered?.session_ended) ended = true;
   };
 
+  // The mock enters its start state the same way, so the flags of a state that is selected by `name#state` hold from
+  // the first request.
+  enter(state);
+
   const fetchImpl = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const request = input instanceof Request ? input : null;
     const url = new URL(request ? request.url : String(input), 'http://localhost');
@@ -160,7 +164,14 @@ export function scenarioFetch(reference: string): ScenarioFetch {
     const current = scenario.states[state] ?? {};
     const key = `${method} ${url.pathname}`;
     if (key === 'POST /j_security_check') {
-      const form = new URLSearchParams(String(init?.body ?? ''));
+      // The credentials are in the init's body, or in the body of a `Request` passed instead.
+      const text =
+        init?.body !== undefined && init.body !== null
+          ? String(init.body)
+          : request
+            ? await request.clone().text()
+            : '';
+      const form = new URLSearchParams(text);
       const known = scenario.login?.users?.some(
         (user) =>
           user.username === form.get('j_username') && user.password === form.get('j_password'),

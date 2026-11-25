@@ -457,4 +457,44 @@ describe('the end of the event stream', () => {
       ),
     );
   });
+
+  it('keeps a stream retryable when the session read after a refused stream fails without a 401', async () => {
+    let streamCalls = 0;
+    fetchMock.mockImplementation(async (path: string, init?: RequestInit) => {
+      if (path === '/api/v1/events') {
+        streamCalls += 1;
+        return streamCalls === 1 ? new Response('', { status: 401 }) : stream([], init?.signal);
+      }
+      throw new TypeError('offline');
+    });
+    const states: StreamState[] = [];
+    client.subscribeStreamState((state) => states.push(state));
+    client.subscribeEvents(() => {});
+    await vi.waitFor(() => expect(streamCalls).toBe(1));
+    await vi.waitFor(() =>
+      expect(fetchMock.mock.calls.some(([path]) => path === '/api/v1/session')).toBe(true),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    client.retryEvents();
+    await vi.waitFor(() => expect(streamCalls).toBe(2));
+    await vi.waitFor(() => expect(states.at(-1)).toBe('connected'));
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('keeps the stream closed when the session read after a refused stream is a 401', async () => {
+    let streamCalls = 0;
+    fetchMock.mockImplementation(async (path: string) => {
+      if (path === '/api/v1/events') {
+        streamCalls += 1;
+        return new Response('', { status: 401 });
+      }
+      return json(401, { outcome: 'UNAUTHENTICATED', login: '/login' });
+    });
+    client.subscribeEvents(() => {});
+    await vi.waitFor(() => expect(navigate).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    client.retryEvents();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(streamCalls).toBe(1);
+  });
 });
