@@ -24,7 +24,8 @@ turns the status into `SPECIFIED` and links it.
 `SPECIFIED`.
 * *Outcomes* lists those of the request beyond the common refusals below. A refusal names its `outcome` in the JSON
 body, and the web app decides by it, never by the status code alone
-(xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]). Statuses are given only where a source fixes them.
+(xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]); the `ApiClient` does not yet follow this for `401 INVALID_CREDENTIALS`
+(see <<_open_questions>>). Statuses are given only where a source fixes them.
 * *Login* is required for every request except `GET /api/v1/status`, `GET /api/v1/messages` and the login endpoints.
 * Every request that changes state carries the anti-CSRF header (xref:web-app.adoc#AUN-WEB-8[AUN-WEB-8]), except
 `POST /j_security_check` of the local login, which is no `/api/v1` request and not in the register.
