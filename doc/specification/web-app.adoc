@@ -78,6 +78,11 @@ Canonical addresses: `/` (Due), `/samm/<scope>/<assessment>/<practice>`, `/threa
 `/reports/<report>`, `/settings/<section>`, `/welcome` (first login) and `/<lens path>/release`. `src/lib/routes.ts`
 holds `parseAddress` and `formatAddress`; route files are stubs rendering `AppRouter`.
 
+Three more addresses are shown without the shell: `/login` (local users), `/signed-out` and `/login-problem`
+(provisional, xref:rest-api.adoc#_addresses_outside_the_shell[REST API Register, Addresses Outside the Shell]). They are
+in `canonical-addresses.json` as `outsideShell`, so the web app routes them and the check of a login's `return` refuses
+them: a login does not return to the page that started it.
+
 [#AUN-WEB-4]
 == AUN-WEB-4: Generated Forms
 

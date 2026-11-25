@@ -372,6 +372,19 @@ Open:
   a non-OIDC identity without tokens; its planned record (SESSION-1) and entry point (BFF-1) are OIDC-only. Until then
   local users run on Quarkus' form authentication.
 
+Decided provisionally with the access use cases (UC-ACC-1, -2, -3, -6, -7); the owner may change each one. The
+reasons are in xref:../specification/rest-api.adoc#_open_questions[REST API Register, Open Questions]:
+
+. A login that cannot start or complete is shown to the person on a page of the web app, `/login-problem`, not as raw
+  JSON: the browser navigation to the login start or the callback is answered with a `303`; the new outcome
+  `UNKNOWN_TRANSACTION` (`400`) names a callback whose transaction is not found. Whether Token Sheriff's layer
+  (BFF-1 to BFF-3) offers a hook for the failure address is open.
+. The logout lands on `/signed-out`; with the identity provider that address is the post-logout redirect address the
+  operator registers at the provider.
+. A wrong step-up password is `401 INVALID_CREDENTIALS`, and the client decides a `401` by its outcome first.
+. The identity of a session in the browser is its anti-CSRF token; whether the layer's session view (SESSION-10) offers
+  an explicit member is open.
+
 == Related
 
 * https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/identity-and-signing.adoc[Identity and Signing] — the library side

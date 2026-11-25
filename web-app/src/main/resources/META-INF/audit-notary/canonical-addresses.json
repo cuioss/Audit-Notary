@@ -1,5 +1,5 @@
 {
-  "description": "The canonical addresses of the web app (doc/specification/web-app.adoc, AUN-WEB-3). One source for the router of the web app, the return check of the login (AUN-AUTH-1) and the mock server. A {name} placeholder matches one path segment of the pattern named in params, or the default segment pattern.",
+  "description": "The canonical addresses of the web app (doc/specification/web-app.adoc, AUN-WEB-3). One source for the router of the web app, the return check of the login (AUN-AUTH-1) and the mock server. A {name} placeholder matches one path segment of the pattern named in params, or the default segment pattern. The addresses of outsideShell are routed by the web app without the shell (doc/specification/rest-api.adoc, Addresses Outside the Shell); they are deliberately not in addresses, so that the check of a login's return never accepts them.",
   "segment": "[a-z0-9][a-z0-9._-]{0,127}",
   "params": {
     "year": "[0-9]{4}"
@@ -34,5 +34,10 @@
     { "route": "reports.report", "pattern": "/reports/{report}" },
     { "route": "settings", "pattern": "/settings" },
     { "route": "settings.section", "pattern": "/settings/{section}" }
+  ],
+  "outsideShell": [
+    { "route": "login", "pattern": "/login" },
+    { "route": "signed-out", "pattern": "/signed-out" },
+    { "route": "login-problem", "pattern": "/login-problem" }
   ]
 }
