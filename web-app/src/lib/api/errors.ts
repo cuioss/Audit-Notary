@@ -18,6 +18,7 @@ export const OUTCOMES = [
   'MANDATORY_FIELDS_MISSING',
   'CHANGED_SINCE_REVIEW',
   'MODEL_VERSIONS_DIFFER',
+  'TOO_MANY_LOGINS',
 ] as const;
 
 /** An outcome of a refusal of the server. */
@@ -111,6 +112,8 @@ export function errorMessageKey(error: unknown): string {
       return 'error.mandatory-fields-missing';
     case 'CHANGED_SINCE_REVIEW':
       return 'error.changed-since-review';
+    case 'TOO_MANY_LOGINS':
+      return 'error.too-many-logins';
     case 'CONFLICT':
       return 'error.conflict';
     case 'TIMEOUT':

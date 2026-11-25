@@ -205,15 +205,17 @@ public final class MockEngine implements AutoCloseable {
         if (open.isPresent()) {
             return open.get();
         }
-        var session = request.cookie(SESSION_COOKIE).map(sessions::get);
-        if (session.isEmpty()) {
-            return json(401, object().put(OUTCOME, "UNAUTHENTICATED").put("login", loginAddress()));
-        }
-        if (request.isStateChanging() && !passesCsrf(request, session.get())) {
-            return json(403, object().put(OUTCOME, "CSRF_REJECTED"));
-        }
         lock.lock();
         try {
+            // The session and the CSRF token are read under the lock: a transition (enter) that ends or replaces the
+            // sessions cannot run between the check and the act.
+            var session = request.cookie(SESSION_COOKIE).map(sessions::get);
+            if (session.isEmpty()) {
+                return json(401, object().put(OUTCOME, "UNAUTHENTICATED").put("login", loginAddress()));
+            }
+            if (request.isStateChanging() && !passesCsrf(request, session.get())) {
+                return json(403, object().put(OUTCOME, "CSRF_REJECTED"));
+            }
             if (request.isStateChanging()) {
                 acts.add(new Act(request.method(), path, state.id(), redacted(parseBody(request))));
             }

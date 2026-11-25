@@ -19,9 +19,11 @@ import org.jspecify.annotations.Nullable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -109,7 +111,8 @@ public final class MockClient implements AutoCloseable {
      * @return the response
      */
     public HttpResponse<String> sendForm(String username, String password) {
-        return send("POST", "/j_security_check", "j_username=" + username + "&j_password=" + password,
+        return send("POST", "/j_security_check", "j_username=" + URLEncoder.encode(username, StandardCharsets.UTF_8) + "&j_password="
+                        + URLEncoder.encode(password, StandardCharsets.UTF_8),
                 Map.of("Origin", mock.baseUrl(), "Content-Type", "application/x-www-form-urlencoded"));
     }
 
