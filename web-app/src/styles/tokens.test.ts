@@ -173,6 +173,12 @@ describe('tokens.css', () => {
         ).toBeGreaterThanOrEqual(3);
       });
 
+      it('the field boundary stands out from the desk by 3:1, where a form lies on it (the login page)', () => {
+        expect(
+          contrastRatio(palette['--color-border-field'], palette['--color-bg-app']),
+        ).toBeGreaterThanOrEqual(3);
+      });
+
       for (const state of [
         '--color-attention',
         '--color-neutral',

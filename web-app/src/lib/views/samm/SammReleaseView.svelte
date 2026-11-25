@@ -465,8 +465,10 @@
   }
 
   .record__count {
+    flex: 0 0 auto;
     font-size: var(--text-sm);
     color: var(--color-text-muted);
+    white-space: nowrap;
   }
 
   .changes {

@@ -17,11 +17,13 @@
 </script>
 
 <div class="gate">
-  <header class="gate__head"><Wordmark /></header>
-  <main id="main" class="gate__main" tabindex="-1">
-    <div class="gate__notices"><AccessNotices /></div>
-    {@render children()}
-  </main>
+  <div class="gate__column">
+    <header class="gate__head"><Wordmark /></header>
+    <main id="main" class="gate__main" tabindex="-1">
+      <div class="gate__notices"><AccessNotices /></div>
+      {@render children()}
+    </main>
+  </div>
 </div>
 
 <style>
@@ -32,15 +34,22 @@
     background-color: var(--color-bg-app);
   }
 
+  /* The name and the page share one column, so the name stands on the left edge of the page's text. */
+  .gate__column {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    inline-size: 100%;
+    max-inline-size: 720px;
+    margin-inline: auto;
+  }
+
   .gate__head {
     padding: var(--space-5) var(--space-6);
   }
 
   .gate__main {
     flex: 1 1 auto;
-    inline-size: 100%;
-    max-inline-size: 720px;
-    margin-inline: auto;
   }
 
   .gate__main:focus {

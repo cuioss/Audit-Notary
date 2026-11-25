@@ -117,14 +117,23 @@
 </GateFrame>
 
 <style>
+  /* Three short fields: a form of the width of its content, not of the page; the act under the fields. */
   .login {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+    max-inline-size: 26rem;
   }
 
   .login__acts {
     display: flex;
-    justify-content: flex-end;
+    margin-block-start: var(--space-2);
+  }
+
+  /* On the phone the one act is the width of the form: a target to hit with a thumb. */
+  @media (max-width: 767px) {
+    .login__acts :global(.btn) {
+      flex: 1 1 auto;
+    }
   }
 </style>
