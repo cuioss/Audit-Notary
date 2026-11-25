@@ -64,6 +64,8 @@ verification classes outside JUnit. The target is Java 25; CI builds on Java 25 
   `-Ppre-commit` maintains it for Java sources (the root pom overrides the Apache-2.0 header of the parent pom), and
   the shell scripts carry the same text by hand. `inceptionYear` in the root pom must stay set, otherwise every run
   restamps all headers.
+- The visual design of the web app is [`doc/concepts/visual-design.adoc`](doc/concepts/visual-design.adoc): read it
+  before changing a token, a component or a view.
 - The conventions for code (null safety, logging, results instead of exceptions, tests) are those of the libraries;
   see `doc/specification/architecture-and-modules.adoc` and `doc/specification/testing.adoc`.
 

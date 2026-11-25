@@ -13,7 +13,8 @@ resource JAR that the application serves. Specification: `doc/specification/web-
 |Path |Content
 
 |`src/styles/`
-|Design: `tokens.css` (the token contract of `pm-web-app`, pinned by commit in its header), `base.css`, `layers.ts`;
+|Design (`doc/concepts/visual-design.adoc`): `tokens.css` (the token names of `pm-web-app`, pinned by commit in its
+header, with Audit Notary's own values), `base.css` (Inter and Source Serif 4), `layers.ts`;
 `tokens.test.ts` checks both themes for WCAG 2.1 AA
 
 |`src/lib/brand/`

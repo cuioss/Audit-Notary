@@ -46,8 +46,11 @@ the header of `src/styles/tokens.css`, and a change of the token contract is tak
 [#AUN-WEB-2]
 == AUN-WEB-2: Visual Language and Accessibility
 
-* The app must use the design-token contract of `pm-web-app` with a light and a dark theme; no raw colour literal may
-  appear in a view or a component (stylelint).
+* The app must use the design-token contract of `pm-web-app` — its token names — with Audit Notary's own values in a
+  light and a dark theme (xref:../concepts/visual-design.adoc[Visual Design]); no raw colour literal may appear in a
+  view or a component (stylelint).
+* Every field boundary must reach 3:1 against the sheet (WCAG 2.1 success criterion 1.4.11), and the accessible name
+  of a control must contain its visible label (success criterion 2.5.3).
 * Text contrast must meet WCAG 2.1 AA in both themes, verified automatically; the axe-core audit must report no
   violation of impact `serious` or `critical`.
 
@@ -55,7 +58,9 @@ Tokens, fonts and checks:
 
 * `src/styles/tokens.css`: the token contract of `pm-web-app`; `:root` light, dark under `prefers-color-scheme` and
   `[data-theme]`. `src/lib/theme.ts`: light, dark, system; stored in `localStorage` key `audit_notary_theme`.
-* Inter variable font self-hosted in `static/fonts/` with its licence file; own icon set in `src/lib/icons/`.
+* Inter (the interface) and Source Serif 4 (the record: sheet titles, section heads, question texts, figures) as
+  variable fonts self-hosted in `static/fonts/` with their licence files, both under the SIL Open Font License 1.1;
+  own icon set in `src/lib/icons/`.
 * Contrast: an automated test computes the relative luminance of WCAG 2.1
   (link:https://www.w3.org/TR/WCAG21/#dfn-relative-luminance[definition]) for every text/background token pair in both
   themes; below 4.5:1 (3:1 for large text) fails, the thresholds of success criterion 1.4.3, level AA

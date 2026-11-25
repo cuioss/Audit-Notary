@@ -24,9 +24,10 @@ authentication demand.
 TypeScript in strict mode, ESLint, Prettier and stylelint.
 
 |*Visual language*
-|The design tokens of `src/styles/tokens.css` with a light and a dark palette, the
-https://www.w3.org/TR/WCAG21/[WCAG 2.1] AA contrast checks of its
-theme-readability design, Inter self-hosted and an own icon set; no raw colour literal in a view or a component.
+|The token contract of `src/styles/tokens.css` — its names, a light and a dark palette, the
+https://www.w3.org/TR/WCAG21/[WCAG 2.1] AA contrast checks of its theme-readability design — Inter self-hosted and the
+rules of an own icon set; no raw colour literal in a view or a component. The values and the look are Audit Notary's
+own (<<_visual_design>>).
 
 |*Structure*
 |The shell (`AppShell` with `NavRail`, `TopBar`, `BottomBar` on the phone, `CommandPalette`), the page templates
@@ -52,7 +53,7 @@ CORS; served from the application's own origin, the session cookie can be `SameS
 
 == Structure of the App
 
-image::../resources/diagrams/web-app-shell-layout.svg["The web app shell: navigation rail with the lenses, top bar with command palette, live indicator fed by the event stream and user menu, and the main area with one page template, here the TriagePage of the SAMM lens with scopes, assessments and the selected practice as ObjectPage",align=center]
+image::../resources/diagrams/web-app-shell-layout.svg["The web app shell: navigation rail with the lenses, top bar with breadcrumb, command palette and user menu, and the main area with one page template, here the TriagePage of the SAMM lens with scopes, assessments and the selected practice as ObjectPage",align=center]
 
 The rail carries the *lenses* of Audit Notary:
 
@@ -96,6 +97,13 @@ The rail carries the *lenses* of Audit Notary:
 The first login and the release of a document run as `WizardPage` flows.
 
 == What Differs
+
+[#_visual_design]
+=== Visual Design
+
+The token names and the structure stay; the values and the look are Audit Notary's own: the register — a desk, sheets
+with a register margin, the seal of a release, the daybook — with Source Serif 4 for the record beside Inter
+(xref:visual-design.adoc[Visual Design: The Register]).
 
 === Authentication
 
@@ -157,6 +165,9 @@ renewed MFA login before the transition is written.
 
 . Whether the AsciiDoc preview runs server-side only or with a sanitising client renderer.
 . Which `pm-web-app` components move into a shared component package instead of being copied.
+. Which revision of the document a release request carries, so the release is bound to exactly the state the approver
+  reviewed and refused with `CHANGED_SINCE_REVIEW` when the working branch has moved since
+  (xref:../specification/web-app.adoc#AUN-WEB-6[AUN-WEB-6] names the outcome, not yet the request field).
 
 == Related
 

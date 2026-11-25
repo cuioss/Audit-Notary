@@ -117,8 +117,9 @@
    * The maturity seal of a SAMM assessment (doc/concepts/visual-design.adoc, The Seal): the 15 practices of the five
    * business functions as a rosette of 30 lobes, one per stream, each as long as its stream score on the 0 to 3
    * scale. The target of a practice is a dashed arc across its two lobes; the hub states the overall score, or the
-   * practice under the pointer or the focus. Every practice is a link with its full accessible name, so the rosette
-   * is navigation too; the legend names the functions with their scores, and a table states the same figures
+   * practice under the pointer or the focus. Every practice is a link whose accessible name starts with the
+   * abbreviation drawn beside it and goes on with its full name, score and target (WCAG 2.5.3), so the rosette is
+   * navigation too; the legend names the functions with their scores, and a table states the same figures
    * (`AssessmentSheet`).
    *
    * Released, a scalloped seal of gold rings the rosette with the version: the only place the seal gold appears. With
@@ -225,7 +226,7 @@
           class="seal__practice"
           class:seal__practice--active={active}
           href={practice.href}
-          aria-label={practice.label}
+          aria-label={`${practice.shortName}, ${practice.label}`}
           data-practice={practice.id}
           onmouseenter={() => (pointed = practice.id)}
           onmouseleave={() => (pointed = null)}
@@ -239,7 +240,7 @@
           class="seal__practice"
           class:seal__practice--active={active}
           role="img"
-          aria-label={practice.label}
+          aria-label={`${practice.shortName}, ${practice.label}`}
           data-practice={practice.id}
           onmouseenter={() => (pointed = practice.id)}
           onmouseleave={() => (pointed = null)}

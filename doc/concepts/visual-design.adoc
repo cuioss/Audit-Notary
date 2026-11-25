@@ -1,0 +1,196 @@
+= Visual Design: The Register
+:toc: left
+:toclevels: 3
+:toc-title: Table of Contents
+:sectnums:
+:source-highlighter: highlight.js
+
+xref:../README.adoc[Audit Notary documentation] » Concepts
+
+Audit Notary is a form-based application: every document is edited in a form generated from its category's schema
+(xref:web-app.adoc#_forms_from_schemas[Web App, Forms from Schemas]). This page records how it looks and why. It keeps
+the structure of `pm-web-app` — the shell, the four page templates, the closed vocabulary of components, the tag
+grammar and the column engine (xref:web-app.adoc[Web App]) — and replaces its visual language with one of its own,
+grounded in what the application is: a notary's office for security documents.
+
+The implementation is `web-app/src/styles/tokens.css` and the components of `web-app/src/lib/components/`; the
+working rules for whoever changes them are the project skill `.claude/skills/audit-notary-design/SKILL.md`.
+
+== Why an Own Visual Language
+
+`pm-web-app` is a control room for running work: an indigo-violet accent on a warm off-white, a dark palette close to
+GitHub's, cards with border and shadow, 36 pixels as the largest type. That language suits a dashboard of processes.
+Audit Notary's pages are records: an assessment a team fills in over two hours, a release an approver signs, an
+incident report a supervisory authority may read. The person needs to see the record itself, not a control panel
+around it.
+
+== The Idea: The Form Reads Like the Record It Will Become
+
+Every document is an entry in a register, every save a signed line, every release a seal. Five decisions follow from
+it.
+
+=== The Sheet and Its Margin
+
+A document is one sheet of paper on a desk (`Sheet`): white, nearly square corners, a soft shadow beneath it, on a
+cool paper-grey ground. The record takes the left of the sheet — the title at a display size in the serif, the
+sections from the nesting of the schema, the fields with labels above and full visible boundaries. A released
+document is the same sheet with its values typeset, so reading and writing share one layout.
+
+To the right runs the *register margin*, divided from the record by the double rule of a ledger's margin. It holds
+what the record does not: who works on it, the signed history (every save is a signed commit, so every line names who
+did what and when), the release and its tag. Its top, the *status*, holds what must stay in reach — the save state and
+"Save for everyone" — and on a narrow sheet it stands as a band above the record, while the rest of the margin follows
+the record. The sheet measures its own width, never the viewport: in a column it is as narrow as the column.
+
+=== The Seal
+
+The one bold element. A SAMM assessment shows its 15 practices of the five business functions as a scalloped rosette
+of 30 lobes (`MaturitySeal`), one per stream, each as long as its stream score on the 0 to 3 scale; the target of a
+practice is a dashed arc across its two lobes, the hub states the overall score. It echoes the scalloped seal of the
+mark (xref:brand.adoc#_the_mark[Name and Brand, The Mark]). It is navigation too: every practice is a link with its
+full accessible name, and the table beside it states the same figures.
+
+Released, a scalloped ring of gold surrounds the rosette with the version on a tab: the seal is pressed into the
+sheet. That press is the application's one orchestrated motion; under reduced motion the seal simply stands. The seal
+gold appears nowhere else as a colour of state; a released document's state label wears a small gold seal, and a
+release line in the history a gold dot.
+
+=== The Daybook
+
+The start page (*Due*) is kept like a register's daybook: groups *Overdue*, *Today*, *This week*, *Later*, one day
+after the other with the day's numeral in the serif in the gutter. An overdue entry carries a box with its reason,
+because it needs the person; every other entry says its day quietly. The grouping follows the clock, so "today" turns
+into "overdue" without a reload.
+
+=== Columns as a File Drawer
+
+The lenses with a chain of levels (SAMM: scope › assessment › practice) keep the column engine of `pm-web-app`
+(`columnWindow.ts`). The list columns lie on the desk and stay in view while the sheet beside them scrolls; the object
+column holds the sheet, raised above them. The engine admits a larger minimum for an object that needs room — the
+practice sheet keeps 820 pixels and the window hides a list column instead — and the hidden levels stand in the strip,
+by name or by mark.
+
+=== Workshop Speed
+
+A SAMM practice is answered in a meeting. Each question shows the model's answers as one row of choices, a small gauge
+on each saying how much of the answer it is (`AnswerScale`); the number keys 1 to 4 answer the question in focus, J
+and K move between questions, and a hint shows the key on the question in focus (switchable, hidden on touch screens).
+A change is kept as the person's draft within seconds ("saved for you"); "Save for everyone" writes one signed commit.
+A conflict shows each differing question with both answers; a save by another assessor refreshes what nobody changed
+here and says who saved. The answer texts are those of the model's answer sets
+(link:https://github.com/owaspsamm/core/tree/v2.2.0/model/answer_sets[OWASP SAMM core v2.2.0, answer sets]), served as
+data with the model, never written into the catalogue.
+
+== Tokens
+
+The token names are the contract of `pm-web-app`; the values are Audit Notary's own, in both themes.
+
+[cols="2,1,1,3"]
+|===
+|Role |Light |Dark |Why
+
+|Desk (`--color-bg-app`)
+|`#ECEEF2`
+|`#0E1320`
+|Cool paper-grey; in dark the navy-black of the notary's suit
+
+|Sheet (`--color-bg-surface`)
+|`#FFFFFF`
+|`#161D2E`
+|The record
+
+|Ink (`--color-text-primary`)
+|`#1B2233`
+|`#E4E8F1`
+|The suit's navy as text
+
+|Signature ink (`--color-brand`)
+|`#2B3FA0`
+|`#9AA8FF`
+|The one accent: the primary act, the selection, the focus, links
+
+|Rail (`--color-bg-rail`, `--color-rail-*`)
+|`#1C2643`
+|`#0A0F1A`
+|The register's spine: dark in both themes; its texts and focus ring have tokens of their own
+
+|Seal (`--color-seal`, `--color-seal-rim`, `--color-seal-text`)
+|`#F2B630`
+|`#F2B630`
+|The mascot's gold; only seals wear it
+
+|Field boundary (`--color-border-field`)
+|`#7D8698`
+|`#6F7B98`
+|At least 3:1 against the sheet
+
+|Business functions (`--color-series-1` … `-5`)
+|slots 1–5
+|slots 1–5
+|The five SAMM business functions in charts
+|===
+
+The status colours (attention, danger, success, running) keep one meaning each; colour never carries meaning alone —
+every state has its word, every chart its labels or table.
+
+Every text on every ground it is rendered on — the plain grounds, the rail, the tinted grounds of badges, notices,
+the diff and the chosen answer — is checked in `tokens.test.ts` in both themes against WCAG 2.1 success criterion 1.4.3
+(link:https://www.w3.org/TR/WCAG21/#contrast-minimum[4.5:1]), every state graphic and the field boundary against 1.4.11
+(link:https://www.w3.org/TR/WCAG21/#non-text-contrast[3:1]). The five chart colours are slots 1 to 5 of the reference
+palette of the data-visualisation method used here, validated against both sheet colours for colour-vision deficiency
+and normal-vision separation; in the light theme four of them stay below 3:1 against white, so every chart states its
+values in text or a table as well.
+
+== Type
+
+* *Inter* for the interface (taken over from `pm-web-app`), with tabular figures.
+* *Source Serif 4* for the record: sheet titles at the display size of 40 pixels, section heads, question texts, the
+  daybook's numerals, the figures of a score. The variable roman with its optical-size axis, so a title gets the
+  display cut and a question the text cut; self-hosted under `web-app/static/fonts/` with its licence, the SIL Open
+  Font License 1.1 (link:https://github.com/adobe-fonts/source-serif/blob/4.005R/LICENSE.md[`LICENSE.md` of
+  `adobe-fonts/source-serif`, release 4.005R]).
+* No labels in capitals, no strings of facts joined by dots: facts are a list of terms and values.
+* Monospace only for what a person compares or copies: release tags, pseudonyms.
+
+== What Stays from pm-web-app
+
+The shell (rail, top bar with the one breadcrumb, bottom bar on the phone, command palette; the top bar shows no
+connection state, by the owner's decision — the event stream reconnects by itself instead), the templates, the closed
+vocabulary of components with no raw control in a view, the tag grammar (a box means "needs you", a dot means "for
+information"), one primary act per screen, a disabled control that stays focusable and says why, the column window,
+the focus moved to a new object and announced, light, dark and system themes.
+
+== Accessibility
+
+* WCAG 2.1 AA in both themes, checked by `tokens.test.ts` and by axe-core on every view in `web-e2e`; no violation of
+  impact `serious` or `critical`.
+* Every control is a native element of the closed vocabulary: radio buttons for answers, a switch for the key hints,
+  `<details>` for folded content. The keyboard reaches everything; the number keys are an addition, never the only way.
+* The seal's practices are links whose accessible name starts with the abbreviation drawn beside them and goes on
+  with the practice's name, score and target, so the visible label is part of the name (WCAG 2.1 success criterion
+  2.5.3, link:https://www.w3.org/TR/WCAG21/#label-in-name[Label in Name]).
+* Motion answers an act or marks the one release moment; under `prefers-reduced-motion` it is off. In forced-colours
+  mode the seal and the meters fall back to system colours.
+* The phone keeps every act: the save band stays above the record, the answers take two columns, the margin follows
+  the record.
+
+== The Mascot
+
+As the brand rules have it (xref:brand.adoc#_the_mascot[Name and Brand, The Mascot]): only on calm surfaces — the empty
+Due list and a finished release, where the notary stands beside the seal. Never in an incident, a deadline or a
+warning.
+
+== Open Questions
+
+. Whether `pm-web-app` takes the sheet, the seal or the column depth cue over into a shared component package.
+. The poses of the mascot: the notary still holds the tape measure of its first role
+  (xref:brand.adoc#_the_mascot[Name and Brand, The Mascot]).
+. Charts of the Reports lens (trend, comparison, gaps) beyond the scope's trend line, and the deadline clock of the
+  incident report, follow with their lenses.
+
+== Related
+
+* xref:web-app.adoc[Web App]
+* xref:brand.adoc[Name and Brand]
+* xref:../specification/web-app.adoc#AUN-WEB-2[AUN-WEB-2: Visual Language and Accessibility]
+* `pm-mcp-clients/doc/design/web-app/` (the structure taken over)
