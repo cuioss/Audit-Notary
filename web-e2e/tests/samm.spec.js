@@ -68,7 +68,7 @@ test('a save by another assessor refreshes the practice and says who saved', asy
 }) => {
   await useScenario(request, 'workshop');
   await login(page, PRACTICE);
-  await expect(page.getByTestId('live-indicator')).toHaveAttribute('data-state', 'connected');
+  await expect(page.locator('.app-shell')).toHaveAttribute('data-stream', 'connected');
   await gotoState(request, 'saved-by-other');
   await expect(page.getByText('Jordan Weber just saved this practice.').first()).toBeVisible();
   await expect(page.getByTestId('answer-sm-b-1-3')).toBeChecked();
