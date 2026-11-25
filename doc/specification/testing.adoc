@@ -68,8 +68,10 @@ xref:../adr/0003-UI_tests_run_against_a_scenario_mock_server.adoc[ADR-0003]
 
 |Profiles
 |`workshop` (default: populated lenses), `first-login` (no directory entry), `read-only` (right `read` only),
-`degraded` (Git server unreachable), `empty` (a fresh installation); besides them, profiles for one flow such as
-`release` (an approver releases with step-up)
+`degraded` (Git server unreachable), `empty` (a fresh installation), `no-rights` (logged in, no right mapped);
+besides them, profiles for one flow: `release` (an approver releases with step-up, by password, or refused for too many
+pending logins), `local` (the login of local users on the web app's own page) and `login-trouble` (the login cannot
+start or complete); `workshop` also carries the states `session-replaced` and `session-ended`
 
 |Control
 |`GET /mock/state`, `POST /mock/scenario`, `POST /mock/goto/{state}`, `POST /mock/reset`, `POST /mock/broadcast`,

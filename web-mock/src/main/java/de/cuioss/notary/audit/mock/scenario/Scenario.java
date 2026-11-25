@@ -22,6 +22,7 @@ import java.util.Optional;
  *
  * @param name               the scenario name
  * @param description        what the scenario represents
+ * @param login              how the login works; the default is the identity provider
  * @param user               the user a login signs in as
  * @param rights             the rights of the user
  * @param firstLoginRequired whether the user has no directory entry yet; a state may override it
@@ -29,14 +30,15 @@ import java.util.Optional;
  * @param routes             the static answers by {@code "METHOD /path"}, valid in every state
  * @param states             the states by id, in file order
  */
-public record Scenario(String name, String description, ScenarioUser user, List<Right> rights,
-boolean firstLoginRequired, String start, Map<String, Route> routes, Map<String, ScenarioState> states) {
+public record Scenario(String name, String description, ScenarioLogin login, ScenarioUser user,
+List<Right> rights, boolean firstLoginRequired, String start, Map<String, Route> routes, Map<String, ScenarioState> states) {
 
     /**
      * Copies the collections; the state map keeps its order.
      *
      * @param name               the name
      * @param description        the description
+     * @param login              the login
      * @param user               the user
      * @param rights             the rights
      * @param firstLoginRequired the first-login flag

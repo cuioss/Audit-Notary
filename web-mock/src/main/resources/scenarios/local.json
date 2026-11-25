@@ -1,0 +1,230 @@
+{
+  "format_version": 1,
+  "name": "local",
+  "description": "Login provider local: the web app's own login page with a username and a password; no identity provider; step-up off.",
+  "login": {
+    "provider": "local",
+    "users": [
+      {
+        "username": "alex",
+        "password": "local-password"
+      }
+    ]
+  },
+  "user": {
+    "pseudonym": "p-4c1a9e",
+    "name": "Alex Example",
+    "groups": [
+      "samm-assessors",
+      "threat-modelers",
+      "isms-readers"
+    ]
+  },
+  "rights": [
+    {
+      "repository": "samm-assessments",
+      "actions": [
+        "read",
+        "edit"
+      ]
+    },
+    {
+      "repository": "threat-models",
+      "actions": [
+        "read",
+        "edit"
+      ]
+    },
+    {
+      "repository": "isms-register",
+      "actions": [
+        "read"
+      ]
+    }
+  ],
+  "first_login_required": false,
+  "start": "ready",
+  "routes": {
+    "GET /api/v1/status": {
+      "status": 200,
+      "body": {
+        "version": "0.1.0-SNAPSHOT",
+        "degraded": false,
+        "loginProvider": "local",
+        "repositories": [
+          {
+            "alias": "samm-assessments",
+            "fetch": "UP"
+          },
+          {
+            "alias": "threat-models",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-register",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-incidents-2026",
+            "fetch": "UP"
+          },
+          {
+            "alias": "directory",
+            "fetch": "UP"
+          }
+        ],
+        "stepUp": "off"
+      }
+    },
+    "GET /api/v1/catalogs/team": {
+      "status": 200,
+      "body": {
+        "entries": [
+          {
+            "id": "payments",
+            "name": "Payments"
+          },
+          {
+            "id": "identity",
+            "name": "Identity Platform"
+          },
+          {
+            "id": "mobile",
+            "name": "Mobile Apps"
+          },
+          {
+            "id": "security-office",
+            "name": "Security Office"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/catalogs/role": {
+      "status": 200,
+      "body": {
+        "entries": [
+          {
+            "id": "developer",
+            "name": "Developer"
+          },
+          {
+            "id": "product-owner",
+            "name": "Product Owner"
+          },
+          {
+            "id": "security-champion",
+            "name": "Security Champion"
+          },
+          {
+            "id": "ciso",
+            "name": "Chief Information Security Officer"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/due": {
+      "status": 200,
+      "body": {
+        "items": [
+          {
+            "kind": "review",
+            "lens": "samm",
+            "title": "Payments 2026 Q4: Strategy and Metrics",
+            "address": "/samm/payments/2026-q4/sm",
+            "due": "2026-11-27"
+          },
+          {
+            "kind": "release",
+            "lens": "samm",
+            "title": "Payments 2026 Q4 assessment",
+            "address": "/samm/payments/2026-q4/release",
+            "due": "2026-12-04"
+          },
+          {
+            "kind": "review",
+            "lens": "threat-models",
+            "title": "Payment gateway: checkout flow",
+            "address": "/threat-models/payment-gateway/checkout-flow",
+            "due": "2026-12-01"
+          },
+          {
+            "kind": "deadline",
+            "lens": "incidents",
+            "title": "INC-0007 card data exposure: notification to the authority",
+            "address": "/incidents/2026/inc-0007",
+            "due": "2026-11-22"
+          },
+          {
+            "kind": "review",
+            "lens": "isms",
+            "title": "Risk R-012: supplier access to production",
+            "address": "/isms/risks/r-012",
+            "due": "2026-12-15"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/samm/models/v2.2.0": {
+      "body_file": "samm-model-v2.2.0.json"
+    },
+    "GET /api/v1/samm/scopes": {
+      "body_file": "samm-scopes.json"
+    },
+    "GET /api/v1/samm/scopes/payments": {
+      "body_file": "samm-scope-payments.json"
+    },
+    "GET /api/v1/samm/scopes/identity": {
+      "body_file": "samm-scope-identity.json"
+    },
+    "GET /api/v1/samm/scopes/shop": {
+      "body_file": "samm-scope-shop.json"
+    },
+    "GET /api/v1/samm/scopes/organisation": {
+      "body_file": "samm-scope-organisation.json"
+    },
+    "GET /api/v1/documents/samm-assessments/payments-2026-q4": {
+      "body_file": "samm-assessment-payments-2026-q4.json"
+    },
+    "GET /api/v1/documents/samm-assessments/payments-2026-q2": {
+      "body_file": "samm-assessment-payments-2026-q2.json"
+    },
+    "GET /api/v1/documents/samm-assessments/payments-2025-q4": {
+      "body_file": "samm-assessment-payments-2025-q4.json"
+    },
+    "GET /api/v1/documents/samm-assessments/identity-2026-q4": {
+      "body_file": "samm-assessment-identity-2026-q4.json"
+    },
+    "GET /api/v1/documents/samm-assessments/shop-2026-q3": {
+      "body_file": "samm-assessment-shop-2026-q3.json"
+    },
+    "GET /api/v1/documents/samm-assessments/organisation-2026-h1": {
+      "body_file": "samm-assessment-organisation-2026-h1.json"
+    },
+    "GET /api/v1/samm/payments/compare": {
+      "body_file": "samm-compare-payments-workshop.json"
+    },
+    "GET /api/v1/documents/samm-assessments/payments-2026-q4/diff": {
+      "body_file": "samm-diff-payments-2026-q4-draft.json"
+    },
+    "PUT /api/v1/drafts/samm-assessments/payments-2026-q4": {
+      "body": {
+        "outcome": "DRAFT_SAVED"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/payments-2026-q4/save": {
+      "body": {
+        "outcome": "SAVED",
+        "parts": {}
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/payments-2026-q4/transitions/samm.submit": {
+      "status": 422,
+      "body_file": "samm-submit-payments-2026-q4.json"
+    }
+  },
+  "states": {
+    "ready": {
+      "description": "Everything is fetched; the Due list is populated; the login is the page of local users."
+    }
+  }
+}

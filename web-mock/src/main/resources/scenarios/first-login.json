@@ -26,6 +26,7 @@
       "body": {
         "version": "0.1.0-SNAPSHOT",
         "degraded": false,
+        "loginProvider": "oidc",
         "repositories": [
           {
             "alias": "samm-assessments",

@@ -15,7 +15,7 @@ describe('errors', () => {
     expect(errorMessageKey(new ApiError('UNEXPECTED', 500))).toBe('error.unexpected');
     expect(errorMessageKey(new ApiError('DOCUMENT_RELEASED', 409))).toBe('error.document-released');
     expect(errorMessageKey(new ApiError('REJECTED', 409))).toBe('error.rejected');
-    expect(errorMessageKey(new ApiError('INVALID_CREDENTIALS', 403))).toBe(
+    expect(errorMessageKey(new ApiError('INVALID_CREDENTIALS', 401))).toBe(
       'error.invalid-credentials',
     );
     expect(errorMessageKey(new ApiError('MANDATORY_FIELDS_MISSING', 422))).toBe(

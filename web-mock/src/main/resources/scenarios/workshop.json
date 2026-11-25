@@ -41,6 +41,7 @@
       "body": {
         "version": "0.1.0-SNAPSHOT",
         "degraded": false,
+        "loginProvider": "oidc",
         "repositories": [
           {
             "alias": "samm-assessments",
@@ -286,6 +287,14 @@
           }
         }
       }
+    },
+    "session-replaced": {
+      "description": "Another login in the same browser replaced the session: the open event streams close and the session gets a new anti-CSRF token; the tab reads the session again and reloads.",
+      "session_replaced": true
+    },
+    "session-ended": {
+      "description": "The provider ended the session (back-channel logout): the event streams close and the next request answers UNAUTHENTICATED.",
+      "session_ended": true
     }
   }
 }

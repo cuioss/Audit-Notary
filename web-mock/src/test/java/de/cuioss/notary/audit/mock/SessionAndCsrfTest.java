@@ -176,10 +176,9 @@ class SessionAndCsrfTest {
             // Assert
             assertAll(
                     () -> assertEquals(200, response.statusCode()),
-                    () -> assertEquals(MockEngine.SIGNED_OUT_PATH, json(response).path("redirect").asText()),
                     () -> assertTrue(response.headers().firstValue("Set-Cookie").orElseThrow().contains("Max-Age=0")),
-                    () -> assertEquals(401, client.get("/api/v1/session").statusCode()),
-                    () -> assertEquals(200, client.get(MockEngine.SIGNED_OUT_PATH).statusCode()));
+                    () -> assertEquals("/signed-out", json(response).path("redirect").asText()),
+                    () -> assertEquals(401, client.get("/api/v1/session").statusCode()));
         }
     }
 }

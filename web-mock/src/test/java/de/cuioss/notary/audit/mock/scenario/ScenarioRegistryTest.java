@@ -87,6 +87,6 @@ class ScenarioRegistryTest {
     @Test
     @DisplayName("lists the primary profiles in file order")
     void shouldListPrimaries() {
-        assertEquals(List.of("workshop", "first-login", "read-only", "degraded", "empty"), registry.primaryNames());
+        assertEquals(List.of("workshop", "first-login", "read-only", "degraded", "empty", "no-rights"), registry.primaryNames());
     }
 }

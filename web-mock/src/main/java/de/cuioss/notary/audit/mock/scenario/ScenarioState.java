@@ -28,10 +28,13 @@ import java.util.Optional;
  * @param links              the transitions by name, in file order
  * @param events             the events pushed when the state is entered
  * @param auto               the timed transition, possibly {@code null}
+ * @param sessionReplaced    whether entering the state replaces the session: the event streams close and every
+ *                           session gets a new anti-CSRF token
+ * @param sessionEnded       whether entering the state ends every session and closes the event streams
  */
 public record ScenarioState(String id, String description, @Nullable Boolean firstLoginRequired,
 Map<String, Route> routes, Map<String, Link> links, List<ScenarioEvent> events,
-@Nullable AutoTransition auto) {
+@Nullable AutoTransition auto, boolean sessionReplaced, boolean sessionEnded) {
 
     /**
      * Copies the collections; the maps keep their order.
@@ -43,6 +46,8 @@ Map<String, Route> routes, Map<String, Link> links, List<ScenarioEvent> events,
      * @param links              the links
      * @param events             the events
      * @param auto               the timed transition, possibly {@code null}
+     * @param sessionReplaced    the session-replaced flag
+     * @param sessionEnded       the session-ended flag
      */
     public ScenarioState {
         routes = Map.copyOf(routes);

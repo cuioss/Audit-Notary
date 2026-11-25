@@ -39,7 +39,7 @@ test('a return address that is no canonical address leads to the start page', as
 test('signing out ends the session', async ({ page }) => {
   await page.goto('/');
   await page.getByTestId('sign-out').click();
-  await expect(page).toHaveURL(/\/api\/v1\/auth\/mock-signed-out$/);
+  await expect(page).toHaveURL(/\/signed-out$/);
   const session = await page.request.get('/api/v1/session');
   expect(session.status()).toBe(401);
   expect(await session.json()).toMatchObject({ outcome: 'UNAUTHENTICATED' });

@@ -60,12 +60,15 @@ Without the scripts: `java -cp … de.cuioss.notary.audit.mock.cli.WebMockCli --
 |Profile |States |Represents
 
 |`workshop` (default)
-|`ready`, `saved-by-other`, `conflict`, `forbidden`
+|`ready`, `saved-by-other`, `conflict`, `forbidden`, `session-replaced`, `session-ended`
 |An assessor in a populated installation: Due list with every kind, catalogs, and the SAMM lens — four scopes, the
 open workshop *Payments 2026 Q4* (draft, eleven practices answered) and released assessments to compare with; a draft
 and a save for everyone succeed. `saved-by-other` pushes a `document-saved` event and serves the assessment with
 another assessor's two answers in *Strategy and Metrics*; `conflict` answers a save with `CONFLICT` and both values;
-`forbidden` refuses the Due list
+`forbidden` refuses the Due list; `session-replaced` closes the open event streams and gives every session a new
+anti-CSRF token (another login in the same browser replaced the session); `session-ended` closes the streams and drops
+every session, so the next request answers `UNAUTHENTICATED` (a back-channel logout; an addition to the profile list of
+the plan, because UC-ACC-6 needs it)
 
 |`first-login`
 |`form`, `invalid-team`, `registered`
@@ -85,6 +88,12 @@ another assessor's two answers in *Strategy and Metrics*; `conflict` answers a s
 |`empty`
 |`ready`
 |A fresh installation: nothing due
+
+|`no-rights`
+|`ready`
+|A logged-in user whom no group maps to a right (`"rights": []`): the shell works (status, messages, session, Due
+list, events, logout, directory, catalogs) and every other request on a repository answers `403 FORBIDDEN`; the Due
+list is empty
 |===
 
 `src/main/resources/scenarios/primary.txt` lists the primary profiles; a test module can add its own under
@@ -97,28 +106,60 @@ One more profile is not primary, because it serves one flow rather than a kind o
 |Profile |States |Represents
 
 |`release`
-|`review`, `stepped-up`, `password`, `wrong-password`, `changed`, `released`
+|`review`, `stepped-up`, `password`, `wrong-password`, `changed`, `too-many-logins`, `released`
 |An approver (right `approve`) releases *Payments 2026 Q4*, which is in review with every practice answered
 (AUN-WEB-6). `review`: the release answers `STEP_UP_REQUIRED` with a step-up address and moves to `stepped-up`, where
 it answers `RELEASED`; `password`: the status names the step-up by password (local users) and the release, sent with
-the password, answers `RELEASED`; `wrong-password` answers `INVALID_CREDENTIALS`; `changed` answers
-`CHANGED_SINCE_REVIEW`; `released` serves the frozen assessment with its tag `assessments/payments-2026-q4/v1`
+the password, answers `RELEASED`; `wrong-password` answers `401 INVALID_CREDENTIALS`; both name `loginProvider: local` in the status, while the login
+stays the one of the identity provider; `changed` answers `CHANGED_SINCE_REVIEW`; `too-many-logins` answers the release
+`503 TOO_MANY_LOGINS` with `Retry-After: 60`, writes nothing and keeps the state (`POST /mock/goto/review` leaves it);
+`released` serves the frozen assessment with its tag `assessments/payments-2026-q4/v1`
+
+|`local`
+|`ready`
+|The login provider is `local`: `GET /api/v1/auth/login` answers `302` to the web app's page `/login?return=<address>`
+and `POST /j_security_check` with the user `alex` and the password `local-password` signs in (`Origin` required); the
+status names `loginProvider: local` and `stepUp: off`. The data and the user are those of `workshop`
+
+|`login-trouble`
+|`idp-unavailable` (start), `too-many-logins`, `unknown-transaction`, `recovered`
+|The login cannot start or complete. `idp-unavailable` answers the login start `502 IDENTITY_PROVIDER_UNAVAILABLE`,
+`too-many-logins` answers it `503 TOO_MANY_LOGINS` with `Retry-After: 60`, `unknown-transaction` lets the start
+navigate to the callback, which answers `400 UNKNOWN_TRANSACTION`; a browser navigation (`Accept` contains
+`text/html`) is sent to `/login-problem?reason=<reason>` instead. In `recovered` the built-in login signs in
 |===
 
 == What the Mock Emulates
 
-* *Session:* `GET /api/v1/auth/login?return=<address>` signs in as the scenario's user without an identity provider:
-  it sets the cookie `audit-notary-mock-session` (`HttpOnly`, `SameSite=Strict`, `Path=/`; not `Secure`, the mock runs
+* *Login provider:* the scenario's `login` names `oidc` (default) or `local`. With `oidc`,
+  `GET /api/v1/auth/login?return=<address>` signs in as the scenario's user without an identity provider: it sets the
+  cookie `audit-notary-mock-session` (`HttpOnly`, `SameSite=Strict`, `Path=/`; not `Secure`, the mock runs
   on plain HTTP) and answers a page that navigates to the checked `return` by `<meta http-equiv="refresh">`, no
-  script. A `return` that is not a canonical address becomes `/`. Every other `/api/v1` request without session
-  answers `401 UNAUTHENTICATED` with `login`.
+  script. A `return` that is not a canonical address becomes `/` (the pages outside the shell, such as `/login`, are no
+  valid `return`). Every other `/api/v1` request without session answers `401 UNAUTHENTICATED` with `login`:
+  `/api/v1/auth/login` with `oidc`, `/login` with `local`. With `local` the login start creates no session: it answers
+  `302` to `/login?return=<checked address>`, and `POST /j_security_check` (form body `j_username`, `j_password`; `404`
+  with `oidc`) answers `200` with an empty body and the cookie for a user of `login.users`, `401` with an empty body for
+  anyone else, and `403 CSRF_REJECTED` when `Origin` is missing or foreign. No anti-CSRF header is needed there. The
+  password is never recorded in `/mock/acts`: the field `j_password` is redacted like `password`.
+* *Refused logins:* a route of a scenario or state for `GET /api/v1/auth/login` or `GET /api/v1/auth/callback` is the
+  answer of that request (it replaces the built-in login; with a callback route the built-in login does not sign in
+  but navigates to the callback). For a browser navigation (`Accept` contains `text/html`) the outcomes
+  `IDENTITY_PROVIDER_UNAVAILABLE`, `TOO_MANY_LOGINS` and `UNKNOWN_TRANSACTION` are answered as `303` to
+  `/login-problem?reason=idp-unavailable|too-many-logins|unknown-transaction` without body; every other client gets the
+  JSON. A `503` with the outcome `TOO_MANY_LOGINS` carries `Retry-After: 60`, whichever request it answers.
+* *No rights:* with `"rights": []` and no first login, every `/api/v1` request outside the shell answers
+  `403 FORBIDDEN` before the routes are looked at.
+* *Session changes:* a state with `"session_replaced": true` closes every open event stream on entry and replaces the
+  anti-CSRF token of every session (the cookie stays valid; a request with the old token answers `403 CSRF_REJECTED`);
+  a state with `"session_ended": true` closes the streams and drops every session.
 * *Anti-CSRF and Origin:* every state-changing request must carry `X-CSRF-Token` with the token of
   `GET /api/v1/session`; an `Origin` header must be the own origin, which is `X-Forwarded-Proto://X-Forwarded-Host`
   behind the Vite proxy (`xfwd: true`), otherwise `http://<Host>`. Otherwise `403 CSRF_REJECTED`.
 * *First login:* while `first_login_required` holds, every request outside the allow-list of AUN-DIR-2 answers
   `403 FIRST_LOGIN_REQUIRED`.
-* *Built in:* `GET /api/v1/session`, `POST /api/v1/auth/logout` (answers `{"redirect"}` to the page
-  `/api/v1/auth/mock-signed-out`), `GET /api/v1/messages?lang=en|de` (`400` for another language) and
+* *Built in:* `GET /api/v1/session`, `POST /api/v1/auth/logout` (answers `{"redirect": "/signed-out"}`, the
+  page of the web app, and clears the cookie), `GET /api/v1/messages?lang=en|de` (`400` for another language) and
   `GET /api/v1/events`.
 * *Event stream:* `text/event-stream`, frames `id:`, `event:`, `data:`; a `: keepalive` comment every 15 s. Events
   come from entered states and `POST /mock/broadcast`; switching, resetting or jumping first announces the new
@@ -165,6 +206,7 @@ No login; the Vite dev server forwards `/mock` for loopback clients only.
   "format_version": 1,
   "name": "workshop",
   "description": "…",
+  "login": { "provider": "local", "users": [ { "username": "alex", "password": "local-password" } ] },
   "user": { "pseudonym": "p-4c1a9e", "name": "Alex Example", "groups": ["samm-assessors"] },
   "rights": [ { "repository": "samm-assessments", "actions": ["read", "edit"] } ],
   "first_login_required": false,
@@ -174,6 +216,8 @@ No login; the Vite dev server forwards `/mock` for loopback clients only.
     "ready": {
       "description": "…",
       "first_login_required": false,
+      "session_replaced": false,
+      "session_ended": false,
       "routes": { "GET /api/v1/due": { "status": 200, "body": { } } },
       "links": { "save-entry": { "method": "PUT", "path": "/api/v1/directory/me", "next": "registered",
                                   "status": 200, "body": { } } },
@@ -187,6 +231,9 @@ No login; the Vite dev server forwards `/mock` for loopback clients only.
 * A request is answered by the first of: a link of the current state with the same method and path (moves to `next`
   and plays that state's events and timed transition), a route of the state, a route of the scenario; otherwise
   `404 MOCK_NO_ROUTE`.
+* `login` is optional; the default is `{"provider": "oidc"}`. `users` belongs to `local` only, each user has a
+  non-empty `username` and `password`. `session_replaced` and `session_ended` are optional booleans of a state (default
+  `false`).
 * Route keys are `"METHOD /path"` without query; `status` defaults to `200`, `body` to `{}`, `after_ms` to `0`.
 * A route or a link answers either its `body` or the JSON of the data file its `body_file` names, below
   `src/main/resources/scenarios/data/` (`"body_file": "samm-scopes.json"`). Large or shared answers live there once
@@ -217,7 +264,7 @@ under CC BY-SA 4.0, not under the licence of this repository: see `samm-model-v2
 
 The answers are generated once from the model and are consistent with each other: the comparison holds the scores the
 answers give (`web-app` checks this in `scores.test.ts`).
-* Checked on load: format version `1`; name, user name and start present; every `next` names a state; methods `GET`,
+* Checked on load: format version `1`; the login provider `oidc` or `local`, users with `local` only; name, user name and start present; every `next` names a state; methods `GET`,
   `POST`, `PUT`, `DELETE`; paths below `/api/v1/` without query; status 100 to 599; actions `read`, `edit`,
   `approve`, `administer-catalogs`; no negative delay. A violation names file, location and rule.
 

@@ -1,7 +1,7 @@
 {
   "format_version": 1,
   "name": "release",
-  "description": "An approver releases the reviewed assessment Payments 2026 Q4: with MFA step-up (start review), with the password of a local user (start password), or after someone saved since the review (start changed).",
+  "description": "An approver releases the reviewed assessment Payments 2026 Q4: with MFA step-up (start review), with the password of a local user (start password), or after someone saved since the review (start changed); the step-up can also be refused because too many logins are pending (state too-many-logins).",
   "user": {
     "pseudonym": "p-7d2e58",
     "name": "Noor Haddad",
@@ -34,6 +34,7 @@
       "body": {
         "version": "0.1.0-SNAPSHOT",
         "degraded": false,
+        "loginProvider": "oidc",
         "repositories": [
           {
             "alias": "samm-assessments",
@@ -200,6 +201,7 @@
           "body": {
             "version": "0.1.0-SNAPSHOT",
             "degraded": false,
+            "loginProvider": "local",
             "repositories": [
               {
                 "alias": "samm-assessments",
@@ -247,6 +249,7 @@
           "body": {
             "version": "0.1.0-SNAPSHOT",
             "degraded": false,
+            "loginProvider": "local",
             "repositories": [
               {
                 "alias": "samm-assessments",
@@ -273,7 +276,7 @@
           }
         },
         "POST /api/v1/releases/samm-assessments/payments-2026-q4": {
-          "status": 403,
+          "status": 401,
           "body": {
             "outcome": "INVALID_CREDENTIALS"
           }
@@ -290,6 +293,20 @@
           "status": 409,
           "body": {
             "outcome": "CHANGED_SINCE_REVIEW"
+          }
+        }
+      }
+    },
+    "too-many-logins": {
+      "description": "Every place of pending logins is taken: the release cannot start its step-up; nothing is written.",
+      "links": {
+        "release": {
+          "method": "POST",
+          "path": "/api/v1/releases/samm-assessments/payments-2026-q4",
+          "next": "too-many-logins",
+          "status": 503,
+          "body": {
+            "outcome": "TOO_MANY_LOGINS"
           }
         }
       }

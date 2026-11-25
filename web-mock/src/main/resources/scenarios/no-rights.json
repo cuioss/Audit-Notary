@@ -1,0 +1,58 @@
+{
+  "format_version": 1,
+  "name": "no-rights",
+  "description": "A logged-in user whom no group maps to a right: the shell works, every request on a repository is refused FORBIDDEN, nothing is due.",
+  "user": {
+    "pseudonym": "p-9b3c71",
+    "name": "Sam Outsider",
+    "groups": [
+      "visitors"
+    ]
+  },
+  "rights": [],
+  "first_login_required": false,
+  "start": "ready",
+  "routes": {
+    "GET /api/v1/status": {
+      "status": 200,
+      "body": {
+        "version": "0.1.0-SNAPSHOT",
+        "degraded": false,
+        "loginProvider": "oidc",
+        "repositories": [
+          {
+            "alias": "samm-assessments",
+            "fetch": "UP"
+          },
+          {
+            "alias": "threat-models",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-register",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-incidents-2026",
+            "fetch": "UP"
+          },
+          {
+            "alias": "directory",
+            "fetch": "UP"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/due": {
+      "status": 200,
+      "body": {
+        "items": []
+      }
+    }
+  },
+  "states": {
+    "ready": {
+      "description": "Logged in, without any mapped right."
+    }
+  }
+}

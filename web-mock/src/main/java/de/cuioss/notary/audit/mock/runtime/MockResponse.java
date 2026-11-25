@@ -37,6 +37,9 @@ boolean eventStream) {
     /** The content type of the HTML pages of the login emulation. */
     public static final String HTML = "text/html; charset=utf-8";
 
+    /** The content type of an answer without a body. */
+    public static final String TEXT = "text/plain; charset=utf-8";
+
     /** The content type of the event stream. */
     public static final String EVENT_STREAM = "text/event-stream";
 
