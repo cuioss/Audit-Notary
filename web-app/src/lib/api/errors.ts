@@ -10,6 +10,14 @@ export const OUTCOMES = [
   'FIRST_LOGIN_REQUIRED',
   'VALIDATION',
   'GIT_UNAVAILABLE',
+  'CONFLICT',
+  'DOCUMENT_RELEASED',
+  'REJECTED',
+  'STEP_UP_REQUIRED',
+  'INVALID_CREDENTIALS',
+  'MANDATORY_FIELDS_MISSING',
+  'CHANGED_SINCE_REVIEW',
+  'MODEL_VERSIONS_DIFFER',
 ] as const;
 
 /** An outcome of a refusal of the server. */
@@ -37,18 +45,30 @@ export class ApiError extends Error {
   readonly status: number;
   /** The field errors of a `VALIDATION` refusal. */
   readonly errors: FieldError[];
+  /**
+   * The whole body of the refusal, for the outcomes that carry more than a word: the conflicts of `CONFLICT`, the
+   * step-up address of `STEP_UP_REQUIRED`, the missing fields of `MANDATORY_FIELDS_MISSING`.
+   */
+  readonly details: Record<string, unknown>;
 
   /**
    * @param outcome the outcome
    * @param status the HTTP status, 0 when no answer arrived
    * @param errors the field errors of a `VALIDATION` refusal
+   * @param details the body of the refusal
    */
-  constructor(outcome: Outcome | ClientFailure, status: number, errors: FieldError[] = []) {
+  constructor(
+    outcome: Outcome | ClientFailure,
+    status: number,
+    errors: FieldError[] = [],
+    details: Record<string, unknown> = {},
+  ) {
     super(outcome);
     this.name = 'ApiError';
     this.outcome = outcome;
     this.status = status;
     this.errors = errors;
+    this.details = details;
   }
 }
 
@@ -81,6 +101,21 @@ export function errorMessageKey(error: unknown): string {
       return 'error.forbidden';
     case 'GIT_UNAVAILABLE':
       return 'error.git-unavailable';
+    case 'DOCUMENT_RELEASED':
+      return 'error.document-released';
+    case 'REJECTED':
+      return 'error.rejected';
+    case 'INVALID_CREDENTIALS':
+      return 'error.invalid-credentials';
+    case 'MANDATORY_FIELDS_MISSING':
+      return 'error.mandatory-fields-missing';
+    case 'CHANGED_SINCE_REVIEW':
+      return 'error.changed-since-review';
+    case 'CONFLICT':
+      return 'error.conflict';
+    case 'TIMEOUT':
+    case 'NETWORK':
+      return 'error.network';
     default:
       return 'error.unexpected';
   }

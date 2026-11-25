@@ -11,11 +11,28 @@ import type {
   DirectoryEntry,
   DirectoryPrefill,
   DirectorySaved,
+  DocumentDiff,
+  DraftSaved,
   DueList,
   LogoutAnswer,
+  Released,
+  SammAssessment,
+  SammComparison,
+  SammModel,
+  SammScope,
+  SammScopeList,
+  SaveRequest,
+  Saved,
   Session,
   Status,
+  Transitioned,
 } from './types';
+
+/**
+ * @param segment one path segment from an address or a document
+ * @returns it encoded for a request path
+ */
+const seg = (segment: string): string => encodeURIComponent(segment);
 
 /** The connection states of the event stream, which the live indicator shows. */
 export type StreamState = 'connecting' | 'connected' | 'reconnecting' | 'offline';
@@ -147,6 +164,129 @@ export class ApiClient {
   }
 
   /**
+   * @param version a pinned SAMM model version
+   * @returns the model: business functions, practices, streams, questions and their answer sets
+   */
+  getSammModel(version: string): Promise<SammModel> {
+    return this.request<SammModel>('GET', `/api/v1/samm/models/${seg(version)}`);
+  }
+
+  /** @returns the SAMM scopes with their latest released and their open assessment */
+  getSammScopes(): Promise<SammScopeList> {
+    return this.request<SammScopeList>('GET', '/api/v1/samm/scopes');
+  }
+
+  /**
+   * @param scope the scope's address segment
+   * @returns the scope: subject, targets and assessments
+   */
+  getSammScope(scope: string): Promise<SammScope> {
+    return this.request<SammScope>('GET', `/api/v1/samm/scopes/${seg(scope)}`);
+  }
+
+  /**
+   * @param scope the scope's address segment
+   * @param from the earlier assessment
+   * @param to the later assessment
+   * @returns the score differences per business function, practice and stream (AUN-SAMM-5)
+   */
+  compareSamm(scope: string, from: string, to: string): Promise<SammComparison> {
+    return this.request<SammComparison>(
+      'GET',
+      `/api/v1/samm/${seg(scope)}/compare?from=${seg(from)}&to=${seg(to)}`,
+    );
+  }
+
+  /**
+   * @param id the assessment's document id
+   * @returns the assessment with its answers, parts and signed history
+   */
+  getSammAssessment(id: string): Promise<SammAssessment> {
+    return this.request<SammAssessment>('GET', `/api/v1/documents/samm-assessments/${seg(id)}`);
+  }
+
+  /**
+   * @param repository the repository
+   * @param id the document id
+   * @returns the structured diff against the last released state (AUN-WEB-6)
+   */
+  getDiff(repository: string, id: string): Promise<DocumentDiff> {
+    return this.request<DocumentDiff>(
+      'GET',
+      `/api/v1/documents/${seg(repository)}/${seg(id)}/diff?from=released`,
+    );
+  }
+
+  /**
+   * Keeps the user's work as a draft, for this user only (AUN-WEB-5).
+   *
+   * @param repository the repository
+   * @param id the document id
+   * @param body the changed parts
+   * @returns when the draft was kept
+   */
+  saveDraft(repository: string, id: string, body: SaveRequest): Promise<DraftSaved> {
+    return this.request<DraftSaved>('PUT', `/api/v1/drafts/${seg(repository)}/${seg(id)}`, body);
+  }
+
+  /**
+   * Saves for everyone: one signed commit with the blob ids the form loaded (AUN-WEB-5).
+   *
+   * @param repository the repository
+   * @param id the document id
+   * @param body the changed parts with their loaded blob ids
+   * @returns the new blob ids
+   */
+  saveDocument(repository: string, id: string, body: SaveRequest): Promise<Saved> {
+    return this.request<Saved>(
+      'POST',
+      `/api/v1/documents/${seg(repository)}/${seg(id)}/save`,
+      body,
+    );
+  }
+
+  /**
+   * Moves a document along its workflow, such as `samm.submit` into review. PROVISIONAL path: the specification
+   * names the operation and its outcomes, not yet its request.
+   *
+   * @param repository the repository
+   * @param id the document id
+   * @param transition the transition of the category's workflow
+   * @returns the new state
+   */
+  transition(repository: string, id: string, transition: string): Promise<Transitioned> {
+    return this.request<Transitioned>(
+      'POST',
+      `/api/v1/documents/${seg(repository)}/${seg(id)}/transitions/${seg(transition)}`,
+    );
+  }
+
+  /**
+   * Releases a document (AUN-WEB-6). With local users the step-up is the password, sent with the request.
+   *
+   * @param repository the repository
+   * @param id the document id
+   * @param password the renewed password of a local user, if step-up asks for it
+   * @returns the release tag
+   */
+  release(repository: string, id: string, password?: string): Promise<Released> {
+    return this.request<Released>(
+      'POST',
+      `/api/v1/releases/${seg(repository)}/${seg(id)}`,
+      password === undefined ? undefined : { password },
+    );
+  }
+
+  /**
+   * Leaves the app for a step-up address the server named, returning to the current address.
+   *
+   * @param address the step-up address of a `STEP_UP_REQUIRED` refusal
+   */
+  stepUp(address: string): void {
+    this.navigate(this.loginAddress(address));
+  }
+
+  /**
    * Ends the session at the server and leaves the app for the address the server names.
    */
   async logout(): Promise<void> {
@@ -218,7 +358,7 @@ export class ApiClient {
       this.csrfToken = null;
     }
     const errors = Array.isArray(record.errors) ? (record.errors as FieldError[]) : [];
-    return new ApiError(outcome, status, errors);
+    return new ApiError(outcome, status, errors, record);
   }
 
   /**

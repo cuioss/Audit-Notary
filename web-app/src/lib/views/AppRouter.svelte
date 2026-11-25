@@ -5,6 +5,8 @@
   import NotFoundView from './NotFoundView.svelte';
   import SettingsView from './SettingsView.svelte';
   import WelcomeView from './WelcomeView.svelte';
+  import SammReleaseView from './samm/SammReleaseView.svelte';
+  import SammView from './samm/SammView.svelte';
 
   /**
    * Chooses the view of an address (AUN-WEB-3). The route files are stubs that render this component.
@@ -30,6 +32,12 @@
   <WelcomeView {onnavigate} />
 {:else if lensOf(route) === 'settings'}
   <SettingsView />
+{:else if route === 'samm.release' && address}
+  {#key `${address.params.scope}/${address.params.assessment}`}
+    <SammReleaseView params={address.params} />
+  {/key}
+{:else if lensOf(route) === 'samm' && address}
+  <SammView params={address.params} />
 {:else}
   {#key route}
     <LensPlaceholderView titleKey={routeTitleKey(route)} {route} />

@@ -222,3 +222,74 @@ describe('the event stream', () => {
     stop();
   });
 });
+
+describe('the SAMM and document requests', () => {
+  it('reads models, scopes, comparisons, assessments and diffs with encoded paths', async () => {
+    fetchMock.mockImplementation(async () => json(200, { ok: true }));
+    await client.getSammModel('v2.2.0');
+    await client.getSammScopes();
+    await client.getSammScope('pay ments');
+    await client.compareSamm('payments', 'a/1', 'b');
+    await client.getSammAssessment('payments-2026-q4');
+    await client.getDiff('samm-assessments', 'payments-2026-q4');
+    expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
+      '/api/v1/samm/models/v2.2.0',
+      '/api/v1/samm/scopes',
+      '/api/v1/samm/scopes/pay%20ments',
+      '/api/v1/samm/payments/compare?from=a%2F1&to=b',
+      '/api/v1/documents/samm-assessments/payments-2026-q4',
+      '/api/v1/documents/samm-assessments/payments-2026-q4/diff?from=released',
+    ]);
+  });
+
+  it('keeps a draft with PUT and saves for everyone with POST', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json(200, SESSION))
+      .mockImplementation(async () => json(200, { outcome: 'SAVED' }));
+    const body = { parts: [] } as unknown as Parameters<ApiClient['saveDraft']>[2];
+    await client.saveDraft('samm-assessments', 'p', body);
+    await client.saveDocument('samm-assessments', 'p', body);
+    const [draftPath, draftInit] = fetchMock.mock.calls[1];
+    expect(draftPath).toBe('/api/v1/drafts/samm-assessments/p');
+    expect(draftInit.method).toBe('PUT');
+    expect(draftInit.headers[CSRF_HEADER]).toBe('token-1');
+    const [savePath, saveInit] = fetchMock.mock.calls[2];
+    expect(savePath).toBe('/api/v1/documents/samm-assessments/p/save');
+    expect(saveInit.method).toBe('POST');
+    expect(JSON.parse(saveInit.body)).toEqual({ parts: [] });
+  });
+
+  it('moves along the workflow and releases with or without a password', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json(200, SESSION))
+      .mockImplementation(async () => json(200, { outcome: 'OK' }));
+    await client.transition('samm-assessments', 'p', 'samm.submit');
+    await client.release('samm-assessments', 'p');
+    await client.release('samm-assessments', 'p', 'secret');
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      '/api/v1/documents/samm-assessments/p/transitions/samm.submit',
+    );
+    expect(fetchMock.mock.calls[1][1].body).toBeUndefined();
+    expect(fetchMock.mock.calls[2][0]).toBe('/api/v1/releases/samm-assessments/p');
+    expect(fetchMock.mock.calls[2][1].body).toBeUndefined();
+    expect(fetchMock.mock.calls[2][1].headers['Content-Type']).toBeUndefined();
+    expect(JSON.parse(fetchMock.mock.calls[3][1].body)).toEqual({ password: 'secret' });
+  });
+
+  it('leaves for the step-up address and returns to the current address', () => {
+    client.stepUp('/api/v1/auth/step-up');
+    expect(navigate).toHaveBeenCalledWith(
+      `/api/v1/auth/step-up?return=${encodeURIComponent('/samm/payments?x=1')}`,
+    );
+  });
+
+  it('keeps the refusal body for a step-up', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json(200, SESSION))
+      .mockResolvedValueOnce(json(403, { outcome: 'STEP_UP_REQUIRED', stepUp: '/x' }));
+    await expect(client.release('samm-assessments', 'p')).rejects.toMatchObject({
+      outcome: 'STEP_UP_REQUIRED',
+      status: 403,
+    });
+  });
+});
