@@ -12,9 +12,10 @@
 <script lang="ts">
   /**
    * One measure over time as a line on a fixed scale: the overall score of a scope's released assessments. One series,
-   * so no legend; the last point carries its value, every point states it under the pointer, and a table beneath —
-   * visually hidden, for assistive technology and the keyboard — states them all (dataviz method: thin line, markers
-   * of at least 8 px, recessive grid). Points are keyed by position: two assessments may carry the same title.
+   * so no legend; a trend has few points, so every point carries its value as a direct label — nothing depends on the
+   * pointer — and a visually hidden table states them for assistive technology (dataviz method: thin line, markers of
+   * at least 8 px, recessive grid). The pointer only marks a point. Points are keyed by position: two assessments may
+   * carry the same title.
    */
   interface Props {
     /** The points, oldest first. */
@@ -34,7 +35,7 @@
 
   const x = (index: number, count: number) =>
     PAD.left + (count <= 1 ? 0 : (index * (W - PAD.left - PAD.right)) / (count - 1));
-  // A scale without range draws every point on the baseline instead of dividing by zero.
+  // A non-positive max uses a 0–1 scale instead of dividing by zero.
   let top = $derived(max > 0 ? max : 1);
   const y = (value: number) => PAD.top + (1 - value / top) * (H - PAD.top - PAD.bottom);
 
@@ -74,14 +75,13 @@
         <text class="trend__axis" x={x(index, points.length)} y={H - 10} text-anchor="middle"
           >{point.label}</text
         >
-        {#if index === points.length - 1 || active === index}
-          <text
-            class="trend__value"
-            x={x(index, points.length) + 10}
-            y={y(point.value) - 10}
-            text-anchor="start">{point.text}</text
-          >
-        {/if}
+        <text
+          class="trend__value"
+          class:trend__value--active={active === index}
+          x={x(index, points.length)}
+          y={y(point.value) - 12}
+          text-anchor="middle">{point.text}</text
+        >
       </g>
     {/each}
   </svg>
@@ -134,6 +134,10 @@
 
   .trend__point--active .trend__marker {
     r: 6;
+  }
+
+  .trend__value--active {
+    text-decoration: underline;
   }
 
   .trend__value {

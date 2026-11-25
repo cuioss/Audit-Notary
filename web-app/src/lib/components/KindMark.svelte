@@ -1,18 +1,8 @@
 <script lang="ts" module>
   /** The kinds of objects the app names; the category kinds carry their tint on the icon. */
-  export type Kind =
-    | 'samm'
-    | 'scope'
-    | 'assessment'
-    | 'practice'
-    | 'threat-model'
-    | 'incident'
-    | 'isms'
-    | 'catalog'
-    | 'report';
 
-  /** The icon of every kind. */
-  export const KIND_ICONS: Record<Kind, string> = {
+  /** The icon of every kind: the one place that names the kinds. */
+  export const KIND_ICONS = {
     samm: 'lens.samm',
     scope: 'state.target',
     assessment: 'lens.samm',
@@ -22,7 +12,10 @@
     isms: 'lens.isms',
     catalog: 'lens.catalogs',
     report: 'lens.reports',
-  };
+  } as const;
+
+  /** The kinds of objects the app names; the category kinds carry their tint on the icon. */
+  export type Kind = keyof typeof KIND_ICONS;
 
   /** The category tint of a kind, or nothing for a neutral kind. */
   const TINTS: Partial<Record<Kind, string>> = {

@@ -45,6 +45,11 @@
   }: Props = $props();
 
   const reasonId = uniqueId('reason');
+  /** The caller's own description, kept, with the reason appended while there is one. */
+  let describedBy = $derived(
+    [rest['aria-describedby'], disabledReason ? reasonId : null].filter(Boolean).join(' ') ||
+      undefined,
+  );
 
   function handleClick(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }) {
     if (busy || disabledReason) {
@@ -67,7 +72,7 @@
     class:btn--unavailable={!!disabledReason}
     disabled={disabled || undefined}
     aria-disabled={disabledReason ? 'true' : undefined}
-    aria-describedby={disabledReason ? reasonId : undefined}
+    aria-describedby={describedBy}
     aria-busy={busy ? 'true' : undefined}
     onclick={handleClick}
   >

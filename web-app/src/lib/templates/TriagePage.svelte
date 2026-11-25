@@ -75,11 +75,15 @@
 
   // A new object ends a peek and takes the focus.
   let lastObject = '';
+  // Whether an object was ever shown: an empty chain in between does not make the next object the first again.
+  let shownBefore = false;
   $effect(() => {
     const key = objectKey;
     if (key === lastObject) return;
-    const first = lastObject === '';
     lastObject = key;
+    if (key === '') return;
+    const first = !shownBefore;
+    shownBefore = true;
     peek = null;
     const object = levels.at(-1);
     if (first || !object) return;
@@ -92,6 +96,23 @@
       }
     });
   });
+
+  /**
+   * Peeks at a hidden level, or returns from a peek. The strip button that was pressed goes away, so focus moves on:
+   * to the heading of the first column now shown, or back to the object's heading.
+   */
+  async function peekAt(index: number | null) {
+    peek = index;
+    await tick();
+    const target =
+      index === null
+        ? root?.querySelector<HTMLElement>('[data-object-column] h1')
+        : root?.querySelector<HTMLElement>('.triage__column h1, .triage__column h2');
+    if (target) {
+      target.tabIndex = -1;
+      target.focus();
+    }
+  }
 </script>
 
 <div
@@ -119,7 +140,7 @@
           levels={hiddenLeft}
           names={win.strip === 'names'}
           label={stripLabel}
-          onselect={(index) => (peek = index)}
+          onselect={(index) => peekAt(index)}
         />
       </div>
     {/if}
@@ -146,7 +167,7 @@
           side="right"
           levels={hiddenRight}
           label={returnLabel}
-          onselect={() => (peek = null)}
+          onselect={() => peekAt(null)}
         />
       </div>
     {/if}

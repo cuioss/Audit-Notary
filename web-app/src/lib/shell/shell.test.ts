@@ -61,7 +61,6 @@ describe('NavRail', () => {
   });
 });
 
-
 describe('TopBar', () => {
   it('shows the view title, the user and signs out', async () => {
     const logout = vi.spyOn(apiClient, 'logout').mockResolvedValue();
@@ -118,7 +117,6 @@ describe('TopBar breadcrumb', () => {
     expect(screen.getByTestId('view-title')).toHaveAttribute('aria-current', 'page');
   });
 });
-
 
 describe('BottomBar', () => {
   it('opens "More" with the remaining lenses', async () => {

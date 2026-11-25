@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import { describe, expect, it, vi } from 'vitest';
-import { ApiClient } from '../api/client';
+import { ApiClient, type StreamState } from '../api/client';
 import { ApiError } from '../api/errors';
 import type { Session, Status } from '../api/types';
 import {
@@ -86,8 +86,7 @@ describe('completeFirstLogin', () => {
 describe('keepStreamAlive', () => {
   function client() {
     const fake = new ApiClient(() => {});
-    let setState:
-      ((state: 'connecting' | 'connected' | 'reconnecting' | 'offline') => void) | undefined;
+    let setState: ((state: StreamState) => void) | undefined;
     vi.spyOn(fake, 'subscribeStreamState').mockImplementation((listener) => {
       setState = listener;
       return () => {};

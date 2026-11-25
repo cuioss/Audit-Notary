@@ -1,18 +1,25 @@
 <script lang="ts" module>
   /**
-   * Where the person's work stands (AUN-WEB-5): nothing changed, a change not yet kept, kept for them only (a draft),
+   * The icon of every state of the person's work (AUN-WEB-5): nothing changed, a change not yet kept, kept for them only (a draft),
    * being saved, saved for everyone, or a save that did not go through.
    */
-  export type SaveStateKind =
-    | 'clean'
-    | 'changed'
-    | 'drafting'
-    | 'draft'
-    | 'saving'
-    | 'saved'
-    | 'conflict'
-    | 'failed'
-    | 'read-only';
+  export const SAVE_STATE_ICONS = {
+    clean: 'state.check',
+    changed: 'state.draft',
+    drafting: 'state.draft',
+    draft: 'state.person',
+    saving: 'act.save',
+    saved: 'state.done',
+    conflict: 'state.conflict',
+    failed: 'state.alert',
+    'read-only': 'state.lock',
+  } as const;
+
+  /** A save state: the keys of {@link SAVE_STATE_ICONS}, the one place that names them. */
+  export type SaveStateKind = keyof typeof SAVE_STATE_ICONS;
+
+  /** Every save state. */
+  export const SAVE_STATES = Object.keys(SAVE_STATE_ICONS) as SaveStateKind[];
 </script>
 
 <script lang="ts">
@@ -32,22 +39,10 @@
   }
 
   let { state, label, testId }: Props = $props();
-
-  const ICONS: Record<SaveStateKind, string> = {
-    clean: 'state.check',
-    changed: 'state.draft',
-    drafting: 'state.draft',
-    draft: 'state.person',
-    saving: 'act.save',
-    saved: 'state.done',
-    conflict: 'state.conflict',
-    failed: 'state.alert',
-    'read-only': 'state.lock',
-  };
 </script>
 
 <p class="save save--{state}" role="status" data-testid={testId} data-state={state}>
-  <Icon name={ICONS[state]} size={16} />
+  <Icon name={SAVE_STATE_ICONS[state]} size={16} />
   <span>{label}</span>
 </p>
 

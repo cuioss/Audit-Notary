@@ -162,7 +162,10 @@
   }: Props = $props();
 
   let geometry = $derived(layout(functions));
-  let hovered: string | null = $state(null);
+  // Pointer and focus are followed apart: the practice under the pointer wins, else the focused one stays shown.
+  let pointed: string | null = $state(null);
+  let focused: string | null = $state(null);
+  let hovered = $derived(pointed ?? focused);
   let hoveredPractice = $derived(
     hovered === null
       ? null
@@ -224,10 +227,10 @@
           href={practice.href}
           aria-label={practice.label}
           data-practice={practice.id}
-          onmouseenter={() => (hovered = practice.id)}
-          onmouseleave={() => (hovered = null)}
-          onfocus={() => (hovered = practice.id)}
-          onblur={() => (hovered = null)}
+          onmouseenter={() => (pointed = practice.id)}
+          onmouseleave={() => (pointed = null)}
+          onfocus={() => (focused = practice.id)}
+          onblur={() => (focused = null)}
         >
           {@render lobes()}
         </a>
@@ -238,8 +241,8 @@
           role="img"
           aria-label={practice.label}
           data-practice={practice.id}
-          onmouseenter={() => (hovered = practice.id)}
-          onmouseleave={() => (hovered = null)}
+          onmouseenter={() => (pointed = practice.id)}
+          onmouseleave={() => (pointed = null)}
         >
           {@render lobes()}
         </g>

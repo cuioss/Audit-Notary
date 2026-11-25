@@ -9,6 +9,7 @@ import {
   SIDE_WIDE,
   STRIP_MARKS,
   STRIP_NAMES,
+  type Strip,
 } from './columnWindow';
 
 /**
@@ -58,7 +59,7 @@ interface TableRow {
   /** The width of the object column. */
   object: number;
   /** The strip the row names. */
-  strip: 'none' | 'names' | 'marks';
+  strip: Strip;
 }
 
 /**
@@ -97,7 +98,7 @@ interface SideRow {
   /** The width of the object column. */
   object: number;
   /** The strip the row names. */
-  strip: 'none' | 'names' | 'marks';
+  strip: Strip;
 }
 
 const OPEN: readonly SideRow[] = [

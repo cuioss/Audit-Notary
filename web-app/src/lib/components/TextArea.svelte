@@ -2,8 +2,9 @@
   import { uniqueId } from './uniqueId';
 
   /**
-   * Free text with its label, an optional hint and its field error: a comment, a narrative fragment. A field marked
-   * `x-free-text` carries the hint "no personal details" (AUN-WEB-4).
+   * Free text with its label, an optional hint and its field error: a comment, a narrative fragment. For a field marked
+   * `x-free-text` the caller passes the hint "no personal details" (AUN-WEB-4); the schema-driven form will do so
+   * for every such field once it exists.
    */
   interface Props {
     /** The label. */

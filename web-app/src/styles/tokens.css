@@ -11,7 +11,9 @@
  * Additions to the contract: the rail colours (`--color-rail-*`, the rail is the register's dark spine), the
  * sunken ground, the field boundary (`--color-border-field`, 3:1 against the sheet, WCAG 1.4.11), the seal
  * (`--color-seal*`), the chart series of the five SAMM business functions (`--color-series-1` … `-5`, slots 1–5 of
- * the dataviz reference palette, validated against both sheet colours), the chart grid and axis, the sheet's
+ * the dataviz reference palette, checked with its validator against both sheet colours for colour-vision and
+ * normal-vision separation; on the dark sheet they reach 3:1 (tokens.test.ts), on the white sheet four stay below it,
+ * so every chart states its values in text or a table as well), the chart grid and axis, the sheet's
  * shadow and radius, the serif and the display step of the type scale. The kind colours name the Audit Notary
  * categories; the aliases of the old pm-web-app token names are not taken over.
  *

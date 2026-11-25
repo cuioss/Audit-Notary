@@ -13,7 +13,9 @@
    * The answer of one SAMM question: the model's answers as one row of choices, from "No" to the fullest answer.
    * Native radio buttons, so the arrow keys move between the answers and a screen reader names the group by its
    * question. Each choice shows how much of the answer it is as a small gauge, so the row reads as a scale at a
-   * glance; the text says it. With `hints`, the number key that picks the answer stands in its corner.
+   * glance; the text says it. With `hints`, the number of each answer stands in its corner: the view around the
+   * scale maps the number keys to the answers (the practice sheet does, for the question in focus); the scale itself
+   * handles no keys but those of its radio buttons.
    */
   interface Props {
     /** The id of the element that names the group, the question's text. */

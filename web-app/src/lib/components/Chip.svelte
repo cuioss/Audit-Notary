@@ -5,7 +5,7 @@
   interface Props {
     /** The identifier. */
     value: string;
-    /** An accessible name where the identifier alone does not say what it is. */
+    /** What the identifier is, said to assistive technology before it (a code element takes no own name). */
     label?: string;
     /** A test id. */
     testId?: string;
@@ -14,7 +14,9 @@
   let { value, label, testId }: Props = $props();
 </script>
 
-<code class="chip" aria-label={label} data-testid={testId}>{value}</code>
+<code class="chip" data-testid={testId}
+  >{#if label}<span class="sr-only">{label}:&nbsp;</span>{/if}{value}</code
+>
 
 <style>
   .chip {

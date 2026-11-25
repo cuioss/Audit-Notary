@@ -57,13 +57,10 @@ const themes = {
 
 /** The text colours and the surfaces they stand on. */
 const TEXT_TOKENS = ['--color-text-primary', '--color-text-secondary', '--color-text-muted'];
-const SURFACES = [
-  '--color-bg-app',
-  '--color-bg-surface',
-  '--color-bg-raised',
-  '--color-bg-subtle',
-  '--color-bg-sunken',
-];
+/** Every ground of the palette but the rail, which has its own texts ({@link RAIL_PAIRS}); read from tokens.css. */
+const SURFACES = Object.keys(rootBlock).filter(
+  (key) => key.startsWith('--color-bg-') && key !== '--color-bg-rail',
+);
 /** Colours used as text or as a link on the surfaces (brand links, state words). */
 const STATE_TEXT = [
   '--color-brand',
@@ -137,6 +134,16 @@ describe('tokens.css', () => {
         it(`${text} on ${ground} reaches ${minimum}:1`, () => {
           expect(contrastRatio(palette[text], palette[ground])).toBeGreaterThanOrEqual(minimum);
         });
+      }
+
+      if (theme === 'dark') {
+        for (const series of [1, 2, 3, 4, 5].map((n) => `--color-series-${n}`)) {
+          it(`${series} as a chart mark on the dark sheet reaches 3:1`, () => {
+            expect(
+              contrastRatio(palette[series], palette['--color-bg-surface']),
+            ).toBeGreaterThanOrEqual(3);
+          });
+        }
       }
 
       it('the field boundary stands out from the sheet by 3:1 (WCAG 1.4.11)', () => {

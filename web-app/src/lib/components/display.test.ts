@@ -19,7 +19,7 @@ import MaturitySeal, {
 } from './MaturitySeal.svelte';
 import ReasonBadge from './ReasonBadge.svelte';
 import RowLink from './RowLink.svelte';
-import SaveState, { type SaveStateKind } from './SaveState.svelte';
+import SaveState, { SAVE_STATE_ICONS, SAVE_STATES } from './SaveState.svelte';
 import ScoreMeter from './ScoreMeter.svelte';
 import Sheet from './Sheet.svelte';
 import SheetHead from './SheetHead.svelte';
@@ -47,8 +47,9 @@ describe('Avatar', () => {
 describe('Chip', () => {
   it('shows the identifier with its name', () => {
     render(Chip, { value: 'p-4c1a9e', label: 'Pseudonym', testId: 'chip' });
-    expect(screen.getByTestId('chip')).toHaveTextContent('p-4c1a9e');
-    expect(screen.getByLabelText('Pseudonym')).toBeInTheDocument();
+    expect(screen.getByTestId('chip')).toHaveTextContent('Pseudonym: p-4c1a9e');
+    expect(screen.getByTestId('chip').querySelector('.sr-only')).toHaveTextContent('Pseudonym');
+    expect(screen.getByTestId('chip')).not.toHaveAttribute('aria-label');
   });
 });
 
@@ -216,23 +217,16 @@ describe('RowLink', () => {
 });
 
 describe('SaveState', () => {
-  it.each<[SaveStateKind, string]>([
-    ['clean', 'state.check'],
-    ['changed', 'state.draft'],
-    ['drafting', 'state.draft'],
-    ['draft', 'state.person'],
-    ['saving', 'act.save'],
-    ['saved', 'state.done'],
-    ['conflict', 'state.conflict'],
-    ['failed', 'state.alert'],
-    ['read-only', 'state.lock'],
-  ])('shows %s with its icon', (state, icon) => {
-    const { container } = render(SaveState, { state, label: 'Sentence', testId: 'save' });
-    const status = screen.getByRole('status');
-    expect(status).toHaveAttribute('data-state', state);
-    expect(status).toHaveTextContent('Sentence');
-    expect(container.querySelector(`[data-icon="${icon}"]`)).not.toBeNull();
-  });
+  it.each(SAVE_STATES.map((state) => [state, SAVE_STATE_ICONS[state]] as const))(
+    'shows %s with its icon',
+    (state, icon) => {
+      const { container } = render(SaveState, { state, label: 'Sentence', testId: 'save' });
+      const status = screen.getByRole('status');
+      expect(status).toHaveAttribute('data-state', state);
+      expect(status).toHaveTextContent('Sentence');
+      expect(container.querySelector(`[data-icon="${icon}"]`)).not.toBeNull();
+    },
+  );
 });
 
 describe('ScoreMeter', () => {
@@ -369,7 +363,7 @@ describe('TrendLine', () => {
     { label: '2026 Q4', value: 2, text: '2.00' },
   ];
 
-  it('draws the line, the grid and the last value, and tabulates every point', () => {
+  it('draws the line and the grid, labels every point, and tabulates them', () => {
     const { container } = render(TrendLine, { points, max: 3, label: 'Overall score' });
     expect(screen.getByRole('img', { name: 'Overall score' })).toBeInTheDocument();
     expect(container.querySelectorAll('.trend__grid')).toHaveLength(4);
@@ -378,19 +372,25 @@ describe('TrendLine', () => {
     );
     expect(
       [...container.querySelectorAll('.trend__value')].map((text) => text.textContent),
-    ).toEqual(['2.00']);
+    ).toEqual(['1.00', '1.50', '2.00']);
     expect(container.querySelector('table caption')).toHaveTextContent('Overall score');
     expect(container.querySelectorAll('tbody tr')).toHaveLength(3);
   });
 
-  it('states a point under the pointer', async () => {
+  it('marks a point under the pointer; its value stands without it', async () => {
     const { container } = render(TrendLine, { points, max: 3, label: 'Overall score' });
     const first = container.querySelectorAll('.trend__point')[0];
     await fireEvent.mouseEnter(first);
     expect(first).toHaveClass('trend__point--active');
-    expect(first.querySelector('.trend__value')).toHaveTextContent('1.00');
     await fireEvent.mouseLeave(first);
-    expect(first.querySelector('.trend__value')).toBeNull();
+    expect(first).not.toHaveClass('trend__point--active');
+    expect(first.querySelector('.trend__value')).toHaveTextContent('1.00');
+  });
+
+  it('draws a scale without range from 0 to 1', () => {
+    const { container } = render(TrendLine, { points, max: 0, label: 'Flat' });
+    expect(container.querySelectorAll('.trend__grid')).toHaveLength(2);
+    expect(container.querySelector('.trend__line')?.getAttribute('d')).not.toContain('NaN');
   });
 
   it('places a single point at the left edge', () => {
