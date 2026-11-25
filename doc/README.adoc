@@ -45,6 +45,8 @@ In reading order:
 . xref:concepts/application-architecture.adoc[Application Architecture] -- shape, modules, configuration, run-time
   state, native image, testing
 . xref:concepts/web-app.adoc[Web App] -- what is taken from `pm-web-app`, structure, what differs, page security
+. xref:concepts/visual-design.adoc[Visual Design: The Register] -- the sheet and its margin, the seal, the daybook,
+  tokens, type, accessibility
 . xref:concepts/mcp-server.adoc[MCP Server] -- protected resource, transport, scopes and rights, attribution
 . xref:concepts/deployment.adoc[Deployment] -- what runs where, image, secrets, compose sample, operating duties
 . xref:concepts/local-mcp-gateway.adoc[Local MCP Gateway] -- proposal: a reusable local base project that logs the user

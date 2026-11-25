@@ -60,8 +60,9 @@ rendering that follows `currentColor`.
 
 |A five-token warm palette
 |`--color-mascot-fur` `#E17512`, `--color-mascot-gold` `#F2B630`, `--color-mascot-hat` `#A0602E`,
-`--color-mascot-cream` `#F6DDB0`, `--color-mascot-outline` `#2A1A10`, the same in both themes. The violet
-`--color-brand` of the interface stays the accent of the interface and does not colour the mark.
+`--color-mascot-cream` `#F6DDB0`, `--color-mascot-outline` `#2A1A10`, the same in both themes. The signature-ink
+blue `--color-brand` stays the accent of the interface and does not colour the mark; the gold of the palette is also
+the seal of a released document (xref:visual-design.adoc[Visual Design]).
 
 |The raster mascot only on calm surfaces
 |Login, empty states, a finished release. Never on the editing view of an incident report or in a deadline warning.

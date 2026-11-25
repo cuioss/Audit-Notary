@@ -10,6 +10,8 @@ Claude Code specifics, in addition to the shared guidance above.
   `doc/specification/architecture-and-modules.adoc` and `doc/adr/`, and the open questions are at the end of each
   concept.
 - Ask before adding any dependency and before touching `.github/project.yml` (see _Releases_ in `AGENTS.md`).
+- Every change to the look or the interaction of the web app goes through the project skill `/audit-notary-design`
+  (`.claude/skills/audit-notary-design/SKILL.md`): its rules, its checklist and its screenshot critique.
 
 ## Temporary Files
 
