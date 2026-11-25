@@ -170,11 +170,17 @@ The rules:
   something writes it down, in whatever tab it belongs to; the order of the stages does not hold that back.
 . *Completion is gated.* A stage can be completed only when every stage of its `after` is completed or not applicable,
   and when the mandatory fields of its part are filled in. These are the `required` findings of the library whose JSON
-  Pointer starts with the part (`/triage/…`); the library already reports them per pointer
+  Pointer is the part (`/triage`) or starts with it (`/triage/…`); the library already reports them per pointer
   (https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-2[GDR-FORMS-2]).
+  The library applies the sub-schema of a property only to a property the data hold, so the mandatory fields of an
+  absent part would not be reported. The check therefore treats an absent part as an empty part (`{}`): its mandatory
+  fields are missing, and a stage whose part is absent cannot be completed unless its part declares no mandatory field.
 . *Completion is a save*, onto the working branch, so that everyone sees it: the signed commit names the person, and
   `completion` records the time in the data, where deadline rules and the index can read it. With `step-up: true` it
   requires step-up like a release.
+. *Only the complete and reopen operations write `completion`.* Every other save, by a person in the form or by an
+  agent through `write_draft` and `save`, is refused when it sets, changes or removes `completion`, so that no save
+  passes around the gates above.
 . *A completed stage is read-only until it is reopened.* Reopening removes `completion` in a save; the earlier
   completion stays in the history as evidence that the stage was changed after its sign-off. Reopening a stage reopens
   no other stage; a completed stage whose predecessor was reopened is marked in the form.
@@ -203,7 +209,9 @@ Workflow states remain for review and release only.
 An agent fills in stages through `write_draft` like any part of a document
 (xref:../specification/mcp-server.adoc#AUN-MCP-6[AUN-MCP-6]) and reads their status with the document. Completing a
 stage is a sign-off and stays a person's act, as the release does
-(xref:../use-cases/02-documents.adoc#UC-DOC-8[UC-DOC-8]).
+(xref:../use-cases/02-documents.adoc#UC-DOC-8[UC-DOC-8]). The MCP server offers no complete or reopen operation, and
+`write_draft` and `save` refuse a change of `completion` like every other save (<<_stage_status>>). AUN-MCP-6 states
+this when the specification is aligned with this concept.
 
 == In the Web App
 

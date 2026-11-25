@@ -76,6 +76,16 @@ submitted for review and released only when every stage that applies is complete
 `privacy-assessment` count only for a personal data breach, a condition the schema alone could not express
 (xref:staged-documents.adoc#_stage_status[Staged Documents, Stage Status]).
 
+[NOTE]
+====
+The specification does not follow the stages yet:
+xref:../specification/category-incident-reports.adoc#AUN-IR-1[AUN-IR-1] to
+xref:../specification/category-incident-reports.adoc#AUN-IR-3[AUN-IR-3] still describe one `document.yaml` with
+`aware-at`, `personal-data-affected` and `nis2-significant` at its root, and the deadline rules of AUN-IR-2 read them
+there. They are deferred until this layout is agreed. The change that aligns them moves the field paths and the
+deadline inputs into the parts (`/triage/aware-at`) in one step.
+====
+
 == What a Form Gains over Confluence
 
 . *Mandatory fields and deadlines are enforced.* Security incidents carry hard notification deadlines (see
