@@ -72,17 +72,33 @@ describe('assessmentScore', () => {
     expect(score.overall).toBeCloseTo(((1 + 3 + 3) / 3 + 3 * 4) / 5, 12);
   });
 
-  it('matches the comparison the mock serves for the released and the reviewed assessment', () => {
+  it.each([
+    ['samm-compare-payments.json', 'samm-assessment-payments-2026-q4-in-review.json'],
+    ['samm-compare-payments-workshop.json', 'samm-assessment-payments-2026-q4.json'],
+  ])('%s holds the scores the model gives the compared answers', (file, later) => {
     const read = (name: string) =>
       JSON.parse(fs.readFileSync(path.join(SCENARIO_DIR, 'data', name), 'utf8'));
-    const comparison = read('samm-compare-payments.json');
+    const comparison = read(file);
     const from = assessmentScore(model, read('samm-assessment-payments-2026-q2.json').answers);
-    const to = assessmentScore(
-      model,
-      read('samm-assessment-payments-2026-q4-in-review.json').answers,
-    );
+    const to = assessmentScore(model, read(later).answers);
     expect(from.overall).toBeCloseTo(comparison.overall.from, 12);
     expect(to.overall).toBeCloseTo(comparison.overall.to, 12);
+    // The same business functions, practices and streams, in model order, with the same scores.
+    expect(comparison.functions.map((fn: { id: string }) => fn.id)).toEqual(
+      model.functions.map((fn) => fn.id),
+    );
+    model.functions.forEach((fn, f) => {
+      const compared = comparison.functions[f];
+      expect(compared.from).toBeCloseTo(from.functions[f].score, 12);
+      expect(compared.to).toBeCloseTo(to.functions[f].score, 12);
+      fn.practices.forEach((practice, p) => {
+        expect(compared.practices[p].id).toBe(practice.id);
+        expect(compared.practices[p].to).toBeCloseTo(to.functions[f].practices[p].score, 12);
+        expect(compared.practices[p].streams.map((s: { to: number }) => s.to)).toEqual(
+          to.functions[f].practices[p].streams,
+        );
+      });
+    });
   });
 });
 

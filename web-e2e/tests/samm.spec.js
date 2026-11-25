@@ -71,7 +71,9 @@ test('a save by another assessor refreshes the practice and says who saved', asy
   await expect(page.locator('.app-shell')).toHaveAttribute('data-stream', 'connected');
   await gotoState(request, 'saved-by-other');
   await expect(page.getByText('Jordan Weber just saved this practice.').first()).toBeVisible();
-  await expect(page.getByTestId('answer-sm-b-1-3')).toBeChecked();
+  // The other assessor answered sm-b-1 with 0.25 and sm-b-2 with 1 (the fixture of saved-by-other).
+  await expect(page.getByTestId('answer-sm-b-1-1')).toBeChecked();
+  await expect(page.getByTestId('answer-sm-b-2-3')).toBeChecked();
 });
 
 test('a person with the right read only reads the practice', async ({ page, request }) => {

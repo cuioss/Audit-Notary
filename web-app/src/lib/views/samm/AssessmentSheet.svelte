@@ -122,6 +122,14 @@
     model?.functions.flatMap((fn) => fn.practices).find((practice) => practice.id === id)?.name ??
     id;
 
+  /**
+   * @param pointers the JSON Pointers of `MANDATORY_FIELDS_MISSING`, `/answers/<practice>/<question>/answer`
+   * @returns the practices they lie in, each once, in their order
+   */
+  function missingPractices(pointers: string[]): string[] {
+    return [...new Set(pointers.map((pointer) => pointer.split('/')[2] ?? pointer))];
+  }
+
   async function submit() {
     if (!assessment) return;
     submitting = true;
@@ -202,7 +210,9 @@
         <Notice
           tone="danger"
           title={$t(failure)}
-          body={missing.length > 0 ? missing.map(practiceName).join(', ') : undefined}
+          body={missing.length > 0
+            ? missingPractices(missing).map(practiceName).join(', ')
+            : undefined}
           live
         />
       </div>
