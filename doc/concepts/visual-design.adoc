@@ -133,7 +133,8 @@ The token names are the contract of `pm-web-app`; the values are Audit Notary's 
 The status colours (attention, danger, success, running) keep one meaning each; colour never carries meaning alone —
 every state has its word, every chart its labels or table.
 
-Every text/background pair is checked in `tokens.test.ts` in both themes against WCAG 2.1 success criterion 1.4.3
+Every text on every ground it is rendered on — the plain grounds, the rail, the tinted grounds of badges, notices,
+the diff and the chosen answer — is checked in `tokens.test.ts` in both themes against WCAG 2.1 success criterion 1.4.3
 (link:https://www.w3.org/TR/WCAG21/#contrast-minimum[4.5:1]), every state graphic and the field boundary against 1.4.11
 (link:https://www.w3.org/TR/WCAG21/#non-text-contrast[3:1]). The five chart colours are slots 1 to 5 of the reference
 palette of the data-visualisation method used here, validated against both sheet colours for colour-vision deficiency
@@ -165,9 +166,9 @@ the focus moved to a new object and announced, light, dark and system themes.
   impact `serious` or `critical`.
 * Every control is a native element of the closed vocabulary: radio buttons for answers, a switch for the key hints,
   `<details>` for folded content. The keyboard reaches everything; the number keys are an addition, never the only way.
-* The seal's practices are links named by practice, score and target; their visible abbreviations are decorative, so
-  the accessible name never contradicts the visible text (WCAG 2.1 success criterion 2.5.3,
-  link:https://www.w3.org/TR/WCAG21/#label-in-name[Label in Name]).
+* The seal's practices are links whose accessible name starts with the abbreviation drawn beside them and goes on
+  with the practice's name, score and target, so the visible label is part of the name (WCAG 2.1 success criterion
+  2.5.3, link:https://www.w3.org/TR/WCAG21/#label-in-name[Label in Name]).
 * Motion answers an act or marks the one release moment; under `prefers-reduced-motion` it is off. In forced-colours
   mode the seal and the meters fall back to system colours.
 * The phone keeps every act: the save band stays above the record, the answers take two columns, the margin follows
