@@ -489,9 +489,11 @@ describe('MaturitySeal', () => {
     expect(screen.getByRole('group', { name: 'Maturity' })).toBeInTheDocument();
     expect(container.querySelector('a[data-practice="sm"]')).toHaveAttribute(
       'aria-label',
-      'Strategy and Metrics, 1.5 of 3, target 2',
+      'SM, Strategy and Metrics, 1.5 of 3, target 2',
     );
-    expect(screen.getByRole('img', { name: 'Policy and Compliance, 0 of 3' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('img', { name: 'PC, Policy and Compliance, 0 of 3' }),
+    ).toBeInTheDocument();
     expect(container.querySelectorAll('.seal__target')).toHaveLength(1);
     expect(container.querySelector('.seal__hub')).toHaveTextContent('0.75of 3Overall');
     expect(screen.getByRole('list', { name: 'Business functions' })).toHaveTextContent(

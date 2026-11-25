@@ -75,6 +75,21 @@ const STATE_TEXT = [
   '--color-seal-text',
 ];
 
+/**
+ * Texts on the tinted grounds the components render them on: the reason badges, the danger button, the diff of a
+ * release, the chosen answer, the notices.
+ */
+const RENDERED_PAIRS: [string, string][] = [
+  ['--color-attention-text', '--color-attention-subtle'],
+  ['--color-text-primary', '--color-attention-subtle'],
+  ['--color-danger', '--color-danger-subtle'],
+  ['--color-success', '--color-success-subtle'],
+  ['--color-on-brand', '--color-danger'],
+  ['--color-text-muted', '--color-diff-removed'],
+  ['--color-text-primary', '--color-diff-added'],
+  ['--color-text-primary', '--color-brand-subtle'],
+];
+
 /** The rail is the register's dark spine in both themes: its own texts on its own grounds. */
 const RAIL_PAIRS: [string, string, number][] = [
   ['--color-rail-text', '--color-bg-rail', 4.5],
@@ -129,6 +144,12 @@ describe('tokens.css', () => {
           contrastRatio(palette['--color-on-brand'], palette['--color-brand']),
         ).toBeGreaterThanOrEqual(4.5);
       });
+
+      for (const [text, ground] of RENDERED_PAIRS) {
+        it(`${text} on ${ground} reaches 4.5:1`, () => {
+          expect(contrastRatio(palette[text], palette[ground])).toBeGreaterThanOrEqual(4.5);
+        });
+      }
 
       for (const [text, ground, minimum] of RAIL_PAIRS) {
         it(`${text} on ${ground} reaches ${minimum}:1`, () => {
