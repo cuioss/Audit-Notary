@@ -1,13 +1,21 @@
 /*
- * The design tokens of Audit Notary: both themes (doc/specification/web-app.adoc, AUN-WEB-2).
+ * The design tokens of Audit Notary: both themes (doc/specification/web-app.adoc, AUN-WEB-2; the reasoning is
+ * doc/concepts/visual-design.adoc).
  *
- * Adopted from pm-mcp-clients, pm-web-app/src/styles/tokens.css, at commit
- * 05e6c68333cdd33b030b25f76123b4a4c641da3c (design rules: pm-mcp-clients/doc/design/web-app). A change of
- * that token contract is taken over deliberately, with this commit id.
+ * The token names are the contract of pm-mcp-clients, pm-web-app/src/styles/tokens.css, at commit
+ * 05e6c68333cdd33b030b25f76123b4a4c641da3c; a change of that contract is taken over deliberately, with this commit
+ * id. The values are Audit Notary's own: the "register" palette of the notary's office — a cool paper-grey desk,
+ * white sheets, the navy of the notary's suit for the rail, signature-ink blue as the one accent, and the gold of
+ * the seal, which only a seal wears.
  *
- * Deviations: the kind colours name the Audit Notary categories (`--color-kind-samm`,
- * `--color-kind-threat-model`, `--color-kind-incident`, `--color-kind-isms`); the aliases of the old
- * pm-web-app token names are not taken over.
+ * Additions to the contract: the rail colours (`--color-rail-*`, the rail is the register's dark spine), the
+ * sunken ground, the field boundary (`--color-border-field`, 3:1 against the sheet, WCAG 1.4.11), the seal
+ * (`--color-seal*`), the chart series of the five SAMM business functions (`--color-series-1` … `-5`, slots 1–5 of
+ * the dataviz reference palette, checked with its validator against both sheet colours for colour-vision and
+ * normal-vision separation; on the dark sheet they reach 3:1 (tokens.test.ts), on the white sheet four stay below it,
+ * so every chart states its values in text or a table as well), the chart grid and axis, the sheet's
+ * shadow and radius, the serif and the display step of the type scale. The kind colours name the Audit Notary
+ * categories; the aliases of the old pm-web-app token names are not taken over.
  *
  * `:root` carries what every theme shares and the light palette as the default; the system-dark media
  * block, `[data-theme='light']` and `[data-theme='dark']` override the palette. Only this file holds
@@ -17,9 +25,14 @@
 :root {
   color-scheme: light;
 
-  /* Typeface: Inter, self-hosted; the system stack carries the page until the file is available. */
+  /*
+   * Typefaces, self-hosted: Inter for the interface, Source Serif 4 for the record — sheet titles, section heads
+   * of a document, values a released document shows, the day numerals of the daybook. The system stacks carry
+   * the page until the files are available.
+   */
   --font-sans:
     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: 'Source Serif 4', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
   --font-feature-settings: 'tnum' 1, 'cv11' 1;
 
@@ -40,10 +53,16 @@
   --line-height-2xl: 2.125rem; /* 34px */
   --text-3xl: 2.25rem; /* 36px */
   --line-height-3xl: 2.625rem; /* 42px */
+  /* the display step: the title of a sheet, in the serif */
+  --text-display: 2.5rem; /* 40px */
+  --line-height-display: 2.875rem; /* 46px */
 
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
+
+  /* the longest line of running text */
+  --measure: 72ch;
 
   /* spacing: the 4 px scale plus 48 px and 64 px */
   --space-1: 0.25rem; /* 4px */
@@ -57,7 +76,8 @@
   --space-12: 3rem; /* 48px */
   --space-16: 4rem; /* 64px */
 
-  /* radius */
+  /* radius: a sheet of paper has nearly square corners; controls keep theirs */
+  --radius-sheet: 3px;
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
@@ -67,13 +87,16 @@
   --control-height: 34px;
   --control-radius: var(--radius-md);
   --control-bg: var(--color-bg-surface);
-  --control-border: var(--color-border-strong);
+  --control-border: var(--color-border-field);
   --state-slot-width: 8.5rem;
 
   /* motion; the reduced-motion block below turns it off */
   --duration-fast: 120ms;
   --duration-base: 200ms;
+  /* the one orchestrated moment: the seal pressed into a released sheet */
+  --duration-seal: 900ms;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-press: cubic-bezier(0.3, 1.4, 0.5, 1);
 
   /* breakpoints: phone below 768 px, tablet 768–1279 px, desktop from 1280 px */
   --breakpoint-tablet: 768px;
@@ -87,36 +110,63 @@
   --layer-dialog: 100;
 
   /* colour palette, light (the default) */
-  --color-bg-app: #f7f7f5;
-  --color-bg-rail: #efefeb;
+  --color-bg-app: #eceef2;
+  --color-bg-rail: #1c2643;
   --color-bg-surface: #ffffff;
   --color-bg-raised: #ffffff;
-  --color-bg-subtle: #f0f0ec;
-  --color-border: #e3e3de;
-  --color-border-strong: #cfcfc8;
-  --color-text-primary: #16181d;
-  --color-text-secondary: #3e4450;
-  --color-text-muted: #5f6672;
-  --color-brand: #5b4bdb;
-  --color-brand-hover: #4a3bc4;
-  --color-brand-subtle: #eeebff;
-  --color-attention: #b86e00;
-  --color-attention-subtle: #fff4e0;
-  --color-attention-text: #8a5200;
-  --color-running: #1f5fbf;
-  --color-danger: #c0362f;
-  --color-danger-subtle: #fdecea;
-  --color-success: #1e7a4e;
-  --color-success-subtle: #e9f6ee;
-  --color-diff-removed: #fbe3e1;
-  --color-diff-added: #ddf2e5;
-  --color-neutral: #7a808b;
-  --color-kind-samm: #606700;
-  --color-kind-threat-model: #bb2d8c;
-  --color-kind-incident: #a3361f;
-  --color-kind-isms: #007785;
+  --color-bg-subtle: #f3f4f7;
+  --color-bg-sunken: #e4e7ed;
+  --color-border: #dde1e8;
+  --color-border-strong: #c3c9d4;
+  --color-border-field: #7d8698;
+  --color-text-primary: #1b2233;
+  --color-text-secondary: #414a5c;
+  --color-text-muted: #586174;
+  --color-brand: #2b3fa0;
+  --color-brand-hover: #22338a;
+  --color-brand-subtle: #e6e9f8;
   --color-on-brand: #ffffff;
-  --color-overlay: rgb(15 23 42 / 0.5);
+  --color-rail-text: #c3cbdd;
+  --color-rail-text-strong: #ffffff;
+  --color-rail-text-muted: #9aa5bf;
+  --color-rail-hover: #24305a;
+  --color-rail-active: #2c3a66;
+  --color-rail-border: #2a355a;
+  --color-rail-focus: #a9b5ff;
+  --color-attention: #b06a00;
+  --color-attention-subtle: #fff3df;
+  --color-attention-text: #855000;
+  --color-running: #22668a;
+  --color-danger: #b3312a;
+  --color-danger-subtle: #fbe9e7;
+  --color-success: #1d7348;
+  --color-success-subtle: #e5f3ea;
+  --color-diff-removed: #fbe3e1;
+  --color-diff-added: #dcf1e4;
+  --color-neutral: #6f7889;
+  --color-kind-samm: #5a6200;
+  --color-kind-threat-model: #a8287d;
+  --color-kind-incident: #a3361f;
+  --color-kind-isms: #006b78;
+  --color-seal: #f2b630;
+  --color-seal-rim: #2a1a10;
+  --color-seal-text: #6e4b00;
+  --color-series-1: #257de0;
+  --color-series-2: #f47230;
+  --color-series-3: #00b894;
+  --color-series-4: #f2a600;
+  --color-series-5: #ee7fac;
+  --color-chart-grid: #e3e6ec;
+  --color-chart-axis: #b8bfcb;
+  --color-overlay: rgb(14 19 32 / 0.5);
+
+  --shadow-1: 0 1px 2px 0 rgb(27 34 51 / 0.06);
+  --shadow-2: 0 4px 12px -2px rgb(27 34 51 / 0.12), 0 2px 4px -2px rgb(27 34 51 / 0.08);
+  --shadow-overlay: 0 24px 48px -12px rgb(14 19 32 / 0.3);
+  --shadow-sheet: 0 1px 0 0 rgb(27 34 51 / 0.05), 0 12px 32px -16px rgb(27 34 51 / 0.22);
+
+  --focus-ring: 0 0 0 2px var(--color-bg-surface), 0 0 0 4px var(--color-brand);
+  --focus-ring-rail: 0 0 0 2px var(--color-bg-rail), 0 0 0 4px var(--color-rail-focus);
 
   /*
    * The brand palette of the mascot (doc/concepts/brand.adoc, The Brand Family): declared once
@@ -127,144 +177,201 @@
   --color-mascot-hat: #a0602e;
   --color-mascot-cream: #f6ddb0;
   --color-mascot-outline: #2a1a10;
-
-  /* elevation */
-  --shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.06);
-  --shadow-2: 0 4px 12px -2px rgb(0 0 0 / 0.12), 0 2px 4px -2px rgb(0 0 0 / 0.08);
-  --shadow-overlay: 0 24px 48px -12px rgb(0 0 0 / 0.25);
-
-  --focus-ring: 0 0 0 2px var(--color-bg-surface), 0 0 0 4px var(--color-brand);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
 
-    --color-bg-app: #0e1116;
-    --color-bg-rail: #12161d;
-    --color-bg-surface: #161b22;
-    --color-bg-raised: #1c2230;
-    --color-bg-subtle: #1e2433;
-    --color-border: #2a3140;
-    --color-border-strong: #3a4356;
-    --color-text-primary: #e6eaf2;
-    --color-text-secondary: #aeb6c4;
-    --color-text-muted: #8b95a7;
-    --color-brand: #8b7ef9;
-    --color-brand-hover: #a093fb;
-    --color-brand-subtle: #1e2240;
+    --color-bg-app: #0e1320;
+    --color-bg-rail: #0a0f1a;
+    --color-bg-surface: #161d2e;
+    --color-bg-raised: #1c2438;
+    --color-bg-subtle: #1f2840;
+    --color-bg-sunken: #121827;
+    --color-border: #2b3550;
+    --color-border-strong: #3a4666;
+    --color-border-field: #6f7b98;
+    --color-text-primary: #e4e8f1;
+    --color-text-secondary: #b3bbcc;
+    --color-text-muted: #929cb2;
+    --color-brand: #9aa8ff;
+    --color-brand-hover: #b3beff;
+    --color-brand-subtle: #222c55;
+    --color-on-brand: #0e1320;
+    --color-rail-text: #c3cbdd;
+    --color-rail-text-strong: #ffffff;
+    --color-rail-text-muted: #8f9ab3;
+    --color-rail-hover: #161e33;
+    --color-rail-active: #1f2a4a;
+    --color-rail-border: #1c2438;
+    --color-rail-focus: #9aa8ff;
     --color-attention: #f2a93b;
     --color-attention-subtle: #2a2112;
     --color-attention-text: #f6c46b;
-    --color-running: #4c9aff;
-    --color-danger: #f25f5c;
+    --color-running: #6ab6db;
+    --color-danger: #f4706a;
     --color-danger-subtle: #2c1517;
-    --color-success: #3fb37f;
-    --color-success-subtle: #15271d;
+    --color-success: #4cbd8a;
+    --color-success-subtle: #13271d;
     --color-diff-removed: #3d1f24;
     --color-diff-added: #132e22;
-    --color-neutral: #8b95a7;
-    --color-kind-samm: #adcd4a;
+    --color-neutral: #8d97ad;
+    --color-kind-samm: #b4cf52;
     --color-kind-threat-model: #ef8bc5;
     --color-kind-incident: #ff9c85;
-    --color-kind-isms: #3bcddc;
-    --color-on-brand: #0e1116;
+    --color-kind-isms: #4dd0de;
+    --color-seal: #f2b630;
+    --color-seal-rim: #2a1a10;
+    --color-seal-text: #f6c46b;
+    --color-series-1: #338ced;
+    --color-series-2: #e76624;
+    --color-series-3: #00a888;
+    --color-series-4: #d28e05;
+    --color-series-5: #e24d8b;
+    --color-chart-grid: #263049;
+    --color-chart-axis: #4a5676;
     --color-overlay: rgb(0 0 0 / 0.7);
 
     --shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.45);
     --shadow-2: 0 4px 12px -2px rgb(0 0 0 / 0.55);
     --shadow-overlay: 0 24px 48px -12px rgb(0 0 0 / 0.7);
+    --shadow-sheet: 0 0 0 1px rgb(255 255 255 / 0.03), 0 16px 40px -18px rgb(0 0 0 / 0.8);
 
     --focus-ring: 0 0 0 2px var(--color-bg-surface), 0 0 0 4px var(--color-brand);
+    --focus-ring-rail: 0 0 0 2px var(--color-bg-rail), 0 0 0 4px var(--color-rail-focus);
   }
 }
 
 [data-theme='light'] {
   color-scheme: light;
 
-  --color-bg-app: #f7f7f5;
-  --color-bg-rail: #efefeb;
+  --color-bg-app: #eceef2;
+  --color-bg-rail: #1c2643;
   --color-bg-surface: #ffffff;
   --color-bg-raised: #ffffff;
-  --color-bg-subtle: #f0f0ec;
-  --color-border: #e3e3de;
-  --color-border-strong: #cfcfc8;
-  --color-text-primary: #16181d;
-  --color-text-secondary: #3e4450;
-  --color-text-muted: #5f6672;
-  --color-brand: #5b4bdb;
-  --color-brand-hover: #4a3bc4;
-  --color-brand-subtle: #eeebff;
-  --color-attention: #b86e00;
-  --color-attention-subtle: #fff4e0;
-  --color-attention-text: #8a5200;
-  --color-running: #1f5fbf;
-  --color-danger: #c0362f;
-  --color-danger-subtle: #fdecea;
-  --color-success: #1e7a4e;
-  --color-success-subtle: #e9f6ee;
-  --color-diff-removed: #fbe3e1;
-  --color-diff-added: #ddf2e5;
-  --color-neutral: #7a808b;
-  --color-kind-samm: #606700;
-  --color-kind-threat-model: #bb2d8c;
-  --color-kind-incident: #a3361f;
-  --color-kind-isms: #007785;
+  --color-bg-subtle: #f3f4f7;
+  --color-bg-sunken: #e4e7ed;
+  --color-border: #dde1e8;
+  --color-border-strong: #c3c9d4;
+  --color-border-field: #7d8698;
+  --color-text-primary: #1b2233;
+  --color-text-secondary: #414a5c;
+  --color-text-muted: #586174;
+  --color-brand: #2b3fa0;
+  --color-brand-hover: #22338a;
+  --color-brand-subtle: #e6e9f8;
   --color-on-brand: #ffffff;
-  --color-overlay: rgb(15 23 42 / 0.5);
+  --color-rail-text: #c3cbdd;
+  --color-rail-text-strong: #ffffff;
+  --color-rail-text-muted: #9aa5bf;
+  --color-rail-hover: #24305a;
+  --color-rail-active: #2c3a66;
+  --color-rail-border: #2a355a;
+  --color-rail-focus: #a9b5ff;
+  --color-attention: #b06a00;
+  --color-attention-subtle: #fff3df;
+  --color-attention-text: #855000;
+  --color-running: #22668a;
+  --color-danger: #b3312a;
+  --color-danger-subtle: #fbe9e7;
+  --color-success: #1d7348;
+  --color-success-subtle: #e5f3ea;
+  --color-diff-removed: #fbe3e1;
+  --color-diff-added: #dcf1e4;
+  --color-neutral: #6f7889;
+  --color-kind-samm: #5a6200;
+  --color-kind-threat-model: #a8287d;
+  --color-kind-incident: #a3361f;
+  --color-kind-isms: #006b78;
+  --color-seal: #f2b630;
+  --color-seal-rim: #2a1a10;
+  --color-seal-text: #6e4b00;
+  --color-series-1: #257de0;
+  --color-series-2: #f47230;
+  --color-series-3: #00b894;
+  --color-series-4: #f2a600;
+  --color-series-5: #ee7fac;
+  --color-chart-grid: #e3e6ec;
+  --color-chart-axis: #b8bfcb;
+  --color-overlay: rgb(14 19 32 / 0.5);
 
-  --shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.06);
-  --shadow-2: 0 4px 12px -2px rgb(0 0 0 / 0.12), 0 2px 4px -2px rgb(0 0 0 / 0.08);
-  --shadow-overlay: 0 24px 48px -12px rgb(0 0 0 / 0.25);
+  --shadow-1: 0 1px 2px 0 rgb(27 34 51 / 0.06);
+  --shadow-2: 0 4px 12px -2px rgb(27 34 51 / 0.12), 0 2px 4px -2px rgb(27 34 51 / 0.08);
+  --shadow-overlay: 0 24px 48px -12px rgb(14 19 32 / 0.3);
+  --shadow-sheet: 0 1px 0 0 rgb(27 34 51 / 0.05), 0 12px 32px -16px rgb(27 34 51 / 0.22);
 
   --focus-ring: 0 0 0 2px var(--color-bg-surface), 0 0 0 4px var(--color-brand);
+  --focus-ring-rail: 0 0 0 2px var(--color-bg-rail), 0 0 0 4px var(--color-rail-focus);
 }
 
 [data-theme='dark'] {
   color-scheme: dark;
 
-  --color-bg-app: #0e1116;
-  --color-bg-rail: #12161d;
-  --color-bg-surface: #161b22;
-  --color-bg-raised: #1c2230;
-  --color-bg-subtle: #1e2433;
-  --color-border: #2a3140;
-  --color-border-strong: #3a4356;
-  --color-text-primary: #e6eaf2;
-  --color-text-secondary: #aeb6c4;
-  --color-text-muted: #8b95a7;
-  --color-brand: #8b7ef9;
-  --color-brand-hover: #a093fb;
-  --color-brand-subtle: #1e2240;
+  --color-bg-app: #0e1320;
+  --color-bg-rail: #0a0f1a;
+  --color-bg-surface: #161d2e;
+  --color-bg-raised: #1c2438;
+  --color-bg-subtle: #1f2840;
+  --color-bg-sunken: #121827;
+  --color-border: #2b3550;
+  --color-border-strong: #3a4666;
+  --color-border-field: #6f7b98;
+  --color-text-primary: #e4e8f1;
+  --color-text-secondary: #b3bbcc;
+  --color-text-muted: #929cb2;
+  --color-brand: #9aa8ff;
+  --color-brand-hover: #b3beff;
+  --color-brand-subtle: #222c55;
+  --color-on-brand: #0e1320;
+  --color-rail-text: #c3cbdd;
+  --color-rail-text-strong: #ffffff;
+  --color-rail-text-muted: #8f9ab3;
+  --color-rail-hover: #161e33;
+  --color-rail-active: #1f2a4a;
+  --color-rail-border: #1c2438;
+  --color-rail-focus: #9aa8ff;
   --color-attention: #f2a93b;
   --color-attention-subtle: #2a2112;
   --color-attention-text: #f6c46b;
-  --color-running: #4c9aff;
-  --color-danger: #f25f5c;
+  --color-running: #6ab6db;
+  --color-danger: #f4706a;
   --color-danger-subtle: #2c1517;
-  --color-success: #3fb37f;
-  --color-success-subtle: #15271d;
+  --color-success: #4cbd8a;
+  --color-success-subtle: #13271d;
   --color-diff-removed: #3d1f24;
   --color-diff-added: #132e22;
-  --color-neutral: #8b95a7;
-  --color-kind-samm: #adcd4a;
+  --color-neutral: #8d97ad;
+  --color-kind-samm: #b4cf52;
   --color-kind-threat-model: #ef8bc5;
   --color-kind-incident: #ff9c85;
-  --color-kind-isms: #3bcddc;
-  --color-on-brand: #0e1116;
+  --color-kind-isms: #4dd0de;
+  --color-seal: #f2b630;
+  --color-seal-rim: #2a1a10;
+  --color-seal-text: #f6c46b;
+  --color-series-1: #338ced;
+  --color-series-2: #e76624;
+  --color-series-3: #00a888;
+  --color-series-4: #d28e05;
+  --color-series-5: #e24d8b;
+  --color-chart-grid: #263049;
+  --color-chart-axis: #4a5676;
   --color-overlay: rgb(0 0 0 / 0.7);
 
   --shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.45);
   --shadow-2: 0 4px 12px -2px rgb(0 0 0 / 0.55);
   --shadow-overlay: 0 24px 48px -12px rgb(0 0 0 / 0.7);
+  --shadow-sheet: 0 0 0 1px rgb(255 255 255 / 0.03), 0 16px 40px -18px rgb(0 0 0 / 0.8);
 
   --focus-ring: 0 0 0 2px var(--color-bg-surface), 0 0 0 4px var(--color-brand);
+  --focus-ring-rail: 0 0 0 2px var(--color-bg-rail), 0 0 0 4px var(--color-rail-focus);
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root {
     --duration-fast: 0ms;
     --duration-base: 0ms;
+    --duration-seal: 0ms;
   }
 }
 

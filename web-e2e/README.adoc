@@ -65,8 +65,8 @@ document address; an unknown address answers with the not-found view
 |A request without the anti-CSRF header, or from a foreign origin, is refused; the app sends the header itself
 
 |`live.spec.js`
-|The live indicator follows the event stream; an unreachable Git server is shown and its recovery clears the notice,
-without a reload
+|The shell connects the event stream and shows no connection state; an unreachable Git server is shown and its
+recovery clears the notice, without a reload
 
 |`i18n.spec.js`
 |Switching to German shows every text in German and keeps the choice; the catalogue refuses another language

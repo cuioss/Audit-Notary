@@ -17,6 +17,8 @@
     name?: string;
     /** The autocomplete hint. */
     autocomplete?: HTMLInputElement['autocomplete'];
+    /** The input type: text, or a password that is not shown. */
+    type?: 'text' | 'password';
     /** A test id. */
     testId?: string;
   }
@@ -28,6 +30,7 @@
     required = false,
     name,
     autocomplete,
+    type = 'text',
     testId,
   }: Props = $props();
 
@@ -39,7 +42,7 @@
   <input
     {id}
     class="field__input"
-    type="text"
+    {type}
     bind:value
     {name}
     {required}

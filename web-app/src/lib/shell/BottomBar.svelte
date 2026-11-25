@@ -75,7 +75,7 @@
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       background-color: var(--color-bg-rail);
-      border-block-start: 1px solid var(--color-border);
+      border-block-start: 1px solid var(--color-rail-border);
     }
   }
 
@@ -87,13 +87,18 @@
     gap: 2px;
     min-block-size: 56px;
     font-size: var(--text-xs);
-    color: var(--color-text-secondary);
+    color: var(--color-rail-text);
     text-decoration: none;
   }
 
+  .bottom-bar__item:focus-visible {
+    box-shadow: var(--focus-ring-rail);
+  }
+
   .bottom-bar__item--active {
-    color: var(--color-brand);
+    color: var(--color-rail-text-strong);
     font-weight: var(--weight-semibold);
+    box-shadow: inset 0 3px 0 var(--color-rail-focus);
   }
 
   .more {

@@ -31,7 +31,7 @@ addresses (`canonical-addresses.json`)
 |The one `ApiClient`: same-origin `/api/v1`, anti-CSRF header, login on `401`, one shared event stream
 
 |`src/lib/shell/`, `src/lib/templates/`, `src/lib/components/`
-|The shell (rail, top bar, bottom bar, live indicator, command palette), the page templates and the closed vocabulary
+|The shell (rail, top bar, bottom bar, command palette), the page templates and the closed vocabulary
 of components
 
 |`src/lib/views/`, `src/routes/`

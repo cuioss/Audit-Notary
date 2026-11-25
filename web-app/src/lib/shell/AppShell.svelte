@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { t } from '../i18n';
-  import type { Lens } from '../routes';
+  import { lensAddress, type Lens } from '../routes';
+  import { streamState } from '../stores/app';
   import BottomBar from './BottomBar.svelte';
   import CommandPalette from './CommandPalette.svelte';
   import NavRail from './NavRail.svelte';
@@ -37,10 +38,15 @@
 </script>
 
 <a class="skip" href="#main">{$t('shell.skip-to-content')}</a>
-<div class="app-shell">
+<div class="app-shell" data-stream={$streamState}>
   <NavRail {activeLens} {collapsed} onToggle={toggle} />
   <div class="app-shell__main">
-    <TopBar {titleKey} onSearch={() => (searching = true)} />
+    <TopBar
+      {titleKey}
+      lensHref={activeLens ? lensAddress(activeLens) : null}
+      lensKey={activeLens ? `lens.${activeLens}` : null}
+      onSearch={() => (searching = true)}
+    />
     {#if notices}
       <div class="app-shell__notices">{@render notices()}</div>
     {/if}

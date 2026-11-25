@@ -1,8 +1,10 @@
 @import './tokens.css';
 
 /*
- * Inter, self-hosted (AUN-WEB-2): the file ships with the app under `static/fonts/`, so the browser never
- * asks a font service for it (AUN-WEB-1). The licence travels beside it as `OFL.txt`.
+ * Inter and Source Serif 4, self-hosted (AUN-WEB-2): the files ship with the app under `static/fonts/`, so the
+ * browser never asks a font service for them (AUN-WEB-1). The licences travel beside them, `OFL.txt` (Inter) and
+ * `SourceSerif4-OFL.txt`. Source Serif 4 is the variable roman with its optical-size axis: the browser picks the
+ * cut for the size (`font-optical-sizing: auto`), so a sheet title gets the display cut and a value the text cut.
  */
 @font-face {
   font-family: Inter;
@@ -10,6 +12,14 @@
   font-weight: 100 900;
   font-display: swap;
   src: url('/fonts/InterVariable.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url('/fonts/SourceSerif4Variable-Roman.woff2') format('woff2');
 }
 
 *,

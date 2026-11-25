@@ -73,83 +73,113 @@
 </nav>
 
 <style>
+  /*
+   * The rail is the register's spine: the navy of the notary's suit in both themes, the mark in its own colours on
+   * it, the lenses in the rail's own text colours (tokens.css, `--color-rail-*`).
+   */
   .rail {
+    position: sticky;
+    inset-block-start: 0;
     display: flex;
     flex-direction: column;
     flex: 0 0 auto;
     inline-size: 232px;
-    min-block-size: 100vh;
-    padding: var(--space-3) var(--space-2);
-    gap: var(--space-4);
+    block-size: 100vh;
+    padding: var(--space-4) var(--space-3);
+    gap: var(--space-6);
     background-color: var(--color-bg-rail);
-    border-inline-end: 1px solid var(--color-border);
+    border-inline-end: 1px solid var(--color-rail-border);
+    color: var(--color-rail-text);
   }
 
   .rail--collapsed {
     inline-size: 64px;
-    padding-inline: var(--space-1);
+    padding-inline: var(--space-2);
     align-items: center;
   }
 
   .rail__head {
-    padding-inline: var(--space-2);
+    padding: var(--space-1) var(--space-2) 0;
   }
 
   .rail__brand {
     display: inline-flex;
-    color: var(--color-text-primary);
+    color: var(--color-rail-text-strong);
     text-decoration: none;
     border-radius: var(--radius-sm);
   }
 
   .rail__brand:hover {
-    color: var(--color-text-primary);
+    color: var(--color-rail-text-strong);
+  }
+
+  .rail__brand :global(.wordmark__name) {
+    font-family: var(--font-serif);
+    font-size: var(--text-lg);
+    letter-spacing: 0;
   }
 
   .rail__groups {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
-    gap: var(--space-4);
+    gap: var(--space-5);
     overflow-y: auto;
   }
 
   .rail__group-title {
-    padding-inline: var(--space-2);
+    padding-inline: var(--space-3);
     margin-block-end: var(--space-1);
     font-size: var(--text-xs);
-    letter-spacing: 0.02em;
-    color: var(--color-text-muted);
+    font-weight: var(--weight-medium);
+    color: var(--color-rail-text-muted);
   }
 
   .rail__list {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 2px;
     list-style: none;
   }
 
   .rail__item {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: var(--space-2);
-    min-block-size: 36px;
-    padding: var(--space-1) var(--space-2);
+    gap: var(--space-3);
+    min-block-size: 38px;
+    padding: var(--space-1) var(--space-3);
     border-radius: var(--radius-sm);
-    color: var(--color-text-secondary);
+    color: var(--color-rail-text);
     text-decoration: none;
+    transition: background-color var(--duration-fast) var(--ease-standard);
   }
 
   .rail__item:hover {
-    background-color: var(--color-bg-subtle);
-    color: var(--color-text-primary);
+    background-color: var(--color-rail-hover);
+    color: var(--color-rail-text-strong);
   }
 
   .rail__item--active,
   .rail__item--active:hover {
-    background-color: var(--color-brand-subtle);
-    color: var(--color-brand);
+    background-color: var(--color-rail-active);
+    color: var(--color-rail-text-strong);
     font-weight: var(--weight-semibold);
+  }
+
+  .rail__item--active::before {
+    content: '';
+    position: absolute;
+    inset-block: var(--space-2);
+    inset-inline-start: 0;
+    inline-size: 3px;
+    border-radius: 0 2px 2px 0;
+    background-color: var(--color-rail-focus);
+  }
+
+  .rail :global(a:focus-visible),
+  .rail :global(button:focus-visible) {
+    box-shadow: var(--focus-ring-rail);
   }
 
   .rail--collapsed .rail__label {
@@ -158,16 +188,35 @@
 
   .rail--collapsed .rail__item {
     justify-content: center;
+    padding-inline: 0;
+    inline-size: 44px;
   }
 
   .rail__foot {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
+    padding-block-start: var(--space-3);
+    border-block-start: 1px solid var(--color-rail-border);
+  }
+
+  .rail__foot :global(.icon-btn) {
+    color: var(--color-rail-text);
+  }
+
+  .rail__foot :global(.icon-btn:hover) {
+    background-color: var(--color-rail-hover);
+    color: var(--color-rail-text-strong);
   }
 
   .rail--collapsed .rail__foot :global(.icon-btn) {
     transform: scaleX(-1);
+  }
+
+  @media (forced-colors: active) {
+    .rail__item--active {
+      outline: 2px solid Highlight;
+    }
   }
 
   @media (max-width: 767px) {

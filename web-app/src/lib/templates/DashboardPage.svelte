@@ -33,7 +33,7 @@
   .dashboard {
     inline-size: 100%;
     max-inline-size: 1440px;
-    padding: var(--space-6);
+    padding: var(--space-8) var(--space-6) var(--space-12);
   }
 
   .dashboard__header {
@@ -41,13 +41,19 @@
   }
 
   .dashboard__title {
-    font-size: var(--text-2xl);
-    line-height: var(--line-height-2xl);
+    font-family: var(--font-serif);
+    font-size: var(--text-display);
+    line-height: var(--line-height-display);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.01em;
   }
 
   .dashboard__intro {
-    margin-block-start: var(--space-1);
+    max-inline-size: var(--measure);
+    margin-block-start: var(--space-2);
     color: var(--color-text-secondary);
+    font-size: var(--text-md);
+    line-height: var(--line-height-md);
   }
 
   .dashboard__body {
@@ -58,7 +64,12 @@
 
   @media (max-width: 767px) {
     .dashboard {
-      padding: var(--space-4);
+      padding: var(--space-5) var(--space-3) var(--space-8);
+    }
+
+    .dashboard__title {
+      font-size: var(--text-2xl);
+      line-height: var(--line-height-2xl);
     }
   }
 </style>

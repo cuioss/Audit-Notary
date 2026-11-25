@@ -9,6 +9,7 @@
   import type { Snippet } from 'svelte';
   import type { HTMLButtonAttributes } from 'svelte/elements';
   import Icon from './Icon.svelte';
+  import { uniqueId } from './uniqueId';
 
   /**
    * An act: a button of the closed vocabulary. Its label says exactly what it does.
@@ -22,6 +23,11 @@
     icon?: string;
     /** Whether the act is running. */
     busy?: boolean;
+    /**
+     * Why the act cannot be taken now. The button stays focusable (`aria-disabled`), ignores clicks and says the
+     * reason beneath itself, so a person learns what is missing instead of meeting a dead control.
+     */
+    disabledReason?: string | null;
     /** The label. */
     children: Snippet;
   }
@@ -30,6 +36,7 @@
     variant = 'secondary',
     icon,
     busy = false,
+    disabledReason = null,
     type = 'button',
     disabled = false,
     onclick,
@@ -37,8 +44,15 @@
     ...rest
   }: Props = $props();
 
+  const reasonId = uniqueId('reason');
+  /** The caller's own description, kept, with the reason appended while there is one. */
+  let describedBy = $derived(
+    [rest['aria-describedby'], disabledReason ? reasonId : null].filter(Boolean).join(' ') ||
+      undefined,
+  );
+
   function handleClick(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }) {
-    if (busy) {
+    if (busy || disabledReason) {
       event.preventDefault();
       return;
     }
@@ -46,21 +60,33 @@
   }
 </script>
 
-<button
-  {...rest}
-  {type}
-  class="btn btn--{variant}"
-  disabled={disabled || undefined}
-  aria-busy={busy ? 'true' : undefined}
-  onclick={handleClick}
->
-  {#if busy}
-    <span class="btn__spinner" aria-hidden="true"></span>
-  {:else if icon}
-    <Icon name={icon} size={16} />
+<!--
+  One structure whether or not a reason is shown, so the button is never rebuilt when the reason comes or goes and
+  keeps the keyboard focus.
+-->
+<span class="btn-frame" class:btn-with-reason={!!disabledReason}>
+  <button
+    {...rest}
+    {type}
+    class="btn btn--{variant}"
+    class:btn--unavailable={!!disabledReason}
+    disabled={disabled || undefined}
+    aria-disabled={disabledReason ? 'true' : undefined}
+    aria-describedby={describedBy}
+    aria-busy={busy ? 'true' : undefined}
+    onclick={handleClick}
+  >
+    {#if busy}
+      <span class="btn__spinner" aria-hidden="true"></span>
+    {:else if icon}
+      <Icon name={icon} size={16} />
+    {/if}
+    <span>{@render children()}</span>
+  </button>
+  {#if disabledReason}
+    <span class="btn__reason" id={reasonId}>{disabledReason}</span>
   {/if}
-  <span>{@render children()}</span>
-</button>
+</span>
 
 <style>
   .btn {
@@ -86,6 +112,33 @@
     color: var(--color-text-muted);
     border-color: var(--color-border);
     cursor: not-allowed;
+  }
+
+  .btn.btn--unavailable,
+  .btn.btn--unavailable:hover {
+    background-color: var(--color-bg-subtle);
+    color: var(--color-text-muted);
+    border-color: var(--color-border);
+    cursor: not-allowed;
+  }
+
+  .btn-frame {
+    display: contents;
+  }
+
+  .btn-frame.btn-with-reason {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-1);
+    max-inline-size: 22rem;
+  }
+
+  .btn__reason {
+    font-size: var(--text-xs);
+    line-height: var(--line-height-xs);
+    color: var(--color-text-muted);
+    text-align: end;
   }
 
   .btn--primary {

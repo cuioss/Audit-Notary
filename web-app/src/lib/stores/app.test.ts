@@ -1,9 +1,19 @@
 import { get } from 'svelte/store';
 import { describe, expect, it, vi } from 'vitest';
-import { ApiClient } from '../api/client';
+import { ApiClient, type StreamState } from '../api/client';
 import { ApiError } from '../api/errors';
 import type { Session, Status } from '../api/types';
-import { boot, bootPhase, completeFirstLogin, peek, session, status } from './app';
+import {
+  boot,
+  bootPhase,
+  completeFirstLogin,
+  keepStreamAlive,
+  peek,
+  session,
+  status,
+  STREAM_RECOVERY_MS,
+  streamState,
+} from './app';
 
 const STATUS: Status = { version: '1.0', degraded: false, repositories: [] };
 const SESSION: Session = {
@@ -70,5 +80,56 @@ describe('completeFirstLogin', () => {
     session.set(null);
     completeFirstLogin('p-9');
     expect(peek(session)).toBeNull();
+  });
+});
+
+describe('keepStreamAlive', () => {
+  function client() {
+    const fake = new ApiClient(() => {});
+    let setState: ((state: StreamState) => void) | undefined;
+    vi.spyOn(fake, 'subscribeStreamState').mockImplementation((listener) => {
+      setState = listener;
+      return () => {};
+    });
+    const retry = vi.spyOn(fake, 'retryEvents').mockImplementation(() => {});
+    return {
+      fake,
+      retry,
+      state: (value: Parameters<NonNullable<typeof setState>>[0]) => setState?.(value),
+    };
+  }
+
+  it('retries an offline stream every 30 s until it is connected again', () => {
+    vi.useFakeTimers();
+    try {
+      const { fake, retry, state } = client();
+      const stop = keepStreamAlive(fake);
+      state('offline');
+      expect(get(streamState)).toBe('offline');
+      vi.advanceTimersByTime(STREAM_RECOVERY_MS);
+      expect(retry).toHaveBeenCalledTimes(1);
+      state('connected');
+      vi.advanceTimersByTime(STREAM_RECOVERY_MS * 3);
+      expect(retry).toHaveBeenCalledTimes(1);
+      stop();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('retries at once when the browser is online again or the page becomes visible', () => {
+    const { fake, retry, state } = client();
+    const stop = keepStreamAlive(fake);
+    state('offline');
+    window.dispatchEvent(new Event('online'));
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(retry).toHaveBeenCalledTimes(2);
+    state('connected');
+    window.dispatchEvent(new Event('online'));
+    expect(retry).toHaveBeenCalledTimes(2);
+    stop();
+    state('offline');
+    window.dispatchEvent(new Event('online'));
+    expect(retry).toHaveBeenCalledTimes(2);
   });
 });

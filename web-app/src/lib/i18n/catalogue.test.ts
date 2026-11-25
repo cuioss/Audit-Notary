@@ -54,7 +54,7 @@ describe('the message catalogue', () => {
     expect([...missing]).toEqual([]);
   });
 
-  it('holds the texts of every lens, kind and live state the app builds keys for', () => {
+  it('holds the texts of every lens and kind the app builds keys for', () => {
     const built = [
       ...[
         'due',
@@ -67,7 +67,6 @@ describe('the message catalogue', () => {
         'settings',
       ].map((lens) => `lens.${lens}`),
       ...['deadline', 'review', 'release'].map((kind) => `due.kind.${kind}`),
-      ...['connecting', 'connected', 'reconnecting', 'offline'].map((state) => `live.${state}`),
       'error.validation.REQUIRED',
       'error.validation.REFERENCE_NOT_FOUND',
     ];

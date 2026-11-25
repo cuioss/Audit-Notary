@@ -58,7 +58,7 @@ export async function boot(client: ApiClient = apiClient): Promise<BootResult> {
     );
     return { firstLoginRequired: false, stop: () => {} };
   }
-  const stopState = client.subscribeStreamState((state) => streamState.set(state));
+  const stopState = keepStreamAlive(client);
   const stopEvents = client.subscribeEvents((event, data) => {
     if (event === 'status' && data && typeof data === 'object') {
       status.set(data as Status);
@@ -75,6 +75,47 @@ export async function boot(client: ApiClient = apiClient): Promise<BootResult> {
       stopEvents();
       stopState();
     },
+  };
+}
+
+/** The pause between two attempts to bring an `offline` event stream back. */
+export const STREAM_RECOVERY_MS = 30_000;
+
+/**
+ * Follows the state of the event stream and brings an `offline` stream back by itself: every
+ * {@link STREAM_RECOVERY_MS}, when the browser is online again and when the page becomes visible. The shell shows no
+ * connection state (owner's decision), so nobody would press a "Try again"; saves by others (AUN-WEB-5) and the
+ * status events must arrive again without a reload.
+ *
+ * @param client the client
+ * @returns the function that stops following
+ */
+export function keepStreamAlive(client: ApiClient): () => void {
+  let timer: ReturnType<typeof setInterval> | null = null;
+  let offline = false;
+  const retry = () => {
+    if (offline) client.retryEvents();
+  };
+  const onVisible = () => {
+    if (document.visibilityState === 'visible') retry();
+  };
+  const stopState = client.subscribeStreamState((state) => {
+    streamState.set(state);
+    offline = state === 'offline';
+    if (offline && timer === null) {
+      timer = setInterval(retry, STREAM_RECOVERY_MS);
+    } else if (!offline && timer !== null) {
+      clearInterval(timer);
+      timer = null;
+    }
+  });
+  window.addEventListener('online', retry);
+  document.addEventListener('visibilitychange', onVisible);
+  return () => {
+    stopState();
+    if (timer !== null) clearInterval(timer);
+    window.removeEventListener('online', retry);
+    document.removeEventListener('visibilitychange', onVisible);
   };
 }
 

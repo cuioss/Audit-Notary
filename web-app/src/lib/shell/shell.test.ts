@@ -2,11 +2,11 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import { apiClient } from '../api/client';
 import { session, streamState } from '../stores/app';
+import { breadcrumb } from '../stores/breadcrumb';
 import { textSnippet } from '../test/snippets';
 import AppShell from './AppShell.svelte';
 import BottomBar from './BottomBar.svelte';
 import CommandPalette from './CommandPalette.svelte';
-import LiveIndicator from './LiveIndicator.svelte';
 import NavRail from './NavRail.svelte';
 import TopBar from './TopBar.svelte';
 import {
@@ -61,19 +61,6 @@ describe('NavRail', () => {
   });
 });
 
-describe('LiveIndicator', () => {
-  it('says the state in words and offers a retry when offline', async () => {
-    const retry = vi.spyOn(apiClient, 'retryEvents').mockImplementation(() => {});
-    streamState.set('connected');
-    const { rerender } = render(LiveIndicator);
-    expect(screen.getByTestId('live-indicator')).toHaveTextContent('Live');
-    streamState.set('offline');
-    await rerender({});
-    await fireEvent.click(screen.getByTestId('live-retry'));
-    expect(retry).toHaveBeenCalled();
-  });
-});
-
 describe('TopBar', () => {
   it('shows the view title, the user and signs out', async () => {
     const logout = vi.spyOn(apiClient, 'logout').mockResolvedValue();
@@ -92,6 +79,42 @@ describe('TopBar', () => {
     await fireEvent.click(screen.getByTestId('sign-out'));
     expect(logout).toHaveBeenCalled();
     session.set(null);
+  });
+});
+
+describe('TopBar breadcrumb', () => {
+  it('links the lens and the inner steps and marks the last step current', () => {
+    breadcrumb.set([
+      { label: 'Payments', href: '/samm/payments' },
+      { label: '2026 Q4', href: '/samm/payments/2026-q4' },
+    ]);
+    render(TopBar, {
+      titleKey: 'lens.samm',
+      lensHref: '/samm',
+      lensKey: 'lens.samm',
+      onSearch: () => {},
+    });
+    expect(screen.getByRole('link', { name: 'SAMM' })).toHaveAttribute('href', '/samm');
+    expect(screen.getByRole('link', { name: 'Payments' })).toHaveAttribute(
+      'href',
+      '/samm/payments',
+    );
+    expect(screen.getByText('2026 Q4')).toHaveAttribute('aria-current', 'page');
+    breadcrumb.set([]);
+  });
+
+  it('falls back to the title as lens name and shows no link without a path', () => {
+    breadcrumb.set([{ label: 'Payments', href: '/samm/payments' }]);
+    const { unmount } = render(TopBar, {
+      titleKey: 'lens.due',
+      lensHref: '/due',
+      onSearch: () => {},
+    });
+    expect(screen.getByRole('link', { name: 'Due' })).toHaveAttribute('href', '/due');
+    unmount();
+    breadcrumb.set([]);
+    render(TopBar, { titleKey: 'lens.due', lensHref: '/due', onSearch: () => {} });
+    expect(screen.getByTestId('view-title')).toHaveAttribute('aria-current', 'page');
   });
 });
 
@@ -151,5 +174,17 @@ describe('AppShell', () => {
     expect(readRailCollapsed()).toBe(true);
     await fireEvent.click(screen.getByTestId('search-open'));
     expect(screen.getByTestId('search-input')).toBeInTheDocument();
+  });
+
+  it('shows no connection state, but keeps it as a data attribute for the end-to-end suite', () => {
+    streamState.set('connected');
+    const { container } = render(AppShell, {
+      activeLens: 'due',
+      titleKey: 'lens.due',
+      onnavigate: () => {},
+      content: textSnippet('content'),
+    });
+    expect(container.querySelector('.app-shell')).toHaveAttribute('data-stream', 'connected');
+    expect(screen.queryByText('Live')).toBeNull();
   });
 });
