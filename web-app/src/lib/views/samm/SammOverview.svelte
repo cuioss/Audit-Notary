@@ -1,10 +1,11 @@
 <script lang="ts">
+  import Button from '../../components/Button.svelte';
   import Link from '../../components/Link.svelte';
   import ScoreMeter from '../../components/ScoreMeter.svelte';
   import Sheet from '../../components/Sheet.svelte';
   import SheetHead from '../../components/SheetHead.svelte';
   import StatusLabel from '../../components/StatusLabel.svelte';
-  import type { SammScopeList } from '../../api/types';
+  import type { SammModelList, SammScopeList } from '../../api/types';
   import { formatDate } from '../../format';
   import { currentLocale, t } from '../../i18n';
   import { formatScore } from '../../samm/scores';
@@ -16,9 +17,23 @@
    */
   interface Props {
     scopes: SammScopeList | null;
+    /** The pinned model versions: with none, no scope can be created. `null` while they are read. */
+    models?: SammModelList | null;
+    /** Whether the user holds `edit` on the SAMM assessments. */
+    canCreate?: boolean;
   }
 
-  let { scopes }: Props = $props();
+  let { scopes, models = null, canCreate = false }: Props = $props();
+
+  let reason = $derived(
+    !canCreate
+      ? $t('samm.new.scope.no-right')
+      : models !== null && models.models.length === 0
+        ? $t('samm.new.scope.no-model')
+        : models === null
+          ? $t('common.loading')
+          : null,
+  );
 
   let released = $derived(scopes?.scopes.filter((entry) => entry.latest !== null).length ?? 0);
 </script>
@@ -29,7 +44,17 @@
     kindLabel={$t('lens.samm')}
     title={$t('samm.overview.title')}
     lede={$t('samm.overview.lede')}
-  />
+  >
+    {#snippet actions()}
+      {#if reason}
+        <Button disabledReason={reason} data-testid="new-scope">{$t('samm.new.scope.act')}</Button>
+      {:else}
+        <Link href="/samm/new" look="primary" data-testid="new-scope">
+          {$t('samm.new.scope.act')}
+        </Link>
+      {/if}
+    {/snippet}
+  </SheetHead>
   {#if scopes === null}
     <p class="muted">{$t('common.loading')}</p>
   {:else}

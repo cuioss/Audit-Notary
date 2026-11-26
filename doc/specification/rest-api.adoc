@@ -2570,6 +2570,33 @@ change each one. The bodies and addresses are in <<_samm_requests>>:
   has an open assessment answers `ASSESSMENT_OPEN`, a scope that has none answers `CREATED`; the e2e flows type the same
   values.
 
+Decided provisionally with the web app of the SAMM completion (the screens that use the requests above), each a reading
+of the register that a screen needs and the register leaves open:
+
+[start=20]
+. *The form of a new assessment takes the model version from the scope.* The address `/samm/{scope}/new` admits no query
+  (point 1), so a frozen assessment cannot name itself. The form preselects the model version of the scope's newest
+  assessment when it is still pinned, else the scope's own version, else the default (point 9 and the section _A Frozen
+  Assessment_ keep their wording: "the assessment it was started from" is the newest one).
+. *The targets of a scope are kept on the page until they are saved for everyone.* A scope has no draft (point 3), so the
+  sheet of the scope does not keep the changes as the person's draft; a change not yet saved is lost when the page is
+  left, and leaving asks first (the question every new object asks). The document controller serves such a part with the
+  option `drafts: false`.
+. *A due day belongs to a target.* The editor offers the day only for a practice that has a target; "no target" removes the
+  entry and with it the day. The empty day is no day; it is never sent as `""`.
+. *The scope sheet shows the trend from two points.* One released assessment has no line to draw; the sheet then shows no
+  trend. A trend that omits released assessments of other model versions says how many.
+. *A link of the evidence leads out of the app only when it is absolute `https`.* The table draws such a link as an anchor
+  (`rel="noopener noreferrer"`, a new tab) and every other value, which the server refuses on a save and which can
+  only come from a hand-edited repository, as text. The editor refuses an address that is not `https` before it keeps a
+  draft (the server's `PATTERN` stays the verdict).
+. *The question of a link names a question of the practice or none,* chosen in the editor of the link from the practice's
+  questions in order; a conflict of the evidence is decided for the list as a whole (the one field
+  `/evidence/<practice>`).
+. *The act that starts an assessment stands at three places:* the head of the scope sheet (disabled with the reason while
+  one is open, no model is pinned or the user lacks `edit`), the status of a frozen practice sheet and the head of a
+  released assessment, both only for a user who holds `edit`.
+
 For the owner: whether the scope and the assessment should be created through the generic `POST
 /api/v1/documents/samm-assessments` with a schema of the two kinds served to the form kit (2, 18); whether the title and
 the subject of a scope may change (4) and whether a subject may have several scopes (4); the step of a target and
@@ -2577,4 +2604,8 @@ whether the targets of a scope must be complete (6); whether the creator of an a
 whether more than one assessment of a scope may be open at once (8); whether a new assessment should offer to start from
 the answers of the last released one (9); whether the evidence shares the file of its practice with the answers (10); the limits of the evidence and the comment (10, 11); the status `422` of
 `MODEL_VERSIONS_DIFFER` (14); whether the trend may mix model versions with a marker instead of leaving the others out
-(15); and whether the web app should pin a model version (16).
+(15); and whether the web app should pin a model version (16). With the screens (20 to 26): whether a new assessment
+should take its model version from the newest assessment (20); whether the roadmap of a scope should keep a draft, so that
+unsaved targets survive leaving the page (21); whether a due day may stand without a target (22); whether the trend should
+draw a single released assessment (23); and whether the evidence of a hand-edited repository that holds a non-`https` address
+should be drawn as text (24).

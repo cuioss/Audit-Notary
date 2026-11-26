@@ -37,6 +37,13 @@ Read the concept first, then the component you are about to change.
    notice with a link, never a gate). The pages are `WizardPage` (import, profile) and `DashboardPage` (persons); the
    erasure of a person and every other destructive act asks first in a `Dialog` that names the person by name and says
    that it cannot be undone.
+   `web-app/src/lib/views/samm/` also holds the forms of the SAMM completion: `NewScopeSheet` and `NewAssessmentSheet` (a new
+   object is a sheet whose first save creates it; nothing is stored before, and `LeaveGuard` from `lib/documents/` asks
+   before the page is left), `TargetsEditor` (the practices by business function as a `GridTable` of a `Select` and a date
+   field with `labelHidden` labels, one component for the form of a new scope and for the roadmap in the scope sheet) and
+   `EvidenceEditor` (a `DataTable` with a dialog over a copy, removal asked first). The roadmap of a scope has no draft:
+   the document controller takes `drafts: false`, and the status says "Not saved for everyone yet". A released assessment is
+   frozen; the way on is the primary link *Start a new assessment* to `/samm/{scope}/new`, never a button that writes.
 3. For a chart, use the five series colours in model order (`--color-series-1` … `-5`); they are validated for
    colour-vision and normal-vision separation against both sheet colours (`#ffffff`, `#161d2e`). A new chart colour
    needs the same validation before it lands: with the validator of the `dataviz` skill where your agent has that

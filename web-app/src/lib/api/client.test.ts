@@ -545,6 +545,62 @@ describe('the SAMM and document requests', () => {
     ]);
   });
 
+  it('reads the pinned models and the trend, and creates a scope and an assessment (SAMM Requests)', async () => {
+    fetchMock.mockImplementation(async (path: string) =>
+      path === '/api/v1/session' ? json(200, SESSION) : json(200, { ok: true }),
+    );
+    await client.getSammModels();
+    await client.getSammTrend('pay ments');
+    await client.getSammTrend('payments', 'v2.1.0');
+    await client.createSammScope({ title: 'Mobile Apps', subject: 'team:mobile' });
+    await client.createSammAssessment('shop', {
+      title: 'Web shop 2026 Q4',
+      date: '2026-11-26',
+      assessors: ['p-2b7f10'],
+    });
+    expect(fetchMock.mock.calls.map((call) => [call[1].method, call[0]])).toEqual([
+      ['GET', '/api/v1/samm/models'],
+      ['GET', '/api/v1/samm/pay%20ments/trend'],
+      ['GET', '/api/v1/samm/payments/trend?modelVersion=v2.1.0'],
+      ['GET', '/api/v1/session'],
+      ['POST', '/api/v1/samm/scopes'],
+      ['POST', '/api/v1/samm/shop/assessments'],
+    ]);
+    expect(fetchMock.mock.calls[4][1].headers[CSRF_HEADER]).toBe('token-1');
+    expect(JSON.parse(fetchMock.mock.calls[4][1].body)).toEqual({
+      title: 'Mobile Apps',
+      subject: 'team:mobile',
+    });
+    expect(JSON.parse(fetchMock.mock.calls[5][1].body).assessors).toEqual(['p-2b7f10']);
+  });
+
+  it('keeps the refusals of the SAMM creates and the comparison with their details', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json(200, SESSION))
+      .mockResolvedValueOnce(
+        json(409, { outcome: 'ASSESSMENT_OPEN', assessment: '2026-q4', state: 'draft' }),
+      )
+      .mockResolvedValueOnce(
+        json(422, {
+          outcome: 'MODEL_VERSIONS_DIFFER',
+          from: { assessment: '2026-q2', modelVersion: 'v2.1.0' },
+          to: { assessment: '2026-q4', modelVersion: 'v2.2.0' },
+        }),
+      );
+    await expect(
+      client.createSammAssessment('payments', { title: 'x', date: '2026-11-26' }),
+    ).rejects.toMatchObject({
+      outcome: 'ASSESSMENT_OPEN',
+      status: 409,
+      details: { assessment: '2026-q4' },
+    });
+    await expect(client.compareSamm('payments', '2026-q2', '2026-q4')).rejects.toMatchObject({
+      outcome: 'MODEL_VERSIONS_DIFFER',
+      status: 422,
+      details: { to: { modelVersion: 'v2.2.0' } },
+    });
+  });
+
   it('keeps a draft with PUT and saves for everyone with POST', async () => {
     fetchMock
       .mockResolvedValueOnce(json(200, SESSION))

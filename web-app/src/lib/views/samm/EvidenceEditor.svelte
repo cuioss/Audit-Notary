@@ -1,0 +1,299 @@
+<script lang="ts">
+  import { tick } from 'svelte';
+  import Button from '../../components/Button.svelte';
+  import Dialog from '../../components/Dialog.svelte';
+  import Link from '../../components/Link.svelte';
+  import Select from '../../components/Select.svelte';
+  import TextField from '../../components/TextField.svelte';
+  import type { SammEvidenceLink, SammQuestion } from '../../api/types';
+  import DataTable from '../../forms/DataTable.svelte';
+  import { errorKey } from '../../forms/fieldErrors';
+  import { t } from '../../i18n';
+  import {
+    MAX_EVIDENCE,
+    MAX_EVIDENCE_TITLE,
+    MAX_EVIDENCE_URL,
+    isHttpsUrl,
+    linkProblem,
+    type EvidenceErrors,
+  } from '../../samm/evidence';
+
+  /**
+   * The evidence links of a practice (UC-SAMM-3, AUN-SAMM-7): a title and an absolute `https` address, for one question of
+   * the practice or for the practice as a whole. Evidence is a link, never a file. A link is edited in a dialog over a
+   * copy, so cancelling changes nothing; removing one asks first; the limit of the practice is explained where the act
+   * would be, never a dead control. A link the browser would send is checked here; the server's verdict is shown at the
+   * link it names. Read, the same table shows the links without an act.
+   *
+   * The editor holds nothing: it reports the whole list, as the save carries it.
+   */
+  interface Props {
+    /** The links as they stand. */
+    links: SammEvidenceLink[];
+    /** The questions of the practice, in order. */
+    questions: SammQuestion[];
+    /** Called with the whole list after a link was added, changed, moved or removed. */
+    onchange?: (links: SammEvidenceLink[]) => void;
+    /** Whether the table shows the links and offers no act. */
+    readonly?: boolean;
+    /** What a refusal says about the list and its links. */
+    errors?: EvidenceErrors;
+    /** A test id prefix. */
+    testId?: string;
+  }
+
+  let {
+    links,
+    questions,
+    onchange,
+    readonly = false,
+    errors = { rows: {}, list: null },
+    testId = 'evidence',
+  }: Props = $props();
+
+  let table: DataTable | undefined = $state();
+  /** The link in the editor: its position, or `null` for one to add; `undefined` while the editor is closed. */
+  let editing = $state<{ index: number | null } | undefined>();
+  let editorOpen = $state(false);
+  let titleText = $state('');
+  let urlText = $state('');
+  let questionId = $state('');
+  let removing = $state<number | null>(null);
+  let removeOpen = $state(false);
+  let showProblem = $state(false);
+
+  let problem = $derived(linkProblem({ title: titleText, url: urlText }));
+  let addReason = $derived(
+    links.length >= MAX_EVIDENCE ? $t('samm.evidence.max', { count: MAX_EVIDENCE }) : null,
+  );
+  let rowErrors = $derived(
+    Object.entries(errors.rows)
+      .map(([row, codes]) => ({
+        row: Number(row),
+        codes: Object.values(codes).filter((code): code is string => !!code),
+      }))
+      .filter((entry) => entry.codes.length > 0 && entry.row < links.length),
+  );
+
+  /** @returns the text of the question a link belongs to, or the practice as a whole */
+  function aboutOf(link: SammEvidenceLink): string {
+    if (link.question === null) return $t('samm.evidence.practice');
+    return questions.find((question) => question.id === link.question)?.text ?? link.question;
+  }
+
+  /** @param code the code of an error @param member the field it is about @returns its text */
+  function textOf(code: string, member: 'title' | 'url' | 'question' | 'link'): string {
+    if (member === 'url' && code === 'PATTERN') return $t('samm.evidence.url.https');
+    return $t(errorKey(code));
+  }
+
+  /** @returns the error of the field of the link being edited that the server named, or the browser's advice */
+  function fieldError(member: 'title' | 'url'): string | null {
+    const index = editing?.index;
+    const server = index === null || index === undefined ? undefined : errors.rows[index]?.[member];
+    if (server) return textOf(server, member);
+    if (!showProblem) return null;
+    if (member === 'title' && titleText.trim() === '') return $t('form.error.required');
+    if (member === 'title' && titleText.trim().length > MAX_EVIDENCE_TITLE)
+      return $t('form.error.max-length');
+    if (member === 'url' && urlText.trim() === '') return $t('form.error.required');
+    if (member === 'url' && !isHttpsUrl(urlText.trim())) return $t('samm.evidence.url.https');
+    return null;
+  }
+
+  function openEditor(index: number | null) {
+    const held = index === null ? undefined : links[index];
+    titleText = held?.title ?? '';
+    urlText = held?.url ?? '';
+    questionId = held?.question ?? '';
+    showProblem = false;
+    editing = { index };
+    editorOpen = true;
+  }
+
+  function apply() {
+    if (problem !== null) {
+      showProblem = true;
+      return;
+    }
+    const link: SammEvidenceLink = {
+      question: questionId === '' ? null : questionId,
+      title: titleText.trim(),
+      url: urlText.trim(),
+    };
+    const index = editing?.index ?? null;
+    onchange?.(
+      index === null
+        ? [...links, link]
+        : links.map((held, position) => (position === index ? link : held)),
+    );
+    editorOpen = false;
+  }
+
+  function move(row: number, direction: -1 | 1) {
+    const target = row + direction;
+    if (target < 0 || target >= links.length) return;
+    const next = [...links];
+    [next[row], next[target]] = [next[target], next[row]];
+    onchange?.(next);
+  }
+
+  async function remove() {
+    const index = removing;
+    removeOpen = false;
+    removing = null;
+    if (index === null || index >= links.length) return;
+    onchange?.(links.filter((_, position) => position !== index));
+    await tick();
+    await table?.focusRow(index);
+  }
+</script>
+
+<div class="evidence" data-testid={testId}>
+  <DataTable
+    bind:this={table}
+    caption={$t('samm.evidence.caption')}
+    columns={[
+      { key: 'title', label: $t('samm.evidence.title') },
+      { key: 'url', label: $t('samm.evidence.url') },
+      { key: 'about', label: $t('samm.evidence.about') },
+    ]}
+    rowCount={links.length}
+    {readonly}
+    empty={$t('samm.evidence.empty')}
+    flagged={(row) => Object.keys(errors.rows[row] ?? {}).length > 0}
+    addDisabledReason={addReason}
+    note={errors.list ? textOf(errors.list, 'link') : null}
+    onadd={() => openEditor(null)}
+    onedit={(row) => openEditor(row)}
+    onremove={(row) => {
+      removing = row;
+      removeOpen = true;
+    }}
+    onmove={move}
+    testId="{testId}-table"
+  >
+    {#snippet cell(row, column)}
+      {@const link = links[row]}
+      {#if column === 0}
+        {link.title}
+      {:else if column === 1}
+        <!-- Only an absolute https address becomes a link: the server's text is data, never a way out of the page. -->
+        {#if isHttpsUrl(link.url)}
+          <Link href={link.url} rel="noopener noreferrer" target="_blank">{link.url}</Link>
+        {:else}
+          {link.url}
+        {/if}
+      {:else}
+        {aboutOf(link)}
+      {/if}
+    {/snippet}
+  </DataTable>
+
+  {#if rowErrors.length > 0}
+    <ul class="errors" data-testid="{testId}-errors">
+      {#each rowErrors as entry (entry.row)}
+        <li>
+          {$t('samm.evidence.error.row', {
+            number: entry.row + 1,
+            problems: Object.entries(errors.rows[entry.row] ?? {})
+              .map(([member, code]) =>
+                textOf(code ?? '', member as 'title' | 'url' | 'question' | 'link'),
+              )
+              .join(' '),
+          })}
+        </li>
+      {/each}
+    </ul>
+  {/if}
+</div>
+
+<Dialog
+  bind:open={editorOpen}
+  title={editing?.index === null ? $t('samm.evidence.add.title') : $t('samm.evidence.edit.title')}
+  closeLabel={$t('common.close')}
+>
+  <div class="editor">
+    <TextField
+      label={$t('samm.evidence.title')}
+      mark={$t('form.required')}
+      bind:value={titleText}
+      error={fieldError('title')}
+      testId="{testId}-field-title"
+    />
+    <TextField
+      label={$t('samm.evidence.url')}
+      mark={$t('form.required')}
+      hint={$t('samm.evidence.url.hint', { max: MAX_EVIDENCE_URL })}
+      bind:value={urlText}
+      error={fieldError('url')}
+      testId="{testId}-field-url"
+    />
+    <Select
+      label={$t('samm.evidence.about')}
+      options={questions.map((question) => ({ value: question.id, label: question.text }))}
+      bind:value={questionId}
+      placeholder={$t('samm.evidence.practice')}
+      testId="{testId}-field-question"
+    />
+    <div class="acts">
+      <Button onclick={() => (editorOpen = false)} data-testid="{testId}-cancel">
+        {$t('common.cancel')}
+      </Button>
+      <Button variant="primary" onclick={apply} data-testid="{testId}-apply">
+        {$t('form.table.editor.apply')}
+      </Button>
+    </div>
+  </div>
+</Dialog>
+
+<Dialog
+  bind:open={removeOpen}
+  title={$t('samm.evidence.remove.title')}
+  closeLabel={$t('common.close')}
+  onclose={() => (removing = null)}
+>
+  <p>
+    {$t('samm.evidence.remove.body', {
+      title: removing === null ? '' : (links[removing]?.title ?? ''),
+    })}
+  </p>
+  <div class="acts">
+    <Button onclick={() => (removeOpen = false)} data-testid="{testId}-remove-cancel">
+      {$t('common.cancel')}
+    </Button>
+    <Button variant="danger" onclick={() => void remove()} data-testid="{testId}-remove-confirm">
+      {$t('form.table.remove')}
+    </Button>
+  </div>
+</Dialog>
+
+<style>
+  .evidence {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .errors {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    list-style: none;
+    color: var(--color-danger);
+    font-size: var(--text-sm);
+  }
+
+  .editor {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .acts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-block-start: var(--space-4);
+  }
+</style>

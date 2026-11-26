@@ -530,20 +530,114 @@ export interface SammAssessmentSummary {
   release: ReleaseInfo | null;
 }
 
-/** `GET /api/v1/samm/scopes/{scope}` (PROVISIONAL). */
+/**
+ * `GET /api/v1/samm/scopes/{scope}` (PROVISIONAL). The scope is a document without a workflow: `document` is its id for
+ * the generic save and `parts` holds the blob of its `data` and of the roadmap, `targets` (rest-api.adoc, SAMM Requests).
+ */
 export interface SammScope {
   id: string;
+  document: string;
   title: string;
   subject: SammSubject;
   modelVersion: string;
   targets: Record<string, SammTarget>;
+  parts: Record<string, PartVersion>;
   assessments: SammAssessmentSummary[];
+}
+
+/** One pinned model version of `GET /api/v1/samm/models` (PROVISIONAL). */
+export interface SammModelPin {
+  version: string;
+  source: string;
+  checksum: string;
+  /** The day the version was pinned, `YYYY-MM-DD`. */
+  pinnedAt: string;
+  /** Whether the application takes the version for a new scope or assessment. */
+  default: boolean;
+}
+
+/** `GET /api/v1/samm/models` (PROVISIONAL): newest first; empty for an installation that pins none. */
+export interface SammModelList {
+  models: SammModelPin[];
+}
+
+/** The body of `POST /api/v1/samm/scopes` (PROVISIONAL): `subject` is `team:<id>`, `service:<id>` or `organisation`. */
+export interface SammScopeDraft {
+  title: string;
+  subject: string;
+  modelVersion?: string;
+  targets?: Record<string, SammTarget>;
+}
+
+/** The answer of `POST /api/v1/samm/scopes` (`201`). */
+export interface SammScopeCreated {
+  outcome: 'CREATED';
+  /** The address segment the server assigned. */
+  id: string;
+  document: string;
+  address: string;
+  at: string;
+  parts: Record<string, PartVersion>;
+}
+
+/** The body of `POST /api/v1/samm/{scope}/assessments` (PROVISIONAL): `assessors` are further pseudonyms. */
+export interface SammAssessmentDraft {
+  title: string;
+  date: string;
+  modelVersion?: string;
+  assessors?: string[];
+}
+
+/** The answer of `POST /api/v1/samm/{scope}/assessments` (`201`): the assessment is empty and a draft. */
+export interface SammAssessmentCreated {
+  outcome: 'CREATED';
+  /** The address segment the server assigned. */
+  id: string;
+  document: string;
+  scope: string;
+  address: string;
+  state: WorkflowState;
+  at: string;
+  parts: Record<string, PartVersion>;
+}
+
+/** One point of the trend of a scope: a released assessment with its scores, unrounded. */
+export interface SammTrendPoint {
+  assessment: string;
+  document: string;
+  title: string;
+  date: string;
+  overall: number;
+  /** The score per business function id. */
+  functions: Record<string, number>;
+  /** The score per practice id. */
+  practices: Record<string, number>;
+}
+
+/** `GET /api/v1/samm/{scope}/trend` (PROVISIONAL): one model version, oldest first. */
+export interface SammTrend {
+  scope: string;
+  /** The model version of the points; `null` for a scope without a released assessment. */
+  modelVersion: string | null;
+  /** The released assessments of other model versions, which the trend does not mix. */
+  omitted: number;
+  points: SammTrendPoint[];
 }
 
 /** One answer of an assessment. */
 export interface SammAnswer {
   answer: number | null;
   comment?: string | null;
+}
+
+/**
+ * One evidence link of a practice (AUN-SAMM-7): a titled absolute `https` address, for one question of the practice or
+ * for the practice as a whole (`question` is `null`).
+ */
+export interface SammEvidenceLink {
+  question: string | null;
+  title: string;
+  url: string;
 }
 
 /** `GET /api/v1/documents/samm-assessments/{id}` (PROVISIONAL shape of the read). */
@@ -559,6 +653,8 @@ export interface SammAssessment {
   assessors: Person[];
   /** Per practice id, per question id. */
   answers: Record<string, Record<string, SammAnswer>>;
+  /** The evidence links per practice id, in the order they were entered; a practice without a link is absent. */
+  evidence: Record<string, SammEvidenceLink[]>;
   /** The loaded version of every practice file. */
   parts: Record<string, PartVersion>;
   history: HistoryLine[];

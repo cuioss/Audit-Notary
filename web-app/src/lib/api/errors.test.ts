@@ -13,6 +13,9 @@ describe('errors', () => {
     // The refusals of the directory: the candidates of a first login, a directory kept elsewhere.
     expect(isOutcome('BINDING_CANDIDATES')).toBe(true);
     expect(isOutcome('MANAGED_BY_SOURCE')).toBe(true);
+    // The refusals of the SAMM completion: a second open assessment, two model versions compared.
+    expect(isOutcome('ASSESSMENT_OPEN')).toBe(true);
+    expect(isOutcome('MODEL_VERSIONS_DIFFER')).toBe(true);
   });
 
   it('maps a failure to the text a view shows', () => {
@@ -40,6 +43,10 @@ describe('errors', () => {
     expect(errorMessageKey(new ApiError('MANAGED_BY_SOURCE', 409))).toBe('error.managed-by-source');
     expect(errorMessageKey(new ApiError('NOT_BINDABLE', 409))).toBe('error.not-bindable');
     expect(errorMessageKey(new ApiError('TOO_LARGE', 413))).toBe('error.too-large');
+    expect(errorMessageKey(new ApiError('ASSESSMENT_OPEN', 409))).toBe('error.assessment-open');
+    expect(errorMessageKey(new ApiError('MODEL_VERSIONS_DIFFER', 422))).toBe(
+      'error.model-versions-differ',
+    );
     expect(errorMessageKey(new Error('x'))).toBe('error.unexpected');
     expect(isApiError(new ApiError('VALIDATION', 422))).toBe(true);
   });

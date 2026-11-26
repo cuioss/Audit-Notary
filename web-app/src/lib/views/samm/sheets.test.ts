@@ -178,14 +178,15 @@ describe('ScopeSheet', () => {
     const { scope } = await fixture('workshop');
     render(ScopeSheet, { scope });
     expect(screen.getByTestId('scope-sheet')).toBeInTheDocument();
-    expect(screen.getByText('Overall score over time')).toBeInTheDocument();
+    expect(await screen.findByText('Overall score over time')).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Targets' })).toBeInTheDocument();
-    expect(screen.getAllByRole('row').length).toBeGreaterThan(15);
+    expect(within(screen.getByTestId('targets')).getAllByRole('listitem')).toHaveLength(15);
   });
 
   it('has no trend with a single release', async () => {
     const { scope } = await fixture('workshop', 'identity', '2026-q4');
     render(ScopeSheet, { scope });
+    expect(await screen.findByRole('heading', { name: 'Targets' })).toBeInTheDocument();
     expect(screen.queryByText('Overall score over time')).not.toBeInTheDocument();
   });
 });

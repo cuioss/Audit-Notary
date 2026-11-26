@@ -219,6 +219,38 @@ labelled lines; the reason a dependency does not count is a sentence that wraps 
 the first line), the three dimensions of a dependency stand as two aligned columns that never break between the term
 and the level, and every link of a stacked row is a target of 44 px (its padding, not a box).
 
+== The SAMM Completion
+
+Four things are added to the SAMM lens (UC-SAMM-1 to UC-SAMM-5); each reads in the register's words and adds no component
+to the closed vocabulary beyond the three named here.
+
+*A new scope and a new assessment* are sheets in the object column at `/samm/new` and `/samm/{scope}/new`, built like
+the form of a new document: the fields stand in one narrow column of the record, the status holds the save state and the one
+act (*Create scope*, *Start assessment*), the margin says in a line what is not stored yet. Nothing is stored before that
+act, and leaving the page asks (`LeaveGuard`, the one dialog every new object shares). The subject of a scope is a group of
+radio buttons (team, service, the whole organisation) with the picker of the catalog below it; the assessors of an
+assessment are the first person, named by the session and needing no pick, and as many `PersonPicker` rows as the person
+adds, each with a quiet act to remove it. An assessment that is open already is an attention notice naming it, with its
+link, and the act says why it cannot be taken.
+
+*The targets* are a table of the practices by business function, in the register's words: a table of facts read row by row
+(`GridTable`), whose cells are a `Select` (the maturity from 0 to 3 in steps of a half, or no target) and a date field. The
+controls carry their label for assistive technology only (`labelHidden`), because the head of the column says what they
+are; on a narrow column each row stands as a block of labelled lines. In the scope sheet the table is part of the record and
+is saved like the record: the status holds the save state and *Save for everyone*, and a conflict stands above the table, a
+block per practice with both entries and the two ways to decide. A scope has no draft, so the sentence of the status says
+"Changed. Not saved for everyone yet." instead of "Keeping it for you".
+
+*The evidence* of a practice is a section after its streams, a `DataTable` of links (title, address, what it belongs to)
+with a dialog that edits one link over a copy; removing a link asks first, and the limit of fifty is a sentence where the act
+would be. An address is a link only when it is an absolute `https` address. The comment of an answer is an `AsciiDocField`
+with the server's preview; a released assessment shows it formatted, as the server renders it.
+
+*The frozen assessment* is the released one. Its sheets are read-only and say so once, in the status; the way on is the
+one act *Start a new assessment*, a primary link in the head of the assessment and in the status of its practice. A
+comparison with the previous release that the server refuses (`MODEL_VERSIONS_DIFFER`) is an information notice in the place of
+the changes, naming both assessments and both versions; the scores stay readable.
+
 == The Pages of the Directory
 
 Three pages belong to the lens *Catalogs* and *Settings* but are not a chain of columns, because each is a task, not an

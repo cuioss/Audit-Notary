@@ -12,11 +12,12 @@
   import SheetHead from '../../components/SheetHead.svelte';
   import StatusLabel from '../../components/StatusLabel.svelte';
   import { apiClient } from '../../api/client';
-  import { errorMessageKey } from '../../api/errors';
+  import { errorMessageKey, isApiError } from '../../api/errors';
   import type { SammAssessment, SammComparison, SammModel, SammScope } from '../../api/types';
   import { formatDate } from '../../format';
   import { currentLocale, t } from '../../i18n';
   import { historyEntries } from '../../samm/history';
+  import { canEditSamm } from '../../samm/rights';
   import { assessmentScore, formatDelta, formatScore, gapsOf } from '../../samm/scores';
   import { StepUpHandler } from '../../stepup/stepUp';
   import StepUpDialog from '../../stepup/StepUpDialog.svelte';
@@ -43,6 +44,8 @@
 
   let view: 'seal' | 'table' = $state('seal');
   let comparison = $state<SammComparison | null>(null);
+  /** The model versions of the two assessments, when the comparison was refused because they differ. */
+  let versionsDiffer = $state<{ from: string; to: string } | null>(null);
   let submitting = $state(false);
   let failure = $state<string | null>(null);
   let missing: string[] = $state([]);
@@ -53,9 +56,7 @@
   let previous = $derived(
     scope && assessment ? previousRelease(scope.assessments, assessment.slug) : null,
   );
-  let rights = $derived(
-    $session?.rights.find((right) => right.repository === 'samm-assessments')?.actions ?? [],
-  );
+  let canEdit = $derived(canEditSamm($session));
   let base = $derived(scope && assessment ? `/samm/${scope.id}/${assessment.slug}` : '');
 
   // A comparison says what changed between two complete assessments; against a draft that is half answered it would
@@ -63,16 +64,28 @@
   $effect(() => {
     if (!scope || !assessment || !previous || assessment.state === 'draft') {
       comparison = null;
+      versionsDiffer = null;
       return;
     }
     let current = true;
     apiClient
       .compareSamm(scope.id, previous.id, assessment.slug)
       .then((answer) => {
-        if (current) comparison = answer;
+        if (!current) return;
+        comparison = answer;
+        versionsDiffer = null;
       })
-      .catch(() => {
-        if (current) comparison = null;
+      .catch((error) => {
+        if (!current) return;
+        comparison = null;
+        // Two model versions are never compared (rest-api.adoc, SAMM Requests): the sheet says which two.
+        versionsDiffer =
+          isApiError(error) && error.outcome === 'MODEL_VERSIONS_DIFFER'
+            ? {
+                from: modelVersionOf(error.details.from),
+                to: modelVersionOf(error.details.to),
+              }
+            : null;
       });
     return () => {
       current = false;
@@ -121,6 +134,15 @@
   let practiceName = (id: string) =>
     model?.functions.flatMap((fn) => fn.practices).find((practice) => practice.id === id)?.name ??
     id;
+
+  /**
+   * @param side the `from` or `to` of a `MODEL_VERSIONS_DIFFER` refusal, `{assessment, modelVersion}`
+   * @returns its model version, or an empty text for a refusal that names none
+   */
+  function modelVersionOf(side: unknown): string {
+    const version = (side as { modelVersion?: unknown } | null)?.modelVersion;
+    return typeof version === 'string' ? version : '';
+  }
 
   /**
    * @param pointers the JSON Pointers of `MANDATORY_FIELDS_MISSING`, `/answers/<practice>/<question>/answer`
@@ -192,7 +214,7 @@
             icon="act.next"
             busy={submitting}
             onclick={submit}
-            disabledReason={!rights.includes('edit')
+            disabledReason={!canEdit
               ? $t('samm.submit.no-right')
               : complete
                 ? null
@@ -204,6 +226,11 @@
         {:else if assessment.state === 'in-review'}
           <Link href="{base}/release" look="primary" data-testid="assessment-review">
             {$t('samm.review-and-release')}
+          </Link>
+        {:else if assessment.state === 'released' && canEdit}
+          <!-- A released assessment is frozen; the way on is a new one (rest-api.adoc, SAMM Requests). -->
+          <Link href="/samm/{scope.id}/new" look="primary" data-testid="start-new-assessment">
+            {$t('samm.frozen.start')}
           </Link>
         {/if}
       {/snippet}
@@ -316,7 +343,23 @@
       {/if}
     </section>
 
-    {#if comparison && previous}
+    {#if versionsDiffer && previous}
+      <section class="section" aria-labelledby="since-title" data-testid="versions-differ">
+        <h2 class="section__title" id="since-title">
+          {$t('samm.since', { title: previous.title })}
+        </h2>
+        <Notice
+          tone="info"
+          title={$t('samm.differ.title')}
+          body={$t('samm.differ.body', {
+            from: previous.title,
+            fromVersion: versionsDiffer.from,
+            to: assessment.title,
+            toVersion: versionsDiffer.to,
+          })}
+        />
+      </section>
+    {:else if comparison && previous}
       <section class="section" aria-labelledby="since-title">
         <h2 class="section__title" id="since-title">
           {$t('samm.since', { title: previous.title })}
