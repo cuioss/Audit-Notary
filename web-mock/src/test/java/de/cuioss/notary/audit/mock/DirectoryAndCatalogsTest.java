@@ -11,6 +11,8 @@
 package de.cuioss.notary.audit.mock;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import de.cuioss.notary.audit.mock.runtime.CanonicalAddresses;
+import de.cuioss.notary.audit.mock.scenario.Requirement;
+import de.cuioss.notary.audit.mock.scenario.Route;
 import de.cuioss.notary.audit.mock.scenario.ScenarioLoader;
 import de.cuioss.notary.audit.mock.scenario.ScenarioRegistry;
 
@@ -29,8 +33,11 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -47,7 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("The directory and the catalogs")
 class DirectoryAndCatalogsTest {
 
-    private static final List<String> CATALOGS = List.of("team", "role", "service", "system", "external");
+    private static final Pattern SCHEMA_ROUTE = Pattern.compile("GET /api/v1/catalogs/([a-z]+)/schema");
     private static final Map<String, Integer> COUNTS = Map.of("team", 5, "role", 6, "service", 8, "system", 3,
             "external", 4);
     private static final Map<String, List<String>> RETIRED = Map.of("team", List.of("legacy-billing"),
@@ -61,6 +68,41 @@ class DirectoryAndCatalogsTest {
     private static final ClassLoader CLASS_LOADER = DirectoryAndCatalogsTest.class.getClassLoader();
     private static final ScenarioRegistry REGISTRY = new ScenarioRegistry(
             new ScenarioLoader(MockClient.MAPPER, name -> ScenarioRegistry.readDataFile(CLASS_LOADER, name)), CLASS_LOADER);
+
+    /** The catalogs, read from the schema routes of the workshop scenario: the scenario is the single definition. */
+    private static final List<String> CATALOGS = REGISTRY.resolve("workshop").orElseThrow().scenario().routes().keySet()
+            .stream().map(SCHEMA_ROUTE::matcher).filter(Matcher::matches)
+            .map(matcher -> matcher.group(1)).sorted().toList();
+
+    /**
+     * The ids a catalog entry may not take: the literal segment after the catalog in the canonical addresses of the web
+     * app ({@code /catalogs/{catalog}/new}) and in the routes of the workshop scenario
+     * ({@code /api/v1/catalogs/team/schema}).
+     */
+    private static final Set<String> RESERVED_IDS = reservedIds();
+
+    private static Set<String> reservedIds() {
+        Set<String> reserved = new TreeSet<>();
+        Pattern web = Pattern.compile("/catalogs/\\{catalog}/([a-z-]+)");
+        Pattern api = Pattern.compile("[A-Z]+ /api/v1/catalogs/(?:" + String.join("|", CATALOGS) + ")/([a-z-]+)");
+        try (var in = CLASS_LOADER.getResourceAsStream(CanonicalAddresses.RESOURCE)) {
+            MockClient.MAPPER.readTree(in).path("addresses").forEach(route -> {
+                var matcher = web.matcher(route.path("pattern").asText());
+                if (matcher.matches()) {
+                    reserved.add(matcher.group(1));
+                }
+            });
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        REGISTRY.resolve("workshop").orElseThrow().scenario().routes().keySet().forEach(key -> {
+            var matcher = api.matcher(key);
+            if (matcher.matches()) {
+                reserved.add(matcher.group(1));
+            }
+        });
+        return reserved;
+    }
 
     static Stream<String> lensProfiles() {
         return LENS_PROFILES.stream();
@@ -234,8 +276,8 @@ class DirectoryAndCatalogsTest {
                             () -> assertEquals(120, schema.path("properties").path("name").path("maxLength").asInt()),
                             () -> assertTrue(schema.path("properties").path("description").path("x-free-text").asBoolean()),
                             () -> assertTrue(Pattern.matches(id, "payment-api")),
-                            () -> assertFalse(Pattern.matches(id, "new")),
-                            () -> assertFalse(Pattern.matches(id, "schema")),
+                            () -> assertTrue(RESERVED_IDS.containsAll(List.of("new", "schema")), RESERVED_IDS.toString()),
+                            () -> assertEquals(List.of(), RESERVED_IDS.stream().filter(reserved -> Pattern.matches(id, reserved)).toList()),
                             () -> assertTrue(Pattern.matches(id, "newer")));
                 }
             }
@@ -474,25 +516,46 @@ class DirectoryAndCatalogsTest {
     @DisplayName("the writes of a user without the right administer-catalogs")
     class WithoutTheRight {
 
-        private static final List<String[]> WRITES = List.of(
-                new String[]{"POST", CATALOG + "team"}, new String[]{"POST", CATALOG + "role"},
-                new String[]{"POST", CATALOG + "service"}, new String[]{"POST", CATALOG + "system"},
-                new String[]{"POST", CATALOG + "external"},
-                new String[]{"PUT", CATALOG + "team/payments"}, new String[]{"PUT", CATALOG + "role/developer"},
-                new String[]{"PUT", CATALOG + "service/payment-api"}, new String[]{"PUT", CATALOG + "system/webshop"},
-                new String[]{"PUT", CATALOG + "external/psp-provider"},
-                new String[]{"POST", CATALOG + "team/payments/retirement"}, new String[]{"POST", CATALOG + "role/developer/retirement"},
-                new String[]{"POST", CATALOG + "service/customer-portal/retirement"},
-                new String[]{"POST", CATALOG + "system/webshop/retirement"}, new String[]{"POST", CATALOG + "external/psp-provider/retirement"},
-                new String[]{"POST", IMPORT + "/preview"}, new String[]{"POST", IMPORT},
-                new String[]{"POST", DIRECTORY + "persons"}, new String[]{"POST", DIRECTORY + "erasures"});
+        private static final Pattern TEMPLATE_SEGMENT = Pattern.compile("\\{[^}]+}");
+
+        /**
+         * The writes that require {@code administer-catalogs}, read from the routes of the scenario and the links and
+         * routes of its start state; a path template gets a sample id, as the refusal comes before any route.
+         */
+        private static List<String[]> protectedWrites(String profile) {
+            var reference = REGISTRY.resolve(profile).orElseThrow();
+            var scenario = reference.scenario();
+            var start = scenario.state(reference.state()).orElseThrow();
+            Map<String, Route> routes = new LinkedHashMap<>(scenario.routes());
+            routes.putAll(start.routes());
+            List<String[]> writes = new ArrayList<>();
+            routes.forEach((key, route) -> {
+                if (!key.startsWith("GET ") && needsTheRight(route.requires())) {
+                    int space = key.indexOf(' ');
+                    writes.add(new String[]{key.substring(0, space),
+                            TEMPLATE_SEGMENT.matcher(key.substring(space + 1)).replaceAll("sample-id")});
+                }
+            });
+            start.links().values().forEach(link -> {
+                if (!"GET".equals(link.method()) && needsTheRight(link.requires())) {
+                    writes.add(new String[]{link.method(), TEMPLATE_SEGMENT.matcher(link.path()).replaceAll("sample-id")});
+                }
+            });
+            return writes;
+        }
+
+        private static boolean needsTheRight(@Nullable Requirement requires) {
+            return requires != null && "administer-catalogs".equals(requires.action());
+        }
 
         @ParameterizedTest
         @ValueSource(strings = {"workshop", "read-only"})
         @DisplayName("answer 403 FORBIDDEN before any route, and the reads stay 200")
         void shouldRefuseEveryWrite(String profile) {
             try (var client = start(profile)) {
-                for (String[] write : WRITES) {
+                var writes = protectedWrites(profile);
+                assertFalse(writes.isEmpty(), profile + " declares no protected write");
+                for (String[] write : writes) {
                     var response = client.change(write[0], write[1], "{}");
                     assertAll(profile + " " + write[0] + " " + write[1],
                             () -> assertEquals(403, response.statusCode()),
@@ -1154,8 +1217,10 @@ class DirectoryAndCatalogsTest {
         @Test
         @DisplayName("lists the flag in /mock/state and carries it in the session of every profile")
         void shouldCarryTheFlagInEveryProfile() {
-            for (String profile : List.of("workshop", "first-login", "read-only", "degraded", "empty", "no-rights", "release",
-                    "login-trouble#recovered", "catalog-admin")) {
+            // The primary profiles come from primary.txt; the others are named, as they are no primary profile.
+            List<String> profiles = new ArrayList<>(REGISTRY.primaryNames());
+            profiles.addAll(List.of("release", "login-trouble#recovered", "catalog-admin"));
+            for (String profile : profiles) {
                 try (var client = start(profile)) {
                     assertAll(profile,
                             () -> assertTrue(get(client, "/api/v1/session").has("directoryConfirmationDue")),
@@ -1369,6 +1434,129 @@ class DirectoryAndCatalogsTest {
                         () -> assertEquals("CONFIRMED", json(client.change("POST", DIRECTORY + "me/confirmation", null))
                                 .path("outcome").asText()));
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("the data files that mirror one another")
+    class Mirrors {
+
+        private static JsonNode data(String name) {
+            try {
+                return MockClient.MAPPER.readTree(ScenarioRegistry.readDataFile(CLASS_LOADER, name).orElseThrow());
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+
+        private static Map<String, String> namesById(JsonNode entries) {
+            Map<String, String> names = new LinkedHashMap<>();
+            entries.forEach(entry -> names.put(entry.path("id").asText(), entry.path("name").asText()));
+            return names;
+        }
+
+        @Test
+        @DisplayName("the catalogs of the scenario are the ones the tests expect")
+        void shouldNameTheFiveCatalogs() {
+            assertEquals(COUNTS.keySet(), Set.copyOf(CATALOGS));
+        }
+
+        @Test
+        @DisplayName("the list of a catalog names the same ids, names and retirements as the entries behind it")
+        void shouldListWhatTheEntriesHold() {
+            for (String catalog : CATALOGS) {
+                var list = data("catalogs-" + catalog + ".json").path("entries");
+                var entries = data("catalog-" + catalog + "-entries.json").path("entries");
+                if ("service".equals(catalog)) {
+                    // notification-gateway is created in the state service-created, so the baseline list lacks it
+                    var created = data("catalogs-service-created.json").path("entries");
+                    assertEquals(namesById(entries), namesById(created));
+                    var withoutGateway = MockClient.MAPPER.createArrayNode();
+                    entries.forEach(entry -> {
+                        if (!"notification-gateway".equals(entry.path("id").asText())) {
+                            withoutGateway.add(entry);
+                        }
+                    });
+                    entries = withoutGateway;
+                }
+                var expected = entries;
+                Map<String, Boolean> retiredByList = new LinkedHashMap<>();
+                list.forEach(entry -> retiredByList.put(entry.path("id").asText(), entry.path("retired").asBoolean(false)));
+                Map<String, Boolean> retiredByEntry = new LinkedHashMap<>();
+                expected.forEach(entry -> retiredByEntry.put(entry.path("id").asText(), entry.path("retired").asBoolean(false)));
+                assertAll(catalog,
+                        () -> assertEquals(namesById(expected), namesById(list)),
+                        () -> assertEquals(retiredByEntry, retiredByList));
+            }
+        }
+
+        @Test
+        @DisplayName("the service lists of service-created and service-retired are the baseline plus their one change")
+        void shouldDeriveTheServiceStatesFromTheBaseline() {
+            var baseline = data("catalogs-service.json").path("entries");
+            var created = data("catalogs-service-created.json").path("entries");
+            var retired = data("catalogs-service-retired.json").path("entries");
+            var expectedCreated = new ArrayList<JsonNode>();
+            baseline.forEach(expectedCreated::add);
+            var withoutGateway = new ArrayList<JsonNode>();
+            created.forEach(entry -> {
+                if (!"notification-gateway".equals(entry.path("id").asText())) {
+                    withoutGateway.add(entry);
+                }
+            });
+            var expectedRetired = new ArrayList<JsonNode>();
+            baseline.forEach(entry -> {
+                var copy = entry.deepCopy();
+                if ("customer-portal".equals(entry.path("id").asText())) {
+                    ((ObjectNode) copy).put("retired", true);
+                }
+                expectedRetired.add(copy);
+            });
+            var actualRetired = new ArrayList<JsonNode>();
+            retired.forEach(actualRetired::add);
+            assertAll(
+                    () -> assertEquals(expectedCreated, withoutGateway),
+                    () -> assertEquals(expectedRetired, actualRetired));
+        }
+
+        @Test
+        @DisplayName("the retired customer-portal reports the dependency graph of the entry it was before")
+        void shouldKeepTheGraphOfTheRetiredService() {
+            var retired = data("catalog-service-customer-portal-retired.json");
+            JsonNode found = null;
+            for (var entry : data("catalog-service-entries.json").path("entries")) {
+                if ("customer-portal".equals(entry.path("id").asText())) {
+                    found = entry;
+                }
+            }
+            var before = found;
+            var graph = before.path("effective").path("dependencies");
+            Map<String, String> beforeRefs = new LinkedHashMap<>();
+            graph.forEach(dependency -> beforeRefs.put(dependency.path("ref").asText(), dependency.path("via").asText()));
+            Map<String, String> retiredRefs = new LinkedHashMap<>();
+            retired.path("effective").path("dependencies")
+                    .forEach(dependency -> retiredRefs.put(dependency.path("ref").asText(), dependency.path("via").asText()));
+            assertAll(
+                    () -> assertEquals(before.path("value").path("dependsOn"), retired.path("value").path("dependsOn")),
+                    () -> assertEquals(beforeRefs, retiredRefs));
+        }
+
+        @Test
+        @DisplayName("git-unavailable refuses every write of catalog-admin that reaches the Git server")
+        void shouldRefuseEveryWriteWhileTheDirectoryIsDown() {
+            var scenario = REGISTRY.resolve("catalog-admin").orElseThrow().scenario();
+            var down = scenario.state("git-unavailable").orElseThrow().routes();
+            List<String> missing = new ArrayList<>();
+            scenario.routes().forEach((key, route) -> {
+                // The import preview only reads the pasted file; it writes nothing.
+                if (!key.startsWith("GET ") && !key.endsWith("/import/backstage/preview")) {
+                    var refusal = down.get(key);
+                    if (refusal == null || refusal.status() != 503) {
+                        missing.add(key);
+                    }
+                }
+            });
+            assertEquals(List.of(), missing);
         }
     }
 

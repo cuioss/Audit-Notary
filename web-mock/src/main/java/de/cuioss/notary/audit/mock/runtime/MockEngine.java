@@ -290,7 +290,7 @@ public final class MockEngine implements AutoCloseable {
         if (link.isPresent()) {
             var taken = link.get();
             if (!permitted(taken.requires())) {
-                return json(403, object().put(OUTCOME, "FORBIDDEN"));
+                return forbidden();
             }
             if (!taken.next().equals(state.id())) {
                 enter(scenario.state(taken.next()).orElseThrow(), 0);
@@ -300,11 +300,15 @@ public final class MockEngine implements AutoCloseable {
         return scenario.match(state, request.method(), request.path(), query).map(match -> {
             var route = match.route();
             if (!permitted(route.requires())) {
-                return json(403, object().put(OUTCOME, "FORBIDDEN"));
+                return forbidden();
             }
             return route.handler() == null ? answer(route.status(), route.body())
                     : handled(route.handler(), route, request, match.captures());
         }).orElseGet(() -> unrouted(request));
+    }
+
+    private MockResponse forbidden() {
+        return json(403, object().put(OUTCOME, "FORBIDDEN"));
     }
 
     /** Whether the rights of the scenario hold what a route or a link requires; no requirement is always held. */
@@ -472,7 +476,7 @@ public final class MockEngine implements AutoCloseable {
         try {
             var route = scenario.route(state, request.method(), request.path(), request.queryParameters());
             if (route.isPresent()) {
-                return navigation(request, route.get());
+                return permitted(route.get().requires()) ? navigation(request, route.get()) : forbidden();
             }
             String target = addresses.checkReturn(request.queryParameter("return").orElse(null));
             if (scenario.login().isLocal()) {
@@ -498,7 +502,7 @@ public final class MockEngine implements AutoCloseable {
         lock.lock();
         try {
             return scenario.route(state, request.method(), request.path(), request.queryParameters())
-                    .map(route -> navigation(request, route));
+                    .map(route -> permitted(route.requires()) ? navigation(request, route) : forbidden());
         } finally {
             lock.unlock();
         }

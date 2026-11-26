@@ -117,6 +117,30 @@ class RequiresAndConfirmationDueTest {
         }
 
         @Test
+        @DisplayName("answers 403 FORBIDDEN for the login start and the callback that require a right the user lacks")
+        void shouldGuardTheLoginAndTheCallback() throws IOException {
+            for (String rights : new String[]{HELD, NOT_HELD}) {
+                Path scenario = directory.resolve("guarded.json");
+                Files.writeString(scenario, """
+                        {"format_version": 1, "name": "guarded", "user": {"pseudonym": "p-1", "name": "Alex"},
+                         "rights": %s, "start": "ready",
+                         "routes": {
+                           "GET /api/v1/auth/login": {"status": 200, "body": {"outcome": "OPEN"}, %s},
+                           "GET /api/v1/auth/callback": {"status": 200, "body": {"outcome": "OPEN"}, %s}},
+                         "states": {"ready": {}}}
+                        """.formatted(rights, REQUIRES, REQUIRES));
+                int expected = HELD.equals(rights) ? 200 : 403;
+                try (var client = MockClient.start(scenario.toString())) {
+                    var login = client.get("/api/v1/auth/login");
+                    var callback = client.get("/api/v1/auth/callback");
+                    assertAll(rights,
+                            () -> assertEquals(expected, login.statusCode()),
+                            () -> assertEquals(expected, callback.statusCode()));
+                }
+            }
+        }
+
+        @Test
         @DisplayName("records the refused request as an act, as sent")
         void shouldRecordTheRefusedAct() throws IOException {
             try (var client = start(NOT_HELD, "\"description\": \"tiny\"")) {

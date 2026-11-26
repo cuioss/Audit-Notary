@@ -227,7 +227,8 @@ PROVISIONAL). Bodies in <<_directory_and_catalog_requests>>
 |`POST /api/v1/directory/me/confirmation`
 |none
 |`{"outcome": "CONFIRMED", "confirmedAt"}`: the entry is unchanged, its confirmation date is today
-|`404 NOT_FOUND` while the first login is required; `GIT_UNAVAILABLE`; `REJECTED`
+|`FIRST_LOGIN_REQUIRED` from the gate while the first login is required (the request is outside the allow-list of
+xref:directory.adoc#AUN-DIR-2[AUN-DIR-2], so it never reaches the endpoint); `GIT_UNAVAILABLE`; `REJECTED`
 |xref:directory.adoc#AUN-DIR-3[AUN-DIR-3]
 |`PROVISIONAL`
 

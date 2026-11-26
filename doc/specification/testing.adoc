@@ -75,8 +75,10 @@ start or complete) and `catalog-admin` (the right `administer-catalogs`: every c
 states for each refusal, the Backstage import, the prefill and the erasure); the directory and the catalogs: `workshop`,
 `read-only`, `catalog-admin` and `empty` answer the five catalogs (`team`, `role`, `service`, `system`, `external`)
 with their schemas and entries, the effective protection needs of a service (with one cycle) and the person directory;
-`workshop` and `read-only` refuse every catalog and directory write with `403 FORBIDDEN` (no right
-`administer-catalogs`), `workshop` carries the states `confirmation-due` and `confirmation-done` (the session flag
+`read-only` refuses every catalog and directory write with `403 FORBIDDEN` (no right `administer-catalogs`);
+`workshop` refuses the administrative writes (the catalog writes, the Backstage import, `POST /api/v1/directory/persons`
+and `POST /api/v1/directory/erasures`) the same way and accepts the own-entry save and confirmation, which no right
+guards and which can answer a validation or Git-unavailable outcome; `workshop` carries the states `confirmation-due` and `confirmation-done` (the session flag
 `directoryConfirmationDue`), `entry-invalid` and `entry-git-unavailable`, `empty` lists no entry and no person and holds
 the right, and `first-login` answers `entry: null` and the binding states `candidates`, `candidates-chosen`,
 `candidates-not-bindable` and `candidates-refused`; `workshop` also carries the states `session-replaced` and `session-ended`; `workshop` and
