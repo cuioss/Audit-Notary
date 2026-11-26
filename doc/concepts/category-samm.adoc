@@ -112,8 +112,8 @@ xref:../specification/rest-api.adoc#_decided_samm[REST API Register, Open Questi
   and the subject of a scope are fixed after the create, its targets are saved like a document (part `targets`, no
   workflow, never frozen).
 . A target is 0 to 3 in steps of 0.5 with an optional due date; a practice without a target has no gap.
-. At most one assessment of a scope is open at a time; a new assessment starts empty and may be started from a released
-  one, which stays frozen.
+. At most one assessment of a scope is open at a time; a new assessment starts empty, its creator is always an assessor,
+  and it may be started from a released one, which stays frozen.
 . Evidence is kept per practice with the answers (`evidence` in the read, one list per practice, at most 50 absolute
   `https` links with a title); the comment of an answer is an AsciiDoc fragment of at most 8,000 characters.
 . The comparison of two assessments of different model versions is refused with `MODEL_VERSIONS_DIFFER` (`422`); the

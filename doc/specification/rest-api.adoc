@@ -562,8 +562,8 @@ of the practice
 |`PROVISIONAL`
 
 |`POST /api/v1/samm/{scope}/assessments`
-|`{"title", "date", "modelVersion", "assessors"}`: a new assessment of the scope; `assessors` are pseudonyms of the
-directory, bound or not. The exact body is in <<_samm_requests>>
+|`{"title", "date", "modelVersion", "assessors"}`: a new assessment of the scope; `assessors` are further pseudonyms of the
+directory, bound or not; the user who creates is always the first assessor. The exact body is in <<_samm_requests>>
 |`201 {"outcome": "CREATED", "id", "document", "scope", "address", "state": "draft", "at", "parts"}`: the assessment is
 empty; `answers` and `evidence` are empty and every practice file is written by its first save
 |`404 NOT_FOUND` for a scope that does not exist; `409 ASSESSMENT_OPEN` with `assessment`, the address segment of the
@@ -1780,12 +1780,13 @@ writes one signed commit to `main`. The event `document-saved` (`part` `targets`
 
 [source,json]
 ----
-{ "title": "Web shop 2026 Q4", "date": "2026-11-26", "modelVersion": "v2.2.0", "assessors": ["p-4c1a9e", "p-2b7f10"] }
+{ "title": "Web shop 2026 Q4", "date": "2026-11-26", "modelVersion": "v2.2.0", "assessors": ["p-2b7f10"] }
 ----
 
 `title` is 1 to 200 characters, `date` a date `YYYY-MM-DD`, `modelVersion` a pinned version (the default when absent),
-`assessors` one to 30 pseudonyms of the person directory, bound or not yet bound (UC-SAMM-2). The assessment starts
-empty. It answers `201`
+`assessors` zero to 30 further pseudonyms of the person directory, bound or not yet bound (UC-SAMM-2); the user who
+creates the assessment is always its first assessor, so a user can start one in an installation whose directory lists no
+one else. The assessment starts empty. It answers `201`
 
 [source,json]
 ----
@@ -1829,7 +1830,7 @@ other tabs.
   "title": "Payments 2026 Q4", "date": "2026-11-24", "modelVersion": "v2.2.0", "state": "draft",
   "assessors": [ { "pseudonym": "p-4c1a9e", "name": "Alex Example", "role": "Security Champion" } ],
   "answers": { "sb": { "sb-b-1": { "answer": 1,
-      "comment": "Dependency scanning runs in *every* pipeline.\n\n* Scanner: `trivy`\n* The SBOM is not yet published." } } },
+      "comment": "Dependency scanning runs in *every* pipeline.\n\n* Scanner: the template of the platform team\n* The SBOM is not yet published." } } },
   "evidence": {
     "sb": [ { "question": "sb-b-1", "title": "Pipeline of the payment service", "url": "https://ci.example/payments/pipeline" },
             { "question": null, "title": "Dependency policy", "url": "https://wiki.example/payments/dependency-policy" } ]
@@ -2528,6 +2529,8 @@ change each one. The bodies and addresses are in <<_samm_requests>>:
 . *A target is 0 to 3 in steps of 0.5,* with an optional due date; a practice without an entry has no target and no gap.
   AUN-SAMM-6 says "in steps of the model"; the model has no step, and 0.5 is the step of the targets of the mock (1.5,
   2, 2.5). The targets save sends the practices that changed, each as a whole entry, and `null` removes one.
+. *The creator is always an assessor,* the first one; `assessors` names the further ones, none to 30. AUN-SAMM-1 says
+  "assessors (pseudonyms)" without a minimum, and a first user of an empty installation has nobody to pick.
 . *At most one assessment of a scope is open* (`draft` or `in-review`); a second one is refused with `409
   ASSESSMENT_OPEN` that names the open one. The scope list shows one open assessment per scope already.
 . *A new assessment starts empty:* no answer is copied from an earlier one. The form of a new assessment prefills the model
@@ -2560,14 +2563,15 @@ change each one. The bodies and addresses are in <<_samm_requests>>:
 . *The SAMM schemas are not served to the form kit:* the forms of a scope and an assessment are written for the SAMM lens
   (a subject picker, a targets table, an assessor picker), and the register fixes their limits. The scope and the
   assessment are not offered by `GET /api/v1/categories/{category}/schema`.
-. *The mock answers the creates with fixed ids* (`mobile`, `2026-q4` of `shop`) and by the path of the scope: a scope that
+. *The mock answers the creates with fixed ids* (`mobile`, `2026-q4` of `shop`, `2026-h2` of `organisation`) and by the path of the scope: a scope that
   has an open assessment answers `ASSESSMENT_OPEN`, a scope that has none answers `CREATED`; the e2e flows type the same
   values.
 
 For the owner: whether the scope and the assessment should be created through the generic `POST
-/api/v1/documents/samm-assessments` with a schema of the two kinds served to the form kit (2, 17); whether the title and
+/api/v1/documents/samm-assessments` with a schema of the two kinds served to the form kit (2, 18); whether the title and
 the subject of a scope may change (4) and whether a subject may have several scopes (4); the step of a target and
-whether the targets of a scope must be complete (6); whether more than one assessment of a scope may be open at once (7);
-whether a new assessment should offer to start from the answers of the last released one (8); the limits of the evidence
-and the comment (9, 10); the status `422` of `MODEL_VERSIONS_DIFFER` (13); whether the trend may mix model versions with a
-marker instead of leaving the others out (14); and whether the web app should pin a model version (15).
+whether the targets of a scope must be complete (6); whether the creator of an assessment is always an assessor (7);
+whether more than one assessment of a scope may be open at once (8); whether a new assessment should offer to start from
+the answers of the last released one (9); the limits of the evidence and the comment (10, 11); the status `422` of
+`MODEL_VERSIONS_DIFFER` (14); whether the trend may mix model versions with a marker instead of leaving the others out
+(15); and whether the web app should pin a model version (16).
