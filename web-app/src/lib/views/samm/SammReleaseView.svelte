@@ -213,7 +213,10 @@
                 },
               ]
             : []),
-          { key: 'freeze', text: $t('release.check.freeze'), icon: 'state.seal' },
+          // What the release will do is told only while it can be taken (as in the release of a generic document).
+          ...(unavailable === null
+            ? [{ key: 'freeze', text: $t('release.check.freeze'), icon: 'state.seal' as const }]
+            : []),
         ]
       : [],
   );

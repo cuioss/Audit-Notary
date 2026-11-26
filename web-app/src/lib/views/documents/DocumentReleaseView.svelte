@@ -169,7 +169,12 @@
     if (category?.enabled === false) return $t('documents.read-only.switched-off');
     if (doc.state === 'released') return $t('documents.release.state.released');
     if (!rights.includes('approve')) return $t('release.no-right');
-    if (doc.state === 'draft') return $t('documents.release.state.draft');
+    // The workflow decides, not a state: the release is the transition it marks `release` (rest-api.adoc, `DocumentRead`).
+    if (!doc.transitions.some((transition) => transition.release)) {
+      return doc.state === 'draft'
+        ? $t('documents.release.state.draft')
+        : $t('documents.release.state.not-offered');
+    }
     return null;
   });
 

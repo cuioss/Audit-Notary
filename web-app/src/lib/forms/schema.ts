@@ -25,6 +25,31 @@ export type FieldKind =
   | 'table'
   | 'plain';
 
+/**
+ * The kinds that read one value in one line: every kind but the structures (`section`, `table`) and the plain data. The
+ * record is exhaustive on purpose, so that a kind added to {@link FieldKind} has to be classified here.
+ */
+const SCALAR_KINDS: Record<Exclude<FieldKind, 'section' | 'table' | 'plain'>, true> = {
+  catalog: true,
+  person: true,
+  asciidoc: true,
+  docref: true,
+  'date-time': true,
+  date: true,
+  select: true,
+  toggle: true,
+  text: true,
+  number: true,
+};
+
+/**
+ * @param kind the component of a field
+ * @returns whether it holds one scalar value, as `scalarKind` chooses it
+ */
+export function isScalarKind(kind: FieldKind): boolean {
+  return Object.hasOwn(SCALAR_KINDS, kind);
+}
+
 /** The deepest chain of `$ref` the form follows: a cycle ends the chain instead of looping. */
 const MAX_REF_DEPTH = 16;
 

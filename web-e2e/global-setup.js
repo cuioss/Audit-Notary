@@ -27,13 +27,15 @@ async function mockAnswers() {
  * its timeout, on a busy machine more often than on an idle one. Waiting here, for the real pages and not for a
  * duration, takes that cost out of every test; the tests themselves keep their own short timeouts.
  *
- * A failure is a warning and not an error: the suite then runs as before, and the tests say what is wrong.
+ * A failure, the launch of the browser included, is a warning and not an error: the suite then runs as before, and the
+ * tests say what is wrong.
  *
  * @param config the resolved configuration of the run; its first project says how the browser is launched
  */
 async function warmUpApp(config) {
-  const browser = await chromium.launch(config.projects[0]?.use?.launchOptions ?? {});
+  let browser;
   try {
+    browser = await chromium.launch(config.projects[0]?.use?.launchOptions ?? {});
     const page = await browser.newPage({ baseURL: BASE_URL });
     // The page that shows itself decides: the login page, or the shell when the profile signs in without a form.
     const drawn = page.getByTestId('login-view').or(page.getByTestId('view-title'));
@@ -44,7 +46,8 @@ async function warmUpApp(config) {
   } catch (error) {
     console.warn(`web-e2e: the warm-up of the app failed (${error.message.split('\n')[0]})`);
   } finally {
-    await browser.close();
+    // A failure to close is as little fatal as a failure to launch: the browser is only there for the warm-up.
+    await browser?.close().catch(() => {});
   }
 }
 

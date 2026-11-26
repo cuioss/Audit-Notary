@@ -6,6 +6,7 @@ import { ApiError } from '../../api/errors';
 import type { DocumentRead } from '../../api/types';
 import { categoryList } from '../../documents/categories';
 import { status } from '../../stores/app';
+import { scenarioFetch } from '../../test/scenarioFetch';
 import { breadcrumb } from '../../stores/breadcrumb';
 import DocumentReleaseView from './DocumentReleaseView.svelte';
 import { N1, N2, N4, N5, REPOSITORY, resetKit, useProfile, type Kit } from './testkit';
@@ -429,6 +430,29 @@ describe('when the release cannot be taken', () => {
     document.body.innerHTML = '';
     await open('workshop', N1);
     expect(screen.getByText('This document is released already.')).toBeInTheDocument();
+  });
+
+  it('lets the workflow decide: a release it offers from a draft, and none it does not offer in review', async () => {
+    const read = async (id: string): Promise<DocumentRead> =>
+      (await (
+        await scenarioFetch('workshop').fetch(`/api/v1/documents/${REPOSITORY}/${id}`)
+      ).json()) as DocumentRead;
+    const offered = await read(N2);
+    offered.transitions = [
+      { id: 'release', to: 'released', right: 'approve', stepUp: false, release: true },
+    ];
+    await open('workshop', N2, 'en', { [`GET /api/v1/documents/${REPOSITORY}/${N2}`]: offered });
+    expect(screen.getByTestId('release-act')).not.toHaveAttribute('aria-disabled');
+    expect(screen.queryByText('Submit the document for review first.')).toBeNull();
+    resetKit();
+    document.body.innerHTML = '';
+    const withheld = await read(N4);
+    withheld.transitions = [];
+    await open('workshop', N4, 'en', { [`GET /api/v1/documents/${REPOSITORY}/${N4}`]: withheld });
+    expect(screen.getByTestId('release-act')).toHaveAttribute('aria-disabled', 'true');
+    expect(
+      screen.getByText('This document cannot be released in its current state.'),
+    ).toBeInTheDocument();
   });
 
   it('offers no release for a category that is switched off, which stays readable', async () => {

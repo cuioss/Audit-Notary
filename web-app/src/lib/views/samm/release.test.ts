@@ -56,6 +56,7 @@ describe('SammReleaseView', () => {
     await prepare('release');
     render(SammReleaseView, { params: PARAMS });
     expect(await act()).toHaveTextContent(/^Release$/);
+    expect(screen.getByText('The assessment is frozen and tagged.')).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Release Payments 2026 Q4');
     expect(screen.getByTestId('release-seal')).toBeInTheDocument();
     expect(await screen.findByText('Since Payments 2026 Q2')).toBeInTheDocument();
@@ -177,6 +178,8 @@ describe('SammReleaseView', () => {
     const button = await act();
     expect(button).toHaveAttribute('aria-disabled', 'true');
     expect(screen.getByText('Releasing needs the approve right.')).toBeInTheDocument();
+    // The margin promises no freeze that cannot happen.
+    expect(screen.queryByText('The assessment is frozen and tagged.')).toBeNull();
     const release = vi.spyOn(apiClient, 'release');
     await fireEvent.click(button);
     expect(release).not.toHaveBeenCalled();
@@ -187,6 +190,7 @@ describe('SammReleaseView', () => {
     render(SammReleaseView, { params: PARAMS });
     await act();
     expect(screen.getByText('Only an assessment in review can be released.')).toBeInTheDocument();
+    expect(screen.queryByText('The assessment is frozen and tagged.')).toBeNull();
   });
 
   it('refuses an incomplete assessment', async () => {

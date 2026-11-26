@@ -5,7 +5,14 @@
   import { plainValue } from '../../documents/display';
   import { provideForm, type FormContext } from '../../forms/context';
   import ReadValue from '../../forms/ReadValue.svelte';
-  import { childNodes, isObject, itemNode, toPointer, type FieldNode } from '../../forms/schema';
+  import {
+    childNodes,
+    isObject,
+    isScalarKind,
+    itemNode,
+    toPointer,
+    type FieldNode,
+  } from '../../forms/schema';
   import { messagesStore, t } from '../../i18n';
 
   /**
@@ -54,23 +61,10 @@
   };
   provideForm(context);
 
-  const SCALARS = new Set([
-    'text',
-    'number',
-    'date-time',
-    'date',
-    'select',
-    'toggle',
-    'catalog',
-    'person',
-    'docref',
-    'asciidoc',
-  ]);
-
   let node = $derived(nodeAtPointer(schema, pointer));
   /** The source of AsciiDoc is read as text, line by line: a preview per side would hide what changed. */
   let shown: FieldNode | null = $derived(
-    node && SCALARS.has(node.kind)
+    node && isScalarKind(node.kind)
       ? node.kind === 'asciidoc'
         ? { ...node, kind: 'text' }
         : node
@@ -93,7 +87,7 @@
     if (!isObject(held)) return null;
     const fields = childNodes(section, schema);
     if (Object.keys(held).some((key) => !fields.some((field) => field.name === key))) return null;
-    if (fields.some((field) => !SCALARS.has(field.kind))) return null;
+    if (fields.some((field) => !isScalarKind(field.kind))) return null;
     return fields
       .filter((field) => Object.hasOwn(held, field.name))
       .map((field) => ({
@@ -111,7 +105,7 @@
       const read = value.map((held) =>
         item.kind === 'section'
           ? cellsOf(item, held)
-          : SCALARS.has(item.kind)
+          : isScalarKind(item.kind)
             ? [{ node: item, label: '', value: held }]
             : null,
       );
