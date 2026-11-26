@@ -44,6 +44,14 @@ Read the concept first, then the component you are about to change.
    `EvidenceEditor` (a `DataTable` with a dialog over a copy, removal asked first). The roadmap of a scope has no draft:
    the document controller takes `drafts: false`, and the status says "Not saved for everyone yet". A released assessment is
    frozen; the way on is the primary link *Start a new assessment* to `/samm/{scope}/new`, never a button that writes.
+   `web-app/src/lib/views/reports/` holds the lens Reports (`ReportsView`, `SammTrendView`, `SammCompareView`,
+   `ThreatEvaluationView`, `RiskRegisterView`) on `ReportPage` (a `DashboardPage` with the breadcrumb; no page draws a
+   second way back) and `ThreatEvaluationTable`, which the lens Threat models draws as well; what they know is in
+   `web-app/src/lib/reports/` (addresses, statuses, the arithmetic of the charts). A report only reads: its controls choose
+   what is read, and every chart carries its figures as direct labels and as a table under it. `SeriesChart` (several lines,
+   one slot of the series colours and one marker shape each, a legend, the end value of every line as a label) and
+   `Dumbbell` (the same measure at two moments: ring, filled dot, bar, the scores and the change in words) are the two
+   charts; a sixth series is a table row, never a sixth colour.
 3. For a chart, use the five series colours in model order (`--color-series-1` … `-5`); they are validated for
    colour-vision and normal-vision separation against both sheet colours (`#ffffff`, `#161d2e`). A new chart colour
    needs the same validation before it lands: with the validator of the `dataviz` skill where your agent has that
@@ -192,6 +200,12 @@ Check each item before you hand a change over.
       the row in its accessible name and stands under the field it removes, not beside it.
 - [ ] A sentence is said once on a screen: a read-only sheet says so in its status and not again in a notice, and the
       reason of a disabled act is not the sentence of the status beside it.
+- [ ] A cell of a `GridTable` that holds several lines (a date and its note, a badge and a date) is one element
+      (`<span class="cell">`): on a stacked row every child of a cell is an item of its own and a second one would
+      flow under the label instead of standing in the column of the value.
+- [ ] A chart of four or five lines has the taller figure and its moved labels a leader that runs sideways; under forced
+      colours the lines keep a dash of their own per slot.
+- [ ] A section that states a negative about a set ("every service has a model") is not drawn when the set is empty.
 - [ ] German: no clipped or overlapping text with the longer words.
 
 ## 5. The screenshot-critique loop

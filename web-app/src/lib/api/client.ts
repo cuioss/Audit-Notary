@@ -40,8 +40,10 @@ import type {
   ReferenceAnswer,
   ReferenceList,
   Released,
+  ReportsSummary,
   RenderedAsciiDoc,
   RevisionList,
+  RiskRegister,
   SammAssessment,
   SammAssessmentCreated,
   SammAssessmentDraft,
@@ -53,11 +55,13 @@ import type {
   SammScopeDraft,
   SammScopeList,
   SammTrend,
+  SammTrendReport,
   SaveRequest,
   Saved,
   SearchResults,
   Session,
   Status,
+  ThreatEvaluation,
   Transitioned,
   JsonObject,
 } from './types';
@@ -579,6 +583,49 @@ export class ApiClient {
       'GET',
       `/api/v1/samm/${seg(scope)}/compare?from=${seg(from)}&to=${seg(to)}`,
     );
+  }
+
+  /**
+   * The figures of the dashboard of the lens Reports (PROVISIONAL): one section per repository the user may read.
+   *
+   * @returns the summary; a section is absent where the user may not read its repository, and the request never fails
+   * for that
+   */
+  getReportsSummary(): Promise<ReportsSummary> {
+    return this.request<ReportsSummary>('GET', '/api/v1/reports/summary');
+  }
+
+  /**
+   * The released assessments of every scope over time, in the order of the scope list (PROVISIONAL).
+   *
+   * @returns the points of every scope, one model version each
+   * @throws ApiError `FORBIDDEN` without the right to read `samm-assessments`
+   */
+  getSammTrendReport(): Promise<SammTrendReport> {
+    return this.request<SammTrendReport>('GET', '/api/v1/reports/samm-trend');
+  }
+
+  /**
+   * The threat models of the services, evaluated: open and untreated threats, the review and its due date, and the
+   * services without a model (PROVISIONAL).
+   *
+   * @returns one row per threat model, and the services without one
+   * @throws ApiError `FORBIDDEN` without the right to read `threat-models`
+   */
+  getThreatEvaluation(): Promise<ThreatEvaluation> {
+    return this.request<ThreatEvaluation>('GET', '/api/v1/reports/threat-evaluation');
+  }
+
+  /**
+   * The risk register as of a tag or a date, released entries only (AUN-ISMS-3).
+   *
+   * @param asOf a calendar date (`2026-03-01`) or the name of a tag; the register as of now without it
+   * @returns what was read, the tags to pick from and the released entries as they were then
+   * @throws ApiError `FORBIDDEN`, `VALIDATION` (`/as-of` with `PATTERN`, `FUTURE` or `UNKNOWN_TAG`), `GIT_UNAVAILABLE`
+   */
+  getRiskRegister(asOf?: string): Promise<RiskRegister> {
+    const query = asOf === undefined ? '' : `?as-of=${encodeURIComponent(asOf)}`;
+    return this.request<RiskRegister>('GET', `/api/v1/isms/risks${query}`);
   }
 
   /**

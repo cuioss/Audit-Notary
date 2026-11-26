@@ -28,7 +28,18 @@ const ADDRESSES = [
   [`/categories/test-note/${NOTE}?at=v1`, 'documents-view', 'Documents', 'Documents'],
   [`/categories/test-note/${NOTE}/release`, 'release-view', 'Documents', 'Release'],
   ['/catalogs/team/payments', 'catalogs-view', 'Catalogs', 'Catalogs'],
-  ['/reports/trends', 'lens-view', 'Reports', 'Reports'],
+  // The lens Reports: the dashboard and the four reports; the generic `/reports/{report}` is no report (below).
+  ['/reports', 'reports-view', 'Reports', 'Reports'],
+  ['/reports/samm-trend', 'samm-trend-view', 'Reports', 'Reports'],
+  ['/reports/samm-trend?scope=payments', 'samm-trend-view', 'Reports', 'Reports'],
+  [
+    '/reports/samm-compare?scope=payments&from=2025-q4&to=2026-q2',
+    'samm-compare-view',
+    'Reports',
+    'Reports',
+  ],
+  ['/reports/threat-evaluation', 'threat-evaluation-view', 'Reports', 'Reports'],
+  ['/reports/risk-register?as-of=2026-03-01', 'risk-register-view', 'Reports', 'Reports'],
   ['/settings', 'settings-view', 'Settings', 'Settings'],
 ];
 
@@ -98,6 +109,12 @@ test('an unknown address answers with the not-found view', async ({ page }) => {
   await expect(page.getByTestId('not-found-view')).toBeVisible();
   await page.getByRole('link', { name: 'Go to Due' }).click();
   await expect(page.getByTestId('due-view')).toBeVisible();
+});
+
+test('the generic address of the lens Reports is no report', async ({ page }) => {
+  await login(page, '/reports');
+  await page.goto('/reports/trends');
+  await expect(page.getByTestId('not-found-view')).toBeVisible();
 });
 
 test('a name an address does not admit is ignored, a bad value of one it admits is not found', async ({

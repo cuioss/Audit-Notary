@@ -996,3 +996,209 @@ export interface Created {
   at: string;
   parts: Record<string, PartVersion>;
 }
+
+/**
+ * A team or a service named in a report: the kind, the id and the name. A subject of a scope may be the organisation,
+ * which has no id.
+ */
+export interface ReportOwner {
+  kind: 'team' | 'service' | 'organisation';
+  id?: string;
+  name: string;
+}
+
+/** The newest released assessment of a scope in the summary of the dashboard. */
+export interface ReportsSammLatest {
+  scope: string;
+  name: string;
+  assessment: string;
+  date: string;
+  overall: number;
+  /** The overall score minus the one of the release before it of the same model version; `null` when there is none. */
+  change: number | null;
+}
+
+/** The SAMM section of the summary. */
+export interface ReportsSammSummary {
+  scopes: number;
+  withoutRelease: number;
+  open: number;
+  latest: ReportsSammLatest[];
+}
+
+/** The threat-model section of the summary. */
+export interface ReportsThreatSummary {
+  services: number;
+  withModel: number;
+  withoutModel: number;
+  openThreats: number;
+  untreatedThreats: number;
+  overdue: number;
+  dueSoon: number;
+}
+
+/** The ratings of a risk, in rising order. */
+export const RISK_RATINGS = ['low', 'medium', 'high', 'critical'] as const;
+
+/** The rating of a risk. */
+export type RiskRating = (typeof RISK_RATINGS)[number];
+
+/** The risk section of the summary. */
+export interface ReportsRiskSummary {
+  entries: number;
+  byRating: Record<RiskRating, number>;
+  dueSoon: number;
+  overdue: number;
+  /** The time of the newest release of the register; `null` for a register without one. */
+  latestRelease: string | null;
+}
+
+/**
+ * `GET /api/v1/reports/summary` (PROVISIONAL): one section per repository the user may read; a section is absent when
+ * the user may not read its repository.
+ */
+export interface ReportsSummary {
+  today: string;
+  samm?: ReportsSammSummary;
+  threatModels?: ReportsThreatSummary;
+  risks?: ReportsRiskSummary;
+}
+
+/** One point of the trend of a scope in the report: a released assessment with its overall and function scores. */
+export interface SammReportPoint {
+  assessment: string;
+  document: string;
+  title: string;
+  date: string;
+  overall: number;
+  /** The score per business function id. */
+  functions: Record<string, number>;
+}
+
+/** One scope of the trend report. */
+export interface SammReportScope {
+  scope: string;
+  title: string;
+  subject: ReportOwner;
+  /** The model version of the points; `null` for a scope without a released assessment. */
+  modelVersion: string | null;
+  /** The released assessments of other model versions, which the report does not mix. */
+  omitted: number;
+  points: SammReportPoint[];
+}
+
+/** `GET /api/v1/reports/samm-trend` (PROVISIONAL): every scope in the order of the scope list. */
+export interface SammTrendReport {
+  scopes: SammReportScope[];
+}
+
+/** The review state of a threat model (AUN-TM-3, AUN-TM-4). */
+export const THREAT_STATUSES = ['overdue', 'due-soon', 'ok', 'unreleased'] as const;
+
+/** The review state of a threat model. */
+export type ThreatStatus = (typeof THREAT_STATUSES)[number];
+
+/** A service named in the threat evaluation. */
+export interface ReportService {
+  id: string;
+  name: string;
+}
+
+/** The counts of the threats of one model. */
+export interface ThreatCounts {
+  total: number;
+  open: number;
+  /** Open, without a countermeasure and not transferred; never more than `open`. */
+  untreated: number;
+  /** Carrying a reference into the risk register. */
+  transferred: number;
+}
+
+/** One row of the threat evaluation: a threat model and its review. */
+export interface ThreatEvaluationModel {
+  service: ReportService;
+  protectionNeed: ProtectionLevel;
+  /** An ISO 8601 period: `P6M`, `P12M` or `P24M`. */
+  reviewInterval: string;
+  model: string;
+  address: string;
+  state: WorkflowState;
+  /** The number of the last release; `null` before the first. */
+  version: number | null;
+  lastReview: string | null;
+  daysSinceReview: number | null;
+  reviewDue: string | null;
+  /** Negative when the review is overdue. */
+  dueInDays: number | null;
+  status: ThreatStatus;
+  threats: ThreatCounts;
+}
+
+/** A service without a threat model. */
+export interface ServiceWithoutModel {
+  service: ReportService;
+  lifecycle: string;
+  owner: ReportOwner;
+  protectionNeed: ProtectionLevel;
+  address: string;
+}
+
+/** `GET /api/v1/reports/threat-evaluation` (PROVISIONAL): one row per threat model, and the services without one. */
+export interface ThreatEvaluation {
+  today: string;
+  models: ThreatEvaluationModel[];
+  withoutModel: ServiceWithoutModel[];
+}
+
+/** What a read of the risk register names: the date or tag it was asked for and the commit it read. */
+export interface RiskRegisterAsOf {
+  /** The parameter as given; `null` for the register as of now. */
+  requested: string | null;
+  /** The day the register is as of, UTC. */
+  date: string;
+  tag: string | null;
+  /** Seven hexadecimal digits; `null` for a date before the first commit. */
+  commit: string | null;
+  at: string | null;
+}
+
+/** One tag of the register. */
+export interface RiskRegisterTag {
+  tag: string;
+  commit: string;
+  at: string;
+}
+
+/** The origin of a risk: a SAMM practice or a threat. */
+export interface RiskReference {
+  ref: string;
+  title: string;
+  address: string;
+}
+
+/** One released risk of the register as it was at the commit read. */
+export interface RiskSummary {
+  /** `R-<n>`. */
+  id: string;
+  /** The address segment, in lower case. */
+  entry: string;
+  title: string;
+  rating: RiskRating;
+  treatment: 'mitigate' | 'accept' | 'transfer' | 'avoid';
+  owner: ReportOwner;
+  /** The number of the release shown. */
+  version: number;
+  releasedAt: string;
+  reviewDue: string | null;
+  reference: RiskReference | null;
+  /** The entry's page; with `as-of` it carries `?at=v<n>`. */
+  address: string;
+}
+
+/** `GET /api/v1/isms/risks?as-of=` (AUN-ISMS-3): the released entries as of a date or tag. */
+export interface RiskRegister {
+  asOf: RiskRegisterAsOf;
+  /** The newest tags of the register, newest first, at most 20; may be empty. */
+  tags: RiskRegisterTag[];
+  risks: RiskSummary[];
+}

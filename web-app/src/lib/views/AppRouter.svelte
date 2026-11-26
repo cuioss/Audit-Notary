@@ -19,6 +19,11 @@
   import DocumentsView from './documents/DocumentsView.svelte';
   import SammReleaseView from './samm/SammReleaseView.svelte';
   import SammView from './samm/SammView.svelte';
+  import ReportsView from './reports/ReportsView.svelte';
+  import RiskRegisterView from './reports/RiskRegisterView.svelte';
+  import SammCompareView from './reports/SammCompareView.svelte';
+  import SammTrendView from './reports/SammTrendView.svelte';
+  import ThreatEvaluationView from './reports/ThreatEvaluationView.svelte';
 
   /**
    * Chooses the view of an address (AUN-WEB-3). The route files are stubs that render this component.
@@ -77,6 +82,22 @@
   {/key}
 {:else if lensOf(route) === 'categories' && address}
   <DocumentsView {route} params={address.params} query={address.query} {onnavigate} />
+{:else if route === 'reports'}
+  <ReportsView />
+{:else if route === 'reports.samm-trend'}
+  {#key address?.query?.scope ?? ''}
+    <SammTrendView query={address?.query} {onnavigate} />
+  {/key}
+{:else if route === 'reports.samm-compare'}
+  {#key `${address?.query?.scope ?? ''}/${address?.query?.from ?? ''}/${address?.query?.to ?? ''}`}
+    <SammCompareView query={address?.query} {onnavigate} />
+  {/key}
+{:else if route === 'reports.threat-evaluation'}
+  <ThreatEvaluationView />
+{:else if route === 'reports.risk-register'}
+  <RiskRegisterView query={address?.query} {onnavigate} />
+{:else if route === 'reports.report'}
+  <NotFoundView />
 {:else if route === 'catalogs.import'}
   <ImportView />
 {:else if route === 'catalogs.persons'}

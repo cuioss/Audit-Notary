@@ -102,6 +102,15 @@ const ADDRESSES = compileAddresses(canonical as CanonicalFile);
 const OUTSIDE = compileAddresses(canonical as CanonicalFile, 'outsideShell');
 const QUERIES = compileQueries(canonical as CanonicalFile);
 
+/**
+ * @param name a query name of `canonical-addresses.json`
+ * @param value a value to check
+ * @returns whether the file admits the value for the name; `false` for a name the file does not have
+ */
+export function isQueryValue(name: string, value: string): boolean {
+  return QUERIES.get(name)?.test(value) ?? false;
+}
+
 /** The longest query string a `return` may carry (rest-api.adoc, Allowed Queries of an Address). */
 export const MAX_QUERY_LENGTH = 256;
 

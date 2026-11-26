@@ -3018,10 +3018,25 @@ change each one. The bodies and addresses are in <<_reports_requests>>:
   while the Git server is down.* The page then keeps the picker and offers the register as of now.
 . *A report is read-only and has no export.* There is no PDF, spreadsheet or print layout; the table of each report is
   the machine-readable form.
+. *The screens of the reports,* decided with the web app (no body changes): the breadcrumb is the way back, there is no
+  link of its own. The trend of every scope draws the scopes that have a released assessment among the first five of the
+  list, each in the colour and shape of its place in the list, so a scope keeps its colour whether or not an earlier one has
+  points; a scope without a point is a row of the table that says so. The query `scope` of the trend that names no scope
+  is a notice and every scope; the comparison with a `scope` that does not exist is the not-found view. The comparison
+  offers its pairs as the neighbouring released assessments of the scope (oldest first), and two pickers over every
+  assessment of the scope in any state; the same assessment twice is refused on the page, not by a request. The `as-of`
+  field takes a day or a tag name, is checked against the pattern of the address in the browser and otherwise left to the
+  server's `422`; the tags to choose from are those of the last answer, or of the register as of now when the first read was
+  refused (a `422` or a `503`). A refusal stands beside the field only while the field holds the value that was refused;
+  a tag is offered with the UTC day of its commit, the day the register itself names, and a tag whose commit holds no
+  released risk says so for the tag and not for the end of a day. Show on the value the page already shows reads the register
+  again. A review of the risk register counts as overdue or due soon (30 days) only when the register is read as of now.
+  The threat evaluation can be ordered on the page (review due as served, service name, open, untreated threats) without a
+  request; a user without `read` on `threat-models` meets a notice, not an empty table.
 
 For the owner: whether the reports should be requests of the domain (`/api/v1/samm/...`, `/api/v1/threat-models/...`)
 instead of one prefix (2); whether scopes of different model versions may share a chart (4); whether the comparison of two
 scopes is wanted (5); the definition of an untreated threat and the thresholds of "due soon" (3, 7, 8); whether the register
 as of a date should list the draft entries too, or the entry itself instead of its summary (9); whether the web app
 should create reporting tags (10, 11) and whether the register as of two dates should be compared; whether reports should
-be exported (14).
+be exported (14); whether a scope keeps its series colour by its place in the list (15, as decided) or only among the scopes that have points.
