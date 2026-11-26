@@ -60,6 +60,13 @@ limits) and the shared steps; the first test of `directory.spec.js` compares the
 the evidence links and the targets of Payments, the released assessment and its tag), the shared steps and `patchRead`,
 which changes the answer of one read where the mock has no state for it; the first test of `samm-completion.spec.js`
 compares the fixtures with the mock
+
+|`tests/helpers/reports.js`
+|The addresses and paths of the lens Reports, the static fixtures (the figures of the dashboard, the scopes of the trend in
+the order of their series colours, the pair of the comparison, the threat models and their sort orders, the register of
+risks now and as of a day or a tag, the refused values), and the shared steps: the rows of a table as text, the colour a
+token resolves to, and the check that no text of a chart is smaller than a given size at the width it is drawn; the first
+test of `reports.spec.js` compares the fixtures with the mock
 |===
 
 == Specs
@@ -123,19 +130,37 @@ behind a question, at most 50, refusals at the link), the frozen assessment (`DO
 new assessment" only with `edit`, a release found by a save), `MODEL_VERSIONS_DIFFER`, the trend with "other versions
 left out", the read-only and the degraded profile; English and German where the text matters
 
+|`reports.spec.js`
+|The lens Reports (UC-SAMM-5, UC-TM-4, UC-ISMS-3), read only: the dashboard (a section for every register the person may
+read, the figures in their tones, every link, `release` without the threat models, the empty installation, the answer cut
+down to no register), the trend of every scope (one line for each scope that has a release, in the series colour and shape
+of its place in the list, the end values as direct labels clear of each other and inside the figure, the table with its
+row heads, the notice of mixed model versions with the assessments left out, the sixth scope in the table only, an unknown
+scope), the trend of one scope by business function, the comparison (the pairs of neighbouring released assessments, the
+pickers and the reasons for not comparing, the dumbbell with its table, the practices and streams under a disclosure,
+`MODEL_VERSIONS_DIFFER` naming both assessments and versions, the missing assessment, an unknown scope, a scope with fewer
+than two assessments), the threat evaluation (the rows, a box only for the reviews that need the person, the sort control,
+the services without a model, `403` in `release`, `no-threat-models`), the risk register (as of now with the reviews that
+are overdue or due soon, as of a day and of a tag with the commit read and the links `?at=v<n>`, no flag as of a day,
+`FUTURE`, `PATTERN` and `UNKNOWN_TAG` beside the field with the value kept, a value the page refuses without a request, the
+`503` with the way back, the empty register), no request that changes anything, and English and German
+
 |`theme-readability.spec.js`
 |The axe-core audit of every view in both themes, and of the states of the documents lens, the release, the palette, the
-catalogs lens, the directory pages and the SAMM completion (the forms with their refusals and notices, the targets, the
-evidence with its editor and question, the frozen practice, the refused comparison)
+catalogs lens, the directory pages, the SAMM completion (the forms with their refusals and notices, the targets, the
+evidence with its editor and question, the frozen practice, the refused comparison) and the lens Reports (every notice,
+refusal, empty and unavailable state of its five pages, the practices of the comparison opened)
 
 |`fonts.spec.js`
 |Every request stays on the own origin, and Inter is loaded
 
 |`mobile.spec.js`
 |On a narrow screen the bottom bar replaces the rail, and "More" holds the other lenses; the pages outside the shell,
-the notices, the documents lens, the catalogs lens, the directory pages and the SAMM completion at 390 px: nothing
-scrolls sideways, the acts are in reach and the controls hold the target size of 44 px, the targets of a scope are a list
-(no column heads), the evidence links are cards, axe
+the notices, the documents lens, the catalogs lens, the directory pages, the SAMM completion and the lens Reports at
+390 px: nothing scrolls sideways, the acts are in reach and the controls hold the target size of 44 px, the targets of a
+scope are a list (no column heads), the evidence links are cards, the tables of the reports stack, the charts are drawn at
+the width they have with text of at least 11 px (12 px in the dumbbell), every end value stays inside its figure, the
+dumbbell keeps its ring, its dot and its words, axe
 |===
 
 A new view gets its address in `navigation.spec.js` and its audit in `theme-readability.spec.js`; a new profile of
@@ -143,7 +168,8 @@ A new view gets its address in `navigation.spec.js` and its audit in `theme-read
 
 The mock stores nothing, and a state it has no profile for is not invented in the page: where a flow needs one (a
 trend that leaves versions out, a scope whose targets another assessor saved, a scope that shows no open assessment
-while the server knows one, fifty evidence links), the test fetches the real answer and changes it with `patchRead`, and
+while the server knows one, fifty evidence links, a sixth scope in the trend, a third released assessment, a session that
+reads no register, a register that answers `FORBIDDEN`), the test fetches the real answer and changes it with `patchRead`, and
 says so in a comment.
 
 == Cold start

@@ -468,4 +468,16 @@
     display: inline-block;
     padding-block: var(--space-2);
   }
+
+  /* A link of a list and the summary of a disclosure have the 44 px of a target on a phone. */
+  @media (max-width: 767px) {
+    .pairs :global(.link),
+    .links :global(.link) {
+      padding-block: var(--space-3);
+    }
+
+    .section :global(.disclosure__summary) {
+      min-block-size: 44px;
+    }
+  }
 </style>

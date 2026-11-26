@@ -446,4 +446,11 @@
     display: inline-block;
     padding-block: var(--space-2);
   }
+
+  /* A link of the row has the 44 px of a target on a phone, in its padding. */
+  @media (max-width: 767px) {
+    .links :global(.link) {
+      padding-block: var(--space-3);
+    }
+  }
 </style>

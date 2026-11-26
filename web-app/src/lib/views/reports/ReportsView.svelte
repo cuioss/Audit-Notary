@@ -326,6 +326,16 @@
   }
 
   @media (max-width: 767px) {
+    /* The link of a section's head and the ones under its figures have the 44 px of a target on a phone. */
+    .part__title :global(.link) {
+      display: inline-block;
+      padding-block: var(--space-2);
+    }
+
+    .part__links :global(.link) {
+      padding-block: var(--space-3);
+    }
+
     .latest__row {
       grid-template-columns: minmax(0, 1fr);
       gap: var(--space-1);

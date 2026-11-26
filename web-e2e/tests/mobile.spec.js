@@ -21,6 +21,18 @@ import {
   newAssessmentAddress,
 } from './helpers/samm.js';
 import {
+  PAIR,
+  REPORTS_ADDRESS,
+  RISKS_ADDRESS,
+  THREATS_ADDRESS,
+  TREND_ADDRESS,
+  compareAddress,
+  expectLegibleText,
+  loginToReports,
+  risksAddress,
+  trendAddress,
+} from './helpers/reports.js';
+import {
   CANDIDATES,
   DESCRIPTOR,
   IMPORT_ADDRESS,
@@ -814,5 +826,232 @@ test.describe('at 390 px', () => {
     await page.getByTestId('versions-differ').scrollIntoViewIfNeeded();
     await expectNoSideways(page);
     await expectNoSeriousViolations(page, 'versions differ (phone)');
+  });
+
+  /** Fails when a table is not a list of stacked rows: its column heads are taken out of the flow (a 1 px clip). */
+  async function expectStacked(table) {
+    const box = await table.locator('thead').boundingBox();
+    expect(box.width).toBeLessThanOrEqual(1);
+    expect(box.height).toBeLessThanOrEqual(1);
+  }
+
+  /** Fails when a chart is drawn smaller than the width its figure has: its text would shrink with it. */
+  async function expectDrawnAtItsWidth(page, chart) {
+    const scale = await page.getByTestId(chart).evaluate((figure) => {
+      const svg = figure.querySelector('svg.chart__figure');
+      return svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
+    });
+    expect(scale).toBeGreaterThan(0.99);
+    expect(scale).toBeLessThan(1.01);
+  }
+
+  test('the dashboard of the reports fits, its sections are single columns and its links are targets of the phone size', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToReports(page, REPORTS_ADDRESS, 'reports-view');
+    await expectNoSideways(page);
+    for (const link of await page.getByTestId('reports-view').locator('a.link').all()) {
+      await expectTarget(link);
+    }
+    // The latest assessments stack: the score and the change come under the name.
+    const row = page.getByTestId('reports-latest-payments');
+    await row.scrollIntoViewIfNeeded();
+    const name = await row.locator('.latest__name').boundingBox();
+    const change = await row.locator('.latest__change').boundingBox();
+    expect(change.y).toBeGreaterThan(name.y);
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'reports dashboard (phone)');
+  });
+
+  test('the trend of every scope fits, is drawn at its width with legible text, and its table stacks', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToReports(page, TREND_ADDRESS, 'samm-trend-view');
+    await page.getByTestId('trend-chart').scrollIntoViewIfNeeded();
+    await expectNoSideways(page);
+    await expectDrawnAtItsWidth(page, 'trend-chart');
+    await expectLegibleText(page, 'trend-chart');
+    // The end values stay inside the figure; the first and the last axis label too.
+    const outside = await page.getByTestId('trend-chart').evaluate((figure) => {
+      const box = figure.querySelector('svg.chart__figure').getBoundingClientRect();
+      return [...figure.querySelectorAll('text')].filter((text) => {
+        const at = text.getBoundingClientRect();
+        return at.left < box.left - 1 || at.right > box.right + 1;
+      }).length;
+    });
+    expect(outside).toBe(0);
+    await expectTarget(page.getByTestId('trend-scope'));
+    for (const link of await page.getByTestId('trend-table').locator('a.link').all()) {
+      await expectTarget(link);
+    }
+    // The table is a list of stacked rows: no column heads, each cell names itself.
+    await expectStacked(page.getByTestId('trend-table'));
+    await expect(
+      page.getByTestId('trend-row-payments-2026-q2').locator('td[data-label]').first(),
+    ).toBeVisible();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'trend (phone)');
+  });
+
+  test('the trend of one scope fits with its five lines, and the mixed versions and the omitted ones fit', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToReports(page, trendAddress('payments'), 'samm-trend-view');
+    await page.getByTestId('trend-functions-chart').scrollIntoViewIfNeeded();
+    await expectNoSideways(page);
+    await expectDrawnAtItsWidth(page, 'trend-functions-chart');
+    await expectLegibleText(page, 'trend-functions-chart');
+    for (const link of await page.getByTestId('trend-scope-section').locator('a.link').all()) {
+      await expectTarget(link);
+    }
+    await expectNoSeriousViolations(page, 'trend by function (phone)');
+    await useScenario(request, 'workshop#trend-mixed-models');
+    await page.goto(TREND_ADDRESS);
+    await expect(page.getByTestId('trend-versions')).toBeVisible();
+    await page.getByTestId('trend-versions').scrollIntoViewIfNeeded();
+    await page.getByTestId('trend-omitted').scrollIntoViewIfNeeded();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'trend with other versions (phone)');
+  });
+
+  test('the comparison fits: the pickers, the pairs and the act are targets of the phone size', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToReports(page, compareAddress(PAIR.scope), 'samm-compare-view');
+    await expectTarget(page.getByTestId('compare-scope'));
+    await expectTarget(page.getByTestId('compare-from'));
+    await expectTarget(page.getByTestId('compare-to'));
+    await expectTarget(page.getByTestId('compare-show'));
+    await expectTarget(page.getByTestId('compare-pairs').getByRole('link'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'compare pairs (phone)');
+  });
+
+  test('the dumbbell fits at 390 px: every row says its scores, the ring and the dot are drawn, and the practices open', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToReports(page, compareAddress(PAIR.scope, PAIR.from, PAIR.to), 'samm-compare-view');
+    await page.getByTestId('compare-chart').scrollIntoViewIfNeeded();
+    await expectNoSideways(page);
+    // The scale of figures is hidden, so the rows carry their words: the scores and the change in text, which is legible.
+    await expect(page.getByTestId('compare-chart').locator('.dumbbell__scale')).toBeHidden();
+    await expectLegibleText(page, 'compare-chart', 12);
+    for (const row of PAIR.functions) {
+      const line = page.getByTestId(`dumbbell-${row.id}`);
+      await expect(line.locator('.dumbbell__values')).toHaveText(`${row.from} to ${row.to}`);
+      await expect(line.locator('.dumbbell__change')).toHaveText(row.change);
+      // The track holds its ring and its dot, each a visible shape of at least 12 px.
+      const track = await line.locator('.dumbbell__track').boundingBox();
+      expect(track.width).toBeGreaterThan(100);
+      for (const mark of ['.dumbbell__ring--at', '.dumbbell__dot--at']) {
+        const box = await line.locator(mark).boundingBox();
+        expect(box.width).toBeGreaterThanOrEqual(12);
+        expect(box.x).toBeGreaterThanOrEqual(track.x - box.width);
+        expect(box.x + box.width).toBeLessThanOrEqual(track.x + track.width + box.width);
+      }
+    }
+    // The legend of the ring and the dot is drawn above the rows and fits.
+    await expect(page.getByTestId('compare-chart').locator('.dumbbell__legend')).toBeVisible();
+    // The disclosure is a target of the phone size, and the rows of the practices fit when it is open.
+    const summary = page.getByTestId('compare-practices-governance').locator('summary');
+    await expectTarget(summary);
+    await summary.click();
+    await expect(page.getByTestId('dumbbell-governance-sm-A')).toBeVisible();
+    await page.getByTestId('dumbbell-governance-sm-A').scrollIntoViewIfNeeded();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'compare dumbbell (phone)');
+    await expectTarget(page.getByTestId('compare-trend'));
+  });
+
+  test('the refused comparison and the missing assessment fit', async ({ page, request }) => {
+    await useScenario(request, 'workshop#model-versions-differ');
+    await loginToReports(page, compareAddress(PAIR.scope, PAIR.from, PAIR.to), 'samm-compare-view');
+    await page.getByTestId('compare-differ').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('compare-differ')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'compare refused (phone)');
+    await useScenario(request, 'workshop');
+    await page.goto(compareAddress(PAIR.scope, 'nope', PAIR.to));
+    await expect(page.getByTestId('compare-missing')).toBeVisible();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'compare missing (phone)');
+  });
+
+  test('the threat evaluation fits: the order is a target, the rows stack, and the reviews that need the person show their words', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToReports(page, THREATS_ADDRESS, 'threat-evaluation-view');
+    await expectTarget(page.getByTestId('threat-evaluation-sort'));
+    await expectNoSideways(page);
+    await expectStacked(page.getByTestId('threat-evaluation-table'));
+    for (const link of await page.getByTestId('threat-evaluation-view').locator('a.link').all()) {
+      await expectTarget(link);
+    }
+    await page.getByTestId('threat-status-customer-portal-portal').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('threat-status-customer-portal-portal')).toBeInViewport();
+    await expect(page.getByTestId('threat-status-customer-portal-portal')).toHaveText(
+      'Overdue by 177 days',
+    );
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat evaluation (phone)');
+    await useScenario(request, 'release');
+    await page.goto(THREATS_ADDRESS);
+    await expect(page.getByTestId('threat-forbidden')).toBeVisible();
+    await expectNoSideways(page);
+  });
+
+  test('the risk register fits: the field, the tags and the act are targets of the phone size, and the table stacks', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToReports(page, RISKS_ADDRESS, 'risk-register-view');
+    await expectTarget(page.getByTestId('risk-asof'));
+    await expectTarget(page.getByTestId('risk-tag'));
+    await expectTarget(page.getByTestId('risk-show'));
+    await expectStacked(page.getByTestId('risk-table'));
+    for (const link of await page.getByTestId('risk-table').locator('a.link').all()) {
+      await expectTarget(link);
+    }
+    await page.getByTestId('risk-review-r-007').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('risk-review-r-007')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'risk register (phone)');
+    await page.goto(risksAddress('2026-03-01'));
+    await expect(page.getByTestId('risk-earlier-commit')).toBeVisible();
+    await expectTarget(page.getByTestId('risk-link-r-004'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'risk register of a day (phone)');
+  });
+
+  test('the refusals of the risk register fit, and the way back to the register as it is now is a target', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToReports(page, risksAddress('2027-01-01'), 'risk-register-view');
+    await expect(page.getByTestId('risk-refused')).toBeVisible();
+    await expect(page.getByTestId('risk-asof')).toHaveValue('2027-01-01');
+    await expectTarget(page.getByTestId('risk-now'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'risk register refused (phone)');
+    await useScenario(request, 'workshop#risk-register-git-unavailable');
+    await page.goto(risksAddress('2026-03-01'));
+    await expect(page.getByTestId('risk-git-unavailable')).toBeVisible();
+    await page.getByTestId('risk-git-unavailable').scrollIntoViewIfNeeded();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'risk register git unavailable (phone)');
   });
 });

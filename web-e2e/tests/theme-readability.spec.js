@@ -30,6 +30,19 @@ import {
   patchRead,
   trendPath,
 } from './helpers/samm.js';
+import {
+  PAIR,
+  REPORTS_ADDRESS,
+  RISKS_ADDRESS,
+  RISKS_PATH,
+  SUMMARY_PATH,
+  THREATS_ADDRESS,
+  TREND_ADDRESS,
+  TREND_PATH,
+  compareAddress,
+  risksAddress,
+  trendAddress,
+} from './helpers/reports.js';
 
 /**
  * AUN-WEB-2: axe-core on every view in both themes; no violation of impact serious or critical.
@@ -821,6 +834,266 @@ for (const theme of ['light', 'dark']) {
       await prepare(page);
       await expect(page.getByTestId(shown).first()).toBeVisible();
       await expectNoSeriousViolations(page, `samm completion: ${name} (${scenario}, ${theme})`);
+    });
+  }
+}
+
+/**
+ * The states of the lens Reports (UC-SAMM-5, UC-TM-4, UC-ISMS-3) beside the views above: the notices, the refusals, the empty
+ * and the unavailable registers, the trend of one scope with what it leaves out, the comparison with its practices
+ * opened. Each is reached on the page after the theme is chosen, which reloads it.
+ */
+const REPORT_STATES = [
+  [
+    'the dashboard of a person who may read no register',
+    'workshop',
+    REPORTS_ADDRESS,
+    'reports-view',
+    'reports-view',
+    async (page) => {
+      // The mock has no such session; the answer is cut down to its date.
+      await patchRead(page, `**${SUMMARY_PATH}`, ({ today }) => ({ today }));
+      await page.reload();
+      await expect(page.getByText('No report to show')).toBeVisible();
+    },
+  ],
+  [
+    'the dashboard without threat models',
+    'workshop#no-threat-models',
+    REPORTS_ADDRESS,
+    'reports-view',
+    'reports-threats',
+    async () => {},
+  ],
+  [
+    'the dashboard of a person who may not read the threat models',
+    'release',
+    REPORTS_ADDRESS,
+    'reports-view',
+    'reports-risks',
+    async () => {},
+  ],
+  [
+    'the trend with the versions of the model',
+    'workshop#trend-mixed-models',
+    TREND_ADDRESS,
+    'samm-trend-view',
+    'trend-versions',
+    async () => {},
+  ],
+  [
+    'the trend with an assessment it leaves out',
+    'workshop#trend-mixed-models',
+    TREND_ADDRESS,
+    'samm-trend-view',
+    'trend-omitted',
+    async () => {},
+  ],
+  [
+    'the trend of a scope that is not there',
+    'workshop',
+    trendAddress('nope'),
+    'samm-trend-view',
+    'trend-scope-unknown',
+    async () => {},
+  ],
+  [
+    'the trend of a scope without a release',
+    'workshop',
+    trendAddress('identity'),
+    'samm-trend-view',
+    'trend-scope-section',
+    async () => {},
+  ],
+  [
+    'the trend of a scope with one assessment',
+    'workshop',
+    trendAddress('shop'),
+    'samm-trend-view',
+    'trend-functions-chart',
+    async () => {},
+  ],
+  [
+    'the trend with a sixth scope in the table only',
+    'workshop',
+    TREND_ADDRESS,
+    'samm-trend-view',
+    'trend-beyond',
+    async (page) => {
+      await patchRead(page, `**${TREND_PATH}`, (trend) => {
+        const shop = trend.scopes.find((scope) => scope.scope === 'shop');
+        const copy = (id) => ({
+          ...shop,
+          scope: id,
+          title: id,
+          points: shop.points.map((point) => ({ ...point, assessment: `${id}-1`, title: id })),
+        });
+        return { ...trend, scopes: [...trend.scopes, copy('extra-a'), copy('extra-b')] };
+      });
+      await page.reload();
+    },
+  ],
+  [
+    'the trend of the empty installation',
+    'empty',
+    TREND_ADDRESS,
+    'samm-trend-view',
+    'samm-trend-view',
+    async () => {},
+  ],
+  [
+    'the pairs of a scope and its pickers',
+    'workshop',
+    compareAddress('payments'),
+    'samm-compare-view',
+    'compare-pairs',
+    async () => {},
+  ],
+  [
+    'the scope that has too few assessments to compare',
+    'workshop',
+    compareAddress('shop'),
+    'samm-compare-view',
+    'compare-too-few',
+    async () => {},
+  ],
+  [
+    'the practices of a business function opened',
+    'workshop',
+    compareAddress(PAIR.scope, PAIR.from, PAIR.to),
+    'samm-compare-view',
+    'dumbbell-governance-sm-A',
+    async (page) => {
+      await page.getByText('Practices of Governance').click();
+    },
+  ],
+  [
+    'the comparison of two model versions that is refused',
+    'workshop#model-versions-differ',
+    compareAddress(PAIR.scope, PAIR.from, PAIR.to),
+    'samm-compare-view',
+    'compare-differ',
+    async () => {},
+  ],
+  [
+    'the comparison with an assessment that is missing',
+    'workshop',
+    compareAddress(PAIR.scope, 'nope', PAIR.to),
+    'samm-compare-view',
+    'compare-missing',
+    async () => {},
+  ],
+  [
+    'the threat evaluation in another order',
+    'workshop',
+    THREATS_ADDRESS,
+    'threat-evaluation-view',
+    'threat-evaluation-table',
+    async (page) => {
+      await choose(page, 'threat-evaluation-sort', 'Open threats');
+    },
+  ],
+  [
+    'the threat evaluation without a model',
+    'workshop#no-threat-models',
+    THREATS_ADDRESS,
+    'threat-evaluation-view',
+    'threat-evaluation-none',
+    async () => {},
+  ],
+  [
+    'the threat evaluation of the empty installation',
+    'empty',
+    THREATS_ADDRESS,
+    'threat-evaluation-view',
+    'threat-evaluation-view',
+    async () => {},
+  ],
+  [
+    'the risk register of a day',
+    'workshop',
+    risksAddress('2026-03-01'),
+    'risk-register-view',
+    'risk-earlier-commit',
+    async () => {},
+  ],
+  [
+    'the risk register of a tag',
+    'workshop',
+    risksAddress('audit-2026-03'),
+    'risk-register-view',
+    'risk-table',
+    async () => {},
+  ],
+  [
+    'the risk register of a day before its first commit',
+    'workshop',
+    risksAddress('2025-06-01'),
+    'risk-register-view',
+    'risk-before-first',
+    async () => {},
+  ],
+  [
+    'the risk register of a day that has not come',
+    'workshop',
+    risksAddress('2027-01-01'),
+    'risk-register-view',
+    'risk-refused',
+    async () => {},
+  ],
+  [
+    'the risk register of a name that is no tag',
+    'workshop',
+    risksAddress('no-such-tag'),
+    'risk-register-view',
+    'risk-refused',
+    async () => {},
+  ],
+  [
+    'the risk register while the Git server is down',
+    'workshop#risk-register-git-unavailable',
+    risksAddress('2026-03-01'),
+    'risk-register-view',
+    'risk-git-unavailable',
+    async () => {},
+  ],
+  [
+    'the empty risk register',
+    'workshop#risk-register-empty',
+    RISKS_ADDRESS,
+    'risk-register-view',
+    'risk-result',
+    async () => {},
+  ],
+  [
+    'the risk register of a person who may not read it',
+    'workshop',
+    RISKS_ADDRESS,
+    'risk-register-view',
+    'risk-forbidden',
+    async (page) => {
+      // The mock has no profile that reads the reports and not the register; the register answers as the server does.
+      await page.route(`**${RISKS_PATH}**`, (route) =>
+        route.fulfill({ status: 403, json: { outcome: 'FORBIDDEN' } }),
+      );
+      await page.reload();
+    },
+  ],
+];
+
+for (const theme of ['light', 'dark']) {
+  for (const [name, scenario, address, view, shown, prepare] of REPORT_STATES) {
+    test(`reports: ${name} of ${scenario} at ${address} in the ${theme} theme`, async ({
+      page,
+      request,
+    }) => {
+      await useScenario(request, scenario);
+      await login(page, address);
+      await useTheme(page, theme);
+      await expect(page.getByTestId(view)).toBeVisible();
+      await prepare(page);
+      await expect(page.getByTestId(shown).first()).toBeVisible();
+      await expectNoSeriousViolations(page, `reports: ${name} (${scenario}, ${theme})`);
     });
   }
 }
