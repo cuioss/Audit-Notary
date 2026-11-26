@@ -12,6 +12,7 @@
   import SettingsView from './SettingsView.svelte';
   import WelcomeView from './WelcomeView.svelte';
   import DocumentReleaseView from './documents/DocumentReleaseView.svelte';
+  import CatalogsView from './catalogs/CatalogsView.svelte';
   import DocumentsView from './documents/DocumentsView.svelte';
   import SammReleaseView from './samm/SammReleaseView.svelte';
   import SammView from './samm/SammView.svelte';
@@ -29,6 +30,9 @@
   }
 
   let { pathname, search = '', onnavigate }: Props = $props();
+
+  /** The routes of the catalogs lens this view draws; the directory pages of the lens follow with their own views. */
+  const CATALOG_ROUTES = ['catalogs', 'catalogs.catalog', 'catalogs.new', 'catalogs.entry'];
 
   let address = $derived(parseAddress(pathname, search));
   let route = $derived(address?.route ?? null);
@@ -65,6 +69,8 @@
   {/key}
 {:else if lensOf(route) === 'categories' && address}
   <DocumentsView {route} params={address.params} query={address.query} {onnavigate} />
+{:else if CATALOG_ROUTES.includes(route) && address}
+  <CatalogsView {route} params={address.params} {onnavigate} />
 {:else}
   {#key route}
     <LensPlaceholderView titleKey={routeTitleKey(route)} {route} />

@@ -23,6 +23,8 @@ export const OUTCOMES = [
   'TOO_LARGE',
   'RENDER_UNAVAILABLE',
   'NOT_BINDABLE',
+  'ID_TAKEN',
+  'RETIRED',
 ] as const;
 
 /** An outcome of a refusal of the server. */
@@ -124,6 +126,10 @@ export function errorMessageKey(error: unknown): string {
       return 'error.too-many-logins';
     case 'CONFLICT':
       return 'error.conflict';
+    case 'ID_TAKEN':
+      return 'error.id-taken';
+    case 'RETIRED':
+      return 'error.retired';
     case 'VALIDATION':
       return 'error.validation';
     case 'TIMEOUT':

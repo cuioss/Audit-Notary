@@ -8,7 +8,12 @@
 import { loginStartAddress } from '../access/access';
 import { ApiError, isApiError, isOutcome, type FieldError } from './errors';
 import type {
+  CatalogCreated,
+  CatalogEntryRead,
   CatalogList,
+  CatalogRetired,
+  CatalogSaved,
+  CatalogSchema,
   CategoryList,
   CategorySchema,
   CreateRequest,
@@ -41,6 +46,7 @@ import type {
   Session,
   Status,
   Transitioned,
+  JsonObject,
 } from './types';
 
 /**
@@ -172,6 +178,75 @@ export class ApiClient {
    */
   getCatalog(catalog: string): Promise<CatalogList> {
     return this.request<CatalogList>('GET', `/api/v1/catalogs/${seg(catalog)}`);
+  }
+
+  /**
+   * The schema of the entries of a catalog, for the generated form (AUN-WEB-4). PROVISIONAL.
+   *
+   * @param catalog the catalog
+   * @returns the catalog and its JSON Schema
+   * @throws ApiError `NOT_FOUND` for an unknown catalog
+   */
+  getCatalogSchema(catalog: string): Promise<CatalogSchema> {
+    return this.request<CatalogSchema>('GET', `/api/v1/catalogs/${seg(catalog)}/schema`);
+  }
+
+  /**
+   * One entry of a catalog: its value, for a service the effective protection needs, and the signed history.
+   * PROVISIONAL.
+   *
+   * @param catalog the catalog
+   * @param id the entry id
+   * @returns the entry, retired or not
+   * @throws ApiError `NOT_FOUND` for an entry that does not exist
+   */
+  getCatalogEntry(catalog: string, id: string): Promise<CatalogEntryRead> {
+    return this.request<CatalogEntryRead>('GET', `/api/v1/catalogs/${seg(catalog)}/${seg(id)}`);
+  }
+
+  /**
+   * Creates an entry. Needs the right `administer-catalogs`. PROVISIONAL.
+   *
+   * @param catalog the catalog
+   * @param value the entry, `id` included
+   * @returns the address of the new entry
+   * @throws ApiError `VALIDATION` with pointers into `value`, `ID_TAKEN` for an id that exists (retired or not),
+   * `FORBIDDEN` without the right, `GIT_UNAVAILABLE`, `REJECTED`
+   */
+  createCatalogEntry(catalog: string, value: JsonObject): Promise<CatalogCreated> {
+    return this.request<CatalogCreated>('POST', `/api/v1/catalogs/${seg(catalog)}`, { value });
+  }
+
+  /**
+   * Changes an entry; the last save wins. Needs the right `administer-catalogs`. PROVISIONAL.
+   *
+   * @param catalog the catalog
+   * @param id the entry id
+   * @param value the whole entry
+   * @returns when it was saved
+   * @throws ApiError `VALIDATION`, `RETIRED` for a retired entry, `FORBIDDEN`, `NOT_FOUND`, `GIT_UNAVAILABLE`,
+   * `REJECTED`
+   */
+  changeCatalogEntry(catalog: string, id: string, value: JsonObject): Promise<CatalogSaved> {
+    return this.request<CatalogSaved>('PUT', `/api/v1/catalogs/${seg(catalog)}/${seg(id)}`, {
+      value,
+    });
+  }
+
+  /**
+   * Retires an entry: it stays readable and what refers to it stays valid, and the pickers stop offering it. Needs the
+   * right `administer-catalogs`. PROVISIONAL.
+   *
+   * @param catalog the catalog
+   * @param id the entry id
+   * @returns when it was retired
+   * @throws ApiError `FORBIDDEN`, `NOT_FOUND`, `GIT_UNAVAILABLE`, `REJECTED`
+   */
+  retireCatalogEntry(catalog: string, id: string): Promise<CatalogRetired> {
+    return this.request<CatalogRetired>(
+      'POST',
+      `/api/v1/catalogs/${seg(catalog)}/${seg(id)}/retirement`,
+    );
   }
 
   /**

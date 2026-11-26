@@ -3,8 +3,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../api/errors';
 import { field, last, open } from './formHarness';
 import PickerHarness from './PickerHarness.svelte';
+import SchemaForm from './SchemaForm.svelte';
 import { createFormServices } from './services';
 import { CLEAN_NOTE, MARKED_NOTE, useMessages, useProfile } from './testkit';
+import type { JsonObject } from './schema';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -71,6 +73,102 @@ describe('CatalogPicker (AUN-WEB-4, The Pickers)', () => {
     const services = screen.getByTestId('table--scope-services');
     expect(await within(services).findByText('Ledger')).toBeInTheDocument();
     expect(await within(services).findByText('Retired')).toBeInTheDocument();
+  });
+});
+
+describe('CatalogPicker over several catalogs (x-catalog as an array, PROVISIONAL)', () => {
+  /** Opens the form of the service catalog's own schema, whose `dependsOn` names two catalogs. */
+  async function openService(value: JsonObject, profile = 'workshop') {
+    const kit = useProfile(profile);
+    useMessages('en');
+    const { schema } = await kit.client.getCatalogSchema('service');
+    const onchange = vi.fn();
+    render(SchemaForm, {
+      schema,
+      category: 'catalog',
+      kind: 'service',
+      value,
+      services: kit.services,
+      onchange,
+    });
+    return { kit, onchange };
+  }
+
+  it('chooses the picker for a field that names several catalogs', async () => {
+    const kit = useProfile('workshop');
+    const { schema } = await kit.client.getCatalogSchema('service');
+    const properties = schema.properties as Record<string, { items: Record<string, unknown> }>;
+    expect(properties.dependsOn.items['x-catalog']).toEqual(['service', 'external']);
+    await openService({ dependsOn: [] });
+    expect(screen.getByTestId('table--dependsOn')).toBeInTheDocument();
+  });
+
+  it('lists the entries of every catalog under its name, and stores the reference with its prefix', async () => {
+    const { onchange } = await openService({ dependsOn: [] });
+    await fireEvent.click(
+      within(screen.getByTestId('table--dependsOn')).getByRole('button', { name: 'Add row' }),
+    );
+    const dialog = await screen.findByRole('dialog', { name: 'Depends on: new row' });
+    const select = within(dialog).getByLabelText(/^Depends on/) as HTMLSelectElement;
+    await waitFor(() => expect(select.querySelectorAll('optgroup')).toHaveLength(2));
+    const groups = [...select.querySelectorAll('optgroup')].map((group) => [
+      group.label,
+      [...group.querySelectorAll('option')].map((option) => option.textContent),
+    ]);
+    expect(groups[0][0]).toBe('Services');
+    expect(groups[1][0]).toBe('External parties');
+    expect(groups[0][1]).toContain('Payment API');
+    expect(groups[0][1]).not.toContain('Ledger');
+    expect(groups[1][1]).toContain('Payment service provider');
+    await fireEvent.change(select, { target: { value: 'external:psp-provider' } });
+    await fireEvent.click(within(dialog).getByRole('button', { name: 'Add to the list' }));
+    expect(last(onchange)).toEqual({ dependsOn: ['external:psp-provider'] });
+  });
+
+  it('names a held reference of either catalog in the row, and marks a retired one', async () => {
+    await openService({
+      dependsOn: [
+        'service:ledger',
+        'external:psp-provider',
+        'external:unknown-party',
+        'team:payments',
+      ],
+    });
+    const table = screen.getByTestId('table--dependsOn');
+    expect(await within(table).findByText('Ledger')).toBeInTheDocument();
+    expect(await within(table).findByText('Payment service provider')).toBeInTheDocument();
+    expect(within(table).getByText('Retired')).toBeInTheDocument();
+    // A reference into a catalog the field does not name, and one that names no entry, are not found.
+    expect(within(table).getAllByText('Not found')).toHaveLength(2);
+  });
+
+  it('keeps the entries of the catalog that can be read when the other cannot', async () => {
+    const { kit } = await openService({ dependsOn: [] });
+    const real = (globalThis as { fetch: typeof fetch }).fetch;
+    vi.stubGlobal('fetch', (input: RequestInfo | URL, init?: RequestInit) =>
+      String(input).endsWith('/catalogs/external')
+        ? Promise.resolve(new Response('{}', { status: 503 }))
+        : real(input, init),
+    );
+    const fresh = createFormServices(kit.client);
+    const { schema } = await kit.client.getCatalogSchema('service');
+    render(SchemaForm, {
+      schema,
+      category: 'catalog',
+      kind: 'service',
+      value: { dependsOn: [] },
+      services: fresh,
+    });
+    const tables = screen.getAllByTestId('table--dependsOn');
+    await fireEvent.click(
+      within(tables[tables.length - 1]).getByRole('button', { name: 'Add row' }),
+    );
+    const dialogs = await screen.findAllByRole('dialog', { name: 'Depends on: new row' });
+    const dialog = dialogs[dialogs.length - 1];
+    expect(await within(dialog).findByText('The list could not be loaded.')).toBeInTheDocument();
+    const select = within(dialog).getByLabelText(/^Depends on/) as HTMLSelectElement;
+    expect(select.querySelector('optgroup[label="Services"]')).not.toBeNull();
+    expect(select.querySelector('optgroup[label="External parties"]')).toBeNull();
   });
 });
 

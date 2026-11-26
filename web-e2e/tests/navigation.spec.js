@@ -24,7 +24,7 @@ const ADDRESSES = [
   [`/categories/test-note/${NOTE}`, 'documents-view', 'Documents', 'Documents'],
   [`/categories/test-note/${NOTE}?at=v1`, 'documents-view', 'Documents', 'Documents'],
   [`/categories/test-note/${NOTE}/release`, 'release-view', 'Documents', 'Release'],
-  ['/catalogs/team/payments', 'lens-view', 'Catalogs', 'Catalogs'],
+  ['/catalogs/team/payments', 'catalogs-view', 'Catalogs', 'Catalogs'],
   ['/reports/trends', 'lens-view', 'Reports', 'Reports'],
   ['/settings', 'settings-view', 'Settings', 'Settings'],
 ];

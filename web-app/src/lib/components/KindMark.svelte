@@ -13,6 +13,7 @@
     incident: 'lens.incidents',
     isms: 'lens.isms',
     catalog: 'lens.catalogs',
+    entry: 'kind.entity',
     report: 'lens.reports',
   } as const;
 

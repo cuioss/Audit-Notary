@@ -4,7 +4,7 @@
   import AsciiDocView from './AsciiDocView.svelte';
   import { useForm } from './context';
   import ResolvedValue from './ResolvedValue.svelte';
-  import { enumMembers, jsonEqual, type FieldNode } from './schema';
+  import { catalogsOf, enumMembers, jsonEqual, type FieldNode } from './schema';
   import { optionOf } from './texts';
   import { isEmptyValue } from './validate';
 
@@ -68,11 +68,7 @@
 {:else if node.kind === 'toggle'}
   <span>{value === true ? $t('form.read.yes') : $t('form.read.no')}</span>
 {:else if node.kind === 'catalog'}
-  <ResolvedValue
-    kind="catalog"
-    value={text}
-    catalog={typeof node.schema['x-catalog'] === 'string' ? node.schema['x-catalog'] : ''}
-  />
+  <ResolvedValue kind="catalog" value={text} catalog={catalogsOf(node.schema)} />
 {:else if node.kind === 'person'}
   <ResolvedValue kind="person" value={text} />
 {:else if node.kind === 'docref'}

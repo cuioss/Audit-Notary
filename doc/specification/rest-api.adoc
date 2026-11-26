@@ -2029,6 +2029,14 @@ is blocked; the owner may change each one. The bodies and addresses are in <<_di
   `registered-bound` (the bound candidate, `p-3d7a15`); each answers `GET /api/v1/directory/me` with its entry.
 . *The mock reads an import of up to 2 MiB* of descriptors (its transport cap is six times that, for JSON escaping); a
   body above the cap answers `413` with the `limit` of its request, 2097152 for the import and 65536 otherwise.
+. *The Catalogs lens in the web app* decides these details, none of which the register fixed before: the first visit of a
+  page session to `/catalogs` opens the first catalog in place of the address, a later visit shows the five catalogs;
+  `POST` and `PUT` carry the entry as `{"value": {…}}`, the `PUT` with its `id` equal to the one of the address; the `id` of
+  an entry that exists is read and never edited; an entry that someone else saved after the page read it replaces what the
+  person has not touched, and a person with changes of their own is warned that saving replaces what was saved (the last
+  save wins, point 4); a retired entry offers neither *Save* nor *Retire*; the form texts of the field errors `REQUIRED` and
+  `ID_MISMATCH` are `form.error.required` and `form.error.id-mismatch`; the outcomes `ID_TAKEN` and `RETIRED` are the
+  notices `error.id-taken` and `error.retired`.
 
 For the owner: whether `POST` for creation and a `PUT` that only changes is right (4); whether a retired entry may be
 reactivated (5); whether `x-catalog` may name several catalogs (7); whether a retired service counts for the effective

@@ -200,12 +200,19 @@ describe('AppRouter', () => {
     ['/categories/test-note/01JZ8W1E3G5J7M9P1R3T5X7Z9B', 'documents-view'],
     ['/categories/test-note/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=v1', 'documents-view'],
     ['/categories/test-note/01JZ8W1E3G5J7M9P1R3T5X7Z9B/release', 'release-view'],
+    ['/catalogs/team', 'catalogs-view'],
+    ['/catalogs/service/payment-api', 'catalogs-view'],
+    ['/catalogs/service/new', 'catalogs-view'],
+    // The pages of the directory follow with their own views.
+    ['/directory/import', 'lens-view'],
     ['/nowhere/at/all/here/x', 'not-found-view'],
   ])('renders %s as %s', async (pathname, testId) => {
     vi.spyOn(apiClient, 'listCategories').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'getDue').mockResolvedValue({ items: [] });
     vi.spyOn(apiClient, 'getDirectoryMe').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'getCatalog').mockReturnValue(new Promise(() => {}));
+    vi.spyOn(apiClient, 'getCatalogSchema').mockReturnValue(new Promise(() => {}));
+    vi.spyOn(apiClient, 'getCatalogEntry').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'getSammScopes').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'getSammScope').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'subscribeEvents').mockReturnValue(() => {});

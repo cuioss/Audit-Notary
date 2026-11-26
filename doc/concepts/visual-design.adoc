@@ -193,6 +193,25 @@ An earlier state of the document reads in the same layout, typeset, under a noti
 choice of the earlier state is in the margin. The neutral kind marks are the category (the stack of sheets of the lens
 icon) and the document (the page with a folded corner).
 
+== The Catalogs Lens
+
+The catalogs of the directory (teams, roles, services, systems, external parties) are one more chain of columns:
+catalog, entries, entry (`TriagePage`,
+xref:../specification/rest-api.adoc#_directory_addresses[REST API Register, The Addresses]). The first column is the fixed
+list of the five catalogs, each with the sentence that says what it holds, and needs no request; the list of entries
+holds the name and the id of each, a dot for a retired one (nobody has to act) and the action *New*, which says why it
+cannot be taken for a person without the right. The sheet of an entry is the form of the catalog's schema in the layout
+of the record, with the one primary act *Save*; the id is read, never edited, once the entry exists. Retiring is a
+destructive act: it stands in the margin, asks first and says that what refers to the entry keeps its reference and shows
+it as retired. A retired entry and any entry for a person without the right read in the same layout, typeset.
+
+The sheet of a service adds one section below the form: the protection needs stored on the service beside the effective
+ones, per dimension, with the service or dependency that decides each, and the dependencies as a table whose rows are
+indented by their depth and carry the way they were reached, their needs and the reason they count or do not (a dot, never
+a colour alone). A cycle of dependencies is a notice above the form, never a refusal. The neutral kind mark of an entry is
+the cube (`KindMark` kind `entry`); a field that names several catalogs (`dependsOn`) lists their entries grouped by
+catalog under the group's name (`Select` groups its options).
+
 == The Access Pages
 
 Three pages stand outside the shell, because there is no session to show a shell for: `/login` (the form of local test

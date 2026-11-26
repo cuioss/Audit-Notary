@@ -15,7 +15,7 @@
   import PersonPicker from './PersonPicker.svelte';
   import ReadValue from './ReadValue.svelte';
   import SchemaField from './SchemaField.svelte';
-  import { childNodes, enumMembers, jsonEqual, type FieldNode } from './schema';
+  import { catalogsOf, childNodes, enumMembers, jsonEqual, type FieldNode } from './schema';
   import TableField from './TableField.svelte';
   import { helpOf, labelOf, optionOf } from './texts';
 
@@ -206,7 +206,7 @@
     {:else if node.kind === 'catalog'}
       <CatalogPicker
         {label}
-        catalog={String(node.schema['x-catalog'])}
+        catalog={catalogsOf(node.schema)}
         value={typeof value === 'string' ? value : undefined}
         hint={hints}
         {mark}

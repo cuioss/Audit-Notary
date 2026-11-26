@@ -237,6 +237,19 @@ export function enumMembers(schema: JsonSchema): (string | number | boolean)[] |
 }
 
 /**
+ * The catalogs a reference field takes: `x-catalog` is a catalog id or, for a field that names several (the
+ * `dependsOn` of a service: services and external parties), an array of them (rest-api.adoc, Decided Provisionally with the directory, point 7).
+ *
+ * @param schema a resolved schema
+ * @returns the catalog ids in the order the schema names them; none for a schema without a usable `x-catalog`
+ */
+export function catalogsOf(schema: JsonSchema): string[] {
+  const named = schema['x-catalog'];
+  const list = typeof named === 'string' ? [named] : Array.isArray(named) ? named : [];
+  return list.filter((entry): entry is string => typeof entry === 'string' && entry !== '');
+}
+
+/**
  * The kind of a scalar property, by rules 2 to 10 of "Choosing the Component".
  *
  * @param schema a resolved schema
@@ -245,7 +258,7 @@ export function enumMembers(schema: JsonSchema): (string | number | boolean)[] |
 function scalarKind(schema: JsonSchema): FieldKind | null {
   const type = schema.type;
   if (type === 'string') {
-    if (typeof schema['x-catalog'] === 'string' && schema['x-catalog'] !== '') return 'catalog';
+    if (catalogsOf(schema).length > 0) return 'catalog';
     if (schema['x-person'] === true) return 'person';
     if (schema['x-asciidoc'] === true) return 'asciidoc';
     if (stringKeyword(schema, 'format') === 'gdr-link') return 'docref';
