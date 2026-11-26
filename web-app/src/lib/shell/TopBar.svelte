@@ -210,12 +210,6 @@
       display: none;
     }
 
-    /* A way up is a touch target of the phone's size: its padding reaches the 44 px without moving the bar. */
-    .crumbs__step :global(.link) {
-      display: inline-block;
-      padding-block: var(--space-3);
-    }
-
     .crumbs__step:last-child .crumbs__sep {
       display: none;
     }

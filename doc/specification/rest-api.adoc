@@ -2037,10 +2037,14 @@ is blocked; the owner may change each one. The bodies and addresses are in <<_di
   save wins, point 4); a retired entry offers neither *Save* nor *Retire*; the form texts of the field errors `REQUIRED` and
   `ID_MISMATCH` are `form.error.required` and `form.error.id-mismatch`; the outcomes `ID_TAKEN` and `RETIRED` are the
   notices `error.id-taken` and `error.retired`.
+. *The way up on the phone.* The top bar shows only the current step of the path below 768 px, the sheets carry their own
+  way up and the bottom bar navigates; a visible parent link in the top bar is a shell-wide design question, recorded
+  for the owner.
 
 For the owner: whether `POST` for creation and a `PUT` that only changes is right (4); whether a retired entry may be
 reactivated (5); whether `x-catalog` may name several catalogs (7); whether a retired service counts for the effective
 protection needs (8); whether the reconfirmation should be a gate, as AUN-DIR-3 reads (13); whether the erasure should
 ask for step-up; whether a user with an entry may have several memberships in the web app (14); whether `/directory/*`
-and the route ids `catalogs.import` and `catalogs.persons` are the wanted home of the administration (1); and whether
-the status `409` for `BINDING_CANDIDATES` and `NOT_BINDABLE` is wanted.
+and the route ids `catalogs.import` and `catalogs.persons` are the wanted home of the administration (1); whether
+the status `409` for `BINDING_CANDIDATES` and `NOT_BINDABLE` is wanted; and whether the phone's top bar should show
+a link to the parent of the current page.
