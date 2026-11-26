@@ -1,0 +1,62 @@
+{
+  "repository": "meeting-minutes",
+  "id": "01JZ9B6K8N0Q2S4V6X8Z0B2D4F",
+  "category": "meeting-minutes",
+  "kind": "minutes",
+  "title": "Architecture review of 19 November",
+  "state": "draft",
+  "version": 1,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "a7c3e91",
+      "savedAt": "2026-11-25T16:40:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Architecture review of 19 November",
+        "held": "2026-11-19",
+        "attendees": [
+          "p-4c1a9e",
+          "p-2b7f10",
+          "p-61c0d4"
+        ],
+        "summary": "The ledger service stays; the old export job is retired by the end of the year."
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-25T16:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2026-11-25T15:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "transitions": [
+    {
+      "id": "meeting-minutes.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ],
+  "releaseRequest": null
+}

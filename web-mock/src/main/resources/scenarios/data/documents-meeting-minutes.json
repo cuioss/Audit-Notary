@@ -1,0 +1,43 @@
+{
+  "repository": "meeting-minutes",
+  "truncated": false,
+  "documents": [
+    {
+      "id": "01JZ9B6K8N0Q2S4V6X8Z0B2D4F",
+      "kind": "minutes",
+      "title": "Architecture review of 19 November",
+      "state": "draft",
+      "version": 1,
+      "updatedAt": "2026-11-25T16:40:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null,
+      "requested": false,
+      "address": "/categories/meeting-minutes/01JZ9B6K8N0Q2S4V6X8Z0B2D4F"
+    },
+    {
+      "id": "01JZ9C9M1P3R5T7W9Y1A3C5E7G",
+      "kind": "minutes",
+      "title": "Security board, third quarter",
+      "state": "released",
+      "version": 1,
+      "updatedAt": "2026-10-15T11:00:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G/v1",
+        "at": "2026-10-15T11:00:00Z",
+        "by": {
+          "pseudonym": "p-7d2e58",
+          "name": "Noor Haddad"
+        }
+      },
+      "requested": false,
+      "address": "/categories/meeting-minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G"
+    }
+  ]
+}

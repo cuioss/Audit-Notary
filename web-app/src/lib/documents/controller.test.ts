@@ -335,9 +335,9 @@ describe('the save for everyone', () => {
       by: expect.objectContaining({ name: 'Jordan Weber' }),
       edited: new Set(['/summary']),
     });
-    // The own change stays, the other's `pinned` is shown unless it was changed here too.
+    // The own change stays, what the other changed (`status`, `body`) is shown.
     expect(controller.value.summary).toBe('My summary.');
-    expect(controller.value.pinned).toBe(true);
+    expect(controller.value.status).toBe('agreed');
     expect(controller.edits['/summary']).toBe('My summary.');
   });
 

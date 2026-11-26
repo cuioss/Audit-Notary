@@ -1,0 +1,40 @@
+{
+  "category": "meeting-minutes",
+  "kinds": [
+    {
+      "id": "minutes",
+      "repository": "meeting-minutes",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": [
+          "title",
+          "held"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "held": {
+            "type": "string",
+            "format": "date"
+          },
+          "attendees": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "string",
+              "x-person": true
+            }
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 500,
+            "x-free-text": true
+          }
+        }
+      }
+    }
+  ]
+}

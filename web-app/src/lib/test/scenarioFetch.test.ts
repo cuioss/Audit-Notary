@@ -73,6 +73,23 @@ describe('scenarioFetch', () => {
     expect((await scenario.fetch('/api/v1/status')).status).toBe(200);
   });
 
+  it('answers a document of a repository of the rights that no route names with 404 NOT_FOUND, like the mock', async () => {
+    const scenario = scenarioFetch('workshop');
+    const unknown = '01JZ9ZZZZZZZZZZZZZZZZZZZZZ';
+    for (const [method, address] of [
+      ['GET', `/api/v1/documents/test-notes/${unknown}`],
+      ['GET', `/api/v1/documents/test-notes/${unknown}/revisions`],
+      ['PUT', `/api/v1/drafts/test-notes/${unknown}`],
+      ['POST', `/api/v1/releases/samm-assessments/${unknown}`],
+    ]) {
+      const answer = await scenario.fetch(address, { method });
+      expect(answer.status, address).toBe(404);
+      expect(await answer.json(), address).toEqual({ outcome: 'NOT_FOUND' });
+    }
+    const elsewhere = await scenario.fetch(`/api/v1/documents/not-a-repository/${unknown}`);
+    expect((await elsewhere.json()).outcome).toBe('MOCK_NO_ROUTE');
+  });
+
   it('answers the form login of local users with an empty 200 or 401, and refuses it for the provider', async () => {
     const local = scenarioFetch('local');
     const body = (password: string) =>

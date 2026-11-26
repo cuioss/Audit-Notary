@@ -39,6 +39,13 @@
         "edit",
         "approve"
       ]
+    },
+    {
+      "repository": "meeting-minutes",
+      "actions": [
+        "read",
+        "edit"
+      ]
     }
   ],
   "first_login_required": false,
@@ -698,6 +705,78 @@
           }
         }
       }
+    },
+    "GET /api/v1/categories/meeting-minutes/schema": {
+      "status": 200,
+      "body_file": "categories-meeting-minutes-schema.json"
+    },
+    "GET /api/v1/documents/meeting-minutes": {
+      "status": 200,
+      "body_file": "documents-meeting-minutes.json"
+    },
+    "GET /api/v1/documents/meeting-minutes/01JZ9B6K8N0Q2S4V6X8Z0B2D4F": {
+      "status": 200,
+      "body_file": "document-meeting-minutes-m1.json"
+    },
+    "GET /api/v1/documents/meeting-minutes/01JZ9B6K8N0Q2S4V6X8Z0B2D4F/revisions": {
+      "status": 200,
+      "body_file": "document-meeting-minutes-m1-revisions.json"
+    },
+    "PUT /api/v1/drafts/meeting-minutes/01JZ9B6K8N0Q2S4V6X8Z0B2D4F": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      }
+    },
+    "POST /api/v1/documents/meeting-minutes/01JZ9B6K8N0Q2S4V6X8Z0B2D4F/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "b8c0d42",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        }
+      }
+    },
+    "GET /api/v1/documents/meeting-minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G": {
+      "status": 200,
+      "body_file": "document-meeting-minutes-m2.json"
+    },
+    "GET /api/v1/documents/meeting-minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G/revisions": {
+      "status": 200,
+      "body_file": "document-meeting-minutes-m2-revisions.json"
+    },
+    "PUT /api/v1/drafts/meeting-minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      }
+    },
+    "POST /api/v1/documents/meeting-minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G/save": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G/v1"
+      }
+    },
+    "POST /api/v1/documents/meeting-minutes/01JZ9B6K8N0Q2S4V6X8Z0B2D4F/transitions/meeting-minutes.submit": {
+      "status": 200,
+      "body": {
+        "outcome": "TRANSITIONED",
+        "state": "in-review",
+        "version": 1,
+        "at": "2026-11-26T09:50:00Z"
+      }
     }
   },
   "states": {
@@ -977,7 +1056,7 @@
       }
     },
     "note-saved-by-other": {
-      "description": "Jordan Weber saved the summary and the pinned flag of the Retention schedule: a document-saved event follows, and the note reads with them; the user's own draft is older now.",
+      "description": "Jordan Weber saved the status and the details of the Retention schedule, fields the user's own draft does not touch: a document-saved event follows, and the note reads with them; the draft stays.",
       "routes": {
         "GET /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X": {
           "body_file": "document-test-note-n2-saved-by-other.json"
@@ -995,8 +1074,8 @@
             "id": "01JZ8R7A9C1E3G5J7M9P1S3V5X",
             "part": "data",
             "fields": [
-              "/summary",
-              "/pinned"
+              "/status",
+              "/body"
             ],
             "by": {
               "pseudonym": "p-2b7f10",
@@ -1546,6 +1625,624 @@
           "status": 503,
           "body": {
             "outcome": "TOO_MANY_LOGINS"
+          }
+        }
+      }
+    },
+    "note-release-incomplete": {
+      "description": "The server's own check finds a mandatory field of the Supplier security questionnaire empty that the review did not show: the release answers MANDATORY_FIELDS_MISSING and writes nothing.",
+      "routes": {
+        "POST /api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+          "status": 422,
+          "body": {
+            "outcome": "MANDATORY_FIELDS_MISSING",
+            "missing": [
+              "/owner"
+            ]
+          }
+        }
+      }
+    },
+    "note-release-released-meanwhile": {
+      "description": "Somebody released the Supplier security questionnaire while the review was open: the release answers DOCUMENT_RELEASED, and the document reads released now.",
+      "routes": {
+        "POST /api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/v1"
+          }
+        },
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+          "body_file": "document-test-note-n4-released.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/revisions": {
+          "body_file": "document-test-note-n4-released-revisions.json"
+        }
+      }
+    },
+    "note-release-request": {
+      "description": "The release request of the Access review cadence (Jordan Weber) is open: the release is accepted, the note then reads released as v2 and the request leaves the Due list.",
+      "links": {
+        "release-n5": {
+          "method": "POST",
+          "path": "/api/v1/releases/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A",
+          "next": "note-release-request-done",
+          "body": {
+            "outcome": "RELEASED",
+            "tag": "notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/v2",
+            "at": "2026-11-26T10:05:00Z"
+          }
+        }
+      }
+    },
+    "note-release-request-done": {
+      "description": "The Access review cadence is released as v2: it reads released, and its request has left the Due list.",
+      "routes": {
+        "GET /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A": {
+          "body_file": "document-test-note-n5-released.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/revisions": {
+          "body_file": "document-test-note-n5-released-revisions.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A?at=v2": {
+          "body_file": "document-test-note-n5-released-at-v2.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A?at=e5f6a7b": {
+          "body_file": "document-test-note-n5-released-at-e5f6a7b.json"
+        },
+        "GET /api/v1/documents/test-notes": {
+          "body_file": "documents-test-notes-n5-released.json"
+        },
+        "GET /api/v1/search": {
+          "handler": "search-documents",
+          "data_file": "documents-index-n5-released.json"
+        },
+        "GET /api/v1/due": {
+          "status": 200,
+          "body_file": "due-workshop-lifecycle-n5-released.json"
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-transitioned",
+          "data": {
+            "repository": "test-notes",
+            "id": "01JZ8V8D0F2H4K6N8Q0S2W4Y6A",
+            "state": "released",
+            "version": 2,
+            "by": {
+              "pseudonym": "p-7d2e58",
+              "name": "Noor Haddad"
+            }
+          }
+        }
+      ]
+    },
+    "note-save-password": {
+      "description": "Local users: the first save of the Retention schedule asks for the password (STEP_UP_REQUIRED without an address); the same save with the password passes.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": false,
+            "loginProvider": "local",
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              },
+              {
+                "alias": "test-notes",
+                "fetch": "UP"
+              }
+            ],
+            "stepUp": "password"
+          }
+        }
+      },
+      "links": {
+        "save-n2": {
+          "method": "POST",
+          "path": "/api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/save",
+          "next": "note-save-password-done",
+          "status": 403,
+          "body": {
+            "outcome": "STEP_UP_REQUIRED"
+          }
+        }
+      }
+    },
+    "note-save-password-done": {
+      "description": "Local users: the password of the save was given; the Retention schedule saves.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": false,
+            "loginProvider": "local",
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              },
+              {
+                "alias": "test-notes",
+                "fetch": "UP"
+              }
+            ],
+            "stepUp": "password"
+          }
+        }
+      }
+    },
+    "note-submit-password": {
+      "description": "Local users: the submit of the Retention schedule asks for the password (STEP_UP_REQUIRED without an address); the same submit with the password passes.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": false,
+            "loginProvider": "local",
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              },
+              {
+                "alias": "test-notes",
+                "fetch": "UP"
+              }
+            ],
+            "stepUp": "password"
+          }
+        }
+      },
+      "links": {
+        "submit-n2": {
+          "method": "POST",
+          "path": "/api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/transitions/test-note.submit",
+          "next": "note-submit-password-done",
+          "status": 403,
+          "body": {
+            "outcome": "STEP_UP_REQUIRED"
+          }
+        }
+      }
+    },
+    "note-submit-password-done": {
+      "description": "Local users: the password of the submit was given; the Retention schedule is submitted.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": false,
+            "loginProvider": "local",
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              },
+              {
+                "alias": "test-notes",
+                "fetch": "UP"
+              }
+            ],
+            "stepUp": "password"
+          }
+        }
+      }
+    },
+    "note-submit-password-declared": {
+      "description": "Local users: the read of the Retention schedule declares that the submit needs the confirmation, so the dialog opens before the request; the submit passes.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": false,
+            "loginProvider": "local",
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              },
+              {
+                "alias": "test-notes",
+                "fetch": "UP"
+              }
+            ],
+            "stepUp": "password"
+          }
+        },
+        "GET /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X": {
+          "body_file": "document-test-note-n2-step-up.json"
+        }
+      }
+    },
+    "note-submit-wrong-password": {
+      "description": "Local users: the submit of the Retention schedule, which declares the confirmation, gets a wrong password; nothing is submitted.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": false,
+            "loginProvider": "local",
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              },
+              {
+                "alias": "test-notes",
+                "fetch": "UP"
+              }
+            ],
+            "stepUp": "password"
+          }
+        },
+        "GET /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X": {
+          "body_file": "document-test-note-n2-step-up.json"
+        },
+        "POST /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/transitions/test-note.submit": {
+          "status": 401,
+          "body": {
+            "outcome": "INVALID_CREDENTIALS"
+          }
+        }
+      }
+    },
+    "note-save-wrong-password": {
+      "description": "Local users: the first save of the Retention schedule asks for the password (STEP_UP_REQUIRED without an address), the repeated one gets a wrong password; nothing is saved.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": false,
+            "loginProvider": "local",
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              },
+              {
+                "alias": "test-notes",
+                "fetch": "UP"
+              }
+            ],
+            "stepUp": "password"
+          }
+        }
+      },
+      "links": {
+        "save-n2": {
+          "method": "POST",
+          "path": "/api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/save",
+          "next": "note-save-wrong-password-retry",
+          "status": 403,
+          "body": {
+            "outcome": "STEP_UP_REQUIRED"
+          }
+        }
+      }
+    },
+    "note-save-wrong-password-retry": {
+      "description": "Local users: the password of the save was wrong; the Retention schedule is not saved and every further save with a password answers INVALID_CREDENTIALS.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": false,
+            "loginProvider": "local",
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              },
+              {
+                "alias": "test-notes",
+                "fetch": "UP"
+              }
+            ],
+            "stepUp": "password"
+          }
+        },
+        "POST /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/save": {
+          "status": 401,
+          "body": {
+            "outcome": "INVALID_CREDENTIALS"
+          }
+        }
+      }
+    },
+    "note-save-too-many-logins": {
+      "description": "Every place of pending logins is taken: the save of the Retention schedule cannot start its step-up; nothing is written.",
+      "routes": {
+        "POST /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/save": {
+          "status": 503,
+          "body": {
+            "outcome": "TOO_MANY_LOGINS"
+          }
+        }
+      }
+    },
+    "note-submit-too-many-logins": {
+      "description": "Every place of pending logins is taken: the submit of the Retention schedule cannot start its step-up; nothing is submitted.",
+      "routes": {
+        "POST /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/transitions/test-note.submit": {
+          "status": 503,
+          "body": {
+            "outcome": "TOO_MANY_LOGINS"
+          }
+        }
+      }
+    },
+    "note-search-refused": {
+      "description": "The search is refused (the right to read was withdrawn meanwhile): GET /api/v1/search answers FORBIDDEN.",
+      "routes": {
+        "GET /api/v1/search": {
+          "status": 403,
+          "body": {
+            "outcome": "FORBIDDEN"
+          }
+        }
+      }
+    },
+    "category-two": {
+      "description": "Two generic categories: Test notes and Meeting minutes (Meeting minutes has two documents, one a draft, one released once and frozen); the search finds the minutes too.",
+      "routes": {
+        "GET /api/v1/categories": {
+          "status": 200,
+          "body_file": "categories-two.json"
+        },
+        "GET /api/v1/search": {
+          "handler": "search-documents",
+          "data_file": "documents-index-minutes.json"
+        }
+      }
+    },
+    "category-switched-off": {
+      "description": "Meeting minutes is switched off but still holds documents: the categories list it with enabled false; its documents, revisions, schema and the search stay readable, every write answers FORBIDDEN. Test notes stays on.",
+      "routes": {
+        "GET /api/v1/categories": {
+          "status": 200,
+          "body_file": "categories-switched-off.json"
+        },
+        "GET /api/v1/search": {
+          "handler": "search-documents",
+          "data_file": "documents-index-minutes.json"
+        },
+        "PUT /api/v1/drafts/meeting-minutes/01JZ9B6K8N0Q2S4V6X8Z0B2D4F": {
+          "status": 403,
+          "body": {
+            "outcome": "FORBIDDEN"
+          }
+        },
+        "POST /api/v1/documents/meeting-minutes/01JZ9B6K8N0Q2S4V6X8Z0B2D4F/save": {
+          "status": 403,
+          "body": {
+            "outcome": "FORBIDDEN"
+          }
+        },
+        "POST /api/v1/documents/meeting-minutes/01JZ9B6K8N0Q2S4V6X8Z0B2D4F/transitions/meeting-minutes.submit": {
+          "status": 403,
+          "body": {
+            "outcome": "FORBIDDEN"
+          }
+        },
+        "PUT /api/v1/drafts/meeting-minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G": {
+          "status": 403,
+          "body": {
+            "outcome": "FORBIDDEN"
+          }
+        },
+        "POST /api/v1/documents/meeting-minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G/save": {
+          "status": 403,
+          "body": {
+            "outcome": "FORBIDDEN"
+          }
+        },
+        "POST /api/v1/documents/meeting-minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G/transitions/meeting-minutes.submit": {
+          "status": 403,
+          "body": {
+            "outcome": "FORBIDDEN"
+          }
+        },
+        "POST /api/v1/documents/meeting-minutes": {
+          "status": 403,
+          "body": {
+            "outcome": "FORBIDDEN"
+          }
+        }
+      }
+    },
+    "category-only-switched-off": {
+      "description": "Meeting minutes is the only generic category and it is switched off: no entry of the rail, the documents stay readable at their addresses and in the search, every write answers FORBIDDEN.",
+      "routes": {
+        "GET /api/v1/categories": {
+          "status": 200,
+          "body_file": "categories-only-switched-off.json"
+        },
+        "GET /api/v1/search": {
+          "handler": "search-documents",
+          "data_file": "documents-index-minutes.json"
+        },
+        "PUT /api/v1/drafts/meeting-minutes/01JZ9B6K8N0Q2S4V6X8Z0B2D4F": {
+          "status": 403,
+          "body": {
+            "outcome": "FORBIDDEN"
+          }
+        },
+        "POST /api/v1/documents/meeting-minutes/01JZ9B6K8N0Q2S4V6X8Z0B2D4F/save": {
+          "status": 403,
+          "body": {
+            "outcome": "FORBIDDEN"
+          }
+        },
+        "POST /api/v1/documents/meeting-minutes/01JZ9B6K8N0Q2S4V6X8Z0B2D4F/transitions/meeting-minutes.submit": {
+          "status": 403,
+          "body": {
+            "outcome": "FORBIDDEN"
+          }
+        },
+        "PUT /api/v1/drafts/meeting-minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G": {
+          "status": 403,
+          "body": {
+            "outcome": "FORBIDDEN"
+          }
+        },
+        "POST /api/v1/documents/meeting-minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G/save": {
+          "status": 403,
+          "body": {
+            "outcome": "FORBIDDEN"
+          }
+        },
+        "POST /api/v1/documents/meeting-minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G/transitions/meeting-minutes.submit": {
+          "status": 403,
+          "body": {
+            "outcome": "FORBIDDEN"
+          }
+        },
+        "POST /api/v1/documents/meeting-minutes": {
+          "status": 403,
+          "body": {
+            "outcome": "FORBIDDEN"
           }
         }
       }

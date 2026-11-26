@@ -19,13 +19,13 @@
       "value": {
         "title": "Retention schedule for audit evidence",
         "noted": "2026-11-25T15:00:00Z",
-        "status": "open",
-        "pinned": true,
+        "status": "agreed",
+        "pinned": false,
         "service": "service:reporting",
         "owner": "p-4c1a9e",
         "related": "isms-register:risk/R-042",
-        "summary": "Keep audit evidence for seven years; review it every year.",
-        "body": "== Schedule\n\n* Release evidence and assessments: seven years\n* Access logs: 13 months\n\nThe schedule follows the interview notes of 25 November.",
+        "summary": "Keep audit evidence for seven years; review it every two years.",
+        "body": "== Schedule\n\n* Release evidence and assessments: seven years\n* Access logs: 13 months\n* Backups: 35 days\n\nThe schedule follows the interview notes of 25 November.",
         "actions": [
           {
             "what": "Check the schedule with the legal team",

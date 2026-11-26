@@ -421,7 +421,8 @@ an unknown transition. The release is no transition of this request: it is the n
 the password); `503 TOO_MANY_LOGINS` with `Retry-After: 60` when the step-up cannot be started because every place of
 pending logins is taken (nothing is written, PROVISIONAL status); `INVALID_CREDENTIALS` (`401`, local users, nothing is
 written); `MANDATORY_FIELDS_MISSING`; `REJECTED`; `GIT_UNAVAILABLE`; `CHANGED_SINCE_REVIEW` (`409`, PROVISIONAL: someone
-saved after the release was opened); `FORBIDDEN` without `approve`. The handling of the step-up outcomes is the contract
+saved after the release was opened); `DOCUMENT_RELEASED` (`409`, PROVISIONAL: someone released the document
+meanwhile, the body names the `tag`); `FORBIDDEN` without `approve`. The handling of the step-up outcomes is the contract
 of <<_the_step_up_handler>>
 |xref:web-app.adoc#AUN-WEB-6[AUN-WEB-6], xref:authentication.adoc#AUN-AUTH-4[AUN-AUTH-4], xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]
 |`SPECIFIED`; the outcome `CHANGED_SINCE_REVIEW` and the status of `STEP_UP_REQUIRED` and `TOO_MANY_LOGINS` `PROVISIONAL`
@@ -1434,8 +1435,8 @@ blocked; the owner may change each one. The bodies are in <<_document_lifecycle_
   generic document and revision addresses of it are read-only (no save, no act, no release; the writes answer
   `403 FORBIDDEN`), `new` is not offered, and neither the rail entry nor the lens counts the category. The schema
   request (`GET /api/v1/categories/{category}/schema`) answers such a category like any other, because the read-only
-  sheet draws its form from it (decided provisionally; the alternative is a read-only sheet that needs no schema). The mock has no such category yet; the web app builds this
-  with the administration of categories (step 10).
+  sheet draws its form from it (decided provisionally; the alternative is a read-only sheet that needs no schema). The mock has such a category in its states `category-switched-off` and `category-only-switched-off`
+  (_Meeting minutes_); the administration of categories (step 10) builds the real one.
 . *The test category `test-note`* has one document type, `note`, released more than once, with the transitions
   `test-note.submit` and `test-note.release`, the collection `notes` and the tag `notes/<id>/v<n>`; a save is possible
   in every state.
@@ -1487,7 +1488,18 @@ otherwise only when the server answers `STEP_UP_REQUIRED`, after which the same 
 the server asks nothing, and the sheet's line "You confirm your identity once more before this step" is shown only for
 a step that declares `stepUp`.
 
+. *A release of a document that someone released meanwhile* answers `409 DOCUMENT_RELEASED` with the `tag`, like a save of
+  it (decided provisionally with the release flow; the release flow re-reads the document and shows it as released, and
+  writes nothing). The mock has the states `note-release-released-meanwhile` and `note-release-incomplete`
+  (`MANDATORY_FIELDS_MISSING` from the server's own check at the release).
+. *The pattern of a document request is written twice in the mock,* in `MockEngine.DOCUMENT_REQUEST` and in the unit-test
+  fallback `web-app/src/lib/test/scenarioFetch.ts`, which answer an unknown document of a repository of the rights with
+  `404 NOT_FOUND` and everything else with `404 MOCK_NO_ROUTE` (decided provisionally; the alternative is one shared
+  definition in the scenario files, which needs a new scenario field and a reader in both languages for one line). Each
+  copy is pinned by a test of the same behaviour (`DocumentLifecycleTest` and `scenarioFetch.test.ts`); a change of the
+  pattern changes both.
+
 For the owner: whether the rail may gain a ninth lens, and whether `/categories/{category}` may list documents, given
 that the use cases of the categories name it for the definition (1); whether a refused draft is right, or the draft
 should be written and the errors only advised (10); whether a pending release request belongs in the approvers' Due as
-well (13); whether the release request should carry the reviewed revision now (14); the status `502` of `REJECTED` (15); whether a switched-off custom category keeps readable, read-only generic addresses (21).
+well (13); whether the release request should carry the reviewed revision now (14); the status `502` of `REJECTED` (15); whether a switched-off custom category keeps readable, read-only generic addresses (21), and whether the release answers `DOCUMENT_RELEASED` for a document released meanwhile (the last item).

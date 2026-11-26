@@ -936,7 +936,7 @@ class DocumentLifecycleTest {
                         () -> assertEquals("p-7d2e58", releasedEvent.path("by").path("pseudonym").asText()),
                         () -> assertEquals(N2, savedEvent.path("id").asText()),
                         () -> assertEquals("data", savedEvent.path("part").asText()),
-                        () -> assertEquals(List.of("/summary", "/pinned"), texts(savedEvent.path("fields"))),
+                        () -> assertEquals(List.of("/status", "/body"), texts(savedEvent.path("fields"))),
                         () -> assertEquals("p-2b7f10", savedEvent.path("by").path("pseudonym").asText()));
             }
         }
@@ -963,7 +963,7 @@ class DocumentLifecycleTest {
     class States {
 
         @Test
-        @DisplayName("note-saved-by-other: N2 reads with the other's blob, values and one more history line; the draft stays")
+        @DisplayName("note-saved-by-other: N2 reads with the other's blob, other fields than the draft's and one more history line; the draft stays")
         void shouldReadSavedByOther() {
             try (var client = MockClient.start("workshop").login()) {
                 var before = body(client, doc(N2));
@@ -975,7 +975,12 @@ class DocumentLifecycleTest {
                                 after.path("parts").path("data").path("blob")),
                         () -> assertEquals("p-2b7f10",
                                 after.path("parts").path("data").path("savedBy").path("pseudonym").asText()),
-                        () -> assertTrue(value.path("pinned").asBoolean()),
+                        () -> assertEquals("agreed", value.path("status").asText()),
+                        () -> assertTrue(value.path("body").asText().contains("* Backups: 35 days")),
+                        () -> assertEquals(before.path("parts").path("data").path("value").path("summary"),
+                                value.path("summary"), "the own draft's fields are not the ones that changed"),
+                        () -> assertEquals(before.path("parts").path("data").path("value").path("pinned"),
+                                value.path("pinned"), "the own draft's fields are not the ones that changed"),
                         () -> assertEquals(before.path("history").size() + 1, after.path("history").size()),
                         () -> assertTrue(after.path("draft").isObject()),
                         () -> assertEquals(before.path("draft"), after.path("draft")),
@@ -1337,8 +1342,421 @@ class DocumentLifecycleTest {
                             .path("documents"), "id", N10)),
                     () -> assertEquals(without(index, "id", N10), without(data("documents-index-created.json")
                             .path("entries"), "id", N10)),
+                    () -> assertEquals(without(index, "repository", "meeting-minutes"),
+                            without(data("documents-index-minutes.json").path("entries"), "repository",
+                                    "meeting-minutes")),
+                    () -> assertEquals(index.size() + 2, data("documents-index-minutes.json").path("entries").size()),
                     () -> assertEquals(list.size() + 1, data("documents-test-notes-created.json").path("documents").size()),
                     () -> assertEquals(index.size() + 1, data("documents-index-created.json").path("entries").size()));
+        }
+    }
+
+    private static final String M1 = "01JZ9B6K8N0Q2S4V6X8Z0B2D4F";
+    private static final String M2 = "01JZ9C9M1P3R5T7W9Y1A3C5E7G";
+    private static final String MINUTES = "/api/v1/documents/meeting-minutes";
+
+    private static String minutesSubmit(String id) {
+        return MINUTES + "/" + id + "/transitions/meeting-minutes.submit";
+    }
+
+    @Nested
+    @DisplayName("workshop: the release of a request, the server's other release refusals")
+    class ReleaseRequests {
+
+        @Test
+        @DisplayName("note-release-incomplete: the release answers 422 MANDATORY_FIELDS_MISSING with the pointers")
+        void shouldRefuseAnIncompleteRelease() {
+            try (var client = MockClient.start("workshop").login()) {
+                goTo(client, "note-release-incomplete");
+                var response = client.change("POST", release(N4), "{}");
+                assertAll(
+                        () -> assertEquals(422, response.statusCode()),
+                        () -> assertEquals("MANDATORY_FIELDS_MISSING", json(response).path("outcome").asText()),
+                        () -> assertEquals(List.of("/owner"), texts(json(response).path("missing"))));
+            }
+        }
+
+        @Test
+        @DisplayName("note-release-released-meanwhile: the release answers 409 DOCUMENT_RELEASED, the note reads released")
+        void shouldRefuseAReleaseOfAReleasedNote() {
+            try (var client = MockClient.start("workshop").login()) {
+                assertEquals("in-review", body(client, doc(N4)).path("state").asText());
+                goTo(client, "note-release-released-meanwhile");
+                var response = client.change("POST", release(N4), "{}");
+                var read = body(client, doc(N4));
+                assertAll(
+                        () -> assertEquals(409, response.statusCode()),
+                        () -> assertEquals("DOCUMENT_RELEASED", json(response).path("outcome").asText()),
+                        () -> assertEquals("notes/" + N4 + "/v1", json(response).path("tag").asText()),
+                        () -> assertEquals("released", read.path("state").asText()),
+                        () -> assertEquals("v1", body(client, doc(N4) + "/revisions").path("revisions").get(0)
+                                .path("ref").asText()));
+            }
+        }
+
+        @Test
+        @DisplayName("note-release-request: N5 is released as v2; it reads released and its request leaves the Due list")
+        void shouldReleaseTheRequestedNote() throws Exception {
+            try (var client = MockClient.start("workshop").login()) {
+                var lines = client.events().body().iterator();
+                assertEquals(": connected", lines.next());
+                var dueBefore = body(client, "/api/v1/due").path("items");
+                var diff = body(client, doc(N5) + "/diff");
+                goTo(client, "note-release-request");
+                var released = client.change("POST", release(N5), "{}");
+                String next = stateOf(client);
+                var event = awaitEvent(lines, "document-transitioned");
+                var read = body(client, doc(N5));
+                var revisions = body(client, doc(N5) + "/revisions").path("revisions");
+                var dueAfter = body(client, "/api/v1/due").path("items");
+                var documents = body(client, "/api/v1/documents/test-notes").path("documents");
+                var listed = documents.get(0);
+                var indexed = body(client, "/api/v1/search?q=access").path("results");
+                var atTag = body(client, doc(N5) + "?at=v2");
+                var atCommit = body(client, doc(N5) + "?at=e5f6a7b");
+                assertAll(
+                        () -> assertEquals("notes/" + N5 + "/v1", diff.path("from").asText()),
+                        () -> assertEquals(1, requestsOf(dueBefore, N5)),
+                        () -> assertEquals("rr-01JZ8V9C2E4G6J8M0P2R4T6W8Y", dueBefore.get(6).path("requestId").asText()),
+                        () -> assertEquals("RELEASED", json(released).path("outcome").asText()),
+                        () -> assertEquals("notes/" + N5 + "/v2", json(released).path("tag").asText()),
+                        () -> assertEquals("note-release-request-done", next),
+                        () -> assertEquals(N5, event.path("id").asText()),
+                        () -> assertEquals(2, event.path("version").asInt()),
+                        () -> assertEquals("released", read.path("state").asText()),
+                        () -> assertEquals(2, read.path("version").asInt()),
+                        () -> assertEquals("notes/" + N5 + "/v2", read.path("release").path("tag").asText()),
+                        () -> assertTrue(read.path("releaseRequest").isNull()),
+                        () -> assertEquals(0, read.path("transitions").size()),
+                        () -> assertEquals(List.of("v2", "b6c7d8e", "d0e1f2a", "v1"), texts(refsOf(revisions)).subList(0, 4)),
+                        () -> assertEquals(N5, listed.path("id").asText()),
+                        () -> assertEquals("released", listed.path("state").asText()),
+                        () -> assertEquals(2, listed.path("version").asInt()),
+                        () -> assertEquals("notes/" + N5 + "/v2", listed.path("release").path("tag").asText()),
+                        () -> assertFalse(listed.path("requested").asBoolean()),
+                        () -> assertEquals("released", indexed.get(0).path("state").asText()),
+                        () -> assertTrue(atTag.path("frozen").asBoolean()),
+                        () -> assertEquals("v2", atTag.path("at").path("ref").asText()),
+                        () -> assertEquals("e5f6a7b", atTag.path("at").path("commit").asText()),
+                        () -> assertTrue(atCommit.path("frozen").asBoolean()),
+                        () -> assertEquals("e5f6a7b", atCommit.path("at").path("ref").asText()),
+                        () -> assertFalse(read.path("frozen").asBoolean()),
+                        () -> assertEquals(0, requestsOf(dueAfter, N5)),
+                        () -> assertEquals(dueBefore.size() - 1, dueAfter.size()),
+                        () -> assertEquals(1, requestsOf(dueAfter, N2)),
+                        () -> assertEquals("2026-11-22", dueAfter.get(3).path("due").asText()));
+            }
+        }
+
+        private int requestsOf(JsonNode items, String id) {
+            int count = 0;
+            for (var item : items) {
+                if (item.path("requestId").isTextual() && item.path("address").asText().contains(id)) {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        private JsonNode refsOf(JsonNode revisions) {
+            var refs = MockClient.MAPPER.createArrayNode();
+            revisions.forEach(entry -> refs.add(entry.path("ref").asText()));
+            return refs;
+        }
+    }
+
+    @Nested
+    @DisplayName("workshop: the confirmation by password of a save and a submit")
+    class PasswordSteps {
+
+        private JsonNode status(MockClient client) {
+            return body(client, "/api/v1/status");
+        }
+
+        @Test
+        @DisplayName("note-save-password: the first save answers 403 STEP_UP_REQUIRED without an address, the next 200")
+        void shouldAskOnceForTheSave() {
+            try (var client = MockClient.start("workshop").login()) {
+                goTo(client, "note-save-password");
+                var status = status(client);
+                var first = client.change("POST", save(N2), "{\"password\":\"\"}");
+                String next = stateOf(client);
+                var second = client.change("POST", save(N2), "{\"password\":\"secret\"}");
+                var third = client.change("POST", save(N2), "{}");
+                assertAll(
+                        () -> assertEquals("local", status.path("loginProvider").asText()),
+                        () -> assertEquals("password", status.path("stepUp").asText()),
+                        () -> assertEquals(403, first.statusCode()),
+                        () -> assertEquals("STEP_UP_REQUIRED", json(first).path("outcome").asText()),
+                        () -> assertFalse(json(first).has("stepUp"), "no address with local users"),
+                        () -> assertEquals("note-save-password-done", next),
+                        () -> assertEquals(200, second.statusCode()),
+                        () -> assertEquals("SAVED", json(second).path("outcome").asText()),
+                        () -> assertEquals(200, third.statusCode()),
+                        () -> assertEquals("password", status(client).path("stepUp").asText()));
+            }
+        }
+
+        @Test
+        @DisplayName("note-submit-password: the first submit answers 403 STEP_UP_REQUIRED without an address, the next 200")
+        void shouldAskOnceForTheSubmit() {
+            try (var client = MockClient.start("workshop").login()) {
+                goTo(client, "note-submit-password");
+                var first = client.change("POST", submit(N2), "{}");
+                String next = stateOf(client);
+                var second = client.change("POST", submit(N2), "{\"password\":\"secret\"}");
+                assertAll(
+                        () -> assertEquals("password", status(client).path("stepUp").asText()),
+                        () -> assertEquals(403, first.statusCode()),
+                        () -> assertEquals("STEP_UP_REQUIRED", json(first).path("outcome").asText()),
+                        () -> assertFalse(json(first).has("stepUp")),
+                        () -> assertEquals("note-submit-password-done", next),
+                        () -> assertEquals("TRANSITIONED", json(second).path("outcome").asText()),
+                        () -> assertEquals("[redacted]", body(client, "/mock/acts").get(1).path("body").path("password")
+                                .asText()));
+            }
+        }
+
+        @Test
+        @DisplayName("note-submit-password-declared: N2 reads with a submit that declares the confirmation, the submit passes")
+        void shouldDeclareTheConfirmation() {
+            try (var client = MockClient.start("workshop").login()) {
+                var plain = body(client, doc(N2)).path("transitions").get(0);
+                goTo(client, "note-submit-password-declared");
+                var read = body(client, doc(N2));
+                var response = client.change("POST", submit(N2), "{\"password\":\"secret\"}");
+                assertAll(
+                        () -> assertFalse(plain.path("stepUp").asBoolean()),
+                        () -> assertEquals("password", status(client).path("stepUp").asText()),
+                        () -> assertEquals("test-note.submit", read.path("transitions").get(0).path("id").asText()),
+                        () -> assertTrue(read.path("transitions").get(0).path("stepUp").asBoolean()),
+                        () -> assertEquals(1, read.path("transitions").size()),
+                        () -> assertEquals(body(client, doc(N2)).path("parts"), read.path("parts")),
+                        () -> assertEquals("TRANSITIONED", json(response).path("outcome").asText()));
+            }
+        }
+
+        @Test
+        @DisplayName("note-save-wrong-password, note-submit-wrong-password: 401 INVALID_CREDENTIALS, nothing is written")
+        void shouldRefuseAWrongPassword() {
+            try (var client = MockClient.start("workshop").login()) {
+                goTo(client, "note-save-wrong-password");
+                var asked = client.change("POST", save(N2), "{\"password\":\"\"}");
+                String next = stateOf(client);
+                var save = client.change("POST", save(N2), "{\"password\":\"nope\"}");
+                var saveStatus = status(client);
+                goTo(client, "note-submit-wrong-password");
+                var submit = client.change("POST", submit(N2), "{\"password\":\"nope\"}");
+                assertAll(
+                        () -> assertEquals(403, asked.statusCode()),
+                        () -> assertEquals("STEP_UP_REQUIRED", json(asked).path("outcome").asText()),
+                        () -> assertFalse(json(asked).has("stepUp"), "no address with local users"),
+                        () -> assertEquals("note-save-wrong-password-retry", next),
+                        () -> assertEquals(401, save.statusCode()),
+                        () -> assertEquals("INVALID_CREDENTIALS", json(save).path("outcome").asText()),
+                        () -> assertEquals("password", saveStatus.path("stepUp").asText()),
+                        () -> assertEquals(401, submit.statusCode()),
+                        () -> assertEquals("INVALID_CREDENTIALS", json(submit).path("outcome").asText()),
+                        () -> assertEquals("password", status(client).path("stepUp").asText()),
+                        () -> assertTrue(body(client, doc(N2)).path("transitions").get(0).path("stepUp").asBoolean()));
+            }
+        }
+
+        @Test
+        @DisplayName("note-save-too-many-logins, note-submit-too-many-logins: 503 TOO_MANY_LOGINS with Retry-After")
+        void shouldRefuseWithTooManyLogins() {
+            try (var client = MockClient.start("workshop").login()) {
+                goTo(client, "note-save-too-many-logins");
+                var save = client.change("POST", save(N2), "{}");
+                goTo(client, "note-submit-too-many-logins");
+                var submit = client.change("POST", submit(N2), "{}");
+                for (var response : List.of(save, submit)) {
+                    assertAll(
+                            () -> assertEquals(503, response.statusCode()),
+                            () -> assertEquals("TOO_MANY_LOGINS", json(response).path("outcome").asText()),
+                            () -> assertEquals("60", response.headers().firstValue("Retry-After").orElse("")));
+                }
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("workshop: a second generic category, a switched-off one, documents that do not exist, a refused search")
+    class MoreCategories {
+
+        @Test
+        @DisplayName("category-two: two generic categories, the minutes with their documents, schema and search")
+        void shouldListTwoCategories() {
+            try (var client = MockClient.start("workshop").login()) {
+                assertEquals(0, body(client, "/api/v1/search?q=architecture").path("results").size());
+                goTo(client, "category-two");
+                var categories = body(client, CATEGORIES).path("categories");
+                var list = body(client, MINUTES);
+                var draftNote = body(client, MINUTES + "/" + M1);
+                var frozen = body(client, MINUTES + "/" + M2);
+                var savedFrozen = client.change("POST", MINUTES + "/" + M2 + "/save", "{}");
+                var schema = body(client, "/api/v1/categories/meeting-minutes/schema");
+                var found = body(client, "/api/v1/search?q=architecture").path("results");
+                assertAll(
+                        () -> assertEquals(List.of("test-note", "meeting-minutes"),
+                                texts(ids(categories))),
+                        () -> assertTrue(categories.get(0).path("generic").asBoolean()),
+                        () -> assertTrue(categories.get(1).path("generic").asBoolean()),
+                        () -> assertFalse(categories.get(1).has("enabled")),
+                        () -> assertEquals("meeting-minutes", categories.get(1).path("kinds").get(0).path("repository").asText()),
+                        () -> assertEquals(2, list.path("documents").size()),
+                        () -> assertEquals("/categories/meeting-minutes/" + M1,
+                                list.path("documents").get(0).path("address").asText()),
+                        () -> assertEquals("draft", draftNote.path("state").asText()),
+                        () -> assertEquals("meeting-minutes.submit", draftNote.path("transitions").get(0).path("id").asText()),
+                        () -> assertFalse(draftNote.path("frozen").asBoolean()),
+                        () -> assertTrue(frozen.path("frozen").asBoolean()),
+                        () -> assertEquals("minutes/" + M2 + "/v1", frozen.path("release").path("tag").asText()),
+                        () -> assertEquals("meeting-minutes", schema.path("kinds").get(0).path("repository").asText()),
+                        () -> assertEquals(List.of("title", "held"),
+                                texts(schema.path("kinds").get(0).path("schema").path("required"))),
+                        () -> assertEquals(1, found.size()),
+                        () -> assertEquals("/categories/meeting-minutes/" + M1, found.get(0).path("address").asText()),
+                        () -> assertEquals("TRANSITIONED", json(client.change("POST", minutesSubmit(M1), "{}"))
+                                .path("outcome").asText()),
+                        () -> assertEquals("DRAFT_SAVED", json(client.change("PUT",
+                                "/api/v1/drafts/meeting-minutes/" + M1, "{}")).path("outcome").asText()),
+                        () -> assertEquals(409, savedFrozen.statusCode()),
+                        () -> assertEquals("DOCUMENT_RELEASED", json(savedFrozen).path("outcome").asText()),
+                        () -> assertEquals("minutes/" + M2 + "/v1", json(savedFrozen).path("tag").asText()));
+            }
+        }
+
+        private JsonNode ids(JsonNode categories) {
+            var ids = MockClient.MAPPER.createArrayNode();
+            categories.forEach(category -> ids.add(category.path("id").asText()));
+            return ids;
+        }
+
+        @Test
+        @DisplayName("category-switched-off: enabled false for the minutes, reads and search stay, every write of it is 403")
+        void shouldSwitchTheMinutesOff() {
+            try (var client = MockClient.start("workshop").login()) {
+                goTo(client, "category-switched-off");
+                var categories = body(client, CATEGORIES).path("categories");
+                assertAll(
+                        () -> assertEquals(2, categories.size()),
+                        () -> assertFalse(categories.get(0).has("enabled"), "test-note stays on"),
+                        () -> assertTrue(categories.get(1).path("generic").asBoolean()),
+                        () -> assertTrue(categories.get(1).has("enabled")),
+                        () -> assertFalse(categories.get(1).path("enabled").asBoolean()));
+                assertMinutesReadableAndReadOnly(client);
+                assertEquals("SAVED", json(client.change("POST", save(N2), "{}")).path("outcome").asText(),
+                        "the other category stays writable");
+            }
+        }
+
+        @Test
+        @DisplayName("category-only-switched-off: the one listed category is off; its documents stay readable, writes are 403")
+        void shouldHaveNothingButASwitchedOffCategory() {
+            try (var client = MockClient.start("workshop").login()) {
+                goTo(client, "category-only-switched-off");
+                var categories = body(client, CATEGORIES).path("categories");
+                assertAll(
+                        () -> assertEquals(1, categories.size()),
+                        () -> assertEquals("meeting-minutes", categories.get(0).path("id").asText()),
+                        () -> assertFalse(categories.get(0).path("enabled").asBoolean(true)));
+                assertMinutesReadableAndReadOnly(client);
+            }
+        }
+
+        @Test
+        @DisplayName("both switched-off states refuse every write route of the minutes that the scenario level names")
+        void shouldRefuseEveryMinutesWriteInTheSwitchedOffStates() throws IOException {
+            JsonNode workshop;
+            try (var stream = CLASS_LOADER.getResourceAsStream("scenarios/workshop.json")) {
+                workshop = MockClient.MAPPER.readTree(Objects.requireNonNull(stream));
+            }
+            List<String> writes = new ArrayList<>();
+            workshop.path("routes").fieldNames().forEachRemaining(key -> {
+                if (!key.startsWith("GET ") && key.contains("/meeting-minutes")) {
+                    writes.add(key);
+                }
+            });
+            assertFalse(writes.isEmpty(), "the scenario level names write routes of the minutes");
+            for (var state : List.of("category-switched-off", "category-only-switched-off")) {
+                var routes = workshop.path("states").path(state).path("routes");
+                for (var write : writes) {
+                    assertEquals(403, routes.path(write).path("status").asInt(),
+                            state + " refuses " + write + " with 403 FORBIDDEN");
+                    assertEquals("FORBIDDEN", routes.path(write).path("body").path("outcome").asText(), state + " " + write);
+                }
+            }
+        }
+
+        private void assertMinutesReadableAndReadOnly(MockClient client) {
+            var schema = client.get("/api/v1/categories/meeting-minutes/schema");
+            var found = body(client, "/api/v1/search?q=security%20board").path("results");
+            assertAll(
+                    () -> assertEquals(200, client.get(MINUTES).statusCode()),
+                    () -> assertEquals(200, client.get(MINUTES + "/" + M1).statusCode()),
+                    () -> assertEquals(200, client.get(MINUTES + "/" + M2 + "/revisions").statusCode()),
+                    () -> assertEquals(200, schema.statusCode()),
+                    () -> assertEquals("meeting-minutes", json(schema).path("category").asText()),
+                    () -> assertEquals(1, found.size()),
+                    () -> assertEquals(M2, found.get(0).path("id").asText()));
+            for (var request : List.of(
+                    List.of("PUT", "/api/v1/drafts/meeting-minutes/" + M1),
+                    List.of("POST", MINUTES + "/" + M1 + "/save"),
+                    List.of("POST", MINUTES + "/" + M2 + "/save"),
+                    List.of("POST", minutesSubmit(M1)),
+                    List.of("POST", MINUTES))) {
+                var response = client.change(request.get(0), request.get(1), "{}");
+                assertAll(request.toString(),
+                        () -> assertEquals(403, response.statusCode()),
+                        () -> assertEquals("FORBIDDEN", json(response).path("outcome").asText()));
+            }
+        }
+
+        @Test
+        @DisplayName("answers 404 NOT_FOUND for an id the scenario does not know in a repository of the rights, MOCK_NO_ROUTE elsewhere")
+        void shouldNotFindUnknownDocuments() {
+            String unknown = "01JZ9ZZZZZZZZZZZZZZZZZZZZZ";
+            for (String profile : List.of("workshop", "read-only")) {
+                try (var client = MockClient.start(profile).login()) {
+                    for (String path : List.of(DOCS + "/" + unknown, DOCS + "/" + unknown + "/revisions",
+                            DOCS + "/" + unknown + "/diff", DOCS + "/" + unknown + "?at=v1",
+                            "/api/v1/documents/samm-assessments/" + unknown)) {
+                        var response = client.get(path);
+                        assertAll(profile + " " + path,
+                                () -> assertEquals(404, response.statusCode()),
+                                () -> assertEquals("NOT_FOUND", json(response).path("outcome").asText()));
+                    }
+                    var elsewhere = client.get("/api/v1/documents/not-a-repository/" + unknown);
+                    assertEquals("MOCK_NO_ROUTE", json(elsewhere).path("outcome").asText(), profile);
+                }
+            }
+            try (var client = MockClient.start("workshop").login()) {
+                for (var request : List.of(
+                        List.of("PUT", "/api/v1/drafts/test-notes/" + unknown),
+                        List.of("POST", DOCS + "/" + unknown + "/save"),
+                        List.of("POST", DOCS + "/" + unknown + "/transitions/test-note.submit"),
+                        List.of("POST", release(unknown)))) {
+                    var response = client.change(request.get(0), request.get(1), "{}");
+                    assertAll(request.toString(),
+                            () -> assertEquals(404, response.statusCode()),
+                            () -> assertEquals("NOT_FOUND", json(response).path("outcome").asText()));
+                }
+                assertEquals("NOT_FOUND", json(client.get(MINUTES + "/" + unknown)).path("outcome").asText());
+                assertEquals(200, client.get(doc(N1)).statusCode(), "a known id is answered as before");
+            }
+        }
+
+        @Test
+        @DisplayName("note-search-refused: the search answers 403 FORBIDDEN")
+        void shouldRefuseTheSearch() {
+            try (var client = MockClient.start("workshop").login()) {
+                goTo(client, "note-search-refused");
+                var response = client.get("/api/v1/search?q=rotation");
+                assertAll(
+                        () -> assertEquals(403, response.statusCode()),
+                        () -> assertEquals("FORBIDDEN", json(response).path("outcome").asText()));
+            }
         }
     }
 }

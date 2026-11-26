@@ -1,0 +1,113 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8V8D0F2H4K6N8Q0S2W4Y6A",
+  "category": "test-note",
+  "kind": "note",
+  "title": "Access review cadence",
+  "state": "released",
+  "version": 2,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "d0e1f2a",
+      "savedAt": "2026-11-25T13:50:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Developer"
+      },
+      "value": {
+        "title": "Access review cadence",
+        "noted": "2026-10-12T10:00:00Z",
+        "status": "agreed",
+        "pinned": false,
+        "service": "service:identity-provider",
+        "owner": "p-61c0d4",
+        "summary": "Review who has access to the identity provider every quarter; the service accounts every half year.",
+        "body": "== Cadence\n\n* Quarterly review of administrators\n* Yearly review of every account",
+        "actions": [
+          {
+            "what": "Export the list of administrators",
+            "who": "p-2b7f10",
+            "due": "2026-10-31",
+            "done": true
+          },
+          {
+            "what": "Decide who reviews the service accounts",
+            "who": "p-61c0d4",
+            "due": "2026-11-15",
+            "done": true
+          }
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-26T10:05:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/v2"
+    },
+    {
+      "at": "2026-11-25T14:05:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-11-25T13:50:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 3
+    },
+    {
+      "at": "2026-10-14T09:15:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/v1"
+    },
+    {
+      "at": "2026-10-12T10:00:00Z",
+      "by": {
+        "pseudonym": "p-61c0d4",
+        "name": "Lea Brandt"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/v2",
+    "at": "2026-11-26T10:05:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "at": {
+    "ref": "e5f6a7b",
+    "kind": "release",
+    "commit": "e5f6a7b",
+    "tag": "notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/v2",
+    "at": "2026-11-26T10:05:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  }
+}

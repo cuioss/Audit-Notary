@@ -76,8 +76,10 @@ start or complete); `workshop` also carries the states `session-replaced` and `s
 `preview-unavailable` (the built-in `render-asciidoc` handler answers every other preview); `workshop` and `read-only`
 also answer the document lifecycle for the repository `test-notes` (list, read, revisions, diff, search, create, draft,
 save, submit, release; the search is the built-in `search-documents` handler), `read-only` refusing every write, and
-`workshop` carries the `note-*` states (the flow of one document from submit to release and edit, and every outcome of
-the writes)
+`workshop` carries the `note-*` states (the flow of one document from submit to release and edit, every outcome of
+the writes and of the release, the release of a request and the confirmation by password of a save and a submit) and the
+`category-*` states (a second generic category and a switched-off one); a request about a document that no route names
+answers `404 NOT_FOUND` for a repository of the scenario's rights
 
 |Control
 |`GET /mock/state`, `POST /mock/scenario`, `POST /mock/goto/{state}`, `POST /mock/reset`, `POST /mock/broadcast`,
