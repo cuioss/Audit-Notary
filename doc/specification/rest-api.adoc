@@ -667,8 +667,14 @@ lower case and a ULID is upper case. The segments `new` and `edit` (the editor o
 come before `categories.document` in the file, and no document has such an id. The address names the category and the
 document, never the repository: the web app finds the document among the repositories of the category's document types
 (`GET /api/v1/categories` names them) and reads `404 NOT_FOUND` as an address that does not exist. An address under
-`/categories/{category}` of a category that is not `generic`, or not switched on, shows the not-found view. The
-delivered categories keep their own addresses.
+`/categories/{category}` of a category that is not `generic` shows the not-found view, and so does one of a custom
+category that is not switched on and holds no documents. A custom category that is switched off but still holds
+documents is listed with `"enabled": false` (the member is absent for a category that is on): its generic addresses stay
+readable, because the references to its documents and the search results resolve through them
+(xref:../use-cases/09-categories.adoc[UC-KND-5], _Switched off with documents_), but they are read-only: the document
+sheet and the revisions offer no save, no workflow act and no release, `new` shows the not-found view, and neither the
+rail entry nor the lens counts the category. The writes answer `403 FORBIDDEN`. PROVISIONAL, see
+<<_open_questions>>. The delivered categories keep their own addresses.
 
 [#_allowed_queries]
 === Allowed Queries of an Address
@@ -1413,7 +1419,15 @@ blocked; the owner may change each one. The bodies are in <<_document_lifecycle_
   gains the optional `part` and `by`. The open sheet re-reads the document on any of them.
 . *Reading while the Git server is unreachable* serves lists, reads, revisions and search from the last fetched state;
   every write but the draft answers `GIT_UNAVAILABLE`.
-. *The Due `lens` of the generic lens is `categories`*, and a review or release item opens the release address.
+. *The Due `lens` of the generic lens is `categories`*, and an item opens the address it names: a `review` item the
+  release address, a `release` item (a request) the document's address while the document is in its first state (the
+  user submits it there, UC-DOC-8) and the release address once it is in review, as _Release Requests_ states.
+. *A switched-off custom category stays readable.* UC-KND-5 keeps the documents of a switched-off category readable
+  through references and the search. `GET /api/v1/categories` therefore lists a switched-off category that still holds
+  documents with `"enabled": false` and its document types, so that the web app finds the repository of an address; the
+  generic document and revision addresses of it are read-only (no save, no act, no release; the writes answer
+  `403 FORBIDDEN`), `new` is not offered, and neither the rail entry nor the lens counts the category. The mock has
+  no such category yet; the web app builds this with the administration of categories (step 10).
 . *The test category `test-note`* has one document type, `note`, released more than once, with the transitions
   `test-note.submit` and `test-note.release`, the collection `notes` and the tag `notes/<id>/v<n>`; a save is possible
   in every state.
@@ -1421,4 +1435,4 @@ blocked; the owner may change each one. The bodies are in <<_document_lifecycle_
 For the owner: whether the rail may gain a ninth lens, and whether `/categories/{category}` may list documents, given
 that the use cases of the categories name it for the definition (1); whether a refused draft is right, or the draft
 should be written and the errors only advised (10); whether a pending release request belongs in the approvers' Due as
-well (13); whether the release request should carry the reviewed revision now (14); the status `502` of `REJECTED` (15).
+well (13); whether the release request should carry the reviewed revision now (14); the status `502` of `REJECTED` (15); whether a switched-off custom category keeps readable, read-only generic addresses (21).

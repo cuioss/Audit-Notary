@@ -11,6 +11,8 @@
 package de.cuioss.notary.audit.mock;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import de.cuioss.notary.audit.mock.scenario.ScenarioLoader;
+import de.cuioss.notary.audit.mock.scenario.ScenarioRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -45,6 +48,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DisplayName("The document lifecycle of the test notes")
 class DocumentLifecycleTest {
+
+    private static final ClassLoader CLASS_LOADER = DocumentLifecycleTest.class.getClassLoader();
+    private static final ScenarioRegistry REGISTRY = new ScenarioRegistry(
+            new ScenarioLoader(MockClient.MAPPER, name -> ScenarioRegistry.readDataFile(CLASS_LOADER, name)),
+            CLASS_LOADER);
 
     private static final String N1 = "01JZ8Q4Y5N6V7X8B9C0D1E2F3G";
     private static final String N2 = "01JZ8R7A9C1E3G5J7M9P1S3V5X";
@@ -182,6 +190,7 @@ class DocumentLifecycleTest {
                     var response = client.get(CATEGORIES);
                     assertAll(profile,
                             () -> assertEquals(200, response.statusCode()),
+                            () -> assertTrue(json(response).path("categories").isArray()),
                             () -> assertEquals(0, json(response).path("categories").size()));
                 }
             }
@@ -1168,7 +1177,7 @@ class DocumentLifecycleTest {
         }
 
         @Test
-        @DisplayName("note-release-changed: the review reads the new text and diff, the release answers 409 once, then passes")
+        @DisplayName("note-release-changed: the release answers 409, stays refused until the diff is read again, then passes")
         void shouldReportChangeSinceReview() {
             try (var client = MockClient.start("workshop").login()) {
                 goTo(client, "note-release-changed");
@@ -1176,7 +1185,14 @@ class DocumentLifecycleTest {
                 var diff = body(client, doc(N4) + "/diff");
                 var refused = client.change("POST", release(N4), "{}");
                 String afterRefusal = stateOf(client);
+                var refusedAgain = client.change("POST", release(N4), "{}");
+                var reread = body(client, doc(N4));
+                var stillRefused = client.change("POST", release(N4), "{}");
+                var rediff = body(client, doc(N4) + "/diff");
+                String afterReview = stateOf(client);
                 var accepted = client.change("POST", release(N4), "{}");
+                var released = body(client, doc(N4));
+                var revisions = body(client, doc(N4) + "/revisions").path("revisions");
                 assertAll(
                         () -> assertEquals("p-2b7f10",
                                 read.path("parts").path("data").path("savedBy").path("pseudonym").asText()),
@@ -1185,8 +1201,18 @@ class DocumentLifecycleTest {
                         () -> assertTrue(diff.path("sections").get(0).path("changes").toString().contains("in January.")),
                         () -> assertEquals(409, refused.statusCode()),
                         () -> assertEquals("CHANGED_SINCE_REVIEW", json(refused).path("outcome").asText()),
-                        () -> assertEquals("note-release-stepped-up", afterRefusal),
-                        () -> assertEquals("RELEASED", json(accepted).path("outcome").asText()));
+                        () -> assertEquals("note-release-changed-refused", afterRefusal),
+                        () -> assertEquals(409, refusedAgain.statusCode(), "no review in between: still refused"),
+                        () -> assertEquals("1f2e3d4", reread.path("parts").path("data").path("blob").asText()),
+                        () -> assertEquals(409, stillRefused.statusCode(), "reading the document is no review"),
+                        () -> assertTrue(rediff.path("sections").get(0).path("changes").toString().contains("in January.")),
+                        () -> assertEquals("note-release-changed-reviewed", afterReview),
+                        () -> assertEquals("RELEASED", json(accepted).path("outcome").asText()),
+                        () -> assertEquals("note-release-changed-done", stateOf(client)),
+                        () -> assertEquals("released", released.path("state").asText()),
+                        () -> assertEquals("1f2e3d4", released.path("parts").path("data").path("blob").asText()),
+                        () -> assertEquals("v1", revisions.get(0).path("ref").asText()),
+                        () -> assertEquals("1f2e3d4", revisions.get(1).path("ref").asText()));
             }
         }
 
@@ -1204,22 +1230,115 @@ class DocumentLifecycleTest {
         }
 
         @Test
-        @DisplayName("keeps every note state reachable by goto and every scenario state of before")
+        @DisplayName("keeps every state of workshop.json reachable by goto, each with a fresh session")
         void shouldReachEveryState() {
-            try (var client = MockClient.start("workshop").login()) {
-                List<String> states = List.of("note-created", "note-submitted", "note-released", "note-reopened",
-                        "note-saved-by-other", "note-conflict", "note-conflict-resolved", "note-invalid",
-                        "note-released-meanwhile", "note-rejected", "note-git-unavailable", "note-submit-step-up",
-                        "note-submit-stepped-up", "note-release-step-up", "note-release-stepped-up",
-                        "note-release-done", "note-release-password", "note-release-wrong-password",
-                        "note-release-changed", "note-release-too-many-logins", "saved-by-other", "conflict",
-                        "forbidden", "preview-hostile", "preview-unavailable", "ready");
-                for (String state : states) {
+            var scenario = REGISTRY.resolve("workshop").orElseThrow().scenario();
+            var states = List.copyOf(scenario.states().keySet());
+            assertTrue(states.containsAll(List.of("note-created", "note-release-changed", "note-release-changed-refused",
+                    "note-release-changed-reviewed", "note-release-changed-done", "saved-by-other", "ready")));
+            for (String state : states) {
+                try (var client = MockClient.start("workshop").login()) {
                     goTo(client, state);
                     assertEquals(state, stateOf(client));
                     assertEquals(200, client.get("/api/v1/status").statusCode(), state);
                 }
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("workshop: the revisions, the search and the lists follow the note states")
+    class FollowTheStates {
+
+        private List<String> refs(MockClient client, String id) {
+            List<String> refs = new ArrayList<>();
+            body(client, doc(id) + "/revisions").path("revisions").forEach(entry -> refs.add(entry.path("ref").asText()));
+            return refs;
+        }
+
+        @Test
+        @DisplayName("note-saved-by-other lists the concurrent save of N2 in its revisions")
+        void shouldListTheSaveOfAnother() {
+            try (var client = MockClient.start("workshop").login()) {
+                goTo(client, "note-saved-by-other");
+                assertEquals(List.of("6c7d8e9", "3f9a1c2", "8d7c6b5", "2c3d4e5"), refs(client, N2));
+            }
+        }
+
+        @Test
+        @DisplayName("lists the submit, the release v1 and the later save of N9 as the note states reach them")
+        void shouldListTheHistoryOfN9() {
+            try (var client = MockClient.start("workshop").login()) {
+                assertEquals(List.of("f1e2d3c", "9a0b1c2"), refs(client, N9));
+                goTo(client, "note-submitted");
+                assertEquals(List.of("c5d6e7f", "f1e2d3c", "9a0b1c2"), refs(client, N9));
+                goTo(client, "note-released");
+                assertEquals(List.of("v1", "c5d6e7f", "f1e2d3c", "9a0b1c2"), refs(client, N9));
+                goTo(client, "note-reopened");
+                assertEquals(List.of("b8c0d41", "v1", "c5d6e7f", "f1e2d3c", "9a0b1c2"), refs(client, N9));
+            }
+        }
+
+        @Test
+        @DisplayName("lists the release v1 of N4 once it is released")
+        void shouldListTheReleaseOfN4() {
+            try (var client = MockClient.start("workshop").login()) {
+                goTo(client, "note-release-done");
+                assertEquals(List.of("v1", "4d5e6f7", "9b8a7c6", "6f7a8b9"), refs(client, N4));
+            }
+        }
+
+        @Test
+        @DisplayName("finds the created note in the search of note-created, and not before")
+        void shouldSearchTheCreatedNote() {
+            try (var client = MockClient.start("workshop").login()) {
+                var before = body(client, "/api/v1/search?q=phishing").path("results").size();
+                goTo(client, "note-created");
+                var after = body(client, "/api/v1/search?q=phishing").path("results");
+                assertAll(
+                        () -> assertEquals(0, before),
+                        () -> assertEquals(1, after.size()),
+                        () -> assertEquals(N10, after.get(0).path("id").asText()),
+                        () -> assertEquals("draft", after.get(0).path("state").asText()));
+            }
+        }
+
+        private JsonNode data(String file) {
+            try (var stream = CLASS_LOADER.getResourceAsStream("scenarios/data/" + file)) {
+                return MockClient.MAPPER.readTree(Objects.requireNonNull(stream, file));
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+
+        private List<JsonNode> without(JsonNode array, String field, String id) {
+            List<JsonNode> kept = new ArrayList<>();
+            array.forEach(node -> {
+                if (!id.equals(node.path(field).asText())) {
+                    kept.add(node);
+                }
+            });
+            return kept;
+        }
+
+        @Test
+        @DisplayName("keeps the hand-kept copies of the list and the index equal to the baseline but for the one note they change")
+        void shouldNotLetTheCopiesDrift() {
+            var list = data("documents-test-notes.json").path("documents");
+            var index = data("documents-index.json").path("entries");
+            assertAll(
+                    () -> assertEquals(without(list, "id", N9), without(data("documents-test-notes-n9-in-review.json")
+                            .path("documents"), "id", N9)),
+                    () -> assertEquals(without(list, "id", N9), without(data("documents-test-notes-n9-released.json")
+                            .path("documents"), "id", N9)),
+                    () -> assertEquals(without(list, "id", N9), without(data("documents-test-notes-n9-reopened.json")
+                            .path("documents"), "id", N9)),
+                    () -> assertEquals(without(list, "id", N10), without(data("documents-test-notes-created.json")
+                            .path("documents"), "id", N10)),
+                    () -> assertEquals(without(index, "id", N10), without(data("documents-index-created.json")
+                            .path("entries"), "id", N10)),
+                    () -> assertEquals(list.size() + 1, data("documents-test-notes-created.json").path("documents").size()),
+                    () -> assertEquals(index.size() + 1, data("documents-index-created.json").path("entries").size()));
         }
     }
 }

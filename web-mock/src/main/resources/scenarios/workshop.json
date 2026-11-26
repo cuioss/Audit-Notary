@@ -848,6 +848,10 @@
       "routes": {
         "GET /api/v1/documents/test-notes": {
           "body_file": "documents-test-notes-created.json"
+        },
+        "GET /api/v1/search": {
+          "handler": "search-documents",
+          "data_file": "documents-index-created.json"
         }
       },
       "events": [
@@ -870,6 +874,9 @@
         },
         "GET /api/v1/documents/test-notes": {
           "body_file": "documents-test-notes-n9-in-review.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/revisions": {
+          "body_file": "document-test-note-n9-in-review-revisions.json"
         }
       },
       "links": {
@@ -909,6 +916,9 @@
         },
         "GET /api/v1/documents/test-notes": {
           "body_file": "documents-test-notes-n9-released.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/revisions": {
+          "body_file": "document-test-note-n9-released-revisions.json"
         }
       },
       "links": {
@@ -960,6 +970,9 @@
         },
         "GET /api/v1/documents/test-notes": {
           "body_file": "documents-test-notes-n9-reopened.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/revisions": {
+          "body_file": "document-test-note-n9-reopened-revisions.json"
         }
       }
     },
@@ -968,6 +981,9 @@
       "routes": {
         "GET /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X": {
           "body_file": "document-test-note-n2-saved-by-other.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/revisions": {
+          "body_file": "document-test-note-n2-saved-by-other-revisions.json"
         }
       },
       "events": [
@@ -1297,6 +1313,9 @@
       "routes": {
         "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
           "body_file": "document-test-note-n4-released.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/revisions": {
+          "body_file": "document-test-note-n4-released-revisions.json"
         }
       },
       "events": [
@@ -1422,19 +1441,103 @@
         },
         "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/diff": {
           "body_file": "document-test-note-n4-saved-after-diff.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/revisions": {
+          "body_file": "document-test-note-n4-saved-after-revisions.json"
         }
       },
       "links": {
         "release-n4": {
           "method": "POST",
           "path": "/api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z",
-          "next": "note-release-stepped-up",
+          "next": "note-release-changed-refused",
           "status": 409,
           "body": {
             "outcome": "CHANGED_SINCE_REVIEW"
           }
         }
       }
+    },
+    "note-release-changed-refused": {
+      "description": "The release was refused as changed since the review: it stays refused until the new text and diff are read again; the next read of the diff is that review.",
+      "routes": {
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+          "body_file": "document-test-note-n4-saved-after.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/revisions": {
+          "body_file": "document-test-note-n4-saved-after-revisions.json"
+        }
+      },
+      "links": {
+        "review-n4": {
+          "method": "GET",
+          "path": "/api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/diff",
+          "next": "note-release-changed-reviewed",
+          "body_file": "document-test-note-n4-saved-after-diff.json"
+        },
+        "release-n4": {
+          "method": "POST",
+          "path": "/api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z",
+          "next": "note-release-changed-refused",
+          "status": 409,
+          "body": {
+            "outcome": "CHANGED_SINCE_REVIEW"
+          }
+        }
+      }
+    },
+    "note-release-changed-reviewed": {
+      "description": "The new text and diff were read after the refusal: the release of the Supplier security questionnaire is accepted.",
+      "routes": {
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+          "body_file": "document-test-note-n4-saved-after.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/diff": {
+          "body_file": "document-test-note-n4-saved-after-diff.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/revisions": {
+          "body_file": "document-test-note-n4-saved-after-revisions.json"
+        }
+      },
+      "links": {
+        "release-n4": {
+          "method": "POST",
+          "path": "/api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z",
+          "next": "note-release-changed-done",
+          "body": {
+            "outcome": "RELEASED",
+            "tag": "notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/v1",
+            "at": "2026-11-26T10:05:00Z"
+          }
+        }
+      }
+    },
+    "note-release-changed-done": {
+      "description": "The Supplier security questionnaire is released as v1, with the text Jordan Weber saved after the review was opened.",
+      "routes": {
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+          "body_file": "document-test-note-n4-saved-after-released.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/revisions": {
+          "body_file": "document-test-note-n4-saved-after-released-revisions.json"
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-transitioned",
+          "data": {
+            "repository": "test-notes",
+            "id": "01JZ8T5C7E9G1J3M5P7R9V1X3Z",
+            "state": "released",
+            "version": 1,
+            "by": {
+              "pseudonym": "p-7d2e58",
+              "name": "Noor Haddad"
+            }
+          }
+        }
+      ]
     },
     "note-release-too-many-logins": {
       "description": "Every place of pending logins is taken: the release cannot start its step-up; nothing is written.",

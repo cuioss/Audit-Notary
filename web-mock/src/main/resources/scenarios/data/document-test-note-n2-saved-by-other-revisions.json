@@ -1,0 +1,55 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8R7A9C1E3G5J7M9P1S3V5X",
+  "revisions": [
+    {
+      "ref": "6c7d8e9",
+      "commit": "6c7d8e9",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-26T08:50:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      }
+    },
+    {
+      "ref": "3f9a1c2",
+      "commit": "3f9a1c2",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-26T08:12:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "8d7c6b5",
+      "commit": "8d7c6b5",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-25T15:20:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "2c3d4e5",
+      "commit": "2c3d4e5",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-25T15:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

@@ -33,6 +33,23 @@ describe('scenarioFetch', () => {
     expect(scenario.state()).toBe('stepped-up');
   });
 
+  it('keeps a release refused as changed since the review until the diff is read again, like the mock', async () => {
+    const scenario = scenarioFetch('workshop');
+    const n4 = '01JZ8T5C7E9G1J3M5P7R9V1X3Z';
+    const release = () =>
+      scenario.fetch(`/api/v1/releases/test-notes/${n4}`, { method: 'POST', body: '{}' });
+    scenario.goto('note-release-changed');
+    expect((await release()).status).toBe(409);
+    expect(scenario.state()).toBe('note-release-changed-refused');
+    expect((await release()).status).toBe(409);
+    await scenario.fetch(`/api/v1/documents/test-notes/${n4}`);
+    expect((await release()).status).toBe(409);
+    await scenario.fetch(`/api/v1/documents/test-notes/${n4}/diff`);
+    expect(scenario.state()).toBe('note-release-changed-reviewed');
+    expect(await (await release()).json()).toMatchObject({ outcome: 'RELEASED' });
+    expect(scenario.state()).toBe('note-release-changed-done');
+  });
+
   it('reads a data file and refuses what the mock refuses', () => {
     expect(bodyOf({ body_file: 'samm-scopes.json' })).toHaveProperty('scopes');
     expect(() => bodyOf({ body: {}, body_file: 'samm-scopes.json' })).toThrow(

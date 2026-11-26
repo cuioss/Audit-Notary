@@ -365,7 +365,9 @@ A route key or a link path may carry a query, for example
 whose query holds every listed name with exactly the listed (percent-decoded) value; further parameters do not hinder
 the match, and a key without query matches any query, as before. The choice among several matches: a link of the state,
 a route of the state, a route of the scenario; within one of them the key with the most listed parameters, then the
-key without query (equal keys by their text, so that the answer never depends on the order of a map). `/mock/acts`
+key without query. Equal routes are told apart by the text of their key, so that the answer never depends on the order of
+a map; equal links are not: of several links with the same number of listed parameters the first in the order of the
+state wins (`ScenarioState.linkFor`; `web-app/src/lib/test/scenarioFetch.ts` does the same). `/mock/acts`
 records the path of a request with its query as sent, and `/mock/state` lists a link with its query.
 
 == Document Lifecycle
@@ -437,7 +439,8 @@ and `/status`
 `GET /api/v1/documents/test-notes` (N1 to N9, newest change first); the read, `/revisions` of every note and `/diff` of
 N2, N4, N5, N7 and N9; the revision reads `?at=v1`, `?at=v2`, `?at=4be0c3a`, `?at=a3d9f20` of N6, `?at=v2` of N7 and `?at=v1`
 of N1 (with the member `at`, `frozen: true`, no draft, no transitions, no release request); `?at=deadbee` of N6 answers
-`404 NOT_FOUND`, `?at=zzz` `422` `FORMAT`; any other query on a note reads the note itself. Writes (`workshop`): `PUT
+`404 NOT_FOUND`, `?at=zzz` `422` `FORMAT`; any other query on a note reads the note itself, which includes a ref the revisions list but no route serves (only the refs named
+above have a snapshot; the mock does not serve one per listed ref). Writes (`workshop`): `PUT
 /api/v1/drafts/test-notes/<id>` answers `DRAFT_SAVED` and `POST …/<id>/save` `SAVED` (N1 and N6 name `state: draft` and
 the next version); `POST …/<id>/transitions/test-note.submit` answers `TRANSITIONED` for N2, N7 and N8 and
 `422 MANDATORY_FIELDS_MISSING` for N3; `POST /api/v1/releases/test-notes/<id>` answers `RELEASED` for N4 (tag `v1`) and N5
@@ -454,9 +457,9 @@ matched. The mock logs no `q` beyond its request line.
 *The flow of N9* (the links of `ready`): `POST /api/v1/documents/test-notes/<N9>/transitions/test-note.submit` answers
 `TRANSITIONED` and moves to `note-submitted`; `POST /api/v1/releases/test-notes/<N9>` then answers `RELEASED` (tag `v1`) and
 moves to `note-released`; a `POST …/<N9>/save` answers `SAVED` with `state: draft`, `version: 2` and moves to
-`note-reopened`. In each of these states the read and the list show N9 as it is then (in review, released, draft with the
-release `v1`). The revisions of N9 are the same in all of them. `POST /api/v1/documents/test-notes` is a link of `ready`
-too: it answers `CREATED` and moves to `note-created`, whose list holds N10 first. The links of a state are its own: to
+`note-reopened`. In each of these states the read, the list and the revisions show N9 as it is then (in review with its
+submit, released with the release `v1`, draft again with the later save). `POST /api/v1/documents/test-notes` is a link of
+`ready` too: it answers `CREATED` and moves to `note-created`, whose list and search index hold N10. The links of a state are its own: to
 run the flow again, `POST /mock/goto/ready`.
 
 *The `note-*` states of `workshop`* are reached with `POST /mock/goto/<state>` (or by the links above); the outcomes are the
@@ -467,11 +470,14 @@ contract's:
 |State |Behaviour
 
 |`note-created`, `note-submitted`, `note-released`, `note-reopened`
-|The flow of N9 above; events `document-created` (N10), then `document-transitioned` for the submit and the release
+|The flow of N9 above; events `document-created` (N10), then `document-transitioned` for the submit and the release.
+The lists and the search index of these states are copies of the baseline with the one note that changes
+(`documents-test-notes-*.json`, `documents-index-created.json`); a test (`DocumentLifecycleTest`) fails when a copy
+differs from the baseline in any other note
 
 |`note-saved-by-other`
 |Jordan Weber saved `/summary` and `/pinned` of N2: the read of N2 has the new blob, values and one more history line, the
-draft stays; event `document-saved` with `part`, `fields` and `by`
+draft stays, and the revisions of N2 list the save; event `document-saved` with `part`, `fields` and `by`
 
 |`note-conflict`, `note-conflict-resolved`
 |The first save of N2 answers `409 CONFLICT` (blob `5d1e9a0`, fields `/summary` and `/status` with own and other value);
@@ -494,16 +500,19 @@ lists, the revisions and the search still answer `200`
 |The submit of N2 answers `403 STEP_UP_REQUIRED` once, then `TRANSITIONED`
 
 |`note-release-step-up`, `note-release-stepped-up`, `note-release-done`
-|The release of N4 answers `403 STEP_UP_REQUIRED`, then `RELEASED`; N4 then reads released (v1, by Noor Haddad) and the event
-`document-transitioned` follows
+|The release of N4 answers `403 STEP_UP_REQUIRED`, then `RELEASED`; N4 then reads released (v1, by Noor Haddad), its
+revisions list the release `v1`, and the event `document-transitioned` follows
 
 |`note-release-password`, `note-release-wrong-password`
 |The status asks for the password (`loginProvider: local`, `stepUp: password`); the release of N4 answers `RELEASED`, or
 `401 INVALID_CREDENTIALS`
 
-|`note-release-changed`
-|N4 reads as saved by Jordan after the review was opened (other blob, other summary, diff with that change); the release
-answers `409 CHANGED_SINCE_REVIEW` once, then goes on as `note-release-stepped-up`
+|`note-release-changed`, `note-release-changed-refused`, `note-release-changed-reviewed`, `note-release-changed-done`
+|N4 reads as saved by Jordan after the review was opened (other blob, other summary, diff with that change, one more
+revision); the release answers `409 CHANGED_SINCE_REVIEW` and moves to `note-release-changed-refused`, where it keeps
+answering `409` until the diff of N4 is read again (the request carries no reviewed revision, so the read of the diff is
+the review: `rest-api.adoc`, _The Document Lifecycle_). The next release then answers `RELEASED` and N4 reads released
+with Jordan's text, its revisions listing the release `v1` on top
 
 |`note-release-too-many-logins`
 |The release of N4 answers `503 TOO_MANY_LOGINS` with `Retry-After: 60`
