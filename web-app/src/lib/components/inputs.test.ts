@@ -1,9 +1,12 @@
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, within } from '@testing-library/svelte';
+import { createRawSnippet } from 'svelte';
 import { describe, expect, it, vi } from 'vitest';
 import { textSnippet } from '../test/snippets';
 import AnswerScale from './AnswerScale.svelte';
 import Button from './Button.svelte';
+import FieldFrame from './FieldFrame.svelte';
 import Link from './Link.svelte';
+import Select from './Select.svelte';
 import SegmentedControl from './SegmentedControl.svelte';
 import TextArea from './TextArea.svelte';
 import TextField from './TextField.svelte';
@@ -186,5 +189,104 @@ describe('TextField of a password', () => {
   it('is a text field by default', () => {
     render(TextField, { label: 'Name', testId: 'name' });
     expect(screen.getByTestId('name')).toHaveAttribute('type', 'text');
+  });
+});
+
+describe('the fields of the form kit (AUN-WEB-4)', () => {
+  it('lets a text field take a number or a date, a step, a mark, hints and content below', async () => {
+    const oninput = vi.fn();
+    render(TextField, {
+      label: 'Count',
+      type: 'number',
+      step: '1',
+      mark: 'required',
+      hint: ['First line.', 'Second line.'],
+      error: 'Too large.',
+      oninput,
+      after: textSnippet('below'),
+      testId: 'count',
+    });
+    const input = screen.getByTestId('count');
+    expect(input).toHaveAttribute('type', 'number');
+    expect(input).toHaveAttribute('step', '1');
+    expect(screen.getByLabelText(/^Count/)).toBe(input);
+    expect(screen.getByText('required')).toBeInTheDocument();
+    expect(input).toHaveAccessibleDescription('First line. Second line. Too large.');
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByText('below')).toBeInTheDocument();
+    await fireEvent.input(input, { target: { value: '12' } });
+    expect(oninput).toHaveBeenCalledWith('12');
+  });
+
+  it('keeps the bound value of a text field the text', async () => {
+    render(TextField, { label: 'Name', value: 'Alex', testId: 'name' });
+    const input = screen.getByTestId('name') as HTMLInputElement;
+    expect(input.value).toBe('Alex');
+    await fireEvent.input(input, { target: { value: 'Alexa' } });
+    expect(input.value).toBe('Alexa');
+  });
+
+  it('gives a select a mark, hints, content below and a change callback', async () => {
+    const onchange = vi.fn();
+    render(Select, {
+      label: 'Status',
+      options: [{ value: '0', label: 'Open' }],
+      placeholder: 'Choose…',
+      mark: 'required',
+      hint: 'Pick one.',
+      onchange,
+      after: textSnippet('below'),
+      testId: 'status',
+    });
+    const select = screen.getByTestId('status');
+    expect(select).toHaveAccessibleDescription('Pick one.');
+    expect(screen.getByText('required')).toBeInTheDocument();
+    expect(screen.getByText('below')).toBeInTheDocument();
+    await fireEvent.change(select, { target: { value: '0' } });
+    expect(onchange).toHaveBeenCalledWith('0');
+  });
+
+  it('gives a text area a mark, hints and content below', () => {
+    render(TextArea, {
+      label: 'Notes',
+      mark: 'required',
+      hint: ['One.', 'Two.'],
+      after: textSnippet('below'),
+      testId: 'notes',
+    });
+    expect(screen.getByTestId('notes')).toHaveAccessibleDescription('One. Two.');
+    expect(screen.getByText('required')).toBeInTheDocument();
+    expect(screen.getByText('below')).toBeInTheDocument();
+  });
+
+  it('names the help and the error of a switch for assistive technology', () => {
+    const onchange = vi.fn();
+    const { container } = render(FieldFrame, {
+      hint: 'A hint.',
+      error: 'An error.',
+      children: createRawSnippet((described: () => string | undefined) => ({
+        render: () => `<span data-described="${described()}">control</span>`,
+      })),
+    });
+    const described = container.querySelector('[data-described]')!.getAttribute('data-described')!;
+    const ids = described.split(' ');
+    expect(ids).toHaveLength(2);
+    expect(container.querySelector(`#${ids[0]}`)).toHaveTextContent('A hint.');
+    expect(container.querySelector(`#${ids[1]}`)).toHaveTextContent('An error.');
+    render(Toggle, { label: 'Pinned', checked: false, onchange, describedby: 'x', invalid: true });
+    const toggle = screen.getByRole('switch', { name: 'Pinned' });
+    expect(toggle).toHaveAttribute('aria-describedby', 'x');
+    expect(toggle).toHaveAttribute('aria-invalid', 'true');
+    expect(within(container).queryByRole('switch')).toBeNull();
+  });
+
+  it('draws no help and no error when it has none', () => {
+    const { container } = render(FieldFrame, {
+      children: createRawSnippet((described: () => string | undefined) => ({
+        render: () => `<span data-described="${described() ?? 'none'}">control</span>`,
+      })),
+    });
+    expect(container.querySelector('[data-described="none"]')).not.toBeNull();
+    expect(container.querySelector('p')).toBeNull();
   });
 });

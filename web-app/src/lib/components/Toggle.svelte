@@ -10,11 +10,15 @@
     checked: boolean;
     /** Called with the new value. */
     onchange: (checked: boolean) => void;
+    /** The ids of the elements that describe the setting: its help and its error. */
+    describedby?: string;
+    /** Whether the setting is in error. */
+    invalid?: boolean;
     /** A test id. */
     testId?: string;
   }
 
-  let { label, checked, onchange, testId }: Props = $props();
+  let { label, checked, onchange, describedby, invalid = false, testId }: Props = $props();
 </script>
 
 <button
@@ -22,6 +26,8 @@
   type="button"
   role="switch"
   aria-checked={checked}
+  aria-describedby={describedby}
+  aria-invalid={invalid ? 'true' : undefined}
   onclick={() => onchange(!checked)}
   data-testid={testId}
 >

@@ -9,6 +9,7 @@ import { loginStartAddress } from '../access/access';
 import { ApiError, isApiError, isOutcome, type FieldError } from './errors';
 import type {
   CatalogList,
+  CategorySchema,
   DirectoryEntry,
   DirectoryPrefill,
   DirectorySaved,
@@ -17,7 +18,12 @@ import type {
   DueList,
   LoginProvider,
   LogoutAnswer,
+  PersonDetail,
+  PersonList,
+  ReferenceAnswer,
+  ReferenceList,
   Released,
+  RenderedAsciiDoc,
   SammAssessment,
   SammComparison,
   SammModel,
@@ -53,6 +59,9 @@ export const STREAM_RETRY_LIMIT = 10;
 
 /** The anti-CSRF header of AUN-WEB-8. */
 export const CSRF_HEADER = 'X-CSRF-Token';
+
+/** The most references one `GET /api/v1/references/resolve` takes. */
+export const MAX_REFERENCES_PER_REQUEST = 50;
 
 /** The default login address, used when a `401` names none. */
 const DEFAULT_LOGIN = '/api/v1/auth/login';
@@ -151,11 +160,73 @@ export class ApiClient {
   }
 
   /**
-   * @param catalog the catalog, `team` or `role`
+   * @param catalog the catalog (`team`, `role`, `service`, …); the list holds the retired entries too, marked `retired`
    * @returns its entries
    */
-  getCatalog(catalog: 'team' | 'role'): Promise<CatalogList> {
-    return this.request<CatalogList>('GET', `/api/v1/catalogs/${catalog}`);
+  getCatalog(catalog: string): Promise<CatalogList> {
+    return this.request<CatalogList>('GET', `/api/v1/catalogs/${seg(catalog)}`);
+  }
+
+  /**
+   * The schema of every document type of a category, for the generated form (AUN-WEB-4). PROVISIONAL.
+   *
+   * @param category the category id
+   * @returns the kinds with their repository alias and their schema file
+   * @throws ApiError `NOT_FOUND` for an unknown or switched-off category
+   */
+  getCategorySchema(category: string): Promise<CategorySchema> {
+    return this.request<CategorySchema>('GET', `/api/v1/categories/${seg(category)}/schema`);
+  }
+
+  /**
+   * Renders AsciiDoc on the server for the preview; nothing is stored. PROVISIONAL.
+   *
+   * @param source the AsciiDoc source, at most 65,536 bytes in UTF-8
+   * @returns the sanitised HTML, which the caller must still parse with the allow-list and never inserts as markup
+   * @throws ApiError `TOO_LARGE` (`details.limit`), `RENDER_UNAVAILABLE`, or `VALIDATION`
+   */
+  renderAsciiDoc(source: string): Promise<RenderedAsciiDoc> {
+    return this.request<RenderedAsciiDoc>('POST', '/api/v1/render/asciidoc', { source });
+  }
+
+  /**
+   * The person entries a document may reference: the bound and the prefilled ones, at most 100, ordered by name.
+   * PROVISIONAL.
+   *
+   * @param query the typed text; the server keeps the entries whose name contains it
+   * @returns the persons, and whether more entries matched
+   */
+  listPersons(query?: string): Promise<PersonList> {
+    const q = query === undefined || query === '' ? '' : `?q=${encodeURIComponent(query)}`;
+    return this.request<PersonList>('GET', `/api/v1/directory/persons${q}`);
+  }
+
+  /**
+   * @param pseudonym the pseudonym a document holds
+   * @returns the person: bound, not yet bound, or a former member with no name
+   * @throws ApiError `NOT_FOUND` for a pseudonym that resolves to no entry and to no erasure
+   */
+  getPerson(pseudonym: string): Promise<PersonDetail> {
+    return this.request<PersonDetail>('GET', `/api/v1/directory/persons/${seg(pseudonym)}`);
+  }
+
+  /**
+   * Resolves document and catalog references to a title and a canonical address. PROVISIONAL.
+   *
+   * @param refs the references; more than {@link MAX_REFERENCES_PER_REQUEST} go in several requests
+   * @returns one answer per reference, in the order asked
+   */
+  async resolveReferences(refs: string[]): Promise<ReferenceAnswer[]> {
+    const answers: ReferenceAnswer[] = [];
+    for (let from = 0; from < refs.length; from += MAX_REFERENCES_PER_REQUEST) {
+      const query = refs
+        .slice(from, from + MAX_REFERENCES_PER_REQUEST)
+        .map((ref) => `ref=${encodeURIComponent(ref)}`)
+        .join('&');
+      const list = await this.request<ReferenceList>('GET', `/api/v1/references/resolve?${query}`);
+      answers.push(...list.references);
+    }
+    return answers;
   }
 
   /**

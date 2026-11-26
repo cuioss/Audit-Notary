@@ -11,6 +11,7 @@ import actBackUrl from './ui/act-back.svg?url';
 import actCancelUrl from './ui/act-cancel.svg?url';
 import actChartUrl from './ui/act-chart.svg?url';
 import actCompareUrl from './ui/act-compare.svg?url';
+import actDownUrl from './ui/act-down.svg?url';
 import actExpandUrl from './ui/act-expand.svg?url';
 import actExternalUrl from './ui/act-external.svg?url';
 import actMoreUrl from './ui/act-more.svg?url';
@@ -21,6 +22,7 @@ import actSaveUrl from './ui/act-save.svg?url';
 import actSearchUrl from './ui/act-search.svg?url';
 import actStampUrl from './ui/act-stamp.svg?url';
 import actTableUrl from './ui/act-table.svg?url';
+import actUpUrl from './ui/act-up.svg?url';
 import kindDocumentUrl from './ui/kind-document.svg?url';
 import kindEntityUrl from './ui/kind-entity.svg?url';
 import kindReportUrl from './ui/kind-report.svg?url';
@@ -57,6 +59,7 @@ export const ICON_URLS = {
   'act.chart': actChartUrl,
   'act.close': actCancelUrl,
   'act.compare': actCompareUrl,
+  'act.down': actDownUrl,
   'act.expand': actExpandUrl,
   'act.external': actExternalUrl,
   'act.more': actMoreUrl,
@@ -67,6 +70,7 @@ export const ICON_URLS = {
   'act.search': actSearchUrl,
   'act.stamp': actStampUrl,
   'act.table': actTableUrl,
+  'act.up': actUpUrl,
   'kind.document': kindDocumentUrl,
   'kind.entity': kindEntityUrl,
   'kind.report': kindReportUrl,

@@ -15,7 +15,9 @@ Read the concept first, then the component you are about to change.
 
 1. Name the document and its moment: whose record is it, who fills it in, who signs it, what is at stake. The design
    follows from the subject (a workshop, a release, an incident under a deadline), never from a template.
-2. Find the existing piece. `web-app/src/lib/components/` is a closed vocabulary: extend a component before adding
+2. Find the existing piece. `web-app/src/lib/forms/` is the form kit (`SchemaForm`, `DateTimeField`, `DataTable`,
+   `CatalogPicker`, `PersonPicker`, `AsciiDocField`, `DocumentRefField`); its tests sit beside it and read the mock's
+   `workshop` profile. `web-app/src/lib/components/` is a closed vocabulary: extend a component before adding
    one, and add one only with its test in `components.test.ts` or a test file beside it.
 3. For a chart, use the five series colours in model order (`--color-series-1` … `-5`); they are validated for
    colour-vision and normal-vision separation against both sheet colours (`#ffffff`, `#161d2e`). A new chart colour
@@ -80,6 +82,25 @@ Read the concept first, then the component you are about to change.
 
 - Only on calm surfaces: an empty Due list, a finished release, the signed-out page.
 - Never in incidents, deadlines, warnings or errors.
+
+**Forms** (the form kit, `web-app/src/lib/forms/`, AUN-WEB-4)
+
+- A document is edited and read through `SchemaForm`; a lens never writes a field of its own. A field the kit lacks is
+  added to the kit (`schema.ts` chooses the component by the ordered rules), not to a view.
+- Texts of a field are catalogue keys `category.<category>.<kind>.field.<path>` (`.help`, `.option.<value>`) of the
+  category's messages, never the schema's `title`. A field without a key shows its property name on purpose.
+- A mandatory field is marked with the word *required* after its label, never with a colour or an asterisk, and is no
+  error before a transition (`showMissing` says it once a transition was refused). A format error is advice ("You can
+  still save"); the server's verdict replaces the browser's errors.
+- Marks are the tag grammar: a dot (`StatusLabel`) for information (*retired*, *not yet bound*, *former member*), a box
+  (`ReasonBadge`) for what needs the person (*not found*, *unknown person*, a row with an error). A person is shown by
+  the name, or for a former member by team and role, never by the pseudonym, except as the `Chip` of an unknown one.
+- A control that holds a list (`DataTable`) edits a row in a dialog over a copy: nothing changes until "Apply changes";
+  removing a row asks first; a limit of the list hides or explains the act, it never leaves a dead control; on a narrow
+  column a row stands as a block of its columns, so nothing scrolls sideways.
+- The preview of AsciiDoc is the server's, cut to the allow-list and drawn with the app's own elements (`SafeNodes`);
+  `{@html}` stays banned. An unavailable renderer costs the preview only.
+- Read-only: the same labels, sections and hints, values typeset in the serif as text; the marks belong to the reading.
 
 **CSP and markup**
 

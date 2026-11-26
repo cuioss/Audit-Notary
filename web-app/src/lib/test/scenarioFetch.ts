@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { loadMessages, loadPropertiesFile } from '../../test/catalogue-fixture';
 
 /**
  * An in-memory `fetch` over the scenario files of `web-mock` (AUN-TEST-1, "Shared fixtures"): unit tests,
@@ -16,10 +17,18 @@ export const SCENARIO_DIR = path.resolve(
 
 interface RouteDefinition {
   status?: number;
+  /** A built-in handler of the mock that computes the answer from the request instead of a body. */
+  handler?: string;
   body?: unknown;
   /** A data file below `scenarios/data/` whose JSON is the body, as the mock's `body_file`. */
   body_file?: string;
 }
+
+/** The built-in handlers of the mock's engine (`web-mock` `Handler`). */
+const HANDLERS = new Set(['render-asciidoc']);
+
+/** The most bytes of source the preview handler renders, as the mock's. */
+const RENDER_LIMIT_BYTES = 65_536;
 
 /** The name pattern of a data file, the same as the mock's. */
 const DATA_FILE = /^[a-z0-9][a-z0-9.-]*\.json$/;
@@ -91,6 +100,113 @@ export function bodyOf(route: RouteDefinition): unknown {
   const text = fs.readFileSync(path.join(SCENARIO_DIR, 'data', route.body_file), 'utf8');
   if (text.trim() === '') throw new Error(`data file ${route.body_file} holds no JSON value`);
   return JSON.parse(text);
+}
+
+/**
+ * @param text a text
+ * @returns it with `& < > " '` escaped, as the mock's `escapeHtml`
+ */
+function escapeHtml(text: string): string {
+  return text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+/**
+ * @param text one escaped line or block
+ * @returns it with `*x*`, `_x_` and `` `x` `` turned into strong, emphasis and code, non-greedy and not nested
+ */
+function renderInline(text: string): string {
+  return text.replace(/\*([^*]+?)\*|_([^_]+?)_|`([^`]+?)`/g, (_, strong, emphasis, code) => {
+    if (strong !== undefined) return `<strong>${strong}</strong>`;
+    if (emphasis !== undefined) return `<em>${emphasis}</em>`;
+    return `<code>${code}</code>`;
+  });
+}
+
+/**
+ * The deliberately tiny, deterministic renderer of the mock's `render-asciidoc` handler (`AsciiDocPreview.java`), with
+ * the same rules in the same order: the source is escaped first; blocks are separated by blank lines; a block of lines
+ * that all start with `* ` is a list; a block of one line `== ` to `====== ` is a heading `h2` to `h6`; every other
+ * block is a paragraph with its lines joined by `<br>`.
+ *
+ * @param source the AsciiDoc source
+ * @returns the HTML
+ */
+export function renderAsciiDocLikeTheMock(source: string): string {
+  const text = escapeHtml(source).replaceAll('\r\n', '\n').replaceAll('\r', '\n').trim();
+  return text
+    .split(/\n\s*\n/)
+    .filter((block) => block.trim() !== '')
+    .map((block) => {
+      const lines = block.split('\n');
+      if (lines.every((line) => line.startsWith('* '))) {
+        return `<ul>${lines.map((line) => `<li>${renderInline(line.slice(2))}</li>`).join('')}</ul>`;
+      }
+      const heading = lines.length === 1 ? /^(={2,6}) (.*)$/.exec(lines[0]) : null;
+      if (heading) {
+        const level = heading[1].length;
+        return `<h${level}>${renderInline(heading[2])}</h${level}>`;
+      }
+      return `<div><p>${lines.map(renderInline).join('<br>')}</p></div>`;
+    })
+    .join('');
+}
+
+/**
+ * The answer of `POST /api/v1/render/asciidoc` (rest-api.adoc, Form Kit Requests), by the rules of the mock's engine:
+ * no `source` is `422 REQUIRED`, one that is no string `422 TYPE`, one above 65,536 bytes `413 TOO_LARGE`, else `200`.
+ *
+ * @param bodyText the text of the request body
+ * @returns the answer
+ */
+function renderAnswer(bodyText: string): Response {
+  let body: unknown = null;
+  try {
+    body = JSON.parse(bodyText);
+  } catch {
+    // Not JSON: it has no `source`.
+  }
+  const record = body && typeof body === 'object' && !Array.isArray(body) ? body : null;
+  const source = record ? (record as Record<string, unknown>).source : undefined;
+  if (source === undefined) {
+    return answer({
+      status: 422,
+      body: { outcome: 'VALIDATION', errors: [{ pointer: '/source', code: 'REQUIRED' }] },
+    });
+  }
+  if (typeof source !== 'string') {
+    return answer({
+      status: 422,
+      body: { outcome: 'VALIDATION', errors: [{ pointer: '/source', code: 'TYPE' }] },
+    });
+  }
+  if (new TextEncoder().encode(source).length > RENDER_LIMIT_BYTES) {
+    return answer({ status: 413, body: { outcome: 'TOO_LARGE', limit: RENDER_LIMIT_BYTES } });
+  }
+  return answer({ body: { html: renderAsciiDocLikeTheMock(source) } });
+}
+
+/**
+ * The catalogue the mock serves for `GET /api/v1/messages?lang=`: the web app's, with the labels of the fixture
+ * categories of `scenarios/messages/` on top; a fixture key that the web app holds too is refused, as the mock refuses
+ * to start (`MessageCatalogue`).
+ *
+ * @param lang `en` or `de`
+ * @returns the catalogue
+ */
+export function mockMessages(lang: 'en' | 'de'): Record<string, string> {
+  const base = loadMessages(lang);
+  const fixtures = loadPropertiesFile(
+    path.join(SCENARIO_DIR, 'messages', `messages_${lang}.properties`),
+  );
+  for (const key of Object.keys(fixtures)) {
+    if (Object.hasOwn(base, key)) throw new Error(`fixture message ${key} exists in the web app`);
+  }
+  return { ...base, ...fixtures };
 }
 
 function answer(route: RouteDefinition): Response {
@@ -194,6 +310,9 @@ export function scenarioFetch(reference: string): ScenarioFetch {
         return answer({ status: 403, body: { outcome: 'FORBIDDEN' } });
       }
     }
+    if (key === 'GET /api/v1/messages') {
+      return answer({ body: mockMessages(url.searchParams.get('lang') === 'de' ? 'de' : 'en') });
+    }
     const link = Object.values(current.links ?? {}).find(
       (candidate) => candidate.method === method && candidate.path === url.pathname,
     );
@@ -214,6 +333,16 @@ export function scenarioFetch(reference: string): ScenarioFetch {
       });
     }
     const route = current.routes?.[key] ?? scenario.routes[key];
+    if (route?.handler !== undefined) {
+      if (!HANDLERS.has(route.handler)) throw new Error(`unknown handler: ${route.handler}`);
+      const text =
+        init?.body !== undefined && init.body !== null
+          ? String(init.body)
+          : request
+            ? await request.clone().text()
+            : '';
+      return renderAnswer(text);
+    }
     return route
       ? answer(route)
       : answer({ status: 404, body: { outcome: 'MOCK_NO_ROUTE', method, path: url.pathname } });

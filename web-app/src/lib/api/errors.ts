@@ -19,6 +19,9 @@ export const OUTCOMES = [
   'CHANGED_SINCE_REVIEW',
   'MODEL_VERSIONS_DIFFER',
   'TOO_MANY_LOGINS',
+  'NOT_FOUND',
+  'TOO_LARGE',
+  'RENDER_UNAVAILABLE',
 ] as const;
 
 /** An outcome of a refusal of the server. */

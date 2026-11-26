@@ -5,7 +5,7 @@
  *
  * - Outside `src/lib/i18n`, no `.svelte` file may hold a text node or one of the attributes `title`,
  *   `placeholder`, `aria-label`, `alt`, `label` with literal words; every text comes from the catalogue.
- * - In `src/lib/views`, `src/lib/templates` and `src/routes`, no raw `<button>`, `<a>`, `<input>`,
+ * - In `src/lib/views`, `src/lib/templates`, `src/lib/forms` and `src/routes`, no raw `<button>`, `<a>`, `<input>`,
  *   `<select>` or `<textarea>`: views use the components.
  *
  * `--self-test` checks the rules against inline samples.
@@ -18,7 +18,7 @@ import { parse } from 'svelte/compiler';
 const SRC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'src');
 const TEXT_ATTRIBUTES = new Set(['title', 'placeholder', 'aria-label', 'alt', 'label']);
 const RAW_CONTROLS = new Set(['button', 'a', 'input', 'select', 'textarea']);
-const VOCABULARY_DIRS = ['lib/views', 'lib/templates', 'routes'];
+const VOCABULARY_DIRS = ['lib/views', 'lib/templates', 'lib/forms', 'routes'];
 const WORD = /\p{L}{2,}/u;
 
 /**
