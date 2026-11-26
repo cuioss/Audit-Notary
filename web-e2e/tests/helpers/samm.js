@@ -182,10 +182,13 @@ export async function fillNewAssessment(page, title, date = '2026-11-26') {
  * @param page the page
  * @param pattern the glob of the URL
  * @param patch a function that gets the parsed body and returns the changed one
+ * @param options `times`: how many reads are patched, the first ones; the later ones are the mock's own answer
  */
-export async function patchRead(page, pattern, patch) {
+export async function patchRead(page, pattern, patch, { times = Infinity } = {}) {
+  let left = times;
   await page.route(pattern, async (route) => {
-    if (route.request().method() !== 'GET') return route.continue();
+    if (route.request().method() !== 'GET' || left <= 0) return route.continue();
+    left -= 1;
     const response = await route.fetch();
     const body = await response.json();
     return route.fulfill({ response, json: patch(body) });

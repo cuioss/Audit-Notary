@@ -790,10 +790,13 @@ test.describe('a new assessment', () => {
     await useScenario(request, 'workshop');
     await clearActs(request);
     // The page reads the scope before another person opens an assessment: it shows none open, the server knows one.
-    await patchRead(page, '**/api/v1/samm/scopes/payments', (scope) => ({
-      ...scope,
-      assessments: [],
-    }));
+    // Only that first read is stale: the read that follows the refusal is the truth, and shows the open assessment.
+    await patchRead(
+      page,
+      '**/api/v1/samm/scopes/payments',
+      (scope) => ({ ...scope, assessments: [] }),
+      { times: 1 },
+    );
     await loginToSamm(page, newAssessmentAddress('payments'));
     await expect(page.getByTestId('open-notice')).toHaveCount(0);
     await fillNewAssessment(page, 'Payments 2026 Q4 again');
