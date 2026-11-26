@@ -250,6 +250,12 @@ bodies in xref:../specification/rest-api.adoc#_decided_directory[REST API Regist
   on every view; the page asks "Is this still right?". The notice is no gate.
 . The first-login form shows binding candidates, and the user binds to one or creates a new entry.
 . A catalog entry that someone else saved is read again when its event arrives, as a document is.
+. The pages of the directory are built as decided in
+  xref:../specification/rest-api.adoc#_decided_directory[REST API Register, Open Questions]: the persons are a table with
+  a search, the entry of several persons at once and the erasure behind a confirmation; the import is a wizard of three
+  steps that checks before it writes; the first login offers the candidates by name, team and role; the page of the own
+  entry asks "Is this still right?" only when the confirmation is due and treats a saved change as the confirmation. The
+  way in is a link in the first column of the lens *Catalogs* and one in *Settings*.
 . The release view is one flow for every category (`ReleaseFlow`); the SAMM release and the release of the generic
   lens hand it their words, seal and values. The generic release shows the diff grouped by property, the values as the
   form reads them, and no seal before the release (`ReleaseSeal` after it). A released document skips the diff, and the

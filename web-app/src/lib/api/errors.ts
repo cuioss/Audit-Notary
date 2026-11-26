@@ -23,6 +23,8 @@ export const OUTCOMES = [
   'TOO_LARGE',
   'RENDER_UNAVAILABLE',
   'NOT_BINDABLE',
+  'BINDING_CANDIDATES',
+  'MANAGED_BY_SOURCE',
   'ID_TAKEN',
   'RETIRED',
 ] as const;
@@ -130,6 +132,12 @@ export function errorMessageKey(error: unknown): string {
       return 'error.id-taken';
     case 'RETIRED':
       return 'error.retired';
+    case 'MANAGED_BY_SOURCE':
+      return 'error.managed-by-source';
+    case 'NOT_BINDABLE':
+      return 'error.not-bindable';
+    case 'TOO_LARGE':
+      return 'error.too-large';
     case 'VALIDATION':
       return 'error.validation';
     case 'TIMEOUT':

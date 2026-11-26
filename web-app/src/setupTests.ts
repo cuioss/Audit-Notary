@@ -51,6 +51,18 @@ if (typeof HTMLDialogElement !== 'undefined') {
   };
 }
 
+// jsdom's File has no `text()`, which every browser has and the import of descriptors reads files with.
+if (typeof Blob !== 'undefined' && typeof Blob.prototype.text === 'undefined') {
+  Blob.prototype.text = function text(this: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(this);
+    });
+  };
+}
+
 // jsdom measures no layout and has no ResizeObserver, which `bind:clientWidth` uses: a silent one stands in, so a
 // measuring component falls back to its documented default width.
 if (typeof globalThis.ResizeObserver === 'undefined') {

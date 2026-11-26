@@ -48,6 +48,23 @@ describe('the catalogs', () => {
     view.unmount();
   });
 
+  it('leads to the pages of the directory, the persons and the import, under the catalogs', async () => {
+    await useProfile('catalog-admin');
+    render(CatalogsView, { ...CATALOG('team'), onnavigate: vi.fn() });
+    await screen.findByTestId('entry-list');
+    const nav = screen.getByTestId('directory-nav');
+    expect(within(nav).getByTestId('directory-persons')).toHaveAttribute(
+      'href',
+      '/directory/persons',
+    );
+    expect(within(nav).getByTestId('directory-import')).toHaveAttribute(
+      'href',
+      '/directory/import',
+    );
+    // The five catalogs stay the only rows of their list.
+    expect(within(screen.getByTestId('catalog-list')).getAllByRole('link')).toHaveLength(5);
+  });
+
   it('keeps the list of the catalogs beside the entries and marks the catalog that is open', async () => {
     await useProfile('catalog-admin');
     render(CatalogsView, { ...CATALOG('service'), onnavigate: vi.fn() });

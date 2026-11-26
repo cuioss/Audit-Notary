@@ -311,6 +311,82 @@ describe('the catalog requests (rest-api.adoc, Directory and Catalog Requests)',
   });
 });
 
+describe('the directory requests (rest-api.adoc, The Own Entry; The Backstage Import; Prefilled Persons)', () => {
+  it('sends the own entry, its confirmation, the import and the persons with the anti-CSRF header', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json(200, SESSION))
+      .mockResolvedValueOnce(json(200, { outcome: 'SAVED', pseudonym: 'p-1' }))
+      .mockResolvedValueOnce(json(200, { outcome: 'SAVED', pseudonym: 'p-1' }))
+      .mockResolvedValueOnce(json(200, { outcome: 'CONFIRMED', confirmedAt: '2026-11-26' }))
+      .mockResolvedValueOnce(json(200, { outcome: 'PREVIEW' }))
+      .mockResolvedValueOnce(json(200, { outcome: 'IMPORTED' }))
+      .mockResolvedValueOnce(json(201, { outcome: 'CREATED', persons: [] }))
+      .mockResolvedValueOnce(json(200, { outcome: 'ERASED' }));
+    const documents = [{ name: 'catalog-info.yaml', content: 'kind: Group' }];
+    const memberships = [{ team: 'team:payments', role: 'role:developer' }];
+    await client.putDirectoryMe({
+      name: 'Robin',
+      team: 'payments',
+      role: 'developer',
+      binding: 'new',
+    });
+    await client.putDirectoryMe({ name: 'Robin', memberships });
+    await client.confirmDirectoryMe();
+    await client.previewBackstageImport(documents);
+    await client.importBackstage(documents);
+    await client.createPersons([{ name: 'Nadia', memberships }]);
+    await client.erasePerson('p-2b7f10');
+    const calls = fetchMock.mock.calls.slice(1);
+    expect(calls.map((call) => [call[0], call[1].method])).toEqual([
+      ['/api/v1/directory/me', 'PUT'],
+      ['/api/v1/directory/me', 'PUT'],
+      ['/api/v1/directory/me/confirmation', 'POST'],
+      ['/api/v1/catalogs/import/backstage/preview', 'POST'],
+      ['/api/v1/catalogs/import/backstage', 'POST'],
+      ['/api/v1/directory/persons', 'POST'],
+      ['/api/v1/directory/erasures', 'POST'],
+    ]);
+    expect(calls.every((call) => call[1].headers[CSRF_HEADER] === 'token-1')).toBe(true);
+    expect(JSON.parse(calls[0][1].body)).toEqual({
+      name: 'Robin',
+      team: 'payments',
+      role: 'developer',
+      binding: 'new',
+    });
+    expect(JSON.parse(calls[1][1].body)).toEqual({ name: 'Robin', memberships });
+    expect(calls[2][1].body).toBeUndefined();
+    expect(JSON.parse(calls[3][1].body)).toEqual({ documents });
+    expect(JSON.parse(calls[4][1].body)).toEqual({ documents });
+    expect(JSON.parse(calls[5][1].body)).toEqual({ persons: [{ name: 'Nadia', memberships }] });
+    expect(JSON.parse(calls[6][1].body)).toEqual({ pseudonym: 'p-2b7f10' });
+  });
+
+  it('keeps the members of the refusals that carry more than a word', async () => {
+    fetchMock.mockResolvedValueOnce(json(200, SESSION));
+    fetchMock.mockResolvedValueOnce(
+      json(409, { outcome: 'BINDING_CANDIDATES', candidates: [{ pseudonym: 'p-3d7a15' }] }),
+    );
+    fetchMock.mockResolvedValueOnce(json(409, { outcome: 'NOT_BINDABLE' }));
+    fetchMock.mockResolvedValueOnce(
+      json(409, { outcome: 'MANAGED_BY_SOURCE', type: 'managed-by-source' }),
+    );
+    fetchMock.mockResolvedValueOnce(json(413, { outcome: 'TOO_LARGE', limit: 2_097_152 }));
+    await expect(client.putDirectoryMe({ name: 'R', team: 't', role: 'r' })).rejects.toMatchObject({
+      outcome: 'BINDING_CANDIDATES',
+      status: 409,
+      details: { candidates: [{ pseudonym: 'p-3d7a15' }] },
+    });
+    await expect(client.putDirectoryMe({ name: 'R', team: 't', role: 'r' })).rejects.toMatchObject({
+      outcome: 'NOT_BINDABLE',
+    });
+    await expect(client.erasePerson('p-1')).rejects.toMatchObject({ outcome: 'MANAGED_BY_SOURCE' });
+    await expect(client.importBackstage([])).rejects.toMatchObject({
+      outcome: 'TOO_LARGE',
+      details: { limit: 2_097_152 },
+    });
+  });
+});
+
 describe('the document lifecycle requests (rest-api.adoc, Document Lifecycle Requests)', () => {
   it('reads the categories, the list of a repository and the search with GET', async () => {
     fetchMock.mockImplementation(async () => json(200, { ok: true }));

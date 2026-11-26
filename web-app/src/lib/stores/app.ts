@@ -229,6 +229,23 @@ export function completeFirstLogin(pseudonym: string): void {
 }
 
 /**
+ * Reads the session again and keeps it: after the own entry was confirmed or changed, so that the shell's notice of a due
+ * confirmation goes (`directoryConfirmationDue`). A failed read leaves the session as it was.
+ *
+ * To be replaced by Token Sheriff `client-framework-aspects` (the session view of the planned session layer, ADR-0004);
+ * kept to this one read.
+ *
+ * @param client the client, {@link apiClient} by default
+ */
+export async function refreshSession(client: ApiClient = apiClient): Promise<void> {
+  try {
+    session.set(await client.getSession());
+  } catch {
+    // The notice stays until the next read; nothing else depends on it.
+  }
+}
+
+/**
  * @param store a store
  * @returns its current value
  */

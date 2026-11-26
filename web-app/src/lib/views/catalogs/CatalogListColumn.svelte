@@ -1,13 +1,16 @@
 <script lang="ts">
   import ColumnHead from '../../components/ColumnHead.svelte';
+  import Link from '../../components/Link.svelte';
   import RowLink from '../../components/RowLink.svelte';
   import { CATALOGS } from '../../api/types';
   import { catalogName } from '../../catalogs/catalogs';
+  import { IMPORT_ADDRESS, PERSONS_ADDRESS } from '../../directory/directory';
   import { messagesStore, t } from '../../i18n';
 
   /**
    * The first column of the Catalogs lens: the five catalogs in their fixed order, `team`, `role`, `service`, `system`,
-   * `external`, each with the sentence that says what it holds. It makes no request (rest-api.adoc, The Addresses).
+   * `external`, each with the sentence that says what it holds, and under them the way to the two pages of the directory
+   * (the persons, the Backstage import). It makes no request (rest-api.adoc, The Addresses).
    */
   interface Props {
     /** The selected catalog. */
@@ -37,8 +40,29 @@
     </li>
   {/each}
 </ul>
+<nav class="directory" aria-label={$t('directory.nav')} data-testid="directory-nav">
+  <Link href={PERSONS_ADDRESS} quiet data-testid="directory-persons">
+    {$t('directory.persons.title')}
+  </Link>
+  <Link href={IMPORT_ADDRESS} quiet data-testid="directory-import">
+    {$t('import.title')}
+  </Link>
+</nav>
 
 <style>
+  .directory {
+    display: flex;
+    flex-direction: column;
+    margin-block-start: var(--space-4);
+    padding-block-start: var(--space-3);
+    border-block-start: 1px solid var(--color-border);
+  }
+
+  /* A link of the list is a touch target of the phone's size. */
+  .directory :global(a) {
+    padding-block: var(--space-3);
+  }
+
   .column__list {
     display: flex;
     flex-direction: column;

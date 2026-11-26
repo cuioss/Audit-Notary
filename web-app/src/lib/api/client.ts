@@ -20,16 +20,23 @@ import type {
   Created,
   DocumentList,
   DocumentRead,
+  DirectoryConfirmed,
   DirectoryEntry,
   DirectoryPrefill,
   DirectorySaved,
   DocumentDiff,
+  Erased,
   DraftSaved,
   DueList,
+  ImportDocument,
+  ImportResult,
   LoginProvider,
   LogoutAnswer,
+  OwnEntryChange,
   PersonDetail,
+  PersonDraft,
   PersonList,
+  PersonsCreated,
   ReferenceAnswer,
   ReferenceList,
   Released,
@@ -60,6 +67,16 @@ export type StreamState = 'connecting' | 'connected' | 'reconnecting' | 'offline
 
 /** A listener of the event stream. */
 export type EventListener = (event: string, data: unknown) => void;
+
+/** The most descriptor documents of one import (rest-api.adoc, The Backstage Import). */
+export const MAX_IMPORT_DOCUMENTS = 100;
+
+/** The most bytes of descriptors of one import, together: 2 MiB. */
+export const MAX_IMPORT_BYTES = 2_097_152;
+
+/** The most persons of one prefill request, and the most memberships of a person. */
+export const MAX_PERSONS_PER_REQUEST = 100;
+export const MAX_MEMBERSHIPS = 5;
 
 /** The time a request may take before it fails with `TIMEOUT`. */
 export const REQUEST_TIMEOUT_MS = 15_000;
@@ -392,11 +409,75 @@ export class ApiClient {
   }
 
   /**
-   * @param entry the own directory entry
-   * @returns the saved entry's pseudonym
+   * Saves the own directory entry: the first login (one team and one role, `binding` after `BINDING_CANDIDATES`) or, for
+   * a user who has an entry, a change of its name and memberships, which counts as a confirmation. No step-up.
+   *
+   * @param entry the first-login entry, or the change of the own entry
+   * @returns the saved entry's pseudonym (and, for a change, the day it is confirmed)
+   * @throws ApiError `VALIDATION`, `BINDING_CANDIDATES` (`details.candidates`), `NOT_BINDABLE`, `GIT_UNAVAILABLE`,
+   * `REJECTED`
    */
-  putDirectoryMe(entry: DirectoryEntry): Promise<DirectorySaved> {
+  putDirectoryMe(entry: DirectoryEntry | OwnEntryChange): Promise<DirectorySaved> {
     return this.request<DirectorySaved>('PUT', '/api/v1/directory/me', entry);
+  }
+
+  /**
+   * Confirms the own entry as it is ("Is this still right?"); the entry is unchanged and its confirmation day is
+   * today. PROVISIONAL.
+   *
+   * @returns the day of the confirmation
+   * @throws ApiError `FORBIDDEN`, `GIT_UNAVAILABLE`, `REJECTED`
+   */
+  confirmDirectoryMe(): Promise<DirectoryConfirmed> {
+    return this.request<DirectoryConfirmed>('POST', '/api/v1/directory/me/confirmation');
+  }
+
+  /**
+   * Checks what the import of Backstage descriptors would do; nothing is written. PROVISIONAL.
+   *
+   * @param documents the descriptors as text, at most {@link MAX_IMPORT_DOCUMENTS}, together at most
+   * {@link MAX_IMPORT_BYTES}
+   * @returns what would be created, updated, left alone and left out (`PREVIEW`)
+   * @throws ApiError `FORBIDDEN`, `VALIDATION` (`/documents/<n>/content`, `FORMAT`), `TOO_LARGE` (`details.limit`),
+   * `GIT_UNAVAILABLE`
+   */
+  previewBackstageImport(documents: ImportDocument[]): Promise<ImportResult> {
+    return this.request<ImportResult>('POST', '/api/v1/catalogs/import/backstage/preview', {
+      documents,
+    });
+  }
+
+  /**
+   * Imports Backstage descriptors in one commit: it updates and creates, never duplicates or deletes.
+   *
+   * @param documents the descriptors, as for the preview
+   * @returns what was created, updated, left alone and left out (`IMPORTED`)
+   * @throws ApiError as the preview, and `REJECTED`
+   */
+  importBackstage(documents: ImportDocument[]): Promise<ImportResult> {
+    return this.request<ImportResult>('POST', '/api/v1/catalogs/import/backstage', { documents });
+  }
+
+  /**
+   * Saves person entries that no login has bound yet, all in one commit. PROVISIONAL.
+   *
+   * @param persons one to {@link MAX_PERSONS_PER_REQUEST} persons, each with a name and one to five memberships
+   * @returns the saved entries in the order sent
+   * @throws ApiError `FORBIDDEN`, `VALIDATION` (`/persons/<n>/…`), `MANAGED_BY_SOURCE`, `GIT_UNAVAILABLE`, `REJECTED`
+   */
+  createPersons(persons: PersonDraft[]): Promise<PersonsCreated> {
+    return this.request<PersonsCreated>('POST', '/api/v1/directory/persons', { persons });
+  }
+
+  /**
+   * Erases a person's entry at once; it cannot be undone. No step-up. PROVISIONAL.
+   *
+   * @param pseudonym the person's pseudonym
+   * @returns the day of the erasure
+   * @throws ApiError `FORBIDDEN`, `NOT_FOUND`, `MANAGED_BY_SOURCE`, `GIT_UNAVAILABLE`, `REJECTED`
+   */
+  erasePerson(pseudonym: string): Promise<Erased> {
+    return this.request<Erased>('POST', '/api/v1/directory/erasures', { pseudonym });
   }
 
   /**

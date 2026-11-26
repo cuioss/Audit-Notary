@@ -2040,11 +2040,43 @@ is blocked; the owner may change each one. The bodies and addresses are in <<_di
 . *The way up on the phone.* The top bar shows only the current step of the path below 768 px, the sheets carry their own
   way up and the bottom bar navigates; a visible parent link in the top bar is a shell-wide design question, recorded
   for the owner.
+. *The pages of the directory in the web app* (`web-app/src/lib/views/directory/`) decide these details, none of which
+  the register fixed before:
+  ** *The persons page* reads `GET /api/v1/directory/persons` for every user with a right and asks again with `q` once the
+  typing has paused for 300 ms; it narrows the received list by the typed text at once, because the mock ignores `q`
+  and a complete answer may be narrowed by the client. The search is state of the page; the address admits no query.
+  ** *The entry of persons* is one form of rows, each a name and one to five memberships (team and role, retired entries
+  offered only where a row holds them). A row nothing was typed into is not sent, a name that is in the table already is
+  a note and no refusal, and a refusal at `/persons/<n>/…` is placed at the row the person `<n>` was sent from. The erasure
+  is offered for a person with a name only, asks first, and reads the table again after `404 NOT_FOUND`. Both
+  `409 MANAGED_BY_SOURCE` answers (prefill and erasure) are one notice, and nothing else on the page changes.
+  ** *The import wizard* reads the chosen files in the browser (`File.text()`), keeps one file of a name once, and names a
+  pasted text `Pasted text <n>`. The limits (100 documents, 2 MiB of UTF-8 together) are checked before the request and
+  the `limit` of a `413` is shown. A `422` pointer `/documents/<n>/…` marks document `<n>`. An import that would create and
+  update nothing is not offered. The entries created or updated are linked only after the import, because the preview
+  names entries that do not exist yet.
+  ** *The first login with candidates* shows each candidate by its name and its teams and roles, never by the pseudonym,
+  beside the choice "none of these is me" (`binding: new`). A `NOT_BINDABLE` keeps the candidates and clears the choice;
+  the person may go back to change the entry, and the next save asks for the candidates again.
+  ** *The page of the own entry* offers "Yes, this is right" only while the confirmation is due: it is the primary act
+  while nothing was changed, and it is refused (it stays focusable and says why) while changes are unsaved, because it
+  would confirm the entry as the server holds it and not as the person sees it. Saving and confirming read the session
+  again, so `directoryConfirmationDue` and the shell's notice go; the notice is an information notice and is not shown on
+  the page itself. The mock profile `read-only` answers the own entry `403 FORBIDDEN`, which the page shows as a refusal.
+  ** *The way in* is the first column of the lens *Catalogs*, which links the persons and the import under the five
+  catalogs, and the page *Settings*, which links the own entry. The import page says that it needs the right and shows
+  nothing else without it.
+  ** *No event* concerns the persons: `catalog-changed` is not used on the pages of the directory, and the persons page reads
+  again after its own acts only.
+  The web app keeps one read of the session for this (`refreshSession`), marked "to be replaced by Token Sheriff
+  `client-framework-aspects`" (ADR-0004).
 
 For the owner: whether `POST` for creation and a `PUT` that only changes is right (4); whether a retired entry may be
 reactivated (5); whether `x-catalog` may name several catalogs (7); whether a retired service counts for the effective
 protection needs (8); whether the reconfirmation should be a gate, as AUN-DIR-3 reads (13); whether the erasure should
 ask for step-up; whether a user with an entry may have several memberships in the web app (14); whether `/directory/*`
 and the route ids `catalogs.import` and `catalogs.persons` are the wanted home of the administration (1); whether
-the status `409` for `BINDING_CANDIDATES` and `NOT_BINDABLE` is wanted; and whether the phone's top bar should show
-a link to the parent of the current page.
+the status `409` for `BINDING_CANDIDATES` and `NOT_BINDABLE` is wanted; whether the phone's top bar should show
+a link to the parent of the current page; whether the persons search should be an address query; whether a user with no
+right to administer the catalogs may change their own entry, which the mock profile `read-only` refuses; and whether the
+person who confirms an entry with unsaved changes should confirm the changed entry instead of being asked to save.

@@ -219,6 +219,33 @@ labelled lines; the reason a dependency does not count is a sentence that wraps 
 the first line), the three dimensions of a dependency stand as two aligned columns that never break between the term
 and the level, and every link of a stacked row is a target of 44 px (its padding, not a box).
 
+== The Pages of the Directory
+
+Three pages belong to the lens *Catalogs* and *Settings* but are not a chain of columns, because each is a task, not an
+object: the persons (`/directory/persons`), the Backstage import (`/directory/import`) and the own entry
+(`/settings/profile`). Each is a single column on the desk. The persons page is a dashboard page: a search, then the
+table of the persons (name, team and role in words, the state as a dot — *bound to a login*, *not yet bound* — and, with
+the right, the act *Erase*), then the entry of several persons at once as rows divided by hairlines, each a name and its
+memberships, with the one primary act at the end. The table is `GridTable`: on a narrow column each row stands as a block
+of labelled lines, so nothing scrolls sideways. Erasing asks first in a dialog that names the person by the name the table
+shows and says that it cannot be undone; a directory kept in the organisation's own source is one notice that says nothing
+was changed. Without the right the page says so once, in a notice, and shows neither act.
+
+The import is a wizard of three steps named above the column (choose documents, check, result), with the current step
+marked by `aria-current` and by weight, not by colour. Choosing is a `FilePicker` and a field to paste into; the chosen
+documents are a list with their size and a box on the one the server found invalid. The check writes nothing and says so
+in a notice; it shows what would be created and updated as tables, what stays unchanged as a figure and what was left out
+as a table of the entity, the sentence of its reason and its detail. The import is the one primary act and is not offered
+when nothing would change; the result repeats the tables with the entries linked.
+
+The own entry is the form of the first login in the register's layout: the name, the memberships as rows of a team and a
+role, the information on data processing. When the confirmation is due, the question *Is this still right?* stands above
+the form with its one act; while there are unsaved changes that act says why it cannot be taken, because saving confirms
+as well. Elsewhere in the shell the due confirmation is an information notice with a link, on every view but this one.
+
+The first login shows the candidates an administrator prepared as one group of radio buttons by name, team and role, with
+the choice to create a new entry as its last option; a refusal of the choice is an attention notice above the group.
+
 == The Access Pages
 
 Three pages stand outside the shell, because there is no session to show a shell for: `/login` (the form of local test

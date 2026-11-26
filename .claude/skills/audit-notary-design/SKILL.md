@@ -29,6 +29,14 @@ Read the concept first, then the component you are about to change.
    no draft (the last save wins); a retirement is a destructive act behind a confirmation, in the margin. The mark of an
    entry is `KindMark` kind `entry`. A field that names several catalogs (`x-catalog` as an array) is a `CatalogPicker`
    whose `Select` groups the options by catalog (`SelectOption.group`).
+   `web-app/src/lib/views/directory/` holds the pages of the directory (`PersonsView`, `ImportView`, `ProfileView`,
+   `MembershipsEditor`) and `web-app/src/lib/directory/` what they know (limits, words, errors by pointer). A page of
+   facts read row by row is a `GridTable` (the first cell a row head, every further cell with `data-label`, so a narrow
+   column stands as a block of labelled lines); files come from a `FilePicker`, an act that opens the system's dialog
+   and never a raw `<input type="file">`. A confirmation that is due is the shell's `ConfirmationNotice` (an information
+   notice with a link, never a gate). The pages are `WizardPage` (import, profile) and `DashboardPage` (persons); the
+   erasure of a person and every other destructive act asks first in a `Dialog` that names the person by name and says
+   that it cannot be undone.
 3. For a chart, use the five series colours in model order (`--color-series-1` … `-5`); they are validated for
    colour-vision and normal-vision separation against both sheet colours (`#ffffff`, `#161d2e`). A new chart colour
    needs the same validation before it lands: with the validator of the `dataviz` skill where your agent has that
@@ -178,7 +186,9 @@ web-mock/start.sh -s workshop                 # port 7420; profiles: workshop, r
                                               # first-login, no-rights, release (states review, password,
                                               # wrong-password, changed, too-many-logins, released); workshop also
                                               # has saved-by-other, conflict, session-replaced, session-ended;
-                                              # flow profiles: local (own login page), login-trouble
+                                              # flow profiles: local (own login page), login-trouble;
+                                              # directory: catalog-admin (import, persons, erasure), first-login#candidates,
+                                              # workshop#confirmation-due
 (cd web-app && npm run dev)                   # http://127.0.0.1:5173, keeps running
 
 # Terminal 2: switch the profile or the state while the dev server runs.

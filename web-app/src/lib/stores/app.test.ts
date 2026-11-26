@@ -11,6 +11,7 @@ import {
   completeFirstLogin,
   keepStreamAlive,
   peek,
+  refreshSession,
   session,
   SESSION_RETRY_MS,
   status,
@@ -84,6 +85,29 @@ describe('completeFirstLogin', () => {
     session.set(null);
     completeFirstLogin('p-9');
     expect(peek(session)).toBeNull();
+  });
+});
+
+describe('refreshSession', () => {
+  it('keeps the session as read again, so the notice of a due confirmation goes', async () => {
+    session.set({ ...SESSION, firstLoginRequired: false, directoryConfirmationDue: true });
+    const fake = fakeClient({});
+    vi.spyOn(fake, 'getSession').mockResolvedValue({
+      ...SESSION,
+      firstLoginRequired: false,
+      directoryConfirmationDue: false,
+    });
+    await refreshSession(fake);
+    expect(peek(session)?.directoryConfirmationDue).toBe(false);
+  });
+
+  it('leaves the session as it was when the read fails', async () => {
+    const held = { ...SESSION, firstLoginRequired: false, directoryConfirmationDue: true };
+    session.set(held);
+    const fake = fakeClient({});
+    vi.spyOn(fake, 'getSession').mockRejectedValue(new ApiError('NETWORK', 0));
+    await refreshSession(fake);
+    expect(peek(session)).toEqual(held);
   });
 });
 

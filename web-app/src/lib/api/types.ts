@@ -17,6 +17,12 @@ export interface Session {
   rights: Right[];
   csrfToken: string;
   firstLoginRequired: boolean;
+  /**
+   * PROVISIONAL: the own directory entry is due for its confirmation (rest-api.adoc, Decided Provisionally with the
+   * directory, point 13). Absent reads `false`. The shell then shows a notice with a link to `/settings/profile`; it is
+   * never a gate.
+   */
+  directoryConfirmationDue?: boolean;
 }
 
 /** The fetch state of one repository. */
@@ -79,11 +85,32 @@ export interface DueList {
   items: DueItem[];
 }
 
-/** `GET /api/v1/directory/me`: the prefill of the first-login form (AUN-DIR-2). */
+/** The team and the role of a membership, both catalog references (`team:payments`). */
+export interface Membership {
+  team: string;
+  role: string;
+}
+
+/** The own directory entry of `GET /api/v1/directory/me` (PROVISIONAL, rest-api.adoc, The Own Entry). */
+export interface OwnEntry {
+  pseudonym: string;
+  name: string;
+  memberships: Membership[];
+  /** The day the entry was last confirmed, `YYYY-MM-DD`. */
+  confirmedAt: string;
+  /** Whether `confirmedAt` is older than the server's interval. */
+  confirmationDue: boolean;
+}
+
+/**
+ * `GET /api/v1/directory/me`: the prefill of the first-login form (AUN-DIR-2) and, once the entry exists, the entry.
+ * `entry` is `null` while the first login is required; an older server leaves it out.
+ */
 export interface DirectoryPrefill {
   name: string;
   teams: string[];
   informationText: string;
+  entry?: OwnEntry | null;
 }
 
 /** One entry of a catalog; `retired` is absent for an entry that is not retired (AUN-DIR-4). */
@@ -211,17 +238,96 @@ export interface CatalogChangedEvent {
   by?: Person;
 }
 
-/** The body of `PUT /api/v1/directory/me`. */
+/**
+ * The body of `PUT /api/v1/directory/me` of the first login (AUN-DIR-2): the ids of one team and one role without their
+ * prefix. `binding` is a candidate's pseudonym or `new`, sent after `BINDING_CANDIDATES` (PROVISIONAL).
+ */
 export interface DirectoryEntry {
   name: string;
   team: string;
   role: string;
+  binding?: string;
 }
 
-/** The answer of a successful save of the own entry. */
+/** The body of `PUT /api/v1/directory/me` of a user who has an entry: one to five memberships (PROVISIONAL). */
+export interface OwnEntryChange {
+  name: string;
+  memberships: Membership[];
+}
+
+/** The answer of a successful save of the own entry; `confirmedAt` is there for a change of an existing entry. */
 export interface DirectorySaved {
   outcome: 'SAVED';
   pseudonym: string;
+  confirmedAt?: string;
+}
+
+/** The answer of `POST /api/v1/directory/me/confirmation` (PROVISIONAL). */
+export interface DirectoryConfirmed {
+  outcome: 'CONFIRMED';
+  confirmedAt: string;
+}
+
+/** One candidate of the refusal `BINDING_CANDIDATES`: a prefilled entry the person may take over (PROVISIONAL). */
+export interface BindingCandidate {
+  pseudonym: string;
+  name: string;
+  memberships: Membership[];
+}
+
+/** One descriptor document of the Backstage import: its name and its text (PROVISIONAL). */
+export interface ImportDocument {
+  name: string;
+  content: string;
+}
+
+/** An entry the import created, or would create. */
+export interface ImportCreated {
+  catalog: string;
+  id: string;
+  name: string;
+}
+
+/** An entry the import updated, or would update, with the fields of its value that change, as dotted paths. */
+export interface ImportUpdated extends ImportCreated {
+  changed: string[];
+}
+
+/** What the import left out of a descriptor. `field` and `detail` may be `null`. */
+export interface ImportLeftOut {
+  entity: string;
+  field: string | null;
+  /** `NAMESPACE_NOT_DEFAULT`, `REFERENCE_KIND_NOT_SUPPORTED`, `LIFECYCLE_UNMAPPED`, `DEFAULTS_MISSING` or `KIND_NOT_SUPPORTED`. */
+  reason: string;
+  detail: string | null;
+}
+
+/** The answer of the preview (`PREVIEW`) and of the import (`IMPORTED`): one shape (PROVISIONAL). */
+export interface ImportResult {
+  outcome: 'PREVIEW' | 'IMPORTED';
+  created: ImportCreated[];
+  updated: ImportUpdated[];
+  unchanged: number;
+  leftOut: ImportLeftOut[];
+}
+
+/** One person of the prefill request: a name and one to five memberships (PROVISIONAL). */
+export interface PersonDraft {
+  name: string;
+  memberships: Membership[];
+}
+
+/** The answer of `POST /api/v1/directory/persons`. */
+export interface PersonsCreated {
+  outcome: 'CREATED';
+  persons: PersonSummary[];
+}
+
+/** The answer of `POST /api/v1/directory/erasures`. */
+export interface Erased {
+  outcome: 'ERASED';
+  pseudonym: string;
+  erasedOn: string;
 }
 
 /** The answer of `POST /api/v1/auth/logout`. */
@@ -591,12 +697,6 @@ export interface RenderedAsciiDoc {
 
 /** The state of a person entry: bound to a login, prefilled and not yet bound, or erased (a former member). */
 export type PersonState = 'bound' | 'unbound' | 'former';
-
-/** The team and the role of a membership, both catalog references (`team:payments`). */
-export interface Membership {
-  team: string;
-  role: string;
-}
 
 /** One person of `GET /api/v1/directory/persons` (PROVISIONAL); the name is `null` for a former member. */
 export interface PersonSummary {
