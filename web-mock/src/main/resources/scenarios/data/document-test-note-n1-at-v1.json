@@ -1,0 +1,105 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8Q4Y5N6V7X8B9C0D1E2F3G",
+  "category": "test-note",
+  "kind": "note",
+  "title": "Key rotation, decision of 24 November",
+  "state": "released",
+  "version": 1,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "a1b2c3d",
+      "savedAt": "2026-11-24T09:35:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Key rotation, decision of 24 November",
+        "noted": "2026-11-24T09:30:00Z",
+        "status": "agreed",
+        "pinned": true,
+        "service": "service:payment-api",
+        "owner": "p-4c1a9e",
+        "related": "samm-assessments:assessment/payments-2026-q4",
+        "summary": "Rotate the signing keys every 90 days; the first rotation is due before the next release.",
+        "body": "== Decision\n\nWe *agree* to rotate the keys, see `ops/keys`.\n\n* quarterly\n* before every release",
+        "actions": [
+          {
+            "what": "Write the rotation runbook",
+            "who": "p-2b7f10",
+            "due": "2026-12-15",
+            "done": false
+          },
+          {
+            "what": "Rotate the staging keys",
+            "who": "p-9e33a1",
+            "due": "2026-12-01",
+            "done": true
+          }
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-24T10:05:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G/v1"
+    },
+    {
+      "at": "2026-11-24T09:50:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-11-24T09:35:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 3
+    },
+    {
+      "at": "2026-11-24T09:10:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G/v1",
+    "at": "2026-11-24T10:05:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "at": {
+    "ref": "v1",
+    "kind": "release",
+    "commit": "d0c1b2a",
+    "tag": "notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G/v1",
+    "at": "2026-11-24T10:05:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  }
+}

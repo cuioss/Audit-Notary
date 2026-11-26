@@ -1,0 +1,76 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8Z0H2K4N6Q8S0V2X4A6C8E",
+  "from": null,
+  "to": "working",
+  "sections": [
+    {
+      "part": "data",
+      "changes": [
+        {
+          "pointer": "/title",
+          "before": null,
+          "after": "Incident communication checklist"
+        },
+        {
+          "pointer": "/noted",
+          "before": null,
+          "after": "2026-11-26T07:00:00Z"
+        },
+        {
+          "pointer": "/status",
+          "before": null,
+          "after": "open"
+        },
+        {
+          "pointer": "/pinned",
+          "before": null,
+          "after": true
+        },
+        {
+          "pointer": "/service",
+          "before": null,
+          "after": "service:customer-portal"
+        },
+        {
+          "pointer": "/owner",
+          "before": null,
+          "after": "p-4c1a9e"
+        },
+        {
+          "pointer": "/related",
+          "before": null,
+          "after": "isms-register:risk/R-042"
+        },
+        {
+          "pointer": "/summary",
+          "before": null,
+          "after": "Who tells whom, in which order, when a security incident is confirmed."
+        },
+        {
+          "pointer": "/body",
+          "before": null,
+          "after": "== Order\n\n. Incident lead informs the CISO\n. CISO informs the management\n. Communication informs the customers"
+        },
+        {
+          "pointer": "/actions",
+          "before": null,
+          "after": [
+            {
+              "what": "Agree the contact list",
+              "who": "p-61c0d4",
+              "due": "2026-12-04",
+              "done": false
+            },
+            {
+              "what": "Test the call tree",
+              "who": "p-9e33a1",
+              "due": "2026-12-11",
+              "done": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

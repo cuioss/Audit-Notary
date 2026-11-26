@@ -59,7 +59,7 @@ export interface Status {
 /** One entry of the Due lens. */
 export interface DueItem {
   kind: 'deadline' | 'review' | 'release';
-  lens: 'samm' | 'threat-models' | 'incidents' | 'isms';
+  lens: 'samm' | 'threat-models' | 'incidents' | 'isms' | 'categories';
   title: string;
   address: string;
   due: string;

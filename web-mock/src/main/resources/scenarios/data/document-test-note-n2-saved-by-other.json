@@ -1,0 +1,116 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8R7A9C1E3G5J7M9P1S3V5X",
+  "category": "test-note",
+  "kind": "note",
+  "title": "Retention schedule for audit evidence",
+  "state": "draft",
+  "version": 1,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "6c7d8e9",
+      "savedAt": "2026-11-26T08:50:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Developer"
+      },
+      "value": {
+        "title": "Retention schedule for audit evidence",
+        "noted": "2026-11-25T15:00:00Z",
+        "status": "open",
+        "pinned": true,
+        "service": "service:reporting",
+        "owner": "p-4c1a9e",
+        "related": "isms-register:risk/R-042",
+        "summary": "Keep audit evidence for seven years; review it every year.",
+        "body": "== Schedule\n\n* Release evidence and assessments: seven years\n* Access logs: 13 months\n\nThe schedule follows the interview notes of 25 November.",
+        "actions": [
+          {
+            "what": "Check the schedule with the legal team",
+            "who": "p-61c0d4",
+            "due": "2026-12-10",
+            "done": false
+          },
+          {
+            "what": "Mark the archive folders",
+            "who": "p-9e33a1",
+            "due": "2026-12-20",
+            "done": false
+          }
+        ]
+      }
+    }
+  },
+  "draft": {
+    "at": "2026-11-26T08:30:00Z",
+    "parts": {
+      "data": {
+        "blob": "3f9a1c2",
+        "fields": {
+          "/summary": "Keep audit evidence for ten years; review it every year.",
+          "/pinned": true
+        }
+      }
+    }
+  },
+  "history": [
+    {
+      "at": "2026-11-26T08:50:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2026-11-26T08:12:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2026-11-25T15:20:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 4
+    },
+    {
+      "at": "2026-11-25T15:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "releaseRequest": {
+    "id": "rr-01JZ8R9B1D3F5H7K9N1Q3S5V7X",
+    "by": {
+      "pseudonym": "p-4c1a9e",
+      "name": "Alex Example"
+    },
+    "at": "2026-11-26T08:20:00Z",
+    "comment": "Written from the interview notes; please submit it and release it."
+  },
+  "transitions": [
+    {
+      "id": "test-note.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ]
+}

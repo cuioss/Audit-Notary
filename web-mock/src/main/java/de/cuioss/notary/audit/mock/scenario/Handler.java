@@ -22,12 +22,29 @@ import java.util.stream.Collectors;
 public enum Handler {
 
     /** {@code POST /api/v1/render/asciidoc}: the deterministic preview of the form kit. */
-    RENDER_ASCIIDOC("render-asciidoc");
+    RENDER_ASCIIDOC("render-asciidoc", false),
+
+    /**
+     * {@code GET /api/v1/search}: the search of documents over the {@code data_file} of the route, restricted to the
+     * repositories the scenario's rights grant {@code read} on.
+     */
+    SEARCH_DOCUMENTS("search-documents", true);
 
     private final String id;
+    private final boolean dataFile;
 
-    Handler(String id) {
+    Handler(String id, boolean dataFile) {
         this.id = id;
+        this.dataFile = dataFile;
+    }
+
+    /**
+     * Whether the handler reads a data file the route names with {@code data_file}.
+     *
+     * @return {@code true} when the route needs, and only then may carry, a {@code data_file}
+     */
+    public boolean usesDataFile() {
+        return dataFile;
     }
 
     /**

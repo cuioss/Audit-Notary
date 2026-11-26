@@ -206,6 +206,10 @@
         "outcome": "SAVED",
         "parts": {}
       }
+    },
+    "GET /api/v1/categories": {
+      "status": 200,
+      "body_file": "categories-none.json"
     }
   },
   "states": {

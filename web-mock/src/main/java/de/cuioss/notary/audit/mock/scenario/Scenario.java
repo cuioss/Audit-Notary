@@ -10,6 +10,8 @@
  */
 package de.cuioss.notary.audit.mock.scenario;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -75,6 +77,46 @@ List<Right> rights, boolean firstLoginRequired, String start, Map<String, Route>
             return Optional.of(own);
         }
         return Optional.ofNullable(routes.get(key));
+    }
+
+    /**
+     * The answer of a route for a request: the route of the state wins over that of the scenario, and within one of
+     * them the key with the most listed query parameters wins over the one with fewer; a key without query matches any
+     * query. Keys that are equally specific are chosen by their text, so the choice never depends on the order of a map.
+     *
+     * @param state  the current state
+     * @param method the request method
+     * @param path   the request path, without query
+     * @param query  the decoded query parameters of the request
+     * @return the route, or empty when neither the state nor the scenario defines one that matches
+     */
+    public Optional<Route> route(ScenarioState state, String method, String path, Map<String, String> query) {
+        return mostSpecific(state.routes(), method, path, query).or(() -> mostSpecific(routes, method, path, query));
+    }
+
+    private static Optional<Route> mostSpecific(Map<String, Route> candidates, String method, String path,
+            Map<String, String> query) {
+        String prefix = method + " " + path;
+        @Nullable Route best = null;
+        int bestSize = -1;
+        String bestText = "";
+        for (var entry : candidates.entrySet()) {
+            String text = entry.getKey();
+            if (!text.startsWith(prefix) || text.length() > prefix.length() && text.charAt(prefix.length()) != '?') {
+                continue;
+            }
+            var key = RouteKey.of(method, text.substring(method.length() + 1));
+            if (key.isEmpty() || !key.get().matches(method, path, query)) {
+                continue;
+            }
+            int size = key.get().query().size();
+            if (size > bestSize || size == bestSize && text.compareTo(bestText) < 0) {
+                best = entry.getValue();
+                bestSize = size;
+                bestText = text;
+            }
+        }
+        return Optional.ofNullable(best);
     }
 
     /**

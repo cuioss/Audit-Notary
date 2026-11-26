@@ -798,9 +798,9 @@ class ProfilesTest {
         }
 
         @Test
-        @DisplayName("workshop grants read and edit on test-notes, read-only grants read; the status lists it")
+        @DisplayName("workshop grants read, edit and approve on test-notes, read-only grants read; the status lists it")
         void shouldGrantTestNotes() {
-            for (var entry : Map.of("workshop", List.of("read", "edit"), "read-only", List.of("read")).entrySet()) {
+            for (var entry : Map.of("workshop", List.of("read", "edit", "approve"), "read-only", List.of("read")).entrySet()) {
                 try (var client = MockClient.start(entry.getKey()).login()) {
                     List<String> actions = new ArrayList<>();
                     json(client.get("/api/v1/session")).path("rights").forEach(right -> {

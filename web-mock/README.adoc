@@ -61,7 +61,7 @@ Without the scripts: `java -cp … de.cuioss.notary.audit.mock.cli.WebMockCli --
 
 |`workshop` (default)
 |`ready`, `saved-by-other`, `conflict`, `forbidden`, `session-replaced`, `session-ended`, `preview-hostile`,
-`preview-unavailable`
+`preview-unavailable`, and the twenty `note-*` states of _Document Lifecycle_
 |An assessor in a populated installation: Due list with every kind, catalogs, and the SAMM lens — four scopes, the
 open workshop *Payments 2026 Q4* (draft, eleven practices answered) and released assessments to compare with; a draft
 and a save for everyone succeed. `saved-by-other` pushes a `document-saved` event and serves the assessment with
@@ -71,7 +71,10 @@ anti-CSRF token (another login in the same browser replaced the session); `sessi
 every session, so the next request answers `UNAUTHENTICATED` (a back-channel logout; an addition to the profile list of
 the plan, because UC-ACC-6 needs it); `preview-hostile` makes the renderer answer HTML that the web app's allow-list must cut down;
 `preview-unavailable` makes it answer `503 RENDER_UNAVAILABLE`. The profile also answers the requests of the form kit
-(_Fixture Categories_) for the repository `test-notes` (right `read` and `edit`)
+(_Fixture Categories_) and the document lifecycle of the test category (_Document Lifecycle_) for the repository
+`test-notes` (rights `read`, `edit` and `approve`): ten notes in every state, their revisions, the search, create, draft,
+save, submit and release, and three more items in the Due list (a review, a review with a release request, a
+release request)
 
 |`first-login`
 |`form`, `invalid-team`, `registered`
@@ -82,8 +85,9 @@ the plan, because UC-ACC-6 needs it); `preview-hostile` makes the renderer answe
 |`read-only`
 |`ready`, `preview-hostile`, `preview-unavailable`
 |The right `read` only (also on `test-notes`), with the SAMM data and the form kit requests of `workshop` (the two
-preview states included); the one edit the mock models, `PUT /api/v1/directory/me`, answers `FORBIDDEN`, and no other
-write is modelled (the `test-notes` documents have no write route)
+preview states included) and the reads of the document lifecycle (list, notes, revisions, diffs, search; the search index
+holds the SAMM assessments too); the one edit the mock models, `PUT /api/v1/directory/me`, answers `FORBIDDEN`, and so
+does every write on `test-notes` (draft, save, submit, release, create)
 
 |`degraded`
 |`unreachable`, `recovered`
@@ -92,7 +96,8 @@ write is modelled (the `test-notes` documents have no write route)
 
 |`empty`
 |`ready`
-|A fresh installation: nothing due
+|A fresh installation: nothing due; `GET /api/v1/categories` lists no category, so the rail has no *Documents* entry
+(as in `degraded`, `release`, `local` and `login-trouble`)
 
 |`no-rights`
 |`ready`
@@ -197,7 +202,7 @@ No login; the Vite dev server forwards `/mock` for loopback clients only.
 |Body `{"event", "data"}`: pushes one event to every open stream
 
 |`GET /mock/acts`, `DELETE /mock/acts`
-|The recorded state-changing `/api/v1` requests `{method, path, state, body}`; clears them
+|The recorded state-changing `/api/v1` requests `{method, path, state, body}`, the path with its query as sent; clears them
 
 |`POST /mock/sessions/clear`
 |Drops every session
@@ -239,13 +244,16 @@ No login; the Vite dev server forwards `/mock` for loopback clients only.
 * `login` is optional; the default is `{"provider": "oidc"}`. `users` belongs to `local` only, each user has a
   non-empty `username` and `password`. `session_replaced` and `session_ended` are optional booleans of a state (default
   `false`).
-* Route keys are `"METHOD /path"` without query; `status` defaults to `200`, `body` to `{}`, `after_ms` to `0`.
+* Route keys are `"METHOD /path"` or, with a query, `"METHOD /path?name=value[&name=value]"` (_Query-Keyed Routes_);
+  `status` defaults to `200`, `body` to `{}`, `after_ms` to `0`.
 * A route or a link answers either its `body` or the JSON of the data file its `body_file` names, below
   `src/main/resources/scenarios/data/` (`"body_file": "samm-scopes.json"`). Large or shared answers live there once
   instead of inline in every profile. The file name matches `[a-z0-9][a-z0-9.-]*.json`; a name that resolves to no
   file, a file that is no JSON, or `body` and `body_file` together fail the load.
-* A route (not a link) may instead name a built-in engine answer, `"handler": "render-asciidoc"`; it then carries no
-  `body`, `body_file` or `status`, and an unknown handler name fails the load (see _Fixture Categories_).
+* A route (not a link) may instead name a built-in engine answer, `"handler": "render-asciidoc"` or
+  `"handler": "search-documents"`; it then carries no `body`, `body_file` or `status`, and an unknown handler name fails
+  the load (see _Fixture Categories_ and _Document Lifecycle_). The handler `search-documents` needs a `data_file`, the
+  data file of its index, read like a `body_file`; no other handler has one.
 
 === Data Files
 
@@ -268,6 +276,15 @@ under CC BY-SA 4.0, not under the licence of this repository: see `samm-model-v2
 |`samm-compare-payments*.json`, `samm-diff-payments-2026-q4.json`
 |The comparison with *Payments 2026 Q2* and the diff of the release
 
+|`categories-test-note.json`, `categories-none.json`, `documents-test-notes*.json`, `document-test-note-n<k>*.json`,
+`documents-index.json`, `due-workshop-lifecycle.json`
+|The document lifecycle (_Document Lifecycle_), generated once and consistent with each other: the list of the test notes
+(`-created`, `-n9-in-review`, `-n9-released`, `-n9-reopened` for the states), the read of each note N1 to N10
+(`document-test-note-n<k>.json`; `-n2-saved-by-other`, `-n4-released`, `-n4-saved-after`, `-n9-in-review`, `-n9-released`,
+`-n9-reopened` for the states), the revision reads (`-n6-at-v1`, `-n6-at-v2`, `-n6-at-4be0c3a`, `-n6-at-a3d9f20`,
+`-n7-at-v2`, `-n1-at-v1`), the revisions (`-n<k>-revisions`) and the diffs (`-n<k>-diff`, `-n4-saved-after-diff`), the index
+of the search and the Due list of `workshop`
+
 |`categories-*-schema.json`, `catalogs-service.json`, `directory-person*.json`, `references-resolve.json`,
 `render-asciidoc-hostile.json`
 |The form kit fixtures (_Fixture Categories_), generated once and consistent with each other (the persons, catalogs and references
@@ -277,7 +294,7 @@ of the schemas and the samples of the unit tests)
 The answers are generated once from the model and are consistent with each other: the comparison holds the scores the
 answers give (`web-app` checks this in `scores.test.ts`).
 * Checked on load: format version `1`; the login provider `oidc` or `local`, users with `local` only; name, user name and start present; every `next` names a state; methods `GET`,
-  `POST`, `PUT`, `DELETE`; paths below `/api/v1/` without query; status 100 to 599; actions `read`, `edit`,
+  `POST`, `PUT`, `DELETE`; paths below `/api/v1/`, each optionally with a query of names and values that are not empty, no `#`, no name twice; status 100 to 599; actions `read`, `edit`,
   `approve`, `administer-catalogs`; no negative delay. A violation names file, location and rule.
 
 == Fixture Categories
@@ -340,6 +357,162 @@ path. The states `preview-hostile` (`render-asciidoc-hostile.json`: script, hand
 replace the handler. A source over the limit needs no state: it answers `413` by itself. The HTTP adapter reads a request body at most up to 1 MiB (`MockEngine.MAX_BODY_BYTES`, far above
 any source within the limit); a larger body is answered with the same `413` before it is buffered, whatever the
 request.
+
+== Query-Keyed Routes
+
+A route key or a link path may carry a query, for example
+`GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=v1`. It matches a request of the same method and path
+whose query holds every listed name with exactly the listed (percent-decoded) value; further parameters do not hinder
+the match, and a key without query matches any query, as before. The choice among several matches: a link of the state,
+a route of the state, a route of the scenario; within one of them the key with the most listed parameters, then the
+key without query (equal keys by their text, so that the answer never depends on the order of a map). `/mock/acts`
+records the path of a request with its query as sent, and `/mock/state` lists a link with its query.
+
+== Document Lifecycle
+
+PROVISIONAL, like the requests (`doc/specification/rest-api.adoc`, _The Document Lifecycle_, _Document Lifecycle
+Requests_). `workshop` and `read-only` serve the test category `test-note` (document type `note`, repository `test-notes`,
+the single part `data`; states `draft`, `in-review`, `released`; transitions `test-note.submit` and `test-note.release`;
+tag `notes/<id>/v<n>`). "Today" in the data is 2026-11-26; the user of `workshop` is Alex Example `p-4c1a9e`, the
+releases are written by Noor Haddad `p-7d2e58`.
+
+[cols="1,2,2,3"]
+|===
+|Key |Id |State (version) |What it is for
+
+|N1
+|`01JZ8Q4Y5N6V7X8B9C0D1E2F3G`
+|released (1)
+|A clean released note, "Key rotation, decision of 24 November"; a save reopens it (`state: draft`, `version: 2`)
+
+|N2
+|`01JZ8R7A9C1E3G5J7M9P1S3V5X`
+|draft (1)
+|"Retention schedule for audit evidence": complete, the user's own unsaved draft and a release request by Alex; the target of
+the outcome states
+
+|N3
+|`01JZ8S2B4D6F8H0K2N4Q6T8W0Y`
+|draft (1)
+|"Backup restore test, Q4": only `title` and `summary`, so a submit answers `MANDATORY_FIELDS_MISSING` for `/noted`
+and `/status`
+
+|N4
+|`01JZ8T5C7E9G1J3M5P7R9V1X3Z`
+|in review (1)
+|"Supplier security questionnaire": never released (diff `from: null`), the target of the release states
+
+|N5
+|`01JZ8V8D0F2H4K6N8Q0S2W4Y6A`
+|in review (2)
+|"Access review cadence": released as `v1` and edited since (diff against `v1`, three changes), a release request by Jordan
+
+|N6
+|`01JZ8W1E3G5J7M9P1R3T5X7Z9B`
+|released (2)
+|"Vendor onboarding questions": released twice, the revision picker (`v2`, `4be0c3a`, `7be21c4`, `v1`, `a3d9f20`)
+
+|N7
+|`01JZ8X4F6H8K0N2Q4S6V8Y0A2C`
+|draft (3)
+|"Third-party access, annual check": reopened after `v2` (diff against `v2`: two changed fields, one new row)
+
+|N8
+|`01JZ8Y7G9J1M3P5R7T9W1Z3B5D`
+|draft (1)
+|"Old decision": every mark of the form kit (retired service, unbound owner, unresolvable reference, former and unknown person)
+
+|N9
+|`01JZ8Z0H2K4N6Q8S0V2X4A6C8E`
+|draft (1)
+|"Incident communication checklist": the flow document, see below
+
+|N10
+|`01JZ9A3J5M7P9R1T3W5Y7B9D1F`
+|draft (1)
+|"Phishing drill notes": what `POST /api/v1/documents/test-notes` creates, a fixed id; it is in the list only in `note-created`
+|===
+
+*Answers of the scenario level* (`workshop`; `read-only` answers the same reads): `GET /api/v1/categories`; the list
+`GET /api/v1/documents/test-notes` (N1 to N9, newest change first); the read, `/revisions` of every note and `/diff` of
+N2, N4, N5, N7 and N9; the revision reads `?at=v1`, `?at=v2`, `?at=4be0c3a`, `?at=a3d9f20` of N6, `?at=v2` of N7 and `?at=v1`
+of N1 (with the member `at`, `frozen: true`, no draft, no transitions, no release request); `?at=deadbee` of N6 answers
+`404 NOT_FOUND`, `?at=zzz` `422` `FORMAT`; any other query on a note reads the note itself. Writes (`workshop`): `PUT
+/api/v1/drafts/test-notes/<id>` answers `DRAFT_SAVED` and `POST …/<id>/save` `SAVED` (N1 and N6 name `state: draft` and
+the next version); `POST …/<id>/transitions/test-note.submit` answers `TRANSITIONED` for N2, N7 and N8 and
+`422 MANDATORY_FIELDS_MISSING` for N3; `POST /api/v1/releases/test-notes/<id>` answers `RELEASED` for N4 (tag `v1`) and N5
+(tag `v2`); `POST /api/v1/documents/test-notes` answers `201 CREATED` with N10. In `read-only` every one of those writes
+answers `403 FORBIDDEN`. The other profiles answer `GET /api/v1/categories` with `{"categories": []}`.
+
+*The handler `search-documents`* answers `GET /api/v1/search?q=` from the index `documents-index.json` (the notes N1 to N9
+and the six SAMM assessments). In this order: `422 VALIDATION` with `/q` and `REQUIRED` without `q`, `MIN_LENGTH` for fewer than
+two characters after trimming, `MAX_LENGTH` for more than 200; otherwise `200 {"query", "results", "truncated"}` with
+the entries whose repository the rights of the scenario grant `read` on (not a session) and whose `title` or `id` contains
+the trimmed text, upper and lower case alike, ordered by title (case-insensitive), at most 20, `truncated` when more
+matched. The mock logs no `q` beyond its request line.
+
+*The flow of N9* (the links of `ready`): `POST /api/v1/documents/test-notes/<N9>/transitions/test-note.submit` answers
+`TRANSITIONED` and moves to `note-submitted`; `POST /api/v1/releases/test-notes/<N9>` then answers `RELEASED` (tag `v1`) and
+moves to `note-released`; a `POST …/<N9>/save` answers `SAVED` with `state: draft`, `version: 2` and moves to
+`note-reopened`. In each of these states the read and the list show N9 as it is then (in review, released, draft with the
+release `v1`). The revisions of N9 are the same in all of them. `POST /api/v1/documents/test-notes` is a link of `ready`
+too: it answers `CREATED` and moves to `note-created`, whose list holds N10 first. The links of a state are its own: to
+run the flow again, `POST /mock/goto/ready`.
+
+*The `note-*` states of `workshop`* are reached with `POST /mock/goto/<state>` (or by the links above); the outcomes are the
+contract's:
+
+[cols="2,3"]
+|===
+|State |Behaviour
+
+|`note-created`, `note-submitted`, `note-released`, `note-reopened`
+|The flow of N9 above; events `document-created` (N10), then `document-transitioned` for the submit and the release
+
+|`note-saved-by-other`
+|Jordan Weber saved `/summary` and `/pinned` of N2: the read of N2 has the new blob, values and one more history line, the
+draft stays; event `document-saved` with `part`, `fields` and `by`
+
+|`note-conflict`, `note-conflict-resolved`
+|The first save of N2 answers `409 CONFLICT` (blob `5d1e9a0`, fields `/summary` and `/status` with own and other value);
+the next save answers `SAVED` with blob `5d1e9a1`
+
+|`note-invalid`
+|A save and a draft of N2 and a create answer `422 VALIDATION` with three errors that name `part: "data"`
+
+|`note-released-meanwhile`
+|A save of N2 answers `409 DOCUMENT_RELEASED` with the tag
+
+|`note-rejected`
+|A save and a submit of N2, a create and the release of N4 answer `502 REJECTED`
+
+|`note-git-unavailable`
+|The status is `degraded` with `test-notes` `DOWN`; the same four writes answer `503 GIT_UNAVAILABLE`; a draft, the reads, the
+lists, the revisions and the search still answer `200`
+
+|`note-submit-step-up`, `note-submit-stepped-up`
+|The submit of N2 answers `403 STEP_UP_REQUIRED` once, then `TRANSITIONED`
+
+|`note-release-step-up`, `note-release-stepped-up`, `note-release-done`
+|The release of N4 answers `403 STEP_UP_REQUIRED`, then `RELEASED`; N4 then reads released (v1, by Noor Haddad) and the event
+`document-transitioned` follows
+
+|`note-release-password`, `note-release-wrong-password`
+|The status asks for the password (`loginProvider: local`, `stepUp: password`); the release of N4 answers `RELEASED`, or
+`401 INVALID_CREDENTIALS`
+
+|`note-release-changed`
+|N4 reads as saved by Jordan after the review was opened (other blob, other summary, diff with that change); the release
+answers `409 CHANGED_SINCE_REVIEW` once, then goes on as `note-release-stepped-up`
+
+|`note-release-too-many-logins`
+|The release of N4 answers `503 TOO_MANY_LOGINS` with `Retry-After: 60`
+|===
+
+The Due list of `workshop` keeps its five items and adds a review of N4 (`/categories/test-note/<N4>/release`, due
+2026-11-30), a review of N5 with the release request of Jordan Weber, and a release item of N2 with the request of Alex
+Example; they have the `lens` `categories`, which the web app does not yet know in this step. The overdue incident of
+2026-11-22 stays the earliest date.
 
 == Use by the Web App and the End-to-End Suite
 

@@ -1,0 +1,47 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ9A3J5M7P9R1T3W5Y7B9D1F",
+  "category": "test-note",
+  "kind": "note",
+  "title": "Phishing drill notes",
+  "state": "draft",
+  "version": 1,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "e51a7d3",
+      "savedAt": "2026-11-26T09:41:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Phishing drill notes",
+        "noted": "2026-11-26T09:30:00Z",
+        "status": "open"
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-26T09:41:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "test-note.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ]
+}

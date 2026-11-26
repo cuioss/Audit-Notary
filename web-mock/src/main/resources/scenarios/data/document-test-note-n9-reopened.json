@@ -1,0 +1,111 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8Z0H2K4N6Q8S0V2X4A6C8E",
+  "category": "test-note",
+  "kind": "note",
+  "title": "Incident communication checklist",
+  "state": "draft",
+  "version": 2,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "b8c0d41",
+      "savedAt": "2026-11-26T10:12:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Incident communication checklist",
+        "noted": "2026-11-26T07:00:00Z",
+        "status": "open",
+        "pinned": true,
+        "service": "service:customer-portal",
+        "owner": "p-4c1a9e",
+        "related": "isms-register:risk/R-042",
+        "summary": "Who tells whom, in which order, when a security incident is confirmed; the CISO decides on the press.",
+        "body": "== Order\n\n. Incident lead informs the CISO\n. CISO informs the management\n. Communication informs the customers",
+        "actions": [
+          {
+            "what": "Agree the contact list",
+            "who": "p-61c0d4",
+            "due": "2026-12-04",
+            "done": false
+          },
+          {
+            "what": "Test the call tree",
+            "who": "p-9e33a1",
+            "due": "2026-12-11",
+            "done": false
+          }
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-26T10:12:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2026-11-26T10:05:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/v1"
+    },
+    {
+      "at": "2026-11-26T09:50:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-11-26T07:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 4
+    },
+    {
+      "at": "2026-11-26T07:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/v1",
+    "at": "2026-11-26T10:05:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "test-note.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ]
+}

@@ -220,6 +220,10 @@
     "POST /api/v1/documents/samm-assessments/payments-2026-q4/transitions/samm.submit": {
       "status": 422,
       "body_file": "samm-submit-payments-2026-q4.json"
+    },
+    "GET /api/v1/categories": {
+      "status": 200,
+      "body_file": "categories-none.json"
     }
   },
   "states": {

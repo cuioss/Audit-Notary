@@ -1,0 +1,139 @@
+{
+  "entries": [
+    {
+      "repository": "test-notes",
+      "id": "01JZ8Q4Y5N6V7X8B9C0D1E2F3G",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Key rotation, decision of 24 November",
+      "state": "released",
+      "address": "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G"
+    },
+    {
+      "repository": "test-notes",
+      "id": "01JZ8R7A9C1E3G5J7M9P1S3V5X",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Retention schedule for audit evidence",
+      "state": "draft",
+      "address": "/categories/test-note/01JZ8R7A9C1E3G5J7M9P1S3V5X"
+    },
+    {
+      "repository": "test-notes",
+      "id": "01JZ8S2B4D6F8H0K2N4Q6T8W0Y",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Backup restore test, Q4",
+      "state": "draft",
+      "address": "/categories/test-note/01JZ8S2B4D6F8H0K2N4Q6T8W0Y"
+    },
+    {
+      "repository": "test-notes",
+      "id": "01JZ8T5C7E9G1J3M5P7R9V1X3Z",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Supplier security questionnaire",
+      "state": "in-review",
+      "address": "/categories/test-note/01JZ8T5C7E9G1J3M5P7R9V1X3Z"
+    },
+    {
+      "repository": "test-notes",
+      "id": "01JZ8V8D0F2H4K6N8Q0S2W4Y6A",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Access review cadence",
+      "state": "in-review",
+      "address": "/categories/test-note/01JZ8V8D0F2H4K6N8Q0S2W4Y6A"
+    },
+    {
+      "repository": "test-notes",
+      "id": "01JZ8W1E3G5J7M9P1R3T5X7Z9B",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Vendor onboarding questions",
+      "state": "released",
+      "address": "/categories/test-note/01JZ8W1E3G5J7M9P1R3T5X7Z9B"
+    },
+    {
+      "repository": "test-notes",
+      "id": "01JZ8X4F6H8K0N2Q4S6V8Y0A2C",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Third-party access, annual check",
+      "state": "draft",
+      "address": "/categories/test-note/01JZ8X4F6H8K0N2Q4S6V8Y0A2C"
+    },
+    {
+      "repository": "test-notes",
+      "id": "01JZ8Y7G9J1M3P5R7T9W1Z3B5D",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Old decision",
+      "state": "draft",
+      "address": "/categories/test-note/01JZ8Y7G9J1M3P5R7T9W1Z3B5D"
+    },
+    {
+      "repository": "test-notes",
+      "id": "01JZ8Z0H2K4N6Q8S0V2X4A6C8E",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Incident communication checklist",
+      "state": "draft",
+      "address": "/categories/test-note/01JZ8Z0H2K4N6Q8S0V2X4A6C8E"
+    },
+    {
+      "repository": "samm-assessments",
+      "id": "payments-2026-q4",
+      "category": "samm",
+      "kind": "assessment",
+      "title": "Payments 2026 Q4",
+      "state": "draft",
+      "address": "/samm/payments/2026-q4"
+    },
+    {
+      "repository": "samm-assessments",
+      "id": "payments-2026-q2",
+      "category": "samm",
+      "kind": "assessment",
+      "title": "Payments 2026 Q2",
+      "state": "released",
+      "address": "/samm/payments/2026-q2"
+    },
+    {
+      "repository": "samm-assessments",
+      "id": "payments-2025-q4",
+      "category": "samm",
+      "kind": "assessment",
+      "title": "Payments 2025 Q4",
+      "state": "released",
+      "address": "/samm/payments/2025-q4"
+    },
+    {
+      "repository": "samm-assessments",
+      "id": "identity-2026-q4",
+      "category": "samm",
+      "kind": "assessment",
+      "title": "Identity Platform 2026 Q4",
+      "state": "in-review",
+      "address": "/samm/identity/2026-q4"
+    },
+    {
+      "repository": "samm-assessments",
+      "id": "shop-2026-q3",
+      "category": "samm",
+      "kind": "assessment",
+      "title": "Web shop 2026 Q3",
+      "state": "released",
+      "address": "/samm/shop/2026-q3"
+    },
+    {
+      "repository": "samm-assessments",
+      "id": "organisation-2026-h1",
+      "category": "samm",
+      "kind": "assessment",
+      "title": "Organisation 2026 H1",
+      "state": "released",
+      "address": "/samm/organisation/2026-h1"
+    }
+  ]
+}

@@ -157,8 +157,11 @@ class ScenarioLoaderTest {
     void shouldAdmitEveryHandler() {
         for (Handler handler : Handler.values()) {
             var root = valid();
-            ((ObjectNode) root.path("routes")).set("POST /api/v1/handler",
-                    MAPPER.createObjectNode().put("handler", handler.id()));
+            var route = MAPPER.createObjectNode().put("handler", handler.id());
+            if (handler.usesDataFile()) {
+                route.put("data_file", "model.json");
+            }
+            ((ObjectNode) root.path("routes")).set("POST /api/v1/handler", route);
             assertEquals(handler, loader.read("sample.json", root).routes().get("POST /api/v1/handler").handler());
             assertEquals(Optional.of(handler), Handler.byId(handler.id()));
         }
@@ -178,6 +181,79 @@ class ScenarioLoaderTest {
         assertAll(
                 () -> assertEquals(Handler.RENDER_ASCIIDOC, route.handler()),
                 () -> assertNull(loader.read("sample.json", valid()).routes().get("GET /api/v1/status").handler()));
+    }
+
+    @Test
+    @DisplayName("reads a route key and a link with a query and keeps the query apart from the path")
+    void shouldReadQueryKeys() {
+        // Arrange
+        var root = valid();
+        ((ObjectNode) root.path("routes")).putObject("GET /api/v1/due?at=v1&kind=note").put("status", 200);
+        ((ObjectNode) root.path("states").path("a").path("links").path("go")).put("path", "/api/v1/directory/me?x=%20a");
+        // Act
+        var scenario = loader.read("sample.json", root);
+        var link = scenario.state("a").orElseThrow().links().get("go");
+        // Assert
+        assertAll(
+                () -> assertTrue(scenario.routes().containsKey("GET /api/v1/due?at=v1&kind=note")),
+                () -> assertEquals("/api/v1/directory/me", link.path()),
+                () -> assertEquals(Map.of("x", " a"), link.query()),
+                () -> assertTrue(scenario.state("a").orElseThrow().linkFor("PUT", "/api/v1/directory/me",
+                        Map.of("x", " a", "y", "1")).isPresent()),
+                () -> assertTrue(scenario.state("a").orElseThrow().linkFor("PUT", "/api/v1/directory/me").isEmpty()));
+    }
+
+    @Nested
+    @DisplayName("reads and refuses the data file of a handler")
+    class HandlerDataFile {
+
+        private String rejectionWith(Consumer<ObjectNode> route) {
+            return rejectionOf(root -> {
+                var node = MAPPER.createObjectNode().put("handler", "search-documents");
+                route.accept(node);
+                ((ObjectNode) root.path("routes")).set("GET /api/v1/search", node);
+            });
+        }
+
+        @Test
+        @DisplayName("keeps the JSON of the data file as the body of the route")
+        void shouldReadDataFile() {
+            var root = valid();
+            ((ObjectNode) root.path("routes")).set("GET /api/v1/search",
+                    MAPPER.createObjectNode().put("handler", "search-documents").put("data_file", "model.json"));
+            var route = loader.read("sample.json", root).routes().get("GET /api/v1/search");
+            assertAll(
+                    () -> assertEquals(Handler.SEARCH_DOCUMENTS, route.handler()),
+                    () -> assertEquals("v2.2.0", route.body().path("version").asText()));
+        }
+
+        @Test
+        @DisplayName("that needs one and has none")
+        void shouldRefuseMissingDataFile() {
+            var message = rejectionWith(node -> { });
+            assertTrue(message.contains("GET /api/v1/search.handler") && message.contains("needs a data_file"), message);
+        }
+
+        @Test
+        @DisplayName("that names no file, a bad name or a broken file")
+        void shouldRefuseBadDataFile() {
+            assertAll(
+                    () -> assertTrue(rejectionWith(node -> node.put("data_file", "absent.json"))
+                            .contains("GET /api/v1/search.data_file: names no data file: absent.json")),
+                    () -> assertTrue(rejectionWith(node -> node.put("data_file", "../x.json")).contains("must name a data file")),
+                    () -> assertTrue(rejectionWith(node -> node.put("data_file", "broken.json")).contains("not valid JSON")));
+        }
+
+        @Test
+        @DisplayName("together with a body, and a data_file on a handler that reads none")
+        void shouldRefuseMisplacedDataFile() {
+            var withBody = rejectionWith(node -> node.put("data_file", "model.json").putObject("body"));
+            var onOther = rejectionOf(root -> ((ObjectNode) root.path("routes")).set("POST /api/v1/render/asciidoc",
+                    MAPPER.createObjectNode().put("handler", "render-asciidoc").put("data_file", "model.json")));
+            assertAll(
+                    () -> assertTrue(withBody.contains("a route with a handler has no body"), withBody),
+                    () -> assertTrue(onOther.contains("POST /api/v1/render/asciidoc.data_file"), onOther));
+        }
     }
 
     @Nested
@@ -367,12 +443,25 @@ class ScenarioLoaderTest {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {"/other/path", "/api/v1/due?x=1", "api/v1/due"})
-        @DisplayName("a link path outside /api/v1/ or with a query")
+        @ValueSource(strings = {"/other/path", "api/v1/due", "/api/v1/due?", "/api/v1/due?x", "/api/v1/due?x=",
+                "/api/v1/due?=1", "/api/v1/due?x=1&x=2", "/api/v1/due?x=1#y", "/api/v1/due?x=1&&y=2"})
+        @DisplayName("a link path outside /api/v1/ or with a malformed query")
         void shouldRefuseLinkPath(String path) {
             var message = rejectionOf(root -> ((ObjectNode) root.path("states").path("a").path("links").path("go"))
                     .put("path", path));
             assertTrue(message.contains("path"), message);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"GET /api/v1/due?", "GET /api/v1/due?at", "GET /api/v1/due?at=", "GET /api/v1/due?=v1",
+                "GET /api/v1/due?at=v1&at=v2", "GET /api/v1/due?at=v1#x"})
+        @DisplayName("a route key with a malformed query")
+        void shouldRefuseRouteKeyQuery(String key) {
+            var message = rejectionOf(root -> ((ObjectNode) root.path("routes")).putObject(key));
+            assertAll(
+                    () -> assertTrue(message.contains("sample.json"), message),
+                    () -> assertTrue(message.contains("routes." + key), message),
+                    () -> assertTrue(message.contains("a query is name=value"), message));
         }
 
         @ParameterizedTest

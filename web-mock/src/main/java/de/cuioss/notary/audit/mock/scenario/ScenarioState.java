@@ -60,9 +60,23 @@ Map<String, Route> routes, Map<String, Link> links, List<ScenarioEvent> events,
      *
      * @param method the request method
      * @param path   the request path, without query
-     * @return the first link matching method and path
+     * @return the first link matching method and path, with no query to match
      */
     public Optional<Link> linkFor(String method, String path) {
-        return links.values().stream().filter(link -> link.matches(method, path)).findFirst();
+        return linkFor(method, path, Map.of());
+    }
+
+    /**
+     * The link a request takes: of the links that match, the one with the most listed query parameters, the first of
+     * them in the order of the state.
+     *
+     * @param method the request method
+     * @param path   the request path, without query
+     * @param query  the decoded query parameters of the request
+     * @return the most specific link matching method, path and query
+     */
+    public Optional<Link> linkFor(String method, String path, Map<String, String> query) {
+        return links.values().stream().filter(link -> link.matches(method, path, query))
+                .reduce((best, link) -> link.query().size() > best.query().size() ? link : best);
     }
 }
