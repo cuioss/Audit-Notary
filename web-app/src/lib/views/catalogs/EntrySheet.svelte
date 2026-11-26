@@ -266,10 +266,6 @@
           body={$t('catalogs.retired.body')}
         />
       </div>
-    {:else if !canAdminister}
-      <div class="notice" data-testid="no-right-notice">
-        <Notice tone="info" title={$t('catalogs.read-only.right')} />
-      </div>
     {/if}
     {#if cycle}
       <div class="notice" data-testid="cycle-notice">
@@ -315,7 +311,11 @@
             icon="act.save"
             busy={saving}
             onclick={() => void save()}
-            disabledReason={dirty ? null : $t('catalogs.save.nothing')}
+            disabledReason={dirty
+              ? null
+              : isNew
+                ? $t('catalogs.new.nothing')
+                : $t('catalogs.save.nothing')}
             data-testid="save-entry"
           >
             {$t('catalogs.save')}

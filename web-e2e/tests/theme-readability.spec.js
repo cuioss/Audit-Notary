@@ -241,7 +241,7 @@ const CATALOG_STATES = [
     'a sheet without the right',
     'read-only',
     entryAddress('service', 'payment-api'),
-    'no-right-notice',
+    'save-state',
     async () => {},
   ],
   [

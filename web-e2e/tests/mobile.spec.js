@@ -273,6 +273,42 @@ test.describe('at 390 px', () => {
     await expectNoSeriousViolations(page, 'service sheet (phone)');
   });
 
+  test('a list of one column and a reason that wraps keep their width, their dot and their targets', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'catalog-admin');
+    await loginToCatalogs(page, entryAddress('service', 'payment-api'));
+    await expect(page.getByTestId('entry-sheet')).toBeVisible();
+    // A list of one column has no label column: its cell and its caption take the width of the list.
+    const list = field(page, '/repositories');
+    await list.scrollIntoViewIfNeeded();
+    const frame = await list.locator('table').boundingBox();
+    const cell = await list.locator('tbody td').first().boundingBox();
+    const caption = await list.locator('caption').boundingBox();
+    expect(cell.width).toBeGreaterThan(frame.width - 2);
+    expect(caption.width).toBeGreaterThan(frame.width - 2);
+    // The reason of an entry that does not count is a sentence: it wraps, and the dot stays beside its first line.
+    const row = page.getByTestId('depends-external:psp-provider');
+    await row.scrollIntoViewIfNeeded();
+    const measure = await row.locator('[data-tone]').evaluate((label) => {
+      const dot = label.querySelector('.status__dot').getBoundingClientRect();
+      const word = label.querySelector('.status__word');
+      const box = word.getBoundingClientRect();
+      const line = parseFloat(getComputedStyle(word).lineHeight);
+      return {
+        lines: Math.round(box.height / line),
+        offset: dot.top + dot.height / 2 - (box.top + line / 2),
+      };
+    });
+    expect(measure.lines).toBeGreaterThan(1);
+    expect(Math.abs(measure.offset)).toBeLessThan(3);
+    // The links of the stacked rows are targets of the phone's size.
+    for (const link of await page.getByTestId('service-needs').getByRole('link').all()) {
+      expect((await link.boundingBox()).height).toBeGreaterThanOrEqual(43.5);
+    }
+  });
+
   test('a circle of dependencies and the retired entry fit', async ({ page, request }) => {
     await useScenario(request, 'catalog-admin');
     await loginToCatalogs(page, entryAddress('service', 'reporting'));
@@ -318,8 +354,9 @@ test.describe('at 390 px', () => {
   }) => {
     await useScenario(request, 'read-only');
     await loginToCatalogs(page, entryAddress('service', 'payment-api'));
-    await expect(page.getByTestId('no-right-notice')).toBeVisible();
     await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'read-only');
+    await expect(page.getByTestId('save-state')).toContainText('Changing it needs the right');
+    await expect(page.getByTestId('no-right-notice')).toHaveCount(0);
     await expectNoSideways(page);
     await expectNoSeriousViolations(page, 'catalog entry read only (phone)');
   });

@@ -72,10 +72,10 @@ describe('reading an entry', () => {
     const history = screen.getByTestId('entry-history');
     expect(history.querySelectorAll('li').length).toBeGreaterThan(0);
     expect(history).toHaveTextContent('Created the entry');
-    expect(screen.getByTestId('save-state')).toHaveTextContent(
-      'Nothing changed since the last save.',
-    );
+    expect(screen.getByTestId('save-state')).toHaveTextContent('Everything is saved.');
     expect(save()).toHaveAttribute('aria-disabled', 'true');
+    // The reason is said once, beside the act, and in other words than the status.
+    expect(screen.getByText('Nothing changed since the last save.')).toBeInTheDocument();
   });
 
   it('reads the id, never edits it: the address decides', async () => {
@@ -111,9 +111,11 @@ describe('reading an entry', () => {
     'reads without the right to administer the catalogs, in %s, and offers no act',
     async (profile) => {
       await openEntry('team', 'payments', profile);
-      expect(screen.getByTestId('no-right-notice')).toHaveTextContent(
+      // The status says it once; no notice repeats it.
+      expect(screen.getByTestId('save-state')).toHaveTextContent(
         'Changing it needs the right to administer the catalogs.',
       );
+      expect(screen.queryByTestId('no-right-notice')).toBeNull();
       expect(screen.queryByTestId('save-entry')).toBeNull();
       expect(screen.queryByTestId('retire-entry')).toBeNull();
       expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'read-only');
@@ -305,6 +307,9 @@ describe('a new entry', () => {
       'Not saved yet. Nothing is kept until the first save.',
     );
     expect(save()).toHaveAttribute('aria-disabled', 'true');
+    // Nothing was saved before, so the reason is not "nothing changed since the last save".
+    expect(screen.getByText('Fill in the form first.')).toBeInTheDocument();
+    expect(screen.queryByText('Nothing changed since the last save.')).toBeNull();
     expect(screen.queryByTestId('retire-entry')).toBeNull();
   });
 

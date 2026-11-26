@@ -48,6 +48,16 @@ describe('CatalogPicker (AUN-WEB-4, The Pickers)', () => {
     await waitFor(() => expect(within(frame).queryByText('Retired')).toBeNull());
   });
 
+  it('leaves nothing below the select for a held entry that has no mark', async () => {
+    await open('test-note', { ...CLEAN_NOTE });
+    const service = field('Service') as HTMLSelectElement;
+    await waitFor(() => expect(service.selectedOptions[0].textContent).toBe('Payment API'));
+    const frame = service.closest('.field') as HTMLElement;
+    // No holder, no resolved value, so the field keeps no blank line (the whitespace of a hidden mark broke `:empty`).
+    expect(frame.querySelector('.field__after')?.childElementCount ?? 0).toBe(0);
+    expect(within(frame).queryByTestId('resolved-catalog')).toBeNull();
+  });
+
   it('shows a held reference that names no entry as the reference, marked not found', async () => {
     await open('test-note', { service: 'service:unknown-service' });
     const service = field('Service') as HTMLSelectElement;

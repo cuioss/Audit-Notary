@@ -226,17 +226,18 @@
     padding-inline-start: calc(var(--depth, 0) * var(--space-5));
   }
 
+  /* The three dimensions as two aligned columns; a line is never broken between its term and its level. */
   .levels {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: start;
+    gap: 2px var(--space-2);
     font-size: var(--text-sm);
+    white-space: nowrap;
   }
 
   .levels div {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
+    display: contents;
   }
 
   .levels dt {
@@ -279,6 +280,13 @@
       display: grid;
       grid-template-columns: minmax(5rem, 9rem) minmax(0, 1fr);
       gap: var(--space-2);
+      align-items: baseline;
+    }
+
+    /* A link of the stacked rows is a touch target of the phone's size; the padding reaches it without a box. */
+    .grid :global(a) {
+      display: inline-block;
+      padding-block: var(--space-3);
     }
 
     .grid td[data-label]::before {

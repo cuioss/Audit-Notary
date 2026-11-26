@@ -199,9 +199,10 @@ test.describe('the catalogs and their entries (UC-CAT-1)', () => {
     await expect(page.getByText('Nach Namen filtern')).toBeVisible();
     await page.getByTestId('entry-payment-api').click();
     await expect(page.getByTestId('save-entry')).toHaveText('Speichern');
-    await expect(page.getByTestId('save-state')).toContainText(
-      'Seit dem letzten Speichern hat sich nichts geändert.',
-    );
+    await expect(page.getByTestId('save-state')).toContainText('Alles ist gespeichert.');
+    await expect(
+      page.getByText('Seit dem letzten Speichern hat sich nichts geändert.'),
+    ).toBeVisible();
     await expect(page.getByTestId('entry-history')).toContainText('Hat den Eintrag gespeichert');
     await expect(page.getByTestId('retire-entry')).toHaveText('Stilllegen');
   });
@@ -237,9 +238,11 @@ test.describe('read without the right (UC-CAT-1)', () => {
       await clearActs(request);
       await login(page, entryAddress('service', 'payment-api'));
       await expect(page.getByTestId('entry-sheet')).toBeVisible();
-      await expect(page.getByTestId('no-right-notice')).toContainText(
+      // The status says it once; no notice repeats it.
+      await expect(page.getByTestId('save-state')).toContainText(
         'You can read this entry. Changing it needs the right to administer the catalogs.',
       );
+      await expect(page.getByTestId('no-right-notice')).toHaveCount(0);
       await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'read-only');
       await expect(page.getByTestId('save-entry')).toHaveCount(0);
       await expect(page.getByTestId('retire-block')).toHaveCount(0);
@@ -314,6 +317,9 @@ test.describe('create an entry (UC-CAT-1, UC-CAT-2)', () => {
       'Not saved yet. Nothing is kept until the first save.',
     );
     await expect(page.getByTestId('save-entry')).toBeDisabled();
+    // Nothing was saved before, so the reason is not "nothing changed since the last save".
+    await expect(page.getByText('Fill in the form first.')).toBeVisible();
+    await expect(page.getByText('Nothing changed since the last save.')).toHaveCount(0);
     await expect(page.getByTestId('retire-block')).toHaveCount(0);
     await expect(page.getByTestId('entry-history')).toHaveCount(0);
     expect(await writes(request)).toEqual([]);

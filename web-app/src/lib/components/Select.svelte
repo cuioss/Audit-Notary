@@ -149,6 +149,7 @@
   }
 
   /* A picker hands over a holder that has nothing to say yet (no mark): it must not leave a blank line. */
+  .field__after:empty,
   .field__after:has(> :global(:only-child:empty)) {
     display: none;
   }

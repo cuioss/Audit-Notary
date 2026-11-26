@@ -162,7 +162,10 @@ Check each item before you hand a change over.
       a new object's heading.
 - [ ] A chart has a legend for two series or more, direct labels where few, and the same figures as a table.
 - [ ] Forced colours: the component still shows its state (`@media (forced-colors: active)`).
-- [ ] Phone (390 px): nothing scrolls sideways, targets are 44 px, the status of a sheet stays above the record.
+- [ ] Phone (390 px): nothing scrolls sideways, targets are 44 px (a link in a stacked row or in a head gets its
+      padding, not a box), the status of a sheet stays above the record.
+- [ ] A sentence is said once on a screen: a read-only sheet says so in its status and not again in a notice, and the
+      reason of a disabled act is not the sentence of the status beside it.
 - [ ] German: no clipped or overlapping text with the longer words.
 
 ## 5. The screenshot-critique loop

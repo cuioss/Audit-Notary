@@ -113,6 +113,15 @@
     padding-block: var(--space-3);
   }
 
+  /* The act stands at the start of the column: the reason that it is not available reads from the start too. */
+  .column__acts :global(.btn-with-reason) {
+    align-items: flex-start;
+  }
+
+  .column__acts :global(.btn__reason) {
+    text-align: start;
+  }
+
   .column__filter {
     padding-block-end: var(--space-3);
   }

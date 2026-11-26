@@ -203,14 +203,21 @@ holds the name and the id of each, a dot for a retired one (nobody has to act) a
 cannot be taken for a person without the right. The sheet of an entry is the form of the catalog's schema in the layout
 of the record, with the one primary act *Save*; the id is read, never edited, once the entry exists. Retiring is a
 destructive act: it stands in the margin, asks first and says that what refers to the entry keeps its reference and shows
-it as retired. A retired entry and any entry for a person without the right read in the same layout, typeset.
+it as retired. A retired entry and any entry for a person without the right read in the same layout, typeset; that the
+entry can only be read is said once, in the status of the sheet, and no notice repeats it. The status and the reason of
+a disabled *Save* are never the same sentence: the status says where the entry stands ("Everything is saved."), the
+reason says why the act is out of reach ("Nothing changed since the last save."; for a new entry "Fill in the form
+first.", because nothing was saved before).
 
 The sheet of a service adds one section below the form: the protection needs stored on the service beside the effective
 ones, per dimension, with the service or dependency that decides each, and the dependencies as a table whose rows are
 indented by their depth and carry the way they were reached, their needs and the reason they count or do not (a dot, never
 a colour alone). A cycle of dependencies is a notice above the form, never a refusal. The neutral kind mark of an entry is
 the cube (`KindMark` kind `entry`); a field that names several catalogs (`dependsOn`) lists their entries grouped by
-catalog under the group's name (`Select` groups its options).
+catalog under the group's name (`Select` groups its options). On a phone the rows of both tables stand as blocks of
+labelled lines; the reason a dependency does not count is a sentence that wraps beside its dot (the dot stays beside
+the first line), the three dimensions of a dependency stand as two aligned columns that never break between the term
+and the level, and every link of a stacked row is a target of 44 px (its padding, not a box).
 
 == The Access Pages
 

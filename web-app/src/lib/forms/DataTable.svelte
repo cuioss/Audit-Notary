@@ -264,6 +264,11 @@
       display: block;
     }
 
+    /* A caption of a table that is a block would shrink to the width of the column heads: it spans the table. */
+    .table__caption {
+      display: block;
+    }
+
     .table__head {
       position: absolute;
       inline-size: 1px;
@@ -283,6 +288,11 @@
       gap: var(--space-2);
       border-block-end: none;
       padding-block: var(--space-1);
+    }
+
+    /* A single column has no label: its cell takes the whole width instead of the narrow label column. */
+    .table__grid td:not([data-label], .table__actions) {
+      display: block;
     }
 
     .table__grid td[data-label]::before {
