@@ -1,5 +1,7 @@
 <script lang="ts">
   import ChoiceGroup from '../components/ChoiceGroup.svelte';
+  import Link from '../components/Link.svelte';
+  import { PROFILE_ADDRESS } from '../directory/directory';
   import { currentLocale, isLocale, setLocale, t } from '../i18n';
   import {
     applyTheme,
@@ -11,7 +13,8 @@
   import WizardPage from '../templates/WizardPage.svelte';
 
   /**
-   * Settings of this browser: theme and language. The own directory entry joins it (AUN-DIR-3).
+   * Settings of this browser: theme and language, and the way to the own directory entry (AUN-DIR-3), which has its own
+   * page, `/settings/profile`.
    */
   let theme: ThemeChoice = $state(readThemeChoice());
 
@@ -52,6 +55,15 @@
       ]}
     />
   </section>
+  <section class="settings__section">
+    <h2 class="settings__heading">{$t('settings.profile')}</h2>
+    <p class="settings__note">{$t('settings.profile.body')}</p>
+    <div>
+      <Link href={PROFILE_ADDRESS} look="secondary" data-testid="settings-profile">
+        {$t('settings.profile.open')}
+      </Link>
+    </div>
+  </section>
 </WizardPage>
 
 <style>
@@ -63,5 +75,10 @@
 
   .settings__heading {
     font-size: var(--text-lg);
+  }
+
+  .settings__note {
+    max-inline-size: var(--measure);
+    color: var(--color-text-secondary);
   }
 </style>

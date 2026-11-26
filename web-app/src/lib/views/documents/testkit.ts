@@ -74,6 +74,26 @@ export async function useProfile(
   };
 }
 
+/**
+ * Holds the answer to one request until released, so that a test can act while a request waits. Call it after
+ * `useProfile`; `resetKit` removes it.
+ *
+ * @param method the method of the request
+ * @param pathname its path
+ * @returns the act that releases the request
+ */
+export function hold(method: string, pathname: string): () => void {
+  const inner = globalThis.fetch;
+  let release: () => void = () => {};
+  const gate = new Promise<void>((resolve) => (release = resolve));
+  vi.stubGlobal('fetch', (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = new URL(input instanceof Request ? input.url : String(input), 'http://localhost');
+    if ((init?.method ?? 'GET').toUpperCase() === method && url.pathname === pathname) await gate;
+    return inner(input, init);
+  }) as typeof fetch);
+  return () => release();
+}
+
 /** Clears what a test set. */
 export function resetKit(): void {
   session.set(null);

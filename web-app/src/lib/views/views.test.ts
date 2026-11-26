@@ -174,6 +174,11 @@ describe('WelcomeView', () => {
 });
 
 describe('SettingsView', () => {
+  it('leads to the page of the own entry', () => {
+    render(SettingsView);
+    expect(screen.getByTestId('settings-profile')).toHaveAttribute('href', '/settings/profile');
+  });
+
   it('switches the theme and the language', async () => {
     const getMessages = vi
       .spyOn(apiClient, 'getMessages')
@@ -205,8 +210,9 @@ describe('AppRouter', () => {
     ['/catalogs/team', 'catalogs-view'],
     ['/catalogs/service/payment-api', 'catalogs-view'],
     ['/catalogs/service/new', 'catalogs-view'],
-    // The pages of the directory follow with their own views.
-    ['/directory/import', 'lens-view'],
+    ['/directory/import', 'import-view'],
+    ['/directory/persons', 'persons-view'],
+    ['/settings/profile', 'profile-view'],
     ['/nowhere/at/all/here/x', 'not-found-view'],
   ])('renders %s as %s', async (pathname, testId) => {
     vi.spyOn(apiClient, 'listCategories').mockReturnValue(new Promise(() => {}));

@@ -10,6 +10,7 @@
   import { isOutsideShell, lensOf, parseAddress, routeTitleKey } from '../lib/routes';
   import AccessNotices from '../lib/shell/AccessNotices.svelte';
   import AppShell from '../lib/shell/AppShell.svelte';
+  import ConfirmationNotice from '../lib/shell/ConfirmationNotice.svelte';
   import { boot, bootOutsideShell, bootPhase, session, status } from '../lib/stores/app';
   import { applyTheme, readThemeChoice, watchSystemTheme } from '../lib/theme';
 
@@ -74,6 +75,7 @@
   <AppShell activeLens={route === null ? null : lensOf(route)} {titleKey} onnavigate={navigate}>
     {#snippet notices()}
       <AccessNotices />
+      <ConfirmationNotice {route} />
       {#if $status?.degraded}
         <Notice
           tone="attention"

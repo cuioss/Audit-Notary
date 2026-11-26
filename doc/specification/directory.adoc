@@ -185,3 +185,7 @@ requests and bodies in xref:rest-api.adoc#_decided_directory[REST API Register, 
 . *The first login* (AUN-DIR-2): `BINDING_CANDIDATES` and `NOT_BINDABLE` are `409`.
 . *The confirmation* (AUN-DIR-3) is a flag of the session view, `directoryConfirmationDue`, and a notice that links to
   the own entry; it is no gate.
+. *The pages of the web app* (UC-ACC-4, UC-ACC-5, UC-CAT-3 to UC-CAT-5) are `/directory/import`, `/directory/persons`
+  and `/settings/profile`; their details (the search, the rows of the prefill, the wizard's limits and refusals, the
+  candidates of the first login, the act "Yes, this is right") are decided in
+  xref:rest-api.adoc#_decided_directory[REST API Register, Open Questions].

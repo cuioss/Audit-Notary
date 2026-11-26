@@ -13,6 +13,9 @@
   import WelcomeView from './WelcomeView.svelte';
   import DocumentReleaseView from './documents/DocumentReleaseView.svelte';
   import CatalogsView from './catalogs/CatalogsView.svelte';
+  import ImportView from './directory/ImportView.svelte';
+  import PersonsView from './directory/PersonsView.svelte';
+  import ProfileView from './directory/ProfileView.svelte';
   import DocumentsView from './documents/DocumentsView.svelte';
   import SammReleaseView from './samm/SammReleaseView.svelte';
   import SammView from './samm/SammView.svelte';
@@ -32,8 +35,8 @@
   let { pathname, search = '', onnavigate }: Props = $props();
 
   /**
-   * The routes of the catalogs lens this view draws: the addresses under `/catalogs`, read from the canonical addresses;
-   * the directory pages of the lens (`/directory/...`) follow with their own views.
+   * The routes of the catalogs lens this view draws as a chain of columns: the addresses under `/catalogs`, read from the
+   * canonical addresses. The pages of the directory (`/directory/...`) belong to the lens too and have views of their own.
    */
   const CATALOG_ROUTES = routesUnder('catalogs');
 
@@ -58,6 +61,8 @@
   <DueView />
 {:else if route === 'welcome'}
   <WelcomeView {onnavigate} />
+{:else if route === 'settings.profile'}
+  <ProfileView />
 {:else if lensOf(route) === 'settings'}
   <SettingsView />
 {:else if route === 'samm.release' && address}
@@ -72,6 +77,10 @@
   {/key}
 {:else if lensOf(route) === 'categories' && address}
   <DocumentsView {route} params={address.params} query={address.query} {onnavigate} />
+{:else if route === 'catalogs.import'}
+  <ImportView />
+{:else if route === 'catalogs.persons'}
+  <PersonsView />
 {:else if CATALOG_ROUTES.includes(route) && address}
   <CatalogsView {route} params={address.params} {onnavigate} />
 {:else}
