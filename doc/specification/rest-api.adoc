@@ -107,13 +107,15 @@ defaults of xref:authentication.adoc#AUN-AUTH-4[AUN-AUTH-4]. The web app and the
 
 |`GET /api/v1/session`
 |none
-|`{"user": {"pseudonym", "name"}, "rights": [{"repository", "actions"}], "csrfToken", "firstLoginRequired"}`; a session
+|`{"user": {"pseudonym", "name"}, "rights": [{"repository", "actions"}], "csrfToken", "firstLoginRequired",
+"directoryConfirmationDue"}`; `directoryConfirmationDue` (PROVISIONAL) is `true` when the own directory entry is due for
+its confirmation (<<_decided_directory>>, point 13), absent reads `false`; a session
 without a mapped right answers `"rights": []` and is a session like any other (<<_a_session_without_rights>>);
 `csrfToken` belongs to the session, so another value on a later read means another session
 (<<_a_session_that_is_replaced>>, PROVISIONAL)
 |none
 |xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]
-|`SPECIFIED`; the use of `csrfToken` as the identity of the session `PROVISIONAL`
+|`SPECIFIED`; the use of `csrfToken` as the identity of the session and the member `directoryConfirmationDue` `PROVISIONAL`
 
 |`GET /api/v1/due`
 |none
@@ -129,13 +131,14 @@ lenses of the rail, `categories` for the documents of the generic lens (<<_the_d
 |none
 |`text/event-stream`: the event `document-saved` `{"repository", "id", "fields"}`, the event `status` with the body
 of `GET /api/v1/status`, and the events of the document lifecycle `document-created`, `document-transitioned` and
-`release-requested` (PROVISIONAL, <<_the_document_lifecycle>>). The stream belongs to the session that opened it and closes when that session ends: a
+`release-requested` (PROVISIONAL, <<_the_document_lifecycle>>) and `catalog-changed` `{"catalog", "id", "by"}`
+(PROVISIONAL, <<_directory_and_catalog_requests>>). The stream belongs to the session that opened it and closes when that session ends: a
 logout, a back-channel logout, a refused refresh, the end of idle time or lifetime, a bound, or a new login in the same
 browser that replaced it (xref:../use-cases/01-access.adoc#change-events[UC-ACC changes, event stream])
 |none
 |xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5], xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]
-|`SPECIFIED`; the closing with the session `PROVISIONAL` until the use cases are agreed; the three lifecycle events
-and the optional members of `document-saved` `PROVISIONAL`
+|`SPECIFIED`; the closing with the session `PROVISIONAL` until the use cases are agreed; the three lifecycle events,
+`catalog-changed` and the optional members of `document-saved` `PROVISIONAL`
 
 6+h|Login and logout
 
@@ -199,56 +202,127 @@ as signed out: the web app navigates to `/signed-out`
 
 |`GET /api/v1/directory/me`
 |none
-|The prefill of the first-login form: `{"name", "teams", "informationText"}` (shape PROVISIONAL)
+|The prefill of the first-login form and the own entry: `{"name", "teams", "informationText", "entry"}` (shape
+PROVISIONAL). `name` is the one of the token, `teams` the candidates from the groups; `entry` is `null` while the first
+login is required and, once the entry is saved, the own entry `{"pseudonym", "name", "memberships": [{"team", "role"}],
+"confirmedAt", "confirmationDue"}` (PROVISIONAL, <<_directory_and_catalog_requests>>). `memberships` are catalog
+references (`team:payments`); `confirmedAt` is a date; `confirmationDue` is `true` when `confirmedAt` is older than
+`directory.confirmation-interval` (<<_decided_directory>>, point 13)
 |none
-|xref:directory.adoc#AUN-DIR-2[AUN-DIR-2]
-|`SPECIFIED`
+|xref:directory.adoc#AUN-DIR-2[AUN-DIR-2], xref:directory.adoc#AUN-DIR-3[AUN-DIR-3]
+|`SPECIFIED`; the member `entry` `PROVISIONAL`
 
 |`PUT /api/v1/directory/me`
-|`{"name", "team", "role"}`, with `binding` (`new` or a pseudonym) after `BINDING_CANDIDATES`
-|`{"outcome": "SAVED", "pseudonym"}`
-|`VALIDATION` with `REFERENCE_NOT_FOUND`; `BINDING_CANDIDATES` with pseudonyms, names and memberships;
-`NOT_BINDABLE`
+|First login: `{"name", "team", "role"}`, with `binding` (`new` or a pseudonym) after `BINDING_CANDIDATES`; `team` and
+`role` are catalog ids without the prefix. Own entry (PROVISIONAL): `{"name", "memberships": [{"team", "role"}]}`, one
+to five memberships, the references with their prefix. Both forms are accepted; a user who has an entry sends the
+second
+|`{"outcome": "SAVED", "pseudonym"}`; for the own entry also `"confirmedAt"`: a saved change is a confirmation
+|`VALIDATION` with `REFERENCE_NOT_FOUND` (pointer `/team`, `/role`, or `/memberships/0/team`); `BINDING_CANDIDATES`
+(`409`, PROVISIONAL) with `candidates`, each `{"pseudonym", "name", "memberships"}`; `NOT_BINDABLE` (`409`,
+PROVISIONAL). Bodies in <<_directory_and_catalog_requests>>
 |xref:directory.adoc#AUN-DIR-2[AUN-DIR-2], xref:directory.adoc#AUN-DIR-3[AUN-DIR-3]
-|`SPECIFIED`
+|`SPECIFIED`; the second body, `confirmedAt` and the two statuses `PROVISIONAL`
+
+|`POST /api/v1/directory/me/confirmation`
+|none
+|`{"outcome": "CONFIRMED", "confirmedAt"}`: the entry is unchanged, its confirmation date is today
+|`404 NOT_FOUND` while the first login is required; `GIT_UNAVAILABLE`; `REJECTED`
+|xref:directory.adoc#AUN-DIR-3[AUN-DIR-3]
+|`PROVISIONAL`
 
 |`GET /api/v1/catalogs/{catalog}`
 |none
 |`{"entries": [{"id", "name", "retired"}]}` (shape PROVISIONAL); `retired` is a boolean and absent means `false`. The
 list holds the retired entries too, so that a reference to one resolves (xref:directory.adoc#AUN-DIR-4[AUN-DIR-4]);
-the form kit's `CatalogPicker` reads it for every catalog its schemas name (<<_form_kit_requests>>). `team` and `role`
-are used today
-|none
+the form kit's `CatalogPicker` reads it for every catalog its schemas name (<<_form_kit_requests>>). `{catalog}` is one
+of the five catalogs `team`, `role`, `service`, `system`, `external`; another id answers `404 NOT_FOUND`. No order is promised
+(the web app sorts by name) and there is no cut-off
+|`404 NOT_FOUND`
 |xref:directory.adoc#AUN-DIR-2[AUN-DIR-2], xref:directory.adoc#AUN-DIR-4[AUN-DIR-4]
 |`SPECIFIED` for `team` and `role`; the other catalogs and the member `retired` `PROVISIONAL`
 
+|`GET /api/v1/catalogs/{catalog}/schema`
+|none
+|`{"catalog", "schema"}`: the JSON Schema of the entries of the catalog, in the vocabulary of the form kit
+(xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4]), the same for every user. The five schemas are in
+<<_directory_and_catalog_requests>>
+|`404 NOT_FOUND`
+|xref:directory.adoc#AUN-DIR-4[AUN-DIR-4], xref:directory.adoc#AUN-DIR-5[AUN-DIR-5]
+|`PROVISIONAL`
+
+|`GET /api/v1/catalogs/{catalog}/{id}`
+|none
+|One entry: `{"catalog", "id", "name", "retired", "value", "effective", "at", "history"}`. `value` is the entry as the
+schema describes it; `effective` is `null` except for a service, where it holds the effective protection needs, the
+dependencies and the cycle of <<_directory_and_catalog_requests>>; `history` is the signed history, newest first, at
+most 20. The ids `new` and `schema` are no entries
+|`404 NOT_FOUND`
+|xref:directory.adoc#AUN-DIR-4[AUN-DIR-4], xref:directory.adoc#AUN-DIR-5[AUN-DIR-5]
+|`PROVISIONAL`
+
+|`POST /api/v1/catalogs/{catalog}`
+|`{"value"}`: a new entry, its `id` in the value
+|`201 {"outcome": "CREATED", "catalog", "id", "address", "at"}`
+|Right `administer-catalogs` (`403 FORBIDDEN`); `VALIDATION` per field, pointers into `value`; `409 ID_TAKEN`;
+`REJECTED`; `GIT_UNAVAILABLE`
+|xref:directory.adoc#AUN-DIR-4[AUN-DIR-4]
+|`PROVISIONAL`
+
 |`PUT /api/v1/catalogs/{catalog}/{id}`
-|The entry
-|The saved entry
-|Right `administer-catalogs`; there is no `DELETE`, retiring sets `retired: true`
+|`{"value"}`: the whole entry, its `id` equal to the one of the path. The last save wins (no `blob`)
+|`200 {"outcome": "SAVED", "catalog", "id", "at"}`
+|Right `administer-catalogs`; `VALIDATION` per field (`REFERENCE_NOT_FOUND` for a reference that is in no catalog,
+`ID_MISMATCH`); `409 RETIRED`: a retired entry is not changed; `404 NOT_FOUND`; `REJECTED`; `GIT_UNAVAILABLE`. There is
+no `DELETE`
 |xref:directory.adoc#AUN-DIR-4[AUN-DIR-4]
 |`SPECIFIED`; body and answer `PROVISIONAL`
 
-|`POST /api/v1/catalogs/import/backstage`
-|The Backstage descriptor documents
-|The import result: created, updated and left out
-|Right `administer-catalogs`
+|`POST /api/v1/catalogs/{catalog}/{id}/retirement`
+|none
+|`200 {"outcome": "RETIRED", "catalog", "id", "at"}`: the entry has `retired: true`; the references to it stay valid. A
+retired entry is retired again without a change of the answer. There is no way back in the web app
+|Right `administer-catalogs`; `404 NOT_FOUND`; `REJECTED`; `GIT_UNAVAILABLE`
+|xref:directory.adoc#AUN-DIR-4[AUN-DIR-4]
+|`PROVISIONAL`
+
+|`POST /api/v1/catalogs/import/backstage/preview`
+|`{"documents": [{"name", "content"}]}`: the descriptor documents as text, at most 100, together at most 2 MiB
+|`{"outcome": "PREVIEW", "created", "updated", "unchanged", "leftOut"}`: what the import would do; nothing is written
+(<<_directory_and_catalog_requests>>)
+|Right `administer-catalogs`; `422 VALIDATION` (`/documents`, `REQUIRED` or `TOO_MANY`; `/documents/0/content`, `FORMAT`
+for text that is no YAML); `413 TOO_LARGE` with `limit`
 |xref:directory.adoc#AUN-DIR-6[AUN-DIR-6]
-|`SPECIFIED`; answer shape `PROVISIONAL`
+|`PROVISIONAL`
+
+|`POST /api/v1/catalogs/import/backstage`
+|As the preview
+|`{"outcome": "IMPORTED", "created", "updated", "unchanged", "leftOut"}`: the import is written in one commit
+|As the preview, and `REJECTED`; `GIT_UNAVAILABLE`
+|xref:directory.adoc#AUN-DIR-6[AUN-DIR-6]
+|`SPECIFIED`; body and answer `PROVISIONAL`
 
 |`POST /api/v1/directory/persons`
-|A list of entries with a name and at least one membership
-|The pseudonyms of the saved, unbound entries
-|Right `administer-catalogs`; `VALIDATION` for a membership that is in no catalog
+|`{"persons": [{"name", "memberships": [{"team", "role"}]}]}`: one to 100 entries, each with a name and one to five
+memberships (catalog references)
+|`201 {"outcome": "CREATED", "persons": [{"pseudonym", "name", "state", "memberships"}]}`: the saved, unbound entries,
+in the order sent, in one commit
+|Right `administer-catalogs`; `422 VALIDATION`, pointers such as `/persons/1/memberships/0/team`
+(`REFERENCE_NOT_FOUND`), `/persons/0/name` (`REQUIRED`, `MAX_LENGTH`), `/persons/0/memberships` (`MIN_ITEMS`),
+`/persons` (`TOO_MANY`); a person directory that is not `git` answers `409 MANAGED_BY_SOURCE`; `REJECTED`;
+`GIT_UNAVAILABLE`
 |xref:directory.adoc#AUN-DIR-8[AUN-DIR-8]
-|`SPECIFIED`
+|`SPECIFIED`; body and answer `PROVISIONAL`
 
 |`POST /api/v1/directory/erasures`
-|The pseudonym
-|The erasure took effect
-|Right `administer-catalogs`; `409` with the problem type `managed-by-source`
+|`{"pseudonym"}`
+|`200 {"outcome": "ERASED", "pseudonym", "erasedOn"}`: the erasure took effect at once; the pseudonym then resolves as
+`former` (`GET /api/v1/directory/persons/{pseudonym}`) and is no longer listed
+|Right `administer-catalogs`; `409 MANAGED_BY_SOURCE` with the member `type` `managed-by-source` (the problem type of
+the requirement; the answer names no person); `404 NOT_FOUND` for a pseudonym without an entry; `REJECTED`;
+`GIT_UNAVAILABLE`
 |xref:data-protection.adoc#AUN-DP-3[AUN-DP-3]
-|`SPECIFIED`
+|`SPECIFIED`; body, answer and the outcome name `PROVISIONAL`
 
 |`GET /api/v1/directory/persons?q=<text>`
 |none; `q` optional
@@ -258,7 +332,8 @@ name, at most 100; `q` keeps the entries whose name contains the text, upper and
 when more entries matched. `team` and `role` are catalog references (`team:payments`). The erased are not listed. A
 client filters the entries it received by the typed text as well, which covers only a complete answer: with
 `truncated` `true` the answer is incomplete, and the client asks again with `q` and does not present its local filter
-as the full set of matches. The server filters by `q`. The exact body is in <<_form_kit_requests>>
+as the full set of matches. The server filters by `q`. The exact body is in <<_form_kit_requests>>. The administration
+page `/directory/persons` reads the same list
 |`403 FORBIDDEN` for a user without a mapped right (the entries are personal data, as the binding candidates of
 xref:directory.adoc#AUN-DIR-2[AUN-DIR-2] are)
 |xref:data-protection.adoc#AUN-DP-5[AUN-DP-5], xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4]
@@ -1088,6 +1163,359 @@ them (the common refusals are above):
 |As in the common refusals
 |===
 
+[#_directory_and_catalog_requests]
+== Directory and Catalog Requests
+
+The requests of the use cases UC-ACC-4, UC-ACC-5 and UC-CAT-1 to UC-CAT-5
+(xref:../use-cases/01-access.adoc[Use Cases: Access], xref:../use-cases/03-catalogs.adoc[Use Cases: Catalogs and
+Persons]). The rows are in <<_requests>>, *Directory and catalogs*; this section fixes their bodies and the addresses
+of the views. Every body is PROVISIONAL unless a row says otherwise; the decisions are in <<_decided_directory>>.
+
+[#_directory_addresses]
+=== The Addresses
+
+The lens *Catalogs* already has `/catalogs`, `/catalogs/{catalog}` and `/catalogs/{catalog}/{id}`. The step adds four
+addresses to `canonical-addresses.json`; the route ids of the administration pages start with `catalogs`, so that the
+lens of an address, the first segment of its route id, is *Catalogs* although the path starts with `/directory`:
+
+[cols="2,3,3"]
+|===
+|Route id |Address |Shows
+
+|`catalogs`
+|`/catalogs`
+|The five catalogs as the first column: `team`, `role`, `service`, `system`, `external`, in this order, with their names
+from the message catalogue (`catalog.<catalog>.name`). Needs no request; with a user's first visit the lens opens the
+first catalog
+
+|`catalogs.catalog`
+|`/catalogs/{catalog}`
+|The entries of the catalog (`GET /api/v1/catalogs/{catalog}`), retired ones marked; the action *New* with the right
+`administer-catalogs`. An unknown catalog is the not-found view
+
+|`catalogs.new`
+|`/catalogs/{catalog}/new`
+|The form of a new entry in the catalog's schema; nothing is stored before the save (`POST`), then the page moves to
+the address of the entry. The segment `new` is reserved: no entry has the id `new`, and the route comes before
+`catalogs.entry` in the file
+
+|`catalogs.entry`
+|`/catalogs/{catalog}/{id}`
+|The entry sheet: the form of the schema, for a service also the effective protection needs, the dependencies and the
+cycle notice; the acts *Save* and *Retire*, each only with the right. A retired entry is shown read-only
+
+|`catalogs.import`
+|`/directory/import`
+|The Backstage import as a wizard: choose the descriptors, check what would happen (the preview), import, read the
+result. Without the right the page says that importing needs it and shows nothing else
+
+|`catalogs.persons`
+|`/directory/persons`
+|The person directory: the table of the persons (`GET /api/v1/directory/persons`) with their state, the prefill of
+unbound entries and the erasure with a confirmation. Without the right the table is read-only: no prefill, no erasure
+
+|`settings.profile`
+|`/settings/profile`
+|The own directory entry and "Is this still right?" (UC-ACC-5). The route comes before `settings.section`, so
+`/settings/profile` is not a section called `profile`
+|===
+
+The prefix `/directory` is used only by the two administration pages; `/directory/*` never meets `/catalogs/{catalog}`.
+There is no address `/directory` itself: it is the not-found view. The addresses admit no query.
+
+[#_catalog_schemas]
+=== The Schemas of the Catalogs
+
+`GET /api/v1/catalogs/service/schema`, the schema of the richest catalog, written out; the `id` pattern leaves out the
+reserved segments `new` and `schema`:
+
+[source,json]
+----
+{
+  "catalog": "service",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "required": ["id", "name", "lifecycle", "owner", "protection-needs"],
+    "properties": {
+      "id":          { "type": "string", "pattern": "^(?!(?:new|schema)$)[a-z0-9][a-z0-9-]{0,63}$" },
+      "name":        { "type": "string", "maxLength": 120 },
+      "description": { "type": "string", "maxLength": 500, "x-free-text": true },
+      "system":      { "type": "string", "format": "gdr-link", "x-catalog": "system" },
+      "lifecycle":   { "type": "string", "enum": ["planned", "active", "deprecated"] },
+      "owner": {
+        "type": "object",
+        "required": ["team", "role"],
+        "properties": {
+          "team": { "type": "string", "format": "gdr-link", "x-catalog": "team" },
+          "role": { "type": "string", "format": "gdr-link", "x-catalog": "role" }
+        }
+      },
+      "repositories": {
+        "type": "array", "maxItems": 20,
+        "items": { "type": "string", "format": "uri", "maxLength": 300 }
+      },
+      "dependsOn": {
+        "type": "array", "maxItems": 50, "uniqueItems": true,
+        "items": { "type": "string", "format": "gdr-link", "x-catalog": ["service", "external"] }
+      },
+      "protection-needs": {
+        "type": "object",
+        "required": ["confidentiality", "integrity", "availability"],
+        "properties": {
+          "confidentiality": { "type": "string", "enum": ["normal", "high", "very-high"] },
+          "integrity":       { "type": "string", "enum": ["normal", "high", "very-high"] },
+          "availability":    { "type": "string", "enum": ["normal", "high", "very-high"] }
+        }
+      },
+      "data-classes": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 60 } }
+    }
+  }
+}
+----
+
+The other four, with the same `id` pattern and the same `name` (required) and `description`:
+
+[cols="1,3"]
+|===
+|Catalog |Further properties
+
+|`team`
+|`parent`: `gdr-link` with `x-catalog: team` (Backstage `spec.parent`, AUN-DIR-6)
+
+|`role`
+|none
+
+|`system`
+|none
+
+|`external`
+|`kind`: `supplier`, `provider` or `other`
+|===
+
+`x-catalog` takes a catalog id or, for `dependsOn`, an array of them (<<_decided_directory>>, point 7). `retired` is not
+a property of the form: the entry has it beside its `value`. The texts of the form are the catalogue keys
+`category.catalog.<catalog>.field.<path>` with `.help` and `.option.<value>`: the form kit is given the category `catalog`
+and the kind `<catalog>`. A catalog has no `required` mark on `id` while an entry is changed: the `id` is read-only
+then, and the path decides.
+
+[#_catalog_entries]
+=== The Entries
+
+`GET /api/v1/catalogs/service`:
+
+[source,json]
+----
+{ "entries": [
+    { "id": "customer-portal", "name": "Customer Portal" },
+    { "id": "ledger", "name": "Ledger", "retired": true },
+    { "id": "payment-api", "name": "Payment API" } ] }
+----
+
+`GET /api/v1/catalogs/service/payment-api` (the `effective` members are explained below):
+
+[source,json]
+----
+{
+  "catalog": "service", "id": "payment-api", "name": "Payment API", "retired": false,
+  "value": {
+    "id": "payment-api", "name": "Payment API", "description": "Payment processing for the web shop",
+    "system": "system:webshop", "lifecycle": "active",
+    "owner": { "team": "team:payments", "role": "role:service-owner" },
+    "repositories": ["https://git.example/payments/payment-api"],
+    "dependsOn": ["service:customer-db", "service:identity-provider", "external:psp-provider"],
+    "protection-needs": { "confidentiality": "high", "integrity": "high", "availability": "high" },
+    "data-classes": ["personal", "payment"]
+  },
+  "effective": {
+    "protectionNeeds": { "confidentiality": "very-high", "integrity": "very-high", "availability": "high" },
+    "decidedBy": { "confidentiality": "service:customer-db", "integrity": "service:identity-provider",
+                   "availability": "service:payment-api" },
+    "dependencies": [
+      { "ref": "external:psp-provider", "name": "Payment service provider", "depth": 1, "via": "service:payment-api",
+        "retired": false, "counts": false, "protectionNeeds": null },
+      { "ref": "service:customer-db", "name": "Customer database", "depth": 1, "via": "service:payment-api",
+        "retired": false, "counts": true,
+        "protectionNeeds": { "confidentiality": "very-high", "integrity": "high", "availability": "normal" } },
+      { "ref": "service:identity-provider", "name": "Identity Provider", "depth": 1, "via": "service:payment-api",
+        "retired": false, "counts": true,
+        "protectionNeeds": { "confidentiality": "very-high", "integrity": "very-high", "availability": "high" } },
+      { "ref": "external:cloud-hosting", "name": "Cloud hosting", "depth": 2, "via": "service:customer-db",
+        "retired": false, "counts": false, "protectionNeeds": null }
+    ],
+    "cycle": null
+  },
+  "at": "2026-10-02T09:12:00Z",
+  "history": [
+    { "kind": "save", "at": "2026-10-02T09:12:00Z", "by": { "pseudonym": "p-7d2e58", "name": "Noor Haddad" } },
+    { "kind": "create", "at": "2026-02-11T13:40:00Z", "by": { "pseudonym": "p-7d2e58", "name": "Noor Haddad" } }
+  ]
+}
+----
+
+The rules of `effective` (AUN-DIR-5; each one is also decided in <<_decided_directory>>, point 8):
+
+* `protectionNeeds` is, per dimension, the highest value over the service itself and every dependency that counts; the
+  order is `normal`, `high`, `very-high`.
+* `dependencies` lists every service and external party reachable through `dependsOn`, transitively, each once, in
+  breadth-first order (depth 1 first, within a depth by `ref`); `via` is the `ref` it was first reached from. A
+  dependency `counts` when it is a service that is not retired and whose protection needs are known; an external party
+  has none (`protectionNeeds` `null`), and a retired service is listed with the mark and does not count.
+* `decidedBy` names, per dimension, the first of the service itself and then `dependencies` that counts and holds the
+  highest value; the service itself is `service:<own id>`.
+* `cycle` is `null`, or the `refs` of the services on a cycle in `dependsOn` that the service is on or reaches, in
+  the order they depend on each other: `["service:reporting", "service:report-scheduler"]`. A cycle is a notice and
+  never a refusal: the maximum is taken over every service reached once.
+* For a catalog other than `service` `effective` is `null`.
+
+Saving a service answers `{"outcome": "SAVED", "catalog": "service", "id": "payment-api", "at": "…"}`; the sheet reads the
+entry again, which carries the new `effective`. A refusal is `422`:
+
+[source,json]
+----
+{ "outcome": "VALIDATION", "errors": [
+    { "pointer": "/owner/team", "code": "REFERENCE_NOT_FOUND" },
+    { "pointer": "/dependsOn/1", "code": "REFERENCE_NOT_FOUND" },
+    { "pointer": "/name", "code": "REQUIRED" } ] }
+----
+
+The pointers are into `value`, the form's own value. Creating answers `201`
+`{"outcome": "CREATED", "catalog": "service", "id": "notification-gateway", "address":
+"/catalogs/service/notification-gateway", "at": "…"}`, and `409 {"outcome": "ID_TAKEN"}` for an id that exists, retired
+or not. Retiring answers `200 {"outcome": "RETIRED", "catalog", "id", "at"}`; a change of a retired entry answers
+`409 {"outcome": "RETIRED"}` and writes nothing.
+
+[#_backstage_import]
+=== The Backstage Import
+
+The wizard reads the files the person chooses in the browser and sends their text; the application fetches nothing
+from Backstage (AUN-DIR-6). The request, preview or import:
+
+[source,json]
+----
+{ "documents": [
+    { "name": "catalog-info.yaml", "content": "apiVersion: backstage.io/v1alpha1\nkind: Component\n…" } ] }
+----
+
+The answer of the preview (`PREVIEW`) and of the import (`IMPORTED`) has one shape:
+
+[source,json]
+----
+{
+  "outcome": "IMPORTED",
+  "created": [
+    { "catalog": "service", "id": "checkout-ui", "name": "Checkout UI" },
+    { "catalog": "system", "id": "storefront", "name": "Storefront" },
+    { "catalog": "team", "id": "storefront", "name": "Storefront" }
+  ],
+  "updated": [
+    { "catalog": "service", "id": "payment-api", "name": "Payment API", "changed": ["lifecycle", "owner.team", "dependsOn"] },
+    { "catalog": "team", "id": "payments", "name": "Payments", "changed": ["parent"] }
+  ],
+  "unchanged": 4,
+  "leftOut": [
+    { "entity": "component:default/billing-batch", "field": "spec.lifecycle", "reason": "LIFECYCLE_UNMAPPED", "detail": "experimental" },
+    { "entity": "component:default/search-index", "field": null, "reason": "DEFAULTS_MISSING", "detail": "owner.role, protection-needs" },
+    { "entity": "component:ops/legacy-export", "field": null, "reason": "NAMESPACE_NOT_DEFAULT", "detail": "ops" },
+    { "entity": "component:default/payment-api", "field": "spec.dependsOn[2]", "reason": "REFERENCE_KIND_NOT_SUPPORTED", "detail": "resource:default/payments-db" },
+    { "entity": "api:default/payments-openapi", "field": null, "reason": "KIND_NOT_SUPPORTED", "detail": "API" }
+  ]
+}
+----
+
+* `created` and `updated` name the catalog entries; `changed` lists the fields of `value` an update changed, as dotted
+  paths. `unchanged` is the number of entries the descriptors matched without a difference.
+* A `leftOut` item names the Backstage entity as its entity reference (`kind:namespace/name`, written in lower case as senders should,
+  link:https://backstage.io/docs/features/software-catalog/references[Backstage: Entity References]), the `field` of
+  the descriptor, or `null` for the entity as a whole, the `reason` and a `detail`. The reasons are the ones AUN-DIR-6
+  names: `NAMESPACE_NOT_DEFAULT`, `REFERENCE_KIND_NOT_SUPPORTED` (the entity is imported, the reference left out),
+  `LIFECYCLE_UNMAPPED` (an existing service keeps its value, a new one is not created), `DEFAULTS_MISSING` (a new
+  service without `directory.backstage.defaults` for `owner.role` and `protection-needs` is not created), and
+  `KIND_NOT_SUPPORTED` for a kind other than `Component`, `System` and `Group`. The text of a reason is the catalogue key
+  `import.reason.<reason in lower case, with hyphens>`.
+* A repeated import answers the same shape with `created` empty: it updates, never duplicates, never deletes.
+* A `422 VALIDATION` names the document by position: `{"pointer": "/documents/0/content", "code": "FORMAT"}`. Nothing is
+  written then. A body above the limits answers `413 {"outcome": "TOO_LARGE", "limit": 2097152}`.
+
+[#_persons_and_erasure]
+=== Prefilled Persons and Erasure
+
+`POST /api/v1/directory/persons`:
+
+[source,json]
+----
+{ "persons": [
+    { "name": "Nadia Kovac", "memberships": [ { "team": "team:payments", "role": "role:developer" } ] },
+    { "name": "Omar Haddad", "memberships": [ { "team": "team:mobile", "role": "role:developer" } ] } ] }
+----
+
+answers `201`
+
+[source,json]
+----
+{ "outcome": "CREATED", "persons": [
+    { "pseudonym": "p-5c2d19", "name": "Nadia Kovac", "state": "unbound",
+      "memberships": [ { "team": "team:payments", "role": "role:developer" } ] },
+    { "pseudonym": "p-a7e341", "name": "Omar Haddad", "state": "unbound",
+      "memberships": [ { "team": "team:mobile", "role": "role:developer" } ] } ] }
+----
+
+and a team that is in no catalog answers `422` with `{"pointer": "/persons/1/memberships/0/team", "code":
+"REFERENCE_NOT_FOUND"}`; nothing is saved when one entry fails. The same name twice is allowed (two people may share a
+name); the page warns about a name that is already in the table.
+
+`POST /api/v1/directory/erasures` with `{"pseudonym": "p-2b7f10"}` answers `200`
+`{"outcome": "ERASED", "pseudonym": "p-2b7f10", "erasedOn": "2026-11-26"}`; with a person directory of the
+organisation's own source `409 {"outcome": "MANAGED_BY_SOURCE", "type": "managed-by-source"}` and nothing is erased
+here. The page then says that the person is erased in the organisation's own source. The erasure cannot be undone; the
+confirmation says so and names the person only by the name the table shows.
+
+[#_own_entry_and_binding]
+=== The Own Entry, the Confirmation and the Binding
+
+`GET /api/v1/directory/me` of a user with an entry:
+
+[source,json]
+----
+{ "name": "Alex Example", "teams": ["payments"], "informationText": "…",
+  "entry": { "pseudonym": "p-4c1a9e", "name": "Alex Example",
+             "memberships": [ { "team": "team:payments", "role": "role:security-champion" } ],
+             "confirmedAt": "2026-01-14", "confirmationDue": false } }
+----
+
+`PUT /api/v1/directory/me` with `{"name": "Alex Example", "memberships": [{"team": "team:payments", "role":
+"role:developer"}]}` answers `200 {"outcome": "SAVED", "pseudonym": "p-4c1a9e", "confirmedAt": "2026-11-26"}`.
+`POST /api/v1/directory/me/confirmation` answers `200 {"outcome": "CONFIRMED", "confirmedAt": "2026-11-26"}`. Neither
+needs step-up.
+
+The first login with candidates (UC-ACC-4): `PUT /api/v1/directory/me` with `{"name": "Robin Newcomer", "team":
+"payments", "role": "developer"}` and no `binding`, from a user who has a mapped right and whose membership a prefilled
+entry holds, saves nothing and answers `409`:
+
+[source,json]
+----
+{ "outcome": "BINDING_CANDIDATES", "candidates": [
+    { "pseudonym": "p-3d7a15", "name": "Robin Newcomer",
+      "memberships": [ { "team": "team:payments", "role": "role:developer" } ] },
+    { "pseudonym": "p-8e2b40", "name": "Rowan Newman",
+      "memberships": [ { "team": "team:payments", "role": "role:developer" } ] } ] }
+----
+
+The repeated request carries `"binding": "p-3d7a15"` (bind) or `"binding": "new"` (a new entry) and answers
+`200 {"outcome": "SAVED", "pseudonym": "p-3d7a15"}`; `"binding": "p-0b0b0b"`, a pseudonym that is no candidate, answers
+`409 {"outcome": "NOT_BINDABLE"}` and the form shows the candidates again. A user without a mapped right never gets
+`BINDING_CANDIDATES`.
+
+*The reconfirmation.* `GET /api/v1/session` carries `directoryConfirmationDue: true` while the own entry's confirmation is
+older than the interval. The shell then shows a notice on every view with a link to `/settings/profile`, which asks "Is
+this still right?" with the acts "Yes, this is right" (`POST …/confirmation`) and *Save* (a changed entry, which
+confirms as well); the web app reads the session again after either, and the notice goes. The notice is no gate: nothing
+else is blocked (<<_decided_directory>>, point 13).
+
+*The event.* `catalog-changed` `{"catalog", "id", "by"}` on `GET /api/v1/events` tells an open catalog list or entry
+sheet that someone saved, created or retired an entry; the web app reads the list and the entry again (PROVISIONAL).
+
+
 [#_the_step_up_handler]
 == The Step-Up Handler
 
@@ -1532,3 +1960,71 @@ For the owner: whether the rail may gain a ninth lens, and whether `/categories/
 that the use cases of the categories name it for the definition (1); whether a refused draft is right, or the draft
 should be written and the errors only advised (10); whether a pending release request belongs in the approvers' Due as
 well (13); whether the release request should carry the reviewed revision now (14); the status `502` of `REJECTED` (15); whether a switched-off custom category keeps readable, read-only generic addresses (21), and whether the release answers `DOCUMENT_RELEASED` for a document released meanwhile (the last item); whether the Due entry of a release request shows the date of the request, and whether the release view of a released document shows nothing instead of its diff (the release view).
+
+[#_decided_directory]
+*Decided provisionally* with the directory and the catalogs (UC-ACC-4, UC-ACC-5, UC-CAT-1 to UC-CAT-5), so that no screen
+is blocked; the owner may change each one. The bodies and addresses are in <<_directory_and_catalog_requests>>:
+
+. *The addresses.* The lens *Catalogs* keeps `/catalogs/{catalog}` and `/catalogs/{catalog}/{id}` and gains
+  `/catalogs/{catalog}/new`. The administration of the directory takes `/directory/import` (the Backstage wizard) and
+  `/directory/persons` (prefill and erasure), whose route ids are `catalogs.import` and `catalogs.persons`, so that the
+  rail marks *Catalogs* and the prefix `/directory` never meets `/catalogs/{catalog}`. The own entry is
+  `/settings/profile` (`settings.profile`, before `settings.section`). The segment `new` is reserved in a catalog.
+. *The catalogs are the five* `team`, `role`, `service`, `system` and `external`, in this order; the first column of the
+  lens is a fixed list with names from the catalogue and makes no request. A sixth catalog needs a change of the web app.
+. *The list is light, the entry is whole.* `GET /api/v1/catalogs/{catalog}` stays `{id, name, retired}` for the pickers;
+  `GET …/{id}` carries the `value`, the `effective` members of a service and the history; the schema of each catalog is
+  served by `GET /api/v1/catalogs/{catalog}/schema` and read by the form kit with the category `catalog` and the kind
+  `<catalog>`, so the texts are `category.catalog.<catalog>.field.<path>`.
+. *Create is `POST /api/v1/catalogs/{catalog}`, change is `PUT …/{id}`.* AUN-DIR-4 names the `PUT` only; a separate create
+  keeps a mistyped id from overwriting an entry (`409 ID_TAKEN`). The `PUT` carries no blob: the last save wins, because
+  the entries are small and the administrators few.
+. *Retiring is `POST …/{id}/retirement`,* asked for after a confirmation that says documents keep their reference. A
+  retired entry is read-only (`409 RETIRED` on a change), and the web app offers no way back.
+. *A reference to a retired entry is not refused* when a value is saved: the pickers do not offer it, and a value that
+  holds it stays valid, as in the documents (AUN-DIR-4).
+. *`x-catalog` may be an array of catalog ids.* `dependsOn` names services and external parties (AUN-DIR-5); the
+  `CatalogPicker` of the field lists both, grouped by catalog, and stores the reference with its prefix. This extends the
+  specified construct `x-catalog: <catalog>` of AUN-WEB-4.
+. *The effective protection needs are read, not stored:* the maximum per dimension over the service and every
+  dependency that counts; a retired service is shown with the mark and does not count, an external party has no needs
+  and does not count; the dependency list, `decidedBy` and the order are fixed in <<_catalog_entries>>. AUN-DIR-5 says
+  "every service reachable", it does not say that a retired one counts; open question 1 of the service catalog
+  (the other direction of BSI-Standard 200-2) stays open.
+. *A cycle in `dependsOn` is a notice,* named by the services on it, and never a refusal: an import may bring one.
+. *The right is `administer-catalogs` on the repository `directory`,* read from the session's `rights`. Without it the
+  lens *Catalogs* is read-only: no *New*, no *Save*, no *Retire*, no import, no prefill, no erasure; the writes answer
+  `403 FORBIDDEN` all the same. Every user reads the catalogs; `/directory/persons` is read by a user with any mapped
+  right (the entries are personal data).
+. *The Backstage import takes the text of the descriptors* (`{"documents": [{"name", "content"}]}`, at most 100, together
+  2 MiB) and has a preview request that writes nothing, so that the wizard can show created, updated and left out before
+  the import; both answer one shape (`created`, `updated`, `unchanged`, `leftOut` with a reason code).
+. *The prefill and the erasure* take the bodies of <<_persons_and_erasure>>; at most 100 persons and five memberships each
+  per request; the erased person is no longer listed and resolves as `former`; the erasure asks for no step-up and is
+  confirmed by the page, not by the request. `409 MANAGED_BY_SOURCE` is the outcome of the requirement's problem type
+  `managed-by-source`.
+. *The reconfirmation flag* is `directoryConfirmationDue` of `GET /api/v1/session`, and `confirmationDue` of the own
+  entry; the interval is the server's. AUN-DIR-3 says the next login shows the form: the web app shows a notice with a link
+  to `/settings/profile` instead, because the session layer's gate is the first login's only (ADR-0004), and nothing is
+  blocked while the notice stands.
+. *The own entry* is read with `GET /api/v1/directory/me` (new member `entry`) and written with `PUT` (memberships, one to
+  five) or `POST /api/v1/directory/me/confirmation`; a saved change is a confirmation, the date is written either way.
+  The page does not change the pseudonym.
+. *`BINDING_CANDIDATES` and `NOT_BINDABLE` are `409`* with their members; the form keeps its candidates after
+  `NOT_BINDABLE`. The statuses are the register's choice; the requirement names the outcomes only.
+. *The event `catalog-changed`* refreshes an open list or entry sheet, as `document-saved` does.
+. *Reading while the Git server is unreachable* serves the catalogs and the persons from the last fetched state; every
+  write answers `GIT_UNAVAILABLE`.
+. *The sheet of a service* shows the stored protection needs and the effective ones side by side, names the dependency
+  that decides each dimension and lists the dependencies as the chain `service › depends on`; a cycle is a notice above
+  the form. *The wizard* of the import is the template `WizardPage`; the entry in the lens is the action *Import*
+  beside *New*.
+. *The mock answers the writes with fixed ids* (the created entry, the created persons), because it does not read the
+  bodies; the e2e flows type the same values.
+
+For the owner: whether `POST` for creation and a `PUT` that only changes is right (4); whether a retired entry may be
+reactivated (5); whether `x-catalog` may name several catalogs (7); whether a retired service counts for the effective
+protection needs (8); whether the reconfirmation should be a gate, as AUN-DIR-3 reads (13); whether the erasure should
+ask for step-up; whether a user with an entry may have several memberships in the web app (14); whether `/directory/*`
+and the route ids `catalogs.import` and `catalogs.persons` are the wanted home of the administration (1); and whether
+the status `409` for `BINDING_CANDIDATES` and `NOT_BINDABLE` is wanted.

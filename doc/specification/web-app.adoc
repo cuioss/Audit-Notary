@@ -87,6 +87,12 @@ document address reads the document as it was at a release or a commit. `parseAd
 under the rules of that section; every other query parameter is ignored in an address and refused in a login's
 `return`.
 
+Provisionally (decided with the directory and the catalogs, xref:rest-api.adoc#_directory_addresses[REST API Register,
+Directory and Catalog Requests]): the lens *Catalogs* gains `/catalogs/<catalog>/new` and the administration pages
+`/directory/import` (the Backstage import) and `/directory/persons` (prefilled persons and erasure), and the own
+directory entry is `/settings/profile`. The administration pages belong to the lens *Catalogs* although their path starts
+with `/directory`, which never meets `/catalogs/<catalog>`.
+
 Three more addresses are shown without the shell: `/login` (local users), `/signed-out` and `/login-problem`
 (provisional, xref:rest-api.adoc#_addresses_outside_the_shell[REST API Register, Addresses Outside the Shell]). They are
 in `canonical-addresses.json` as `outsideShell`, so the web app routes them and the check of a login's `return` refuses
@@ -114,7 +120,8 @@ the other rows are PROVISIONAL, decided so that the forms of every category can 
 |`boolean` |`Toggle` |`SPECIFIED`
 |`array` of objects |`DataTable` with row editor |`SPECIFIED`
 |`x-catalog: <catalog>` (catalog reference, xref:data-protection.adoc#AUN-DP-2[AUN-DP-2]) |`CatalogPicker` over
-that catalog |`SPECIFIED`
+that catalog; `PROVISIONAL`: an array of catalog ids (`["service", "external"]`) lists their entries grouped by catalog
+(xref:rest-api.adoc#_decided_directory[REST API Register, Open Questions]) |`SPECIFIED`
 |`x-asciidoc: true` |`AsciiDocField` with server-rendered preview |`SPECIFIED`
 |`x-person: true` |`PersonPicker` over the person directory; stores the pseudonym |`SPECIFIED`
 |`x-free-text: true` |Hint `form.hint.no-personal-notes` shown with the field (xref:data-protection.adoc#AUN-DP-5[AUN-DP-5]) |`SPECIFIED`

@@ -80,6 +80,20 @@ of truth.
 . Whether service entries are also imported from a CMDB (i-doit, iTop, ServiceNow).
 . Whether a change of the protection needs of a service needs a confirmation by the information security officer.
 
+Decided provisionally with the directory and the catalogs (UC-CAT-1 to UC-CAT-5), recorded with the bodies in
+xref:../specification/rest-api.adoc#_decided_directory[REST API Register, Open Questions]; the owner may change each one:
+
+. The web app keeps the five catalogs `team`, `role`, `service`, `system` and `external` in the lens *Catalogs*; each is
+  edited in a form generated from its schema, served by the application, and every user reads them.
+. An entry is created with its own request and changed with the last save winning; it is retired after a confirmation,
+  never deleted, a retired entry is read-only, and there is no way back in the web app.
+. The effective protection needs are the maximum per dimension over the service and every service reachable through
+  `dependsOn`; a retired service and an external party do not count, the service that decides each dimension is named, and
+  a cycle is a notice that names the services on it, never a refusal.
+. A catalog field may refer to several catalogs (`dependsOn` to services and external parties).
+. The Backstage import takes the text of the descriptors, has a preview that writes nothing, and reports what it created,
+  updated and left out with a reason for each.
+
 == Related
 
 * xref:../specification/directory.adoc#AUN-DIR-5[Directory, AUN-DIR-5 and AUN-DIR-6] -- fields and import

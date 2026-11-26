@@ -385,6 +385,17 @@ reasons are in xref:../specification/rest-api.adoc#_open_questions[REST API Regi
 . The identity of a session in the browser is its anti-CSRF token; whether the layer's session view (SESSION-10) offers
   an explicit member is open.
 
+Decided provisionally with the first login and the own entry (UC-ACC-4, UC-ACC-5), recorded with the bodies in xref:../specification/rest-api.adoc#_decided_directory[REST API Register, Open Questions];
+the owner may change each one:
+
+. The binding candidates of the first login are a `409` with the outcome `BINDING_CANDIDATES`; a pseudonym that is no
+  candidate is a `409 NOT_BINDABLE`; the form keeps its candidates.
+. The reconfirmation of the own entry is a flag of the session view, `directoryConfirmationDue`, that makes the web app
+  show a notice with a link to the own entry; it is no gate like the first login, because Token Sheriff's planned session
+  layer owns the gate (ADR-0004). Whether the confirmation should block until it is done is open.
+. The own entry is read and written with the same request as the first login's form; a saved change counts as a
+  confirmation.
+
 == Related
 
 * https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/identity-and-signing.adoc[Identity and Signing] — the library side

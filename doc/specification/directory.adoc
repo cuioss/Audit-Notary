@@ -166,3 +166,22 @@ Entities]):
 `POST /api/v1/directory/persons` (right `administer-catalogs`) takes a list of entries with name and at least one
 membership, validates the memberships against the catalogs and saves them as unbound entries in one commit; the
 answer lists their pseudonyms. Binding happens only at the person's first login (<<AUN-DIR-2>>).
+
+[#_open_questions]
+== Open Questions
+
+Decided provisionally with the directory and the catalogs (UC-ACC-4, UC-ACC-5, UC-CAT-1 to UC-CAT-5), recorded with the
+requests and bodies in xref:rest-api.adoc#_decided_directory[REST API Register, Open Questions]; the owner may change each one:
+
+. *Create and change are two requests* (AUN-DIR-4): `POST /api/v1/catalogs/{catalog}` creates, `PUT …/{id}` changes, the
+  last save wins, `POST …/{id}/retirement` retires; a retired entry is read-only and has no way back in the web app.
+. *The effective protection needs* (AUN-DIR-5) do not count a retired service or an external party, name the service
+  that decides each dimension, and report a cycle as a notice.
+. *The import* (AUN-DIR-6) takes the text of the descriptors, has a preview request, and reports left-out items with a
+  reason code (`NAMESPACE_NOT_DEFAULT`, `REFERENCE_KIND_NOT_SUPPORTED`, `LIFECYCLE_UNMAPPED`, `DEFAULTS_MISSING`,
+  `KIND_NOT_SUPPORTED`).
+. *The prefill and the erasure* (AUN-DIR-8, AUN-DP-3): at most 100 persons per request; `409 MANAGED_BY_SOURCE` for a
+  person directory of the organisation's own source; the erased person is no longer listed and resolves as `former`.
+. *The first login* (AUN-DIR-2): `BINDING_CANDIDATES` and `NOT_BINDABLE` are `409`.
+. *The confirmation* (AUN-DIR-3) is a flag of the session view, `directoryConfirmationDue`, and a notice that links to
+  the own entry; it is no gate.
