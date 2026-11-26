@@ -20,7 +20,7 @@
    */
   let { children }: { children: Snippet } = $props();
 
-  let address = $derived(parseAddress(page.url.pathname));
+  let address = $derived(parseAddress(page.url.pathname, page.url.search));
   let route = $derived(address?.route ?? null);
   let titleKey = $derived(route === null ? 'error.not-found.title' : routeTitleKey(route));
   let outside = $derived(isOutsideShell(route));

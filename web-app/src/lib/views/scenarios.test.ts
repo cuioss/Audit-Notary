@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { parseAddress } from '../routes';
+import { parseHref } from '../routes';
 import { loadScenario, primaryScenarios, scenarioFetch } from '../test/scenarioFetch';
 import DueView from './DueView.svelte';
 import WelcomeView from './WelcomeView.svelte';
@@ -30,7 +30,7 @@ describe('the profiles', () => {
     ].filter(Boolean) as { items?: { address: string }[] }[];
     for (const body of bodies) {
       for (const item of body.items ?? []) {
-        expect(parseAddress(item.address), item.address).not.toBeNull();
+        expect(parseHref(item.address), item.address).not.toBeNull();
       }
     }
   });

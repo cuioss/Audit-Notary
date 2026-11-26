@@ -7,12 +7,7 @@ import type { JsonSchema } from '../api/types';
 
 export type { JsonSchema } from '../api/types';
 
-/** A JSON value. */
-export type JsonValue =
-  null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
-
-/** A JSON object. */
-export type JsonObject = { [key: string]: JsonValue };
+export type { JsonObject, JsonValue } from '../api/types';
 
 /** The components of "Choosing the Component", by the name of the kit's component; a section has none of its own. */
 export type FieldKind =

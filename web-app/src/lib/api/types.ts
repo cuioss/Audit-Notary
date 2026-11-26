@@ -63,6 +63,15 @@ export interface DueItem {
   title: string;
   address: string;
   due: string;
+  /**
+   * The release request behind a `release` item, and behind a `review` item of an approver when one is pending
+   * (rest-api.adoc, Release Requests; PROVISIONAL): its id, who asked, when, and the comment. The four members come
+   * together.
+   */
+  requestId?: string;
+  requestedBy?: Person;
+  requestedAt?: string;
+  comment?: string;
 }
 
 /** `GET /api/v1/due`. */
@@ -107,11 +116,47 @@ export interface LogoutAnswer {
   redirect: string;
 }
 
-/** `document-saved` on the event stream (AUN-WEB-5). */
+/** A JSON value. */
+export type JsonValue =
+  null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+
+/** A JSON object. */
+export type JsonObject = { [key: string]: JsonValue };
+
+/**
+ * `document-saved` on the event stream (AUN-WEB-5). `part` and `by` are optional (rest-api.adoc, Events of the
+ * Lifecycle; PROVISIONAL): the part the save changed, and who saved. For a document of the generic lens `fields` are
+ * JSON Pointers into the value of `part`.
+ */
 export interface DocumentSavedEvent {
   repository: string;
   id: string;
   fields: string[];
+  part?: string;
+  by?: { pseudonym: string; name: string };
+}
+
+/** `document-created` on the event stream (PROVISIONAL): the lists refresh. */
+export interface DocumentCreatedEvent {
+  repository: string;
+  id: string;
+  kind: string;
+}
+
+/** `document-transitioned` on the event stream (PROVISIONAL), for a submit and for a release. */
+export interface DocumentTransitionedEvent {
+  repository: string;
+  id: string;
+  state: WorkflowState;
+  version: number;
+  by: { pseudonym: string; name: string };
+}
+
+/** `release-requested` on the event stream (PROVISIONAL): Due refreshes. */
+export interface ReleaseRequestedEvent {
+  repository: string;
+  id: string;
+  requestId: string;
 }
 
 /*
@@ -344,11 +389,16 @@ export interface DraftSaved {
   at: string;
 }
 
-/** `POST /api/v1/documents/…/save`. */
+/**
+ * `POST /api/v1/documents/…/save`. A save after a release of a document type released more than once adds `state`
+ * (`draft`) and the next `version` (rest-api.adoc, Document Lifecycle Requests).
+ */
 export interface Saved {
   outcome: 'SAVED';
   at: string;
   parts: Record<string, PartVersion>;
+  state?: WorkflowState;
+  version?: number;
 }
 
 /** One field that differs in a `CONFLICT`: the own value and the other value. */
@@ -365,10 +415,24 @@ export interface ConflictDetails {
   conflicts: { part: string; blob: string; fields: ConflictField[] }[];
 }
 
-/** A transition's answer. */
+/** A transition's answer; `version` and `at` are those of the generic documents (PROVISIONAL). */
 export interface Transitioned {
   outcome: 'TRANSITIONED';
   state: WorkflowState;
+  version?: number;
+  at?: string;
+}
+
+/** The body of a `MANDATORY_FIELDS_MISSING` refusal: the JSON Pointers of the empty mandatory fields. */
+export interface MissingFields {
+  outcome: 'MANDATORY_FIELDS_MISSING';
+  missing: string[];
+}
+
+/** The body of a `DOCUMENT_RELEASED` refusal: the tag of the release that froze the document. */
+export interface DocumentReleasedDetails {
+  outcome: 'DOCUMENT_RELEASED';
+  tag?: string;
 }
 
 /** `POST /api/v1/releases/…`. */
@@ -441,4 +505,174 @@ export interface ReferenceAnswer {
 /** `GET /api/v1/references/resolve`: one entry per reference asked, in the order asked. */
 export interface ReferenceList {
   references: ReferenceAnswer[];
+}
+
+/*
+ * The document lifecycle of the generic documents lens (rest-api.adoc, The Document Lifecycle and Document Lifecycle
+ * Requests). Everything here is PROVISIONAL like the requests.
+ */
+
+/** One document type of a category with the repository that holds its documents. */
+export interface CategoryKind {
+  id: string;
+  repository: string;
+}
+
+/**
+ * One category of `GET /api/v1/categories` (PROVISIONAL). `generic` marks the categories the generic lens shows;
+ * `enabled` is `false` for a switched-off custom category that still holds documents, and absent for one that is on.
+ */
+export interface Category {
+  id: string;
+  generic: boolean;
+  enabled?: boolean;
+  kinds: CategoryKind[];
+}
+
+/** `GET /api/v1/categories`. */
+export interface CategoryList {
+  categories: Category[];
+}
+
+/** One document of `GET /api/v1/documents/{repository}`. */
+export interface DocumentSummary {
+  id: string;
+  kind: string;
+  title: string;
+  state: WorkflowState;
+  version: number;
+  updatedAt: string;
+  updatedBy: Person;
+  /** The last release, `null` for a document never released. */
+  release: { tag: string; at: string } | null;
+  /** Whether a release request is pending. */
+  requested: boolean;
+  /** The canonical address of the document. */
+  address: string;
+}
+
+/** `GET /api/v1/documents/{repository}`: at most 500 documents, newest change first. */
+export interface DocumentList {
+  repository: string;
+  documents: DocumentSummary[];
+  truncated: boolean;
+}
+
+/** One hit of `GET /api/v1/search?q=`. */
+export interface SearchResult {
+  repository: string;
+  id: string;
+  category: string;
+  kind: string;
+  title: string;
+  state: WorkflowState;
+  address: string;
+}
+
+/** `GET /api/v1/search?q=`: at most 20 hits. */
+export interface SearchResults {
+  query: string;
+  results: SearchResult[];
+  truncated: boolean;
+}
+
+/**
+ * A transition the workflow offers in the current state (the web app reads the user's rights from the session).
+ * `release` marks the release itself, whose text is always "Release".
+ */
+export interface DocumentTransition {
+  id: string;
+  to: WorkflowState;
+  right: Action;
+  stepUp: boolean;
+  release?: boolean;
+}
+
+/** The release request a document read carries: who asked, when, and the comment. */
+export interface ReleaseRequest {
+  id: string;
+  by: Person;
+  at: string;
+  comment: string;
+}
+
+/** One part of a generic document read: its loaded version and its value, which the form edits. */
+export interface DocumentPart extends PartVersion {
+  value: JsonObject;
+}
+
+/** The user's own draft of a document: when it was kept, and per part the blob it started from and its fields. */
+export interface DocumentDraft {
+  at: string;
+  parts: Record<string, { blob: string; fields: Record<string, unknown> }>;
+}
+
+/** What a revision read says about the revision. */
+export interface RevisionAt {
+  ref: string;
+  kind: 'create' | 'save' | 'submit' | 'release';
+  commit: string;
+  tag: string | null;
+  at: string;
+  by: Person;
+}
+
+/** `GET /api/v1/documents/{repository}/{id}`, and with `?at=` the document as it was then (the member `at`). */
+export interface DocumentRead {
+  repository: string;
+  id: string;
+  category: string;
+  kind: string;
+  title: string;
+  state: WorkflowState;
+  /** The number of the working state: `1` until the first release, `n+1` after the release `v<n>` and the next save. */
+  version: number;
+  /** `true` for a document that refuses every save (a released SAMM assessment, a revision). */
+  frozen: boolean;
+  /** Per part; a single-file document type has one part, `data`. */
+  parts: Record<string, DocumentPart>;
+  draft: DocumentDraft | null;
+  history: HistoryLine[];
+  release: ReleaseInfo | null;
+  releaseRequest: ReleaseRequest | null;
+  transitions: DocumentTransition[];
+  /** Present on a revision read only. */
+  at?: RevisionAt;
+}
+
+/** One revision of `GET /api/v1/documents/{repository}/{id}/revisions`; `ref` is what `?at=` takes. */
+export interface Revision {
+  ref: string;
+  commit: string;
+  kind: RevisionAt['kind'];
+  tag: string | null;
+  version: number;
+  at: string;
+  by: Person;
+}
+
+/** `GET /api/v1/documents/{repository}/{id}/revisions`. */
+export interface RevisionList {
+  repository: string;
+  id: string;
+  revisions: Revision[];
+  truncated: boolean;
+}
+
+/** The body of `POST /api/v1/documents/{repository}`: the first save of a new document. */
+export interface CreateRequest {
+  kind: string;
+  parts: Record<string, { fields: Record<string, unknown> }>;
+}
+
+/** `201` of `POST /api/v1/documents/{repository}`: the server assigns the id. */
+export interface Created {
+  outcome: 'CREATED';
+  id: string;
+  repository: string;
+  address: string;
+  state: WorkflowState;
+  version: number;
+  at: string;
+  parts: Record<string, PartVersion>;
 }

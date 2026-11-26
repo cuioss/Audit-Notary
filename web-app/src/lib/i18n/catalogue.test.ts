@@ -62,6 +62,7 @@ describe('the message catalogue', () => {
         'threat-models',
         'incidents',
         'isms',
+        'categories',
         'catalogs',
         'reports',
         'settings',

@@ -31,10 +31,14 @@ export type Outcome = (typeof OUTCOMES)[number];
 /** The client's own failures: no answer in time, no connection, an answer that names no outcome. */
 export type ClientFailure = 'TIMEOUT' | 'NETWORK' | 'UNEXPECTED';
 
-/** One field error of a `VALIDATION` refusal. */
+/**
+ * One field error of a `VALIDATION` refusal. For a save, a draft or a create of a document `part` names the part the
+ * pointer is into: the pointer is the one of the form (rest-api.adoc, Decided Provisionally, point 9).
+ */
 export interface FieldError {
   pointer: string;
   code: string;
+  part?: string;
 }
 
 /**
@@ -120,6 +124,8 @@ export function errorMessageKey(error: unknown): string {
       return 'error.too-many-logins';
     case 'CONFLICT':
       return 'error.conflict';
+    case 'VALIDATION':
+      return 'error.validation';
     case 'TIMEOUT':
     case 'NETWORK':
       return 'error.network';

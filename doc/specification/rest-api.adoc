@@ -1431,6 +1431,17 @@ blocked; the owner may change each one. The bodies are in <<_document_lifecycle_
 . *The test category `test-note`* has one document type, `note`, released more than once, with the transitions
   `test-note.submit` and `test-note.release`, the collection `notes` and the tag `notes/<id>/v<n>`; a save is possible
   in every state.
+. *The web app's document controller* (`web-app/src/lib/documents/controller.svelte.ts`, shared by every lens that edits
+  a document; the SAMM practice sheet is its first user) takes these readings of the contract, none of which adds a
+  request:
+  a save and a draft stand on the blob the first change of the sheet was made on (after a save, the blob the answer
+  names), so that the server finds what others changed in the same fields since; a draft restored with the document
+  that started from an older blob is saved on that blob, and the sheet marks it as older. An address is read leniently
+  (a name it does not admit is ignored, an unreadable escape in such a name too) and a `return` strictly, as the rules
+  above say; the 256 characters apply to the `return` only. A transition acts on the saved document: with unsaved
+  changes the controller sends nothing and the sheet asks to save first. A save answered `DOCUMENT_RELEASED` keeps the
+  changes as the draft, makes the sheet read the document again, and says "released while you were working" for a
+  document type released more than once and "released and frozen" for one released once.
 
 For the owner: whether the rail may gain a ninth lens, and whether `/categories/{category}` may list documents, given
 that the use cases of the categories name it for the definition (1); whether a refused draft is right, or the draft

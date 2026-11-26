@@ -9,7 +9,12 @@ import { loginStartAddress } from '../access/access';
 import { ApiError, isApiError, isOutcome, type FieldError } from './errors';
 import type {
   CatalogList,
+  CategoryList,
   CategorySchema,
+  CreateRequest,
+  Created,
+  DocumentList,
+  DocumentRead,
   DirectoryEntry,
   DirectoryPrefill,
   DirectorySaved,
@@ -24,6 +29,7 @@ import type {
   ReferenceList,
   Released,
   RenderedAsciiDoc,
+  RevisionList,
   SammAssessment,
   SammComparison,
   SammModel,
@@ -31,6 +37,7 @@ import type {
   SammScopeList,
   SaveRequest,
   Saved,
+  SearchResults,
   Session,
   Status,
   Transitioned,
@@ -165,6 +172,86 @@ export class ApiClient {
    */
   getCatalog(catalog: string): Promise<CatalogList> {
     return this.request<CatalogList>('GET', `/api/v1/catalogs/${seg(catalog)}`);
+  }
+
+  /**
+   * The categories the user may see, with their document types and the repository of each: the smallest request that
+   * tells the rail whether the generic documents lens exists, and the web app which repository holds the documents
+   * of an address. PROVISIONAL.
+   *
+   * @returns the categories; none on an installation without a generic category
+   */
+  listCategories(): Promise<CategoryList> {
+    return this.request<CategoryList>('GET', '/api/v1/categories');
+  }
+
+  /**
+   * The documents of one repository, newest change first, at most 500. PROVISIONAL.
+   *
+   * @param repository the repository alias of a document type
+   * @returns the documents, and whether more exist than the list holds
+   */
+  listDocuments(repository: string): Promise<DocumentList> {
+    return this.request<DocumentList>('GET', `/api/v1/documents/${seg(repository)}`);
+  }
+
+  /**
+   * Searches the titles and ids of the documents of every repository the user may read, from the index (so it works
+   * while the Git server is unreachable). PROVISIONAL.
+   *
+   * @param query at least two characters after trimming, at most 200
+   * @returns at most 20 hits
+   * @throws ApiError `VALIDATION` with `MIN_LENGTH` or `MAX_LENGTH` at `/q`
+   */
+  search(query: string): Promise<SearchResults> {
+    return this.request<SearchResults>('GET', `/api/v1/search?q=${encodeURIComponent(query)}`);
+  }
+
+  /**
+   * Reads one document of the generic lens, with the user's own draft, the transitions the workflow offers and the
+   * release request. PROVISIONAL.
+   *
+   * @param repository the repository
+   * @param id the document id, a ULID
+   * @param at a revision (`v<n>` or a commit id) to read the document as it was then, read-only; the current document
+   * without it
+   * @returns the document
+   * @throws ApiError `NOT_FOUND` for a document or a revision that does not exist, `VALIDATION` (`/at`, `FORMAT`) for
+   * a value of another shape
+   */
+  getDocument(repository: string, id: string, at?: string): Promise<DocumentRead> {
+    const query = at === undefined || at === '' ? '' : `?at=${encodeURIComponent(at)}`;
+    return this.request<DocumentRead>(
+      'GET',
+      `/api/v1/documents/${seg(repository)}/${seg(id)}${query}`,
+    );
+  }
+
+  /**
+   * The revisions of a document, newest first: the releases and the commits; `ref` is what {@link getDocument} takes
+   * as `at`. PROVISIONAL.
+   *
+   * @param repository the repository
+   * @param id the document id
+   * @returns the revisions
+   */
+  listRevisions(repository: string, id: string): Promise<RevisionList> {
+    return this.request<RevisionList>(
+      'GET',
+      `/api/v1/documents/${seg(repository)}/${seg(id)}/revisions`,
+    );
+  }
+
+  /**
+   * The first save of a new document: the server assigns the id and answers `201`. A refusal of the fields is
+   * `VALIDATION` with a `part` on every error and nothing is written. PROVISIONAL.
+   *
+   * @param repository the repository of the document type
+   * @param body the document type and the fields of each part, keyed by JSON Pointer
+   * @returns the id, the address and the blob ids
+   */
+  createDocument(repository: string, body: CreateRequest): Promise<Created> {
+    return this.request<Created>('POST', `/api/v1/documents/${seg(repository)}`, body);
   }
 
   /**
