@@ -1,8 +1,14 @@
 import { expect, test } from '@playwright/test';
 import { expectNoSeriousViolations, useTheme } from './helpers/a11y.js';
-import { useScenario } from './helpers/mock.js';
+import { gotoState, useScenario } from './helpers/mock.js';
 import { login, loginLocal } from './helpers/login.js';
 import { NOTES, field, noteAddress } from './helpers/documents.js';
+import {
+  catalogAddress,
+  entryAddress,
+  fillNewService,
+  newEntryAddress,
+} from './helpers/catalogs.js';
 
 /**
  * AUN-WEB-2: axe-core on every view in both themes; no violation of impact serious or critical.
@@ -176,6 +182,161 @@ for (const theme of ['light', 'dark']) {
     await expect(page.getByTestId('search-status')).toContainText('No document matches.');
     await expectNoSeriousViolations(page, `command palette without a match (${theme})`);
   });
+}
+
+/**
+ * The states of the catalogs lens (UC-CAT-1, UC-CAT-2): each one is reached on the page, after the theme is chosen,
+ * because choosing it reloads the page and a state that was reached by acting would be gone.
+ */
+const CATALOG_STATES = [
+  [
+    'the catalogs and the entries of the first',
+    'workshop',
+    catalogAddress('team'),
+    'entry-list',
+    async () => {},
+  ],
+  ['the list of the services', 'workshop', catalogAddress('service'), 'entry-list', async () => {}],
+  [
+    'the filter without a match',
+    'workshop',
+    catalogAddress('service'),
+    'catalog-list',
+    async (page) => {
+      await page.getByTestId('filter-name').fill('no such service');
+      await expect(page.getByText('No entry matches')).toBeVisible();
+    },
+  ],
+  [
+    'a catalog without entries',
+    'empty',
+    catalogAddress('service'),
+    'catalog-list',
+    async (page) => {
+      await expect(page.getByText('No entries yet')).toBeVisible();
+    },
+  ],
+  [
+    'the sheet of a service with its needs',
+    'workshop',
+    entryAddress('service', 'payment-api'),
+    'service-needs',
+    async () => {},
+  ],
+  [
+    'the sheet of a service on a circle',
+    'workshop',
+    entryAddress('service', 'reporting'),
+    'cycle-notice',
+    async () => {},
+  ],
+  [
+    'the sheet of a team',
+    'workshop',
+    entryAddress('team', 'payments'),
+    'entry-sheet',
+    async () => {},
+  ],
+  [
+    'a sheet without the right',
+    'read-only',
+    entryAddress('service', 'payment-api'),
+    'no-right-notice',
+    async () => {},
+  ],
+  [
+    'the form of a new service',
+    'catalog-admin',
+    newEntryAddress('service'),
+    'entry-form',
+    async () => {},
+  ],
+  [
+    'a retired entry',
+    'catalog-admin',
+    entryAddress('service', 'ledger'),
+    'retired-notice',
+    async () => {},
+  ],
+  [
+    'the question before a retirement',
+    'catalog-admin',
+    entryAddress('service', 'customer-portal'),
+    'retire-confirm',
+    async (page) => {
+      await page.getByTestId('retire-entry').click();
+    },
+  ],
+  [
+    'the question before a retirement with changes',
+    'catalog-admin',
+    entryAddress('service', 'customer-portal'),
+    'retire-dirty',
+    async (page) => {
+      await field(page, '/description').getByRole('textbox').fill('Typed, not saved.');
+      await page.getByTestId('retire-entry').click();
+    },
+  ],
+  [
+    'a form with field errors',
+    'catalog-admin#catalog-invalid',
+    newEntryAddress('service'),
+    'failure-notice',
+    async (page) => {
+      await fillNewService(page, field, {
+        id: 'notification-gateway',
+        name: 'Notification gateway',
+      });
+      await page.getByTestId('save-entry').click();
+    },
+  ],
+  [
+    'an id that is taken',
+    'catalog-admin#catalog-id-taken',
+    newEntryAddress('service'),
+    'failure-notice',
+    async (page) => {
+      await fillNewService(page, field, { id: 'ledger', name: 'Ledger again' });
+      await page.getByTestId('save-entry').click();
+    },
+  ],
+  [
+    'a Git server that cannot be reached',
+    'catalog-admin#git-unavailable',
+    entryAddress('service', 'payment-api'),
+    'failure-notice',
+    async (page) => {
+      await field(page, '/description').getByRole('textbox').fill('Kept.');
+      await page.getByTestId('save-entry').click();
+    },
+  ],
+  [
+    'a change by someone else over an edit',
+    'catalog-admin',
+    entryAddress('service', 'payment-api'),
+    'stale-notice',
+    async (page, request) => {
+      await field(page, '/description').getByRole('textbox').fill('My own wording.');
+      await gotoState(request, 'catalog-changed-elsewhere');
+    },
+  ],
+];
+
+for (const theme of ['light', 'dark']) {
+  for (const [name, scenario, address, view, prepare] of CATALOG_STATES) {
+    test(`catalogs: ${name} of ${scenario} at ${address} in the ${theme} theme`, async ({
+      page,
+      request,
+    }) => {
+      await useScenario(request, scenario);
+      await login(page, address);
+      await useTheme(page, theme);
+      await expect(page.getByTestId('catalogs-view')).toBeVisible();
+      await prepare(page, request);
+      await expect(page.getByTestId(view)).toBeVisible();
+      await expectNoSeriousViolations(page, `catalogs: ${name} (${scenario}, ${theme})`);
+    });
+  }
 }
 
 /** The pages outside the shell: no login, no shell (UC-ACC-1, UC-ACC-2). */
