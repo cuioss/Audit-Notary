@@ -161,6 +161,12 @@
 
   let notice = $state<{ tone: 'attention' | 'danger'; key: string; body?: string } | null>(null);
   let released = $state<ReleaseDone | null>(null);
+  /**
+   * Whether a release is under way, from the press of the act until its outcome is told and the record is read again.
+   * The act is busy for all of it: a second press must neither send a second release nor release what the person has
+   * not seen yet after a refusal changed the record.
+   */
+  let releasing = $state(false);
 
   // The step-up handler decides whether the release asks and how (UC-ACC-3); the flow keeps the release's own outcomes.
   const stepUp = new StepUpHandler();
@@ -171,16 +177,22 @@
   onDestroy(() => stepUp.cancel());
 
   async function release() {
+    if (releasing || released) return;
+    releasing = true;
     notice = null;
-    // The release always needs the confirmation (AUN-SAMM-4): a local user is asked before it is sent.
-    const result = await stepUp.run((password) => apiClient.release(repository, id, password), {
-      asks: true,
-    });
-    if (result.status === 'done') {
-      released = { tag: result.value.tag, at: result.value.at };
-      onreleased?.(released);
-    } else if (result.status === 'refused') {
-      await refuse(result.error);
+    try {
+      // The release always needs the confirmation (AUN-SAMM-4): a local user is asked before it is sent.
+      const result = await stepUp.run((password) => apiClient.release(repository, id, password), {
+        asks: true,
+      });
+      if (result.status === 'done') {
+        released = { tag: result.value.tag, at: result.value.at };
+        onreleased?.(released);
+      } else if (result.status === 'refused') {
+        await refuse(result.error);
+      }
+    } finally {
+      releasing = false;
     }
   }
 
@@ -311,7 +323,7 @@
             <Button
               variant="primary"
               icon="act.stamp"
-              busy={$stepUpState.working}
+              busy={$stepUpState.working || releasing}
               onclick={release}
               disabledReason={unavailable}
               data-testid="release-act"

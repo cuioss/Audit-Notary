@@ -187,6 +187,35 @@ describe('the documents group', () => {
     expect(screen.queryByText('Somewhere else')).toBeNull();
   });
 
+  it('offers only an address that passes the canonical-address check, as the server gives it', async () => {
+    const hit = (id: string, address: string) => ({
+      repository: 'test-notes',
+      id,
+      category: 'test-note',
+      kind: 'note',
+      title: `Hit ${id}`,
+      state: 'draft',
+      address,
+    });
+    await open('rotation', 'workshop', 'en', {
+      'GET /api/v1/search': {
+        query: 'rotation',
+        truncated: false,
+        results: [
+          hit('good', `/categories/test-note/${N1}`),
+          hit('fragment', `/categories/test-note/${N1}#top`),
+          hit('outside', '//example.org/categories/test-note/x'),
+          hit('scheme', 'https://example.org/categories/test-note/x'),
+          hit('backslash', '/categories/test-note/a\\b'),
+          hit('login', '/login'),
+        ],
+      },
+    });
+    const list = screen.getByTestId('search-documents');
+    expect(within(list).getAllByRole('link')).toHaveLength(1);
+    expect(screen.getByText('Hit good')).toBeInTheDocument();
+  });
+
   it('names a category the catalogue does not know in words', async () => {
     await open('rotation', 'workshop', 'en', {
       'GET /api/v1/search': {

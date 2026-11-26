@@ -1503,8 +1503,11 @@ a step that declares `stepUp`.
   leave the review as it was; `TOO_MANY_LOGINS` and `INVALID_CREDENTIALS` are the step-up handler's. The act reads only
   "Release". "Back to the document" writes nothing. A release request is shown on the release view with who asked and the
   comment, in Due on the `release` item of the requester and on the `review` item of an approver
-  (`requestedBy`, `comment`; the requester's own request reads "You asked for the release."), and Due reads its list again
-  on `release-requested` and `document-transitioned`.
+  (`requestedBy`, `comment`; the requester's own request reads "You asked for the release."; the entry does not show the
+  date of the request, its `due` is the day that counts), and Due reads its list again on `release-requested` and
+  `document-transitioned`. A released document skips the diff of the release ("Nothing changed since v1"): the record of
+  a release is the document itself, so the request for the diff is saved. Both are decided provisionally; the owner may
+  want the date of the request on the Due entry, or the diff of a released document as the history of its release.
 . *The search of the documents* is part of the command palette (`GET /api/v1/search?q=`): it asks from two characters
   after trimming, 250 milliseconds after the last key, and drops the answer of a text that was left; the hits stand under
   their own group beneath the views, with title, category (the category's own name, or the name of the lens for a
@@ -1528,4 +1531,4 @@ a step that declares `stepUp`.
 For the owner: whether the rail may gain a ninth lens, and whether `/categories/{category}` may list documents, given
 that the use cases of the categories name it for the definition (1); whether a refused draft is right, or the draft
 should be written and the errors only advised (10); whether a pending release request belongs in the approvers' Due as
-well (13); whether the release request should carry the reviewed revision now (14); the status `502` of `REJECTED` (15); whether a switched-off custom category keeps readable, read-only generic addresses (21), and whether the release answers `DOCUMENT_RELEASED` for a document released meanwhile (the last item).
+well (13); whether the release request should carry the reviewed revision now (14); the status `502` of `REJECTED` (15); whether a switched-off custom category keeps readable, read-only generic addresses (21), and whether the release answers `DOCUMENT_RELEASED` for a document released meanwhile (the last item); whether the Due entry of a release request shows the date of the request, and whether the release view of a released document shows nothing instead of its diff (the release view).

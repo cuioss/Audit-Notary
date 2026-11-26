@@ -8,7 +8,7 @@
   import type { SearchResult } from '../api/types';
   import { categoryName, hasDocumentsLens } from '../documents/categories';
   import { messagesStore, t } from '../i18n';
-  import { parseHref } from '../routes';
+  import { checkReturn } from '../routes';
   import { stateTone } from '../views/samm/workflow';
   import { allItems, type NavItem } from './nav';
 
@@ -85,10 +85,11 @@
     try {
       const answer = await apiClient.search(text);
       if (read !== latest) return;
-      // An address the app has no view for is not offered.
+      // The address is the server's and is no more than data until it has passed the canonical-address check: an
+      // address the app has no view for, or that is not a plain same-origin path, is not offered.
       documents = {
         state: 'found',
-        results: answer.results.filter((hit) => parseHref(hit.address) !== null),
+        results: answer.results.filter((hit) => checkReturn(hit.address) === hit.address),
         truncated: answer.truncated,
       };
     } catch (error) {
@@ -218,7 +219,7 @@
           aria-labelledby="palette-documents"
           data-testid="search-documents"
         >
-          {#each hits as hit (hit.repository + hit.id)}
+          {#each hits as hit (`${hit.repository}/${hit.id}`)}
             <li class="palette__document">
               <Link
                 href={hit.address}
@@ -237,24 +238,29 @@
           {/each}
         </ul>
       {/if}
-      <p class="palette__note" role="status" data-testid="search-status">
-        {#if documents.state === 'loading'}
-          {$t('shell.search.documents.loading')}
-        {:else if documents.state === 'failed'}
-          {$t('shell.search.documents.failed')}
-        {:else if documents.state === 'found'}
-          {#if hits.length === 0}
-            {$t('shell.search.documents.none')}
-          {:else if documents.truncated}
-            {$t('shell.search.documents.truncated', { count: hits.length })}
-          {:else}
-            {$t('shell.search.documents.count', { count: hits.length })}
-          {/if}
-        {/if}
-      </p>
-    {:else if needle.length > 0}
-      <p class="palette__note" data-testid="search-hint">{$t('shell.search.documents.hint')}</p>
     {/if}
+    <!-- One region that stays in the page, so what is written into it is announced politely. -->
+    <div role="status" data-testid="search-live">
+      {#if searching}
+        <p class="palette__note" data-testid="search-status">
+          {#if documents.state === 'loading'}
+            {$t('shell.search.documents.loading')}
+          {:else if documents.state === 'failed'}
+            {$t('shell.search.documents.failed')}
+          {:else if documents.state === 'found'}
+            {#if hits.length === 0}
+              {$t('shell.search.documents.none')}
+            {:else if documents.truncated}
+              {$t('shell.search.documents.truncated', { count: hits.length })}
+            {:else}
+              {$t('shell.search.documents.count', { count: hits.length })}
+            {/if}
+          {/if}
+        </p>
+      {:else if needle.length > 0}
+        <p class="palette__note" data-testid="search-hint">{$t('shell.search.documents.hint')}</p>
+      {/if}
+    </div>
   </div>
 </Dialog>
 

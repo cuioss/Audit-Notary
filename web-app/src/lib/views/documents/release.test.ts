@@ -275,6 +275,23 @@ describe('the release', () => {
     ).toBeGreaterThanOrEqual(2);
   });
 
+  it('sends one release for two presses, and keeps the act busy while the review is read again', async () => {
+    const kit = await open('workshop#note-release-changed', N4);
+    vi.spyOn(apiClient, 'stepUp').mockImplementation(() => {});
+    const act = screen.getByTestId('release-act');
+    await fireEvent.click(act);
+    await fireEvent.click(act);
+    expect(
+      await screen.findByText(/Someone saved after you opened the release/),
+    ).toBeInTheDocument();
+    // Pressed again before the record is read anew, the act sends nothing: the person has not seen the new changes.
+    await fireEvent.click(act);
+    await vi.waitFor(() => expect(act).not.toHaveAttribute('aria-busy'));
+    expect(
+      kit.requests.filter((request) => request.startsWith('POST /api/v1/releases/')),
+    ).toHaveLength(1);
+  });
+
   it('lists the mandatory fields the server found empty, by their words', async () => {
     await open('workshop#note-release-incomplete', N4);
     await fireEvent.click(screen.getByTestId('release-act'));
@@ -399,6 +416,15 @@ describe('addresses that are no release', () => {
       params: { category: 'test-note', document: '01JZZZZZZZZZZZZZZZZZZZZZZZ' },
     });
     expect(await screen.findByTestId('not-found-view')).toBeInTheDocument();
+  });
+
+  it('is the not-found view for a document type whose schema the server does not serve', async () => {
+    await useProfile('workshop', 'en', {
+      'GET /api/v1/categories/test-note/schema': { category: 'test-note', kinds: [] },
+    });
+    render(DocumentReleaseView, { params: { category: 'test-note', document: N4 } });
+    expect(await screen.findByTestId('not-found-view')).toBeInTheDocument();
+    expect(screen.queryByText('Loading…')).toBeNull();
   });
 
   it('shows a failure to read as a notice', async () => {

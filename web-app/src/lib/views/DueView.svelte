@@ -42,14 +42,19 @@
   const GROUPS = ['overdue', 'today', 'week', 'later'] as const;
   type Group = (typeof GROUPS)[number];
 
+  /** The number of the latest reading; the answer of an older one is dropped. */
+  let latest = 0;
+
   async function load() {
+    const read = ++latest;
     failure = null;
     try {
       const list = await apiClient.getDue();
+      if (read !== latest) return;
       // An address the app has no view for is not offered.
       items = list.items.filter((item) => parseHref(item.address) !== null);
     } catch (error) {
-      failure = errorMessageKey(error);
+      if (read === latest) failure = errorMessageKey(error);
     }
   }
 
@@ -88,12 +93,15 @@
 
   /** Reads the list again after an event, without the loading state or a failure that would replace the list. */
   async function refresh() {
+    const read = ++latest;
     try {
       const list = await apiClient.getDue();
+      if (read !== latest) return;
       items = list.items.filter((item) => parseHref(item.address) !== null);
       failure = null;
-    } catch {
-      // The list on the page stays: it was true when it was read.
+    } catch (error) {
+      // The list on the page stays: it was true when it was read. Only a page that has none says why.
+      if (read === latest && items === null) failure = errorMessageKey(error);
     }
   }
 

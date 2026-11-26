@@ -79,6 +79,11 @@
           : apiClient.getDiff(loaded.repository, loaded.id),
       ]);
       if (read !== latest) return;
+      // A document type whose schema the server does not serve is not an address of this lens.
+      if (!loadedSchemas.kinds.some((entry) => entry.id === loaded.kind)) {
+        missing = true;
+        return;
+      }
       doc = loaded;
       schemas = loadedSchemas;
       diff = loadedDiff;
