@@ -27,6 +27,12 @@
       "actions": [
         "read"
       ]
+    },
+    {
+      "repository": "test-notes",
+      "actions": [
+        "read"
+      ]
     }
   ],
   "first_login_required": false,
@@ -57,6 +63,10 @@
           },
           {
             "alias": "directory",
+            "fetch": "UP"
+          },
+          {
+            "alias": "test-notes",
             "fetch": "UP"
           }
         ]
@@ -170,6 +180,69 @@
     },
     "GET /api/v1/documents/samm-assessments/payments-2026-q4/diff": {
       "body_file": "samm-diff-payments-2026-q4-draft.json"
+    },
+    "GET /api/v1/categories/test-note/schema": {
+      "status": 200,
+      "body_file": "categories-test-note-schema.json"
+    },
+    "GET /api/v1/categories/form-sections/schema": {
+      "status": 200,
+      "body_file": "categories-form-sections-schema.json"
+    },
+    "GET /api/v1/categories/form-validation/schema": {
+      "status": 200,
+      "body_file": "categories-form-validation-schema.json"
+    },
+    "GET /api/v1/categories/unknown-category/schema": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      }
+    },
+    "GET /api/v1/catalogs/service": {
+      "status": 200,
+      "body_file": "catalogs-service.json"
+    },
+    "GET /api/v1/directory/persons": {
+      "status": 200,
+      "body_file": "directory-persons.json"
+    },
+    "GET /api/v1/directory/persons/p-4c1a9e": {
+      "status": 200,
+      "body_file": "directory-person-p-4c1a9e.json"
+    },
+    "GET /api/v1/directory/persons/p-2b7f10": {
+      "status": 200,
+      "body_file": "directory-person-p-2b7f10.json"
+    },
+    "GET /api/v1/directory/persons/p-61c0d4": {
+      "status": 200,
+      "body_file": "directory-person-p-61c0d4.json"
+    },
+    "GET /api/v1/directory/persons/p-9e33a1": {
+      "status": 200,
+      "body_file": "directory-person-p-9e33a1.json"
+    },
+    "GET /api/v1/directory/persons/p-7d52e8": {
+      "status": 200,
+      "body_file": "directory-person-p-7d52e8.json"
+    },
+    "GET /api/v1/directory/persons/p-0f8a42": {
+      "status": 200,
+      "body_file": "directory-person-p-0f8a42.json"
+    },
+    "GET /api/v1/directory/persons/p-3b9d00": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      }
+    },
+    "GET /api/v1/references/resolve": {
+      "status": 200,
+      "body_file": "references-resolve.json"
+    },
+    "POST /api/v1/render/asciidoc": {
+      "handler": "render-asciidoc"
     }
   },
   "states": {
@@ -180,6 +253,26 @@
           "status": 403,
           "body": {
             "outcome": "FORBIDDEN"
+          }
+        }
+      }
+    },
+    "preview-hostile": {
+      "description": "The renderer answers HTML that the allow-list must cut down: the web app shows no script, no handler, no unsafe link.",
+      "routes": {
+        "POST /api/v1/render/asciidoc": {
+          "status": 200,
+          "body_file": "render-asciidoc-hostile.json"
+        }
+      }
+    },
+    "preview-unavailable": {
+      "description": "The renderer cannot run: no preview, the editing goes on.",
+      "routes": {
+        "POST /api/v1/render/asciidoc": {
+          "status": 503,
+          "body": {
+            "outcome": "RENDER_UNAVAILABLE"
           }
         }
       }

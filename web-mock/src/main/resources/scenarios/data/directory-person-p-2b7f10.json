@@ -1,0 +1,12 @@
+{
+  "pseudonym": "p-2b7f10",
+  "name": "Jordan Weber",
+  "state": "bound",
+  "memberships": [
+    {
+      "team": "team:payments",
+      "role": "role:developer"
+    }
+  ],
+  "erasedOn": null
+}

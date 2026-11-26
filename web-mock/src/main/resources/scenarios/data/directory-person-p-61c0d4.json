@@ -1,0 +1,12 @@
+{
+  "pseudonym": "p-61c0d4",
+  "name": "Lea Brandt",
+  "state": "bound",
+  "memberships": [
+    {
+      "team": "team:identity",
+      "role": "role:product-owner"
+    }
+  ],
+  "erasedOn": null
+}

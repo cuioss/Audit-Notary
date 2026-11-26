@@ -1,0 +1,3 @@
+{
+  "html": "<h2 onclick=\"alert(1)\">Decision</h2><script>alert('x')</script><div class=\"paragraph\" style=\"position:fixed\" id=\"x\"><p>Plain <strong>bold</strong> text <a href=\"javascript:alert(1)\">bad link</a> <a href=\"https://example.org/doc\" target=\"_blank\">good link</a> <a href=\"data:text/html,<b>x</b>\">data link</a> <a href=\"#section\">fragment</a></p></div><img src=\"https://tracker.invalid/p.gif\" alt=\"tracker\" onerror=\"alert(2)\"><iframe src=\"https://evil.invalid\"></iframe><form action=\"https://evil.invalid\"><input name=\"x\"></form><table><tbody><tr><td colspan=\"2\" style=\"x\">cell</td></tr></tbody></table><svg><script>alert(3)</script></svg><!-- comment -->"
+}

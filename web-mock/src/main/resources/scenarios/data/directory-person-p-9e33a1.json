@@ -1,0 +1,12 @@
+{
+  "pseudonym": "p-9e33a1",
+  "name": "Sam Okafor",
+  "state": "bound",
+  "memberships": [
+    {
+      "team": "team:payments",
+      "role": "role:developer"
+    }
+  ],
+  "erasedOn": null
+}

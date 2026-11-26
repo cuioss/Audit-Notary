@@ -125,8 +125,17 @@ Session Layer]).
 
 Every document is edited in a form generated from the category's JSON Schema: field types map to the field components,
 `required` marks mandatory fields, enumerations become pickers, references to catalogs (`service:`, `team:`, `role:`)
-become pickers over the catalog, and AsciiDoc fragments get a text area with preview. The same schema validates in the
-browser and in the server; the server's verdict wins. No category has a hand-written view.
+become pickers over the catalog, a person field a picker over the person directory, and AsciiDoc fragments get a text
+area with a preview that the server renders. The same schema validates in the browser and in the server; the server's
+verdict wins. No category has a hand-written view.
+
+The form is a kit of a few components, each with its own picture of what it holds and what it says when the value is
+not clean: a retired catalog entry stays readable and is shown as retired, a person nobody has logged in as yet is
+offered with that mark, an erased person reads as a former member with the team and role they had, a reference that
+resolves to nothing says so. The same kit renders a document that is only read, a revision and a document as of a
+date, so that what is read has the shape of what was edited. The constructs, the rules that choose a component and the
+checks are in xref:../specification/web-app.adoc#AUN-WEB-4[AUN-WEB-4]; the requests are in
+xref:../specification/rest-api.adoc#_form_kit_requests[REST API Register, Form Kit Requests].
 
 === Drafts, Saving and Conflicts
 
@@ -165,7 +174,6 @@ margin says, in domain words and whatever the method, that the user confirms the
 
 == Open Questions
 
-. Whether the AsciiDoc preview runs server-side only or with a sanitising client renderer.
 . Which `pm-web-app` components move into a shared component package instead of being copied.
 . Which revision of the document a release request carries, so the release is bound to exactly the state the approver
   reviewed and refused with `CHANGED_SINCE_REVIEW` when the working branch has moved since
@@ -184,6 +192,23 @@ xref:../specification/rest-api.adoc#_open_questions[REST API Register, Open Ques
 . A session without rights is a session: a notice and empty states, never a login loop.
 . A session that another login in the same browser replaced is recognised by its changed anti-CSRF token when the event
   stream closes, and the tab reloads.
+
+Decided provisionally with the form kit (xref:../specification/web-app.adoc#AUN-WEB-4[AUN-WEB-4], recorded with the
+bodies in xref:../specification/rest-api.adoc#_decided_forms[REST API Register, Open Questions]); the owner may change
+each one:
+
+. The form reads the schema of a whole category with one request, and takes every text from the message catalogue
+  under `category.<category>.<kind>.field.<path>`, never from the schema.
+. An ordered list of rules chooses the component of a property; what the requirement does not name (dates without time,
+  numbers, lists of scalars, sections, a reference to a document, read-only fields) is added, and a construct the form
+  does not know is shown as plain data and saved unchanged.
+. The browser validates with its own small check and no validator library, so the dependency stays out; its `format`
+  checks are advice and never stop a save, and the server's verdict replaces them.
+. The server renders and sanitises the AsciiDoc preview, in the strictest safe mode of Asciidoctor, up to 64 KiB; the
+  web app builds its elements from the answer by the same allow-list and renders no raw HTML.
+. A person who has not logged in yet is offered and shown as *not yet bound*, an erased one as *former*, and a retired
+  catalog entry as *retired*; the person list and a reference lookup are requests of their own.
+
 
 == Related
 

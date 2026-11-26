@@ -71,14 +71,17 @@ xref:../adr/0003-UI_tests_run_against_a_scenario_mock_server.adoc[ADR-0003]
 `degraded` (Git server unreachable), `empty` (a fresh installation), `no-rights` (logged in, no right mapped);
 besides them, profiles for one flow: `release` (an approver releases with step-up, by password, or refused for too many
 pending logins), `local` (the login of local users on the web app's own page) and `login-trouble` (the login cannot
-start or complete); `workshop` also carries the states `session-replaced` and `session-ended`
+start or complete); `workshop` also carries the states `session-replaced` and `session-ended`; `workshop` and
+`read-only` answer the requests of the form kit for the fixture categories and carry the states `preview-hostile` and
+`preview-unavailable` (the built-in `render-asciidoc` handler answers every other preview)
 
 |Control
 |`GET /mock/state`, `POST /mock/scenario`, `POST /mock/goto/{state}`, `POST /mock/reset`, `POST /mock/broadcast`,
 `GET /mock/acts`; the Vite dev server forwards `/mock` for loopback clients only
 
 |Texts
-|The catalogue from the `web-app` JAR (xref:web-app.adoc#AUN-WEB-7[AUN-WEB-7])
+|The catalogue from the `web-app` JAR (xref:web-app.adoc#AUN-WEB-7[AUN-WEB-7]), plus the labels of the fixture
+categories (`scenarios/messages/` of `web-mock`)
 
 |Shared fixtures
 |The web unit tests read the scenario files directly, so unit tests, end-to-end tests and manual runs see the same

@@ -41,7 +41,9 @@ import java.util.regex.Pattern;
  * A route or a link answers its {@code body}, or the JSON of the data file its {@code body_file} names: a file name of
  * the pattern {@code [a-z0-9][a-z0-9.-]*.json}, resolved by the data resolver the loader was created with (the
  * registry resolves it below {@code scenarios/data/}). Large or shared answers, such as the SAMM model, live there
- * once instead of inline in every profile, and a data file under another licence stays a file of its own.
+ * once instead of inline in every profile, and a data file under another licence stays a file of its own. A route (not
+ * a link) may instead name a built-in {@code handler} of the engine ({@link Handler}); it then has no
+ * {@code body}, {@code body_file} or {@code status}.
  */
 public final class ScenarioLoader {
 
@@ -61,6 +63,7 @@ public final class ScenarioLoader {
     private static final String STATUS = "status";
     private static final String BODY = "body";
     private static final String BODY_FILE = "body_file";
+    private static final String HANDLER = "handler";
     private static final Pattern DATA_FILE = Pattern.compile("[a-z0-9][a-z0-9.-]*\\.json");
 
     private final ObjectMapper mapper;
@@ -276,10 +279,29 @@ public final class ScenarioLoader {
             }
             checkMethod(context, routeLocation, matcher.group(1));
             checkPath(context, routeLocation, matcher.group(2));
-            routes.put(key, new Route(status(context, routeLocation, entry.getValue()),
-                    answerBody(context, routeLocation, entry.getValue())));
+            routes.put(key, readRoute(context, routeLocation, entry.getValue()));
         });
         return routes;
+    }
+
+    /** A route answers a static body, or names a built-in handler of the engine and then carries nothing else. */
+    private Route readRoute(Context context, String location, JsonNode node) {
+        var handler = node.path(HANDLER);
+        if (handler.isMissingNode()) {
+            return new Route(status(context, location, node), answerBody(context, location, node));
+        }
+        String handlerLocation = location + "." + HANDLER;
+        String name = handler.asText("");
+        var named = handler.isTextual() ? Handler.byId(name) : Optional.<Handler>empty();
+        if (named.isEmpty()) {
+            throw context.fail(handlerLocation, "must be one of " + Handler.ids() + ": " + name);
+        }
+        for (String member : List.of(BODY, BODY_FILE, STATUS)) {
+            if (!node.path(member).isMissingNode()) {
+                throw context.fail(handlerLocation, "a route with a handler has no " + member);
+            }
+        }
+        return new Route(200, JsonNodeFactory.instance.objectNode(), named.get());
     }
 
     private static void checkTargets(Context context, ScenarioState state, Map<String, ScenarioState> states) {

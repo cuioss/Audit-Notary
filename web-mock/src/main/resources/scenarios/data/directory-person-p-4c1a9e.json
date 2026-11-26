@@ -1,0 +1,12 @@
+{
+  "pseudonym": "p-4c1a9e",
+  "name": "Alex Example",
+  "state": "bound",
+  "memberships": [
+    {
+      "team": "team:payments",
+      "role": "role:security-champion"
+    }
+  ],
+  "erasedOn": null
+}

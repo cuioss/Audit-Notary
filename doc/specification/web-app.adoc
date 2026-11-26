@@ -91,26 +91,249 @@ them: a login does not return to the page that started it.
 * The browser must validate against the same schema as the server; the server's verdict must be shown when they
   differ.
 
-`src/lib/forms/SchemaForm.svelte` renders a JSON Schema:
+`src/lib/forms/SchemaForm.svelte` renders a JSON Schema. The requirement fixes the constructs of the first nine rows;
+the other rows are PROVISIONAL, decided so that the forms of every category can be built
+(xref:../concepts/web-app.adoc#_open_questions[Web App, Open Questions]):
 
-[cols="1,2"]
+[cols="3,2,1"]
 |===
-|Schema construct |Component
+|Schema construct |Component |Status
 
-|`string`, `maxLength` |`Field` (text)
-|`string` with `format: date-time` |`Field` (date-time)
-|`enum` |`Select`
-|`boolean` |`Toggle`
-|`array` of objects |`DataTable` with row editor
+|`string`, `maxLength` |`Field` (text) |`SPECIFIED`
+|`string` with `format: date-time` |`DateTimeField` (date and time) |`SPECIFIED`
+|`enum` |`Select` |`SPECIFIED`
+|`boolean` |`Toggle` |`SPECIFIED`
+|`array` of objects |`DataTable` with row editor |`SPECIFIED`
 |`x-catalog: <catalog>` (catalog reference, xref:data-protection.adoc#AUN-DP-2[AUN-DP-2]) |`CatalogPicker` over
-that catalog
-|`x-asciidoc: true` |`AsciiDocField` with server-rendered preview
-|`x-person: true` |`PersonPicker` over the person directory; stores the pseudonym
-|`x-free-text: true` |Hint `form.hint.no-personal-notes` shown with the field
+that catalog |`SPECIFIED`
+|`x-asciidoc: true` |`AsciiDocField` with server-rendered preview |`SPECIFIED`
+|`x-person: true` |`PersonPicker` over the person directory; stores the pseudonym |`SPECIFIED`
+|`x-free-text: true` |Hint `form.hint.no-personal-notes` shown with the field (xref:data-protection.adoc#AUN-DP-5[AUN-DP-5]) |`SPECIFIED`
+|`format: gdr-link` without `x-catalog` (a reference to a document,
+xref:data-protection.adoc#AUN-DP-2[AUN-DP-2]) |`DocumentRefField` |`PROVISIONAL`
+|`string` with `format: date` |`DateTimeField` in its date-only mode |`PROVISIONAL`
+|`x-free-text: true` on a `string` |`Field` as a text area |`PROVISIONAL`
+|`integer`, `number` |`Field` (number) |`PROVISIONAL`
+|`array` of scalars (`string`, `enum`, `x-catalog`, `x-person`, `gdr-link`) |`DataTable` with one column
+|`PROVISIONAL`
+|`object` with `properties` |A headed group of fields (a section); no component of its own |`PROVISIONAL`
+|`readOnly: true` |The value, shown and not editable |`PROVISIONAL`
+|Any other construct |The value as plain data, read-only, kept unchanged on save |`PROVISIONAL`
 |===
 
-Validation: the same schema runs in the browser (Ajv) and in the server; the server's field errors replace the
-browser's on save.
+[#_the_schema_the_form_reads]
+=== The Schema the Form Reads
+
+The form reads the schema of a document's kind with `GET /api/v1/categories/{category}/schema`
+(xref:rest-api.adoc#_form_kit_requests[REST API Register, Form Kit Requests]; PROVISIONAL). The schema is the kind's
+`<kind>/schema.json` as the library reads it: plain JSON Schema of the dialect Draft 2020-12, every marker an `x-`
+keyword or the library's `format: gdr-link` (xref:data-protection.adoc#AUN-DP-2[AUN-DP-2],
+xref:architecture-and-modules.adoc#AUN-GEN-1[AUN-GEN-1],
+https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-2[GDR-FORMS-2]).
+The form resolves a `$ref` that selects a schema of the same file, as the library does, and nothing else; it ignores
+`title`, `description` and `default`, because every text of the form comes from the message catalogue
+(<<AUN-WEB-7>>). The properties of an object are shown in the order of the schema file.
+
+[#_choosing_the_component]
+=== Choosing the Component
+
+The component of a property is the first rule that matches, after `$ref` has been resolved. A marker on a schema of
+another type than the one named (`x-catalog` on a number) is ignored.
+
+[cols="1,3,2"]
+|===
+|# |Rule |Component
+
+|1 |`readOnly: true` |The value as the kind of the following rules would show it, not editable
+|2 |`type: string` with `x-catalog: <catalog>` |`CatalogPicker`
+|3 |`type: string` with `x-person: true` |`PersonPicker`
+|4 |`type: string` with `x-asciidoc: true` |`AsciiDocField`
+|5 |`type: string` with `format: gdr-link` |`DocumentRefField`
+|6 |`type: string` with `format: date-time` or `format: date` |`DateTimeField`
+|7 |`enum` whose members are all strings, numbers or booleans |`Select`
+|8 |`type: boolean` |`Toggle`
+|9 |`type: string` |`Field` (text; a text area with `x-free-text: true`)
+|10 |`type: integer` or `type: number` |`Field` (number)
+|11 |`type: object` with `properties` |A section: a heading and the fields of its properties
+|12 |`type: array` whose `items` follow rules 2 to 11
+|`DataTable`: one column for a scalar item, the scalar properties of an object item
+|13 |Anything else, an array inside a row of a `DataTable` included |The value as plain data, read-only
+|===
+
+`x-free-text: true` adds the hint to the property whatever its component, to an `AsciiDocField` too. A `DataTable`
+shows the first four scalar properties of a row as columns; the row editor, a dialog, edits every property of one
+row with the components above. A row can be added, edited, removed and moved up or down; `minItems`, `maxItems` and
+`uniqueItems` limit what the table lets the user do and are checked like any other constraint. A property that rule 13
+leaves as plain data is never changed by the form: a save sends it as the document holds it.
+
+[#_values]
+=== Values
+
+The form edits one JSON value, the data of the part it shows (for a document with one file the document's data), and
+names a field by the JSON Pointer of its place in that value
+(link:https://www.rfc-editor.org/rfc/rfc6901[RFC 6901]); the item of a `DataTable` is addressed by its index
+(`/items/0/title`). What the components store:
+
+[cols="1,3"]
+|===
+|Component |Value
+
+|`Field` (text)
+|A string; an empty text field removes the property from the value
+
+|`Select`
+|The member of the `enum` as the schema holds it, with its JSON type: a string, a number or a boolean (`true` stays the
+boolean, not the text `"true"`)
+
+|`Field` (number)
+|A number; an empty field removes the property
+
+|`Toggle`
+|A boolean
+
+|`DateTimeField`
+|With `date-time`, an RFC 3339 instant in UTC to the second (`2026-11-24T09:30:00Z`), shown and entered in the time
+zone of the browser; a value the user did not touch is stored back unchanged, whatever its offset. With `date`, a
+calendar date `YYYY-MM-DD`
+
+|`CatalogPicker`
+|The reference `<catalog>:<id>` (`service:payment-api`), the form of
+https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-8[GDR-FORMS-8]
+
+|`PersonPicker`
+|The pseudonym (`p-…`), never a name (xref:data-protection.adoc#AUN-DP-5[AUN-DP-5])
+
+|`AsciiDocField`
+|The AsciiDoc source as a string; the rendered HTML is never stored
+
+|`DocumentRefField`
+|The reference `<alias>:<kind>/<id>` with an optional `#<fragment>`
+
+|`DataTable`
+|An array
+|===
+
+[#_labels_and_texts]
+=== Labels and Texts
+
+No text comes from the schema. The category's messages (xref:../use-cases/09-categories.adoc#change-web-7[UC-KND,
+texts of custom categories]) merge into the catalogue under `category.<category>.` (<<AUN-WEB-7>>); a property
+`/a/b` of the kind `<kind>` uses these keys, with the indices of arrays left out (PROVISIONAL):
+
+[cols="2,3"]
+|===
+|Key |Text
+
+|`category.<category>.<kind>.field.a.b`
+|The label of the field, or the heading of a section
+
+|`category.<category>.<kind>.field.a.b.help`
+|A line of help under the field; optional
+
+|`category.<category>.<kind>.field.a.b.option.<value>`
+|The text of an `enum` value; without the key the form shows the value
+|===
+
+A property without a label key shows its property name, so that a missing text is visible. The fixed texts of the
+form belong to the application: `form.hint.no-personal-notes` (specified), and by the same pattern the texts of the
+pickers, the table, the preview and the errors (`form.error.<code>`, below).
+
+[#_validation]
+=== Validation
+
+The browser checks the value against the schema without a validator library (PROVISIONAL: the earlier text named
+Ajv; no dependency is added for it, and the checks below are the ones the components need). It checks `type`, `enum`,
+`const`, `minLength`, `maxLength`, `pattern`, `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`,
+`minItems`, `maxItems`, `uniqueItems` and `format`, and lists the mandatory fields from `required`. It does not check
+what it never offers: `additionalProperties`, `patternProperties`, `oneOf`, `anyOf`, `not`, `if`, `dependentRequired`
+and the other keywords, which only the server checks. A `pattern` is matched anywhere in the value, as the library's
+validator does (`Matcher.find`); a pattern the browser cannot compile is not checked.
+
+* *`required`* marks the label of the field. A missing mandatory field is no error on a draft or a save, because the
+  library accepts a save without them (GDR-FORMS-2); it is listed, as the JSON Pointers of the empty fields, for the
+  transition that needs them, and the server names them in `MANDATORY_FIELDS_MISSING`.
+* *`format`* is an annotation for the library: its validator asserts no format (GDR-FORMS-2). The browser asserts
+  `date-time`, `date` and the shape of `gdr-link` (`<alias>:<kind>/<id>[#<fragment>]` or `<catalog>:<id>`, the parts
+  not empty, no white space), so a format error of the browser can stand where the server finds none. It is shown as
+  an error of the field and never stops a draft or a save.
+* *The server's verdict wins.* A refusal `422 VALIDATION` carries `errors`, a list of `{"pointer", "code"}`
+  (<<AUN-WEB-9>>). The form shows them at their fields and takes them in place of every error of its own, so a
+  browser error that the server did not repeat disappears when the answer arrives; the error of a field goes when the
+  field changes, and the browser checks it again then. An error whose pointer names no field of the form is listed
+  under the form.
+* *The codes* the form has a text for (PROVISIONAL): `REFERENCE_NOT_FOUND` (specified,
+  xref:data-protection.adoc#AUN-DP-2[AUN-DP-2]), `PSEUDONYM_UNKNOWN` (xref:data-protection.adoc#AUN-DP-5[AUN-DP-5]),
+  and the keyword of the failing constraint in capitals (`TYPE`, `ENUM`, `CONST`, `MIN_LENGTH`, `MAX_LENGTH`,
+  `PATTERN`, `MINIMUM`, `MAXIMUM`, `EXCLUSIVE_MINIMUM`, `EXCLUSIVE_MAXIMUM`, `MIN_ITEMS`, `MAX_ITEMS`,
+  `UNIQUE_ITEMS`, `FORMAT`). The text is the catalogue's `form.error.<code in lower case, with hyphens>`; another code
+  reads `form.error.invalid`. The library composes its messages from the failing keyword and the constraint and names
+  no value (GDR-FORMS-2).
+
+[#_the_pickers]
+=== The Pickers
+
+* *`CatalogPicker`* lists the entries of its catalog from `GET /api/v1/catalogs/{catalog}`. The list holds the retired
+  entries too, marked `retired`, because a reference to a retired entry still resolves
+  (xref:directory.adoc#AUN-DIR-4[AUN-DIR-4]). The picker offers the entries that are not retired; a held value that
+  names a retired entry is shown with the name and the mark *retired* and can be kept or replaced, and a held value
+  that names no entry of the list is shown as the reference itself with the mark *not found*. The server refuses an
+  unresolvable reference on save with `REFERENCE_NOT_FOUND`.
+* *`PersonPicker`* offers the persons from `GET /api/v1/directory/persons`, filtered by the typed text, and resolves
+  a held pseudonym with `GET /api/v1/directory/persons/{pseudonym}`. A person entry that no login has bound yet
+  (a prefilled entry, xref:directory.adoc#AUN-DIR-8[AUN-DIR-8]) is offered and shown with the mark *not yet bound*; it
+  resolves like a bound one and may be referenced
+  (https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-directory.adoc#GDR-DIR-7[GDR-DIR-7]).
+  An erased person resolves to a former member
+  (https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-directory.adoc#GDR-DIR-4[GDR-DIR-4]):
+  the field shows the mark *former* with the team and the role the entry held, never a name, and the picker does
+  not offer such a person. A pseudonym that does not resolve is shown as *unknown person*.
+* *`DocumentRefField`* is a text field for the reference. It resolves what it holds with
+  `GET /api/v1/references/resolve` and shows the title of the target and, when the target has a canonical address
+  (<<AUN-WEB-3>>), a link to it, or the mark *not found*. A reference into a repository the user may not read is
+  reported as not found (xref:data-protection.adoc#AUN-DP-2[AUN-DP-2]).
+
+[#_asciidoc_preview]
+=== AsciiDoc Preview
+
+An `AsciiDocField` is a text area for the source and a preview that the server renders: the form sends the source to
+`POST /api/v1/render/asciidoc` no sooner than 500 ms after the last change and drops the answer of a request that a
+later one has overtaken. The server renders in the strictest safe mode of Asciidoctor, `secure`, in which the
+document can read no file, include nothing and fetch nothing from a URI
+(link:https://docs.asciidoctor.org/asciidoctor/latest/safe-modes/[Asciidoctor, Safe Modes]), and sanitises the HTML
+against an allow-list (<<AUN-WEB-8>>). The answer is HTML, and the web app puts no `{@html}` in a view: it parses the
+answer with `DOMParser`, which runs no script, and builds its own elements from the nodes that its copy of the
+allow-list names, dropping every other node and attribute. The allow-list of the server and of the web app is the same:
+
+[cols="1,3"]
+|===
+|Elements |Attributes
+
+|`p`, `br`, `hr`, `div`, `span`, `strong`, `b`, `em`, `i`, `code`, `pre`, `sub`, `sup`, `blockquote`, `ul`, `ol`, `li`,
+`dl`, `dt`, `dd`, `h2` to `h6`, `table`, `caption`, `thead`, `tbody`, `tfoot`, `tr`, `th`, `td`
+|None, except `colspan`, `rowspan` and `scope` on `th` and `td`, and `start` on `ol`
+
+|`a`
+|`href` with the scheme `https`, `http` or `mailto` only, or a fragment of the same document; `rel` is
+`noopener noreferrer`, and no `target`
+|===
+
+No `img`, `script`, `style`, `iframe`, `form`, `class`, `id`, `style` or event handler survives, and the page's policy
+allows no image from another origin anyway (<<AUN-WEB-8>>). A source that is too large or an unavailable renderer
+costs the preview only: the field notes that no preview is shown and the user goes on editing; the source is saved
+as written.
+
+[#_read_only_rendering]
+=== Read-Only Rendering
+
+The same `SchemaForm` renders a document that is read, a revision and a document as of a date, with `readOnly` set:
+every component shows its value as text and not as a control. A `DateTimeField` shows the localised date and time; a
+`Select` the text of the option; a `Toggle` yes or no; a `CatalogPicker`, a `PersonPicker` and a `DocumentRefField` the
+name, the person or the title with their marks and the link; a `DataTable` the table without the row editor; an
+`AsciiDocField` the rendered source (the same request), and the source as preformatted text, with a note that it is not
+rendered, when the renderer is unavailable or the source exceeds the preview limit, so that what is read is never
+lost; an empty value a dash. The marks *retired*, *not yet bound*,
+*former* and *not found* are part of the reading, not of the editing. The same labels, sections and hints apply, so
+that what is read has the shape of what was edited.
 
 [#AUN-WEB-5]
 == AUN-WEB-5: Drafts, Saving and Conflicts

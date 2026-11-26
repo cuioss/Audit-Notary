@@ -1,0 +1,88 @@
+{
+  "category": "test-note",
+  "kinds": [
+    {
+      "id": "note",
+      "repository": "test-notes",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": [
+          "title",
+          "noted",
+          "status"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "noted": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "agreed",
+              "dropped"
+            ]
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "service": {
+            "type": "string",
+            "format": "gdr-link",
+            "x-catalog": "service"
+          },
+          "owner": {
+            "type": "string",
+            "x-person": true
+          },
+          "related": {
+            "type": "string",
+            "format": "gdr-link"
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 500,
+            "x-free-text": true
+          },
+          "body": {
+            "type": "string",
+            "x-asciidoc": true
+          },
+          "actions": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "required": [
+                "what"
+              ],
+              "properties": {
+                "what": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "who": {
+                  "type": "string",
+                  "x-person": true
+                },
+                "due": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "done": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

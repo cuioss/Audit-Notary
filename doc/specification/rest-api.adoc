@@ -59,9 +59,16 @@ Every request can end with these outcomes (xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9
 |`FIRST_LOGIN_REQUIRED`
 |Outside the first-login allow-list (xref:directory.adoc#AUN-DIR-2[AUN-DIR-2])
 
+|`404`
+|`NOT_FOUND`
+|The addressed object does not exist, or the user may not read it (PROVISIONAL: xref:data-protection.adoc#AUN-DP-2[AUN-DP-2]
+reports a reference into a repository the user may not read as not found; the form kit's requests use the outcome)
+
 |`422`
 |`VALIDATION`
-|`errors`: a list of `{"pointer", "code"}` with a JSON Pointer into the request body
+|`errors`: a list of `{"pointer", "code"}` with a JSON Pointer into the request body; for a request without a body
+(PROVISIONAL), a JSON Pointer into its query parameters read as one object, a parameter name to its value (`/q`), or to
+the array of its values when it is repeated (`/ref`; an element is `/ref/3`)
 
 |`503`
 |`GIT_UNAVAILABLE`
@@ -202,10 +209,13 @@ as signed out: the web app navigates to `/signed-out`
 
 |`GET /api/v1/catalogs/{catalog}`
 |none
-|`{"entries": [{"id", "name"}]}` (shape PROVISIONAL); `team` and `role` are used today
+|`{"entries": [{"id", "name", "retired"}]}` (shape PROVISIONAL); `retired` is a boolean and absent means `false`. The
+list holds the retired entries too, so that a reference to one resolves (xref:directory.adoc#AUN-DIR-4[AUN-DIR-4]);
+the form kit's `CatalogPicker` reads it for every catalog its schemas name (<<_form_kit_requests>>). `team` and `role`
+are used today
 |none
-|xref:directory.adoc#AUN-DIR-2[AUN-DIR-2]
-|`SPECIFIED` for `team` and `role`; the other catalogs `PROVISIONAL`
+|xref:directory.adoc#AUN-DIR-2[AUN-DIR-2], xref:directory.adoc#AUN-DIR-4[AUN-DIR-4]
+|`SPECIFIED` for `team` and `role`; the other catalogs and the member `retired` `PROVISIONAL`
 
 |`PUT /api/v1/catalogs/{catalog}/{id}`
 |The entry
@@ -234,6 +244,65 @@ as signed out: the web app navigates to `/signed-out`
 |Right `administer-catalogs`; `409` with the problem type `managed-by-source`
 |xref:data-protection.adoc#AUN-DP-3[AUN-DP-3]
 |`SPECIFIED`
+
+|`GET /api/v1/directory/persons?q=<text>`
+|none; `q` optional
+|`{"persons": [{"pseudonym", "name", "state", "memberships": [{"team", "role"}]}], "truncated"}`: the person entries a
+document may reference, the bound ones (`state` `bound`) and the prefilled, unbound ones (`unbound`), ordered by
+name, at most 100; `q` keeps the entries whose name contains the text, upper and lower case alike; `truncated` is `true`
+when more entries matched. `team` and `role` are catalog references (`team:payments`). The erased are not listed. A
+client filters the entries it received by the typed text as well, which covers only a complete answer: with
+`truncated` `true` the answer is incomplete, and the client asks again with `q` and does not present its local filter
+as the full set of matches. The server filters by `q`. The exact body is in <<_form_kit_requests>>
+|`403 FORBIDDEN` for a user without a mapped right (the entries are personal data, as the binding candidates of
+xref:directory.adoc#AUN-DIR-2[AUN-DIR-2] are)
+|xref:data-protection.adoc#AUN-DP-5[AUN-DP-5], xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4]
+|`PROVISIONAL`
+
+|`GET /api/v1/directory/persons/{pseudonym}`
+|none
+|One person as the form shows them: `{"pseudonym", "name", "state", "memberships", "erasedOn"}`; `state` is `bound`,
+`unbound` or `former`. A former member, an erased person, has `name: null`, the memberships recorded at the
+erasure and `erasedOn`, the date of the erasure; the other states have `erasedOn: null`
+|`404 NOT_FOUND` for a pseudonym that resolves to no entry and to no erasure; `403 FORBIDDEN` as above
+|xref:data-protection.adoc#AUN-DP-3[AUN-DP-3], xref:data-protection.adoc#AUN-DP-5[AUN-DP-5],
+https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-directory.adoc#GDR-DIR-4[GDR-DIR-4]
+|`PROVISIONAL`
+
+6+h|Forms
+
+|`GET /api/v1/categories/{category}/schema`
+|none
+|`{"category", "kinds": [{"id", "repository", "schema"}]}`: per document type (kind) of the category its id, the alias
+of its repository and its JSON Schema as the file `<kind>/schema.json` holds it, markers included
+(xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4]). The same for every user; the request asks no more than a right on one of the
+category's repositories. The exact body is in <<_form_kit_requests>>
+|`404 NOT_FOUND` for an unknown category or one that is switched off; `403 FORBIDDEN`
+|xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4], xref:architecture-and-modules.adoc#AUN-GEN-1[AUN-GEN-1]
+|`PROVISIONAL`
+
+|`POST /api/v1/render/asciidoc`
+|`{"source"}`: the AsciiDoc source, a string of at most 65,536 bytes in UTF-8
+|`{"html"}`: the source rendered by the server in safe mode `secure` as an embeddable fragment and sanitised against
+the allow-list of xref:web-app.adoc#_asciidoc_preview[AUN-WEB-4, AsciiDoc Preview]. Nothing is stored or logged; the
+request changes no state, and carries the anti-CSRF header as every `POST` does. An empty source answers
+`{"html": ""}`
+|`413 TOO_LARGE` with `limit`, the number of bytes (nothing is rendered); `422 VALIDATION` with the pointer `/source`
+and the code `REQUIRED` when `source` is missing, or `TYPE` when it is no string; `503 RENDER_UNAVAILABLE` when the
+renderer cannot run (the form then shows no preview and goes on); a user without a mapped right is refused `FORBIDDEN`
+|xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4], xref:web-app.adoc#AUN-WEB-8[AUN-WEB-8]
+|`PROVISIONAL`
+
+|`GET /api/v1/references/resolve?ref=<reference>&ref=<reference>`
+|none; `ref` is repeated, at most 50 times, each value URL-encoded (`#` as `%23`)
+|`{"references": [{"ref", "found", "title", "address", "retired"}]}`, one entry per `ref`, in the order asked. For a
+reference that resolves: `found` `true`, the `title` of the target (the name of a catalog entry), its canonical
+`address` (xref:web-app.adoc#AUN-WEB-3[AUN-WEB-3]) or `null` when the target has none, `retired` `true` for a retired catalog entry. For one that
+does not, or that points into a repository the user may not read: `found` `false` and `title`, `address` `null`
+|`422 VALIDATION` with the pointer `/ref` and the code `REQUIRED` for no `ref` or `TOO_MANY` for more than 50
+|xref:data-protection.adoc#AUN-DP-2[AUN-DP-2],
+https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-8[GDR-FORMS-8]
+|`PROVISIONAL`
 
 6+h|Documents and release
 
@@ -329,6 +398,138 @@ release was opened). The handling of the step-up outcomes is the contract of <<_
 |xref:category-isms.adoc#AUN-ISMS-3[AUN-ISMS-3]
 |`SPECIFIED`; not yet used by the web app
 |===
+
+[#_form_kit_requests]
+== Form Kit Requests
+
+The exact bodies of the requests of the form kit (xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4]); every one is PROVISIONAL.
+The values are those of the resources-only test category `test-note`
+(xref:architecture-and-modules.adoc#AUN-GEN-1[AUN-GEN-1]).
+
+*The schema of a category*, `GET /api/v1/categories/test-note/schema`:
+
+[source,json]
+----
+{
+  "category": "test-note",
+  "kinds": [
+    {
+      "id": "note",
+      "repository": "test-notes",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["title", "noted", "status"],
+        "properties": {
+          "title":   { "type": "string", "maxLength": 120 },
+          "noted":   { "type": "string", "format": "date-time" },
+          "status":  { "type": "string", "enum": ["open", "agreed", "dropped"] },
+          "pinned":  { "type": "boolean" },
+          "service": { "type": "string", "format": "gdr-link", "x-catalog": "service" },
+          "owner":   { "type": "string", "x-person": true },
+          "related": { "type": "string", "format": "gdr-link" },
+          "summary": { "type": "string", "maxLength": 500, "x-free-text": true },
+          "body":    { "type": "string", "x-asciidoc": true },
+          "actions": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "required": ["what"],
+              "properties": {
+                "what": { "type": "string", "maxLength": 200 },
+                "who":  { "type": "string", "x-person": true },
+                "due":  { "type": "string", "format": "date" },
+                "done": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
+----
+
+The schema is the content of the file, unchanged. The labels of this schema are the catalogue's keys
+`category.test-note.note.field.title`, `….field.actions.what` and so on
+(xref:web-app.adoc#_labels_and_texts[AUN-WEB-4, Labels and Texts]).
+
+*The preview*, `POST /api/v1/render/asciidoc`:
+
+[source,json]
+----
+{ "source": "== Decision\n\nWe *agree* to rotate the keys, see `ops/keys`." }
+----
+
+answers `200`
+
+[source,json]
+----
+{ "html": "<h2>Decision</h2><div><p>We <strong>agree</strong> to rotate the keys, see <code>ops/keys</code>.</p></div>" }
+----
+
+and a source above 65,536 bytes answers `413`
+
+[source,json]
+----
+{ "outcome": "TOO_LARGE", "limit": 65536 }
+----
+
+A body without `source`, or with a `source` that is no string, answers `422`
+`{"outcome": "VALIDATION", "errors": [{"pointer": "/source", "code": "REQUIRED"}]}` (`TYPE` for a number or an object).
+
+*The persons*, `GET /api/v1/directory/persons?q=ha`:
+
+[source,json]
+----
+{
+  "persons": [
+    { "pseudonym": "p-7d52e8", "name": "Mira Haas", "state": "unbound",
+      "memberships": [ { "team": "team:mobile", "role": "role:developer" } ] }
+  ],
+  "truncated": false
+}
+----
+
+and one person, `GET /api/v1/directory/persons/p-0f8a42`, here an erased one:
+
+[source,json]
+----
+{ "pseudonym": "p-0f8a42", "name": null, "state": "former", "erasedOn": "2026-09-30",
+  "memberships": [ { "team": "team:payments", "role": "role:developer" } ] }
+----
+
+*The references*, `GET /api/v1/references/resolve?ref=service:ledger&ref=isms-register:risk/R-999`:
+
+[source,json]
+----
+{
+  "references": [
+    { "ref": "service:ledger", "found": true, "title": "Ledger", "address": "/catalogs/service/ledger",
+      "retired": true },
+    { "ref": "isms-register:risk/R-999", "found": false, "title": null, "address": null, "retired": false }
+  ]
+}
+----
+
+*A refusal of the server* that the form shows at the fields, `422`:
+
+[source,json]
+----
+{
+  "outcome": "VALIDATION",
+  "errors": [
+    { "pointer": "/related", "code": "REFERENCE_NOT_FOUND" },
+    { "pointer": "/owner", "code": "PSEUDONYM_UNKNOWN" },
+    { "pointer": "/actions/1/what", "code": "MAX_LENGTH" }
+  ]
+}
+----
+
+The pointers of the form are those into the form's own value (xref:web-app.adoc#_values[AUN-WEB-4, Values]). A refusal
+of the save of a document names its pointers into the request body of that request, and how the two map onto each
+other is the request's (<<_decided_forms>>, the last point).
 
 [#_the_step_up_handler]
 == The Step-Up Handler
@@ -559,3 +760,45 @@ none.
 
 For the owner: whether `/signed-out` replaces the start page (4), whether `/login` should exist for `oidc` (5), and
 whether the session needs an explicit identity member instead of the token (6).
+
+[#_decided_forms]
+*Decided provisionally* with the form kit (`SchemaForm` and its components), so that no screen is blocked; the owner may
+change each one. The reasoning is in xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4]:
+
+. *One request for the schema of a category,* `GET /api/v1/categories/{category}/schema`, answering every document type
+of the category with its repository alias and its schema file unchanged. A category with several document types
+(ISMS, incident reports) is thus read once, and the request needs no query.
+. *The texts of a field are catalogue keys,* `category.<category>.<kind>.field.<path>` with `.help` and
+`.option.<value>`; the schema's `title` and `description` are not shown. Without a key the form shows the property name.
+. *The component is chosen by an ordered rule list* (AUN-WEB-4, Choosing the Component). The additions to the
+specified constructs are `format: date`, numbers, arrays of scalars (a `DataTable` of one column), sections of objects,
+`format: gdr-link` without `x-catalog` as `DocumentRefField`, `x-free-text` as a text area, and `readOnly`. A
+construct the form does not know is shown as plain data and kept unchanged.
+. *The browser validates without Ajv,* with a hand-written check of the constraints its components can offer; the
+requirement's earlier text named Ajv. No dependency is added.
+. *A format error of the browser never stops a save.* The library's validator asserts no `format`
+(https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-2[GDR-FORMS-2]),
+so the browser's check is advice; the errors of the server replace the browser's.
+. *A mandatory field is no error before a transition.* The browser lists the empty `required` fields for the transition
+that needs them; the server's `MANDATORY_FIELDS_MISSING` decides.
+. *The codes of a field error* are the capitalised keyword of the failing constraint, plus `REFERENCE_NOT_FOUND`
+(specified) and `PSEUDONYM_UNKNOWN`; the text is the catalogue key `form.error.<code>`, with `form.error.invalid` for
+another code.
+. *The picker lists are whole lists:* `GET /api/v1/catalogs/{catalog}` carries `retired`, and
+`GET /api/v1/directory/persons` is capped at 100 with `truncated`; the client filters locally as well, which is
+complete only while `truncated` is `false` (with `true` it asks the server with `q`; the server filters by `q`). A
+single pseudonym resolves with `GET /api/v1/directory/persons/{pseudonym}` to `bound`, `unbound` or `former`.
+. *`GET /api/v1/references/resolve`* resolves document and catalog references to a title and a canonical address, so
+that a read view links them; it is no picker. A picker for documents waits for the document list of the document
+lifecycle.
+. *The preview is rendered only by the server,* in safe mode `secure`, sanitised against one allow-list, at most 65,536
+bytes. The web app builds its elements from the parsed answer with the same allow-list, so no view needs `{@html}`.
+. *A request without a body names its input errors by query parameter.* The pointer of a `422 VALIDATION` is then a
+JSON Pointer into the query parameters read as one object (`/ref`), as the common table says.
+. *`NOT_FOUND` is a common refusal* (`404`), for an object that does not exist and for one the user may not read.
+. *The pointers of the form are those of its own value.* How the pointers of a save's answer, which name the request
+body, map onto them is decided with the save of generic documents.
+
+For the owner: whether the server renders the preview with a sanitiser that needs a dependency (the application's
+implementation, not this register), whether the browser's `format` advice should stop a save, and whether the category
+schema should carry the field labels instead of the catalogue.

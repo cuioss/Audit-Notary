@@ -17,6 +17,7 @@ import de.cuioss.notary.audit.mock.runtime.MockEngine;
 import de.cuioss.notary.audit.mock.runtime.MockRequest;
 import de.cuioss.notary.audit.mock.runtime.MockResponse;
 import de.cuioss.tools.logging.CuiLogger;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -92,7 +93,7 @@ public final class MockHttpServer implements AutoCloseable {
         String path = exchange.getRequestURI().getPath();
         try (exchange) {
             var request = toRequest(exchange);
-            var response = engine.handle(request);
+            var response = request == null ? engine.bodyTooLarge() : engine.handle(request);
             if (response.eventStream()) {
                 stream(exchange);
             } else {
@@ -110,14 +111,19 @@ public final class MockHttpServer implements AutoCloseable {
         }
     }
 
-    private static MockRequest toRequest(HttpExchange exchange) throws IOException {
+    /** The request, or {@code null} when the body is above {@link MockEngine#MAX_BODY_BYTES}; it is read bounded. */
+    private static @Nullable MockRequest toRequest(HttpExchange exchange) throws IOException {
         Map<String, String> headers = new LinkedHashMap<>();
         exchange.getRequestHeaders().forEach((name, values) -> {
             if (!values.isEmpty()) {
                 headers.put(name, values.getFirst());
             }
         });
-        String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        byte[] raw = exchange.getRequestBody().readNBytes(MockEngine.MAX_BODY_BYTES + 1);
+        if (raw.length > MockEngine.MAX_BODY_BYTES) {
+            return null;
+        }
+        String body = new String(raw, StandardCharsets.UTF_8);
         String query = exchange.getRequestURI().getRawQuery();
         return new MockRequest(exchange.getRequestMethod(), exchange.getRequestURI().getPath(),
                 query == null ? "" : query, headers, body);
