@@ -246,6 +246,8 @@ Each change is the fix of a gap these use cases need; it is written into the spe
 
 [[change-evidence-per-practice]]AUN-SAMM-1, evidence per practice:: Gap: `evidence.yaml` is one file for all practices
 of an assessment, so two assessors adding evidence to different practices at once conflict, against
-xref:../specification/category-samm.adoc#AUN-SAMM-3[AUN-SAMM-3]. Fix: the declared split
-`evidence/<practice-id>.yaml`, one per practice, beside `answers/<practice-id>.yaml`; the concept's layout
-(xref:../concepts/category-samm.adoc#_repository_layout[SAMM, Repository Layout]) follows.
+xref:../specification/category-samm.adoc#AUN-SAMM-3[AUN-SAMM-3]. Fix: no separate evidence file; the declared split
+`answers/<practice-id>.yaml`, one per practice, holds the answers, the comments and the evidence links of the practice, so
+the blob of a practice covers all three and a save of the practice is one write (decided provisionally,
+xref:../specification/rest-api.adoc#_decided_samm[REST API Register, Open Questions]); `evidence.yaml` is dropped and the
+concept's layout (xref:../concepts/category-samm.adoc#_repository_layout[SAMM, Repository Layout]) follows.

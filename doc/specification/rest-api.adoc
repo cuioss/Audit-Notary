@@ -550,9 +550,9 @@ xref:../use-cases/04-samm.adoc#UC-SAMM-1[UC-SAMM-1]
 |xref:category-samm.adoc#AUN-SAMM-2[AUN-SAMM-2], xref:category-samm.adoc#AUN-SAMM-6[AUN-SAMM-6]
 |`PROVISIONAL`
 
-|`POST /api/v1/documents/samm-assessments/{scope}/save`
+|`POST /api/v1/documents/samm-assessments/{document}/save`
 |`{"parts": {"targets": {"blob", "fields"}}}`: the roadmap of a scope, the generic save of the scope as a document
-(<<_document_lifecycle_requests>>); `fields` maps `/<practice>` to `{"target", "due"}`, or to `null` to remove the target
+(<<_document_lifecycle_requests>>); `{document}` is the `document` of the scope read, not the address segment; `fields` maps `/<practice>` to `{"target", "due"}`, or to `null` to remove the target
 of the practice
 |`{"outcome": "SAVED", "at", "parts"}` with the new blob id of `targets`
 |`CONFLICT` per practice with the target of both sides; `VALIDATION` with `part` `targets`; `FORBIDDEN` without `edit`;
@@ -594,7 +594,7 @@ the code `REQUIRED`. The two assessments may be in any state: an open one is rea
 |xref:category-samm.adoc#AUN-SAMM-5[AUN-SAMM-5]
 |`SPECIFIED`; the status of `MODEL_VERSIONS_DIFFER` and the comparison of an open assessment `PROVISIONAL`
 
-|`GET /api/v1/documents/samm-assessments/{id}`
+|`GET /api/v1/documents/samm-assessments/{document}`
 |none
 |One assessment in the SAMM shape, which keeps its own layout: the answers per practice and question, the loaded `parts`,
 the signed `history`, the `release` and, new, `evidence` per practice. The comment of an answer is an AsciiDoc fragment.
@@ -603,8 +603,8 @@ A released assessment reads `state` `released` and is frozen. The exact body is 
 |xref:category-samm.adoc#AUN-SAMM-1[AUN-SAMM-1], xref:category-samm.adoc#AUN-SAMM-7[AUN-SAMM-7]
 |`PROVISIONAL`
 
-|`PUT /api/v1/drafts/samm-assessments/{id}` and `POST /api/v1/documents/samm-assessments/{id}/save`
-|The generic body (<<_document_lifecycle_requests>>); the part is a practice id, `fields` maps `<question>/answer`,
+|`PUT /api/v1/drafts/samm-assessments/{document}` and `POST /api/v1/documents/samm-assessments/{document}/save`
+|The generic body (<<_document_lifecycle_requests>>); `{document}` is the `document` of the assessment read; the part is a practice id, `fields` maps `<question>/answer`,
 `<question>/comment` and `evidence` (the whole list of the practice's evidence links) to the new value
 |As the generic request: `DRAFT_SAVED`, `SAVED` with the new blob id of the practice
 |`CONFLICT` per practice; `VALIDATION` per field, among them the evidence (`PATTERN` for a link that is not an absolute
@@ -1632,8 +1632,8 @@ route comes before `samm.scope` in the file
 `samm.assessment` in the file. Refused with a reason while the scope has an open assessment
 |===
 
-The segment `new` is reserved in `{scope}` and in `{assessment}`: the server never assigns it as an address segment,
-and neither `models` nor `scopes` (they are paths of the API under `/api/v1/samm/`). `/samm/new/{x}` reads as the
+The segment `new` is reserved in `{scope}` and in `{assessment}`: the server never assigns it as an address segment (a
+derived slug that equals it is treated like a collision and gets a number appended), and neither `models` nor `scopes` (they are paths of the API under `/api/v1/samm/`). `/samm/new/{x}` reads as the
 assessment `{x}` of a scope `new`, which does not exist: the not-found view. The targets editor, the trend and the way
 to start a new assessment have no address of their own: they are parts of the scope sheet and of the frozen assessment.
 The new addresses admit no query.
@@ -1847,8 +1847,9 @@ other tabs.
   assessment without any has `"evidence": {}` (the member is always present). `question` is a question id of the
   practice or `null` for the practice as a whole; `title` is 1 to 200 characters; `url` is an absolute `https` address of
   at most 2,048 characters; a practice holds at most 50 links. Evidence is a link, never a file (AUN-SAMM-7).
-* The blob of a practice covers its answers, its comments and its evidence: one file of the layout of the use case
-  change `change-evidence-per-practice` is read and written together.
+* The blob of a practice covers its answers, its comments and its evidence: they are one file per practice,
+  `answers/<practice-id>.yaml`, as the use case change `change-evidence-per-practice` fixes (no separate evidence file),
+  read and written together.
 * A released assessment reads `"state": "released"`, `release` set; it is frozen.
 
 *A save with a comment and evidence*, `POST /api/v1/documents/samm-assessments/payments-2026-q4/save`, the generic body:
@@ -2517,8 +2518,9 @@ change each one. The bodies and addresses are in <<_samm_requests>>:
 . *The creates are requests of their own,* `POST /api/v1/samm/scopes` and `POST /api/v1/samm/{scope}/assessments`, because
   a scope names a subject and an assessment names its scope, and the server derives the address segment of both. The
   generic `POST /api/v1/documents/{repository}` would need the web app to know the layout of the two document kinds.
-  The server assigns the address segment (a lower-case slug of the title, a number appended on a collision) and the
-  document id.
+  The server assigns the address segment (a lower-case slug of the title, a number appended on a collision; a slug that is
+  a reserved segment, `new`, or `models` and `scopes` for a scope, counts as a collision, so a scope titled "New" gets
+  `new-2`) and the document id.
 . *The scope is a document without a workflow.* Its targets are saved with the generic save of a document, the part
   `targets`, so the conflict, the validation and the step-up of the document controller serve it; there is no draft, no
   submit, no release and no `DOCUMENT_RELEASED`. The scope read gains `document` and `parts`.
@@ -2536,7 +2538,8 @@ change each one. The bodies and addresses are in <<_samm_requests>>:
 . *A new assessment starts empty:* no answer is copied from an earlier one. The form of a new assessment prefills the model
   version of the assessment it was started from. Copying answers is a later decision.
 . *Evidence belongs to the practice,* like the answers (the change `change-evidence-per-practice`): the read has
-  `evidence` per practice, the practice's blob covers answers, comments and evidence, and the save carries the whole list
+  `evidence` per practice, the practice's one file `answers/<practice-id>.yaml` and its blob cover answers, comments and
+  evidence (no separate `evidence/<practice-id>.yaml`), and the save carries the whole list
   under the key `evidence`. A link has an optional `question`, a title and an absolute `https` address; a practice holds at
   most 50. `http`, relative and `file:` addresses are refused with `PATTERN`, there is no upload (AUN-SAMM-7).
 . *The comment of an answer is AsciiDoc* of at most 8,000 characters, previewed by the server like every AsciiDoc field
@@ -2572,6 +2575,6 @@ For the owner: whether the scope and the assessment should be created through th
 the subject of a scope may change (4) and whether a subject may have several scopes (4); the step of a target and
 whether the targets of a scope must be complete (6); whether the creator of an assessment is always an assessor (7);
 whether more than one assessment of a scope may be open at once (8); whether a new assessment should offer to start from
-the answers of the last released one (9); the limits of the evidence and the comment (10, 11); the status `422` of
+the answers of the last released one (9); whether the evidence shares the file of its practice with the answers (10); the limits of the evidence and the comment (10, 11); the status `422` of
 `MODEL_VERSIONS_DIFFER` (14); whether the trend may mix model versions with a marker instead of leaving the others out
 (15); and whether the web app should pin a model version (16).

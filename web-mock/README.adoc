@@ -146,7 +146,7 @@ the password, answers `RELEASED`; `wrong-password` answers `401 INVALID_CREDENTI
 stays the one of the identity provider; `changed` answers `CHANGED_SINCE_REVIEW`; `too-many-logins` answers the release
 `503 TOO_MANY_LOGINS` with `Retry-After: 60`, writes nothing and keeps the state (`POST /mock/goto/review` leaves it);
 `released` serves the frozen assessment with its tag `assessments/payments-2026-q4/v1` (its trend holds the third point);
-`released-meanwhile` answers the release `409 DOCUMENT_RELEASED` with that tag and serves the released reads (assessment,
+`released-meanwhile` answers the release, a draft, a save and a submit `409 DOCUMENT_RELEASED` with that tag and serves the released reads (assessment,
 scope, list, trend). The models and the four trends are read in every state
 
 |`local`
@@ -700,7 +700,7 @@ pushed
 `PSEUDONYM_UNKNOWN`
 
 |`assessment-released-meanwhile`
-|The save and the draft of `payments-2026-q4` answer `409 DOCUMENT_RELEASED` with the tag; the assessment, the scope, the
+|The save, the draft, the submit and the release of `payments-2026-q4` answer `409 DOCUMENT_RELEASED` with the tag; the assessment, the scope, the
 list and the trend read as released (the third point); the event `document-transitioned` (Noor Haddad, version 1) is
 pushed after 300 ms
 
@@ -716,7 +716,7 @@ pushed after 300 ms
 |`GET /api/v1/samm/models` answers `{"models": []}`
 
 |`samm-git-unavailable`
-|The status is `degraded` with `samm-assessments` `DOWN`; the creates and the save of the targets answer `503
+|The status is `degraded` with `samm-assessments` `DOWN`; the creates and every save of the targets (`payments`, `identity`, `shop`, `organisation`) answer `503
 GIT_UNAVAILABLE`; the draft and every read stay `200`
 |===
 

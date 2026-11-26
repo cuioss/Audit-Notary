@@ -24,6 +24,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -56,15 +59,28 @@ class SammCompletionTest {
     private static final Pattern CHECKSUM = Pattern.compile("sha256:[0-9a-f]{64}");
     private static final double TOLERANCE = 1e-12;
     private static final List<String> SCOPES = List.of("payments", "identity", "shop", "organisation");
-    private static final List<String> ASSESSMENT_FILES = List.of("identity-2026-q4", "organisation-2026-h1",
-            "payments-2025-q4", "payments-2026-q2", "payments-2026-q4", "payments-2026-q4-in-review",
-            "payments-2026-q4-released", "payments-2026-q4-saved-by-other", "shop-2026-q3");
-    private static final List<String> FROZEN = List.of("payments-2026-q2", "payments-2025-q4", "shop-2026-q3",
-            "organisation-2026-h1");
-
     private static final ClassLoader CLASS_LOADER = SammCompletionTest.class.getClassLoader();
     private static final ScenarioRegistry REGISTRY = new ScenarioRegistry(
             new ScenarioLoader(MockClient.MAPPER, name -> ScenarioRegistry.readDataFile(CLASS_LOADER, name)), CLASS_LOADER);
+
+    /** The assessment fixtures, found as the {@code samm-assessment-*.json} files of the data folder. */
+    private static final List<String> ASSESSMENT_FILES = assessmentFiles();
+    /** The assessments that workshop holds released under their own file: the released variants of other states are no members. */
+    private static final List<String> FROZEN = ASSESSMENT_FILES.stream()
+            .filter(name -> "released".equals(data("samm-assessment-" + name + ".json").path("state").asText()))
+            .filter(name -> name.equals(data("samm-assessment-" + name + ".json").path("id").asText()))
+            .toList();
+
+    private static List<String> assessmentFiles() {
+        try (var files = Files.list(Path.of(CLASS_LOADER.getResource("scenarios/data/samm-models.json").toURI()).getParent())) {
+            return files.map(file -> file.getFileName().toString())
+                    .filter(name -> name.startsWith("samm-assessment-") && name.endsWith(".json"))
+                    .map(name -> name.substring("samm-assessment-".length(), name.length() - ".json".length()))
+                    .sorted().toList();
+        } catch (IOException | URISyntaxException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 
     private static MockClient start(String reference) {
         return MockClient.start(reference).login();
@@ -162,9 +178,8 @@ class SammCompletionTest {
 
     private static void assertScores(JsonNode point, Scores expected) {
         assertEquals(expected.overall(), point.path("overall").asDouble(), TOLERANCE, "overall");
-        assertEquals(List.of("governance", "design", "implementation", "verification", "operations"),
-                fieldNames(point.path("functions")));
-        assertEquals(15, point.path("practices").size());
+        assertEquals(List.copyOf(expected.functions().keySet()), fieldNames(point.path("functions")));
+        assertEquals(expected.practices().size(), point.path("practices").size());
         expected.functions().forEach((id, score) ->
                 assertEquals(score, point.path("functions").path(id).asDouble(), TOLERANCE, id));
         expected.practices().forEach((id, score) ->
@@ -173,7 +188,7 @@ class SammCompletionTest {
         for (var function : point.path("functions")) {
             average += function.asDouble();
         }
-        assertEquals(point.path("overall").asDouble(), average / 5, TOLERANCE, "the functions average to the overall");
+        assertEquals(point.path("overall").asDouble(), average / expected.functions().size(), TOLERANCE, "the functions average to the overall");
     }
 
     @Nested
@@ -653,7 +668,7 @@ class SammCompletionTest {
         }
 
         @Test
-        @DisplayName("assessment-released-meanwhile: the save and the draft of Payments 2026 Q4 answer DOCUMENT_RELEASED and the reads show it released")
+        @DisplayName("assessment-released-meanwhile: the save, the draft, the submit and the release of Payments 2026 Q4 answer DOCUMENT_RELEASED and the reads show it released")
         void shouldAnswerReleasedMeanwhile() throws Exception {
             try (var client = start("workshop")) {
                 var lines = client.events().body().iterator();
@@ -662,11 +677,18 @@ class SammCompletionTest {
                 var event = awaitEvent(lines, "document-transitioned");
                 var save = client.change("POST", DOC + "payments-2026-q4/save", "{}");
                 var draft = client.change("PUT", DRAFT + "payments-2026-q4", "{}");
+                var submit = client.change("POST", DOC + "payments-2026-q4/transitions/samm.submit", "{}");
+                var release = client.change("POST", RELEASE + "payments-2026-q4", "{}");
                 var assessment = get(client, DOC + "payments-2026-q4");
                 var scope = get(client, SAMM + "scopes/payments");
                 var list = get(client, SAMM + "scopes").path("scopes").get(0);
                 var trend = get(client, SAMM + "payments/trend");
                 assertAll(
+                        () -> List.of(submit, release).forEach(refusal -> {
+                            assertEquals(409, refusal.statusCode());
+                            assertEquals("DOCUMENT_RELEASED", json(refusal).path("outcome").asText());
+                            assertEquals("assessments/payments-2026-q4/v1", json(refusal).path("tag").asText());
+                        }),
                         () -> assertEquals(409, save.statusCode()),
                         () -> assertEquals("assessments/payments-2026-q4/v1", json(save).path("tag").asText()),
                         () -> assertEquals(409, draft.statusCode()),
@@ -772,7 +794,7 @@ class SammCompletionTest {
         }
 
         @Test
-        @DisplayName("samm-git-unavailable: the status is degraded and the creates and the save of the targets answer 503; the draft and the reads work")
+        @DisplayName("samm-git-unavailable: the status is degraded and the creates and every save of the targets answer 503; the draft and the reads work")
         void shouldAnswerGitUnavailable() {
             try (var client = start("workshop")) {
                 goTo(client, "samm-git-unavailable");
@@ -786,7 +808,10 @@ class SammCompletionTest {
                 var writes = List.of(client.change("POST", SAMM + "scopes", "{}"),
                         client.change("POST", SAMM + "shop/assessments", "{}"),
                         client.change("POST", SAMM + "organisation/assessments", "{}"),
-                        client.change("POST", DOC + "payments/save", "{}"));
+                        client.change("POST", DOC + "payments/save", "{}"),
+                        client.change("POST", DOC + "identity/save", "{}"),
+                        client.change("POST", DOC + "shop/save", "{}"),
+                        client.change("POST", DOC + "organisation/save", "{}"));
                 assertAll(
                         () -> assertTrue(status.path("degraded").asBoolean()),
                         () -> assertEquals(List.of("samm-assessments"), down),
@@ -822,11 +847,12 @@ class SammCompletionTest {
     class OtherProfiles {
 
         @Test
-        @DisplayName("read-only reads the models and the four trends, and answers the three writes 403 FORBIDDEN")
+        @DisplayName("read-only reads the models and the four trends, and answers the four writes 403 FORBIDDEN")
         void shouldRefuseTheWritesOfReadOnly() {
             try (var client = start("read-only")) {
                 var writes = List.of(client.change("POST", SAMM + "scopes", "{}"),
                         client.change("POST", SAMM + "shop/assessments", "{}"),
+                        client.change("POST", SAMM + "organisation/assessments", "{}"),
                         client.change("POST", DOC + "payments/save", "{}"));
                 assertAll(
                         () -> assertEquals(2, get(client, SAMM + "models").path("models").size()),
@@ -841,7 +867,7 @@ class SammCompletionTest {
         }
 
         @Test
-        @DisplayName("release reads the models and the trends; released adds the third point, released-meanwhile answers the release DOCUMENT_RELEASED")
+        @DisplayName("release reads the models and the trends; released adds the third point, released-meanwhile answers every write DOCUMENT_RELEASED")
         void shouldServeTheReleaseProfile() {
             try (var client = start("release")) {
                 var before = get(client, SAMM + "payments/trend");
@@ -850,6 +876,9 @@ class SammCompletionTest {
                 goTo(client, "review");
                 goTo(client, "released-meanwhile");
                 var response = client.change("POST", RELEASE + "payments-2026-q4", "{}");
+                var draft = client.change("PUT", DRAFT + "payments-2026-q4", "{}");
+                var save = client.change("POST", DOC + "payments-2026-q4/save", "{}");
+                var submit = client.change("POST", DOC + "payments-2026-q4/transitions/samm.submit", "{}");
                 var assessment = get(client, DOC + "payments-2026-q4");
                 var scope = get(client, SAMM + "scopes/payments");
                 var list = get(client, SAMM + "scopes").path("scopes").get(0);
@@ -860,9 +889,11 @@ class SammCompletionTest {
                         () -> assertEquals(2, before.path("points").size()),
                         () -> assertEquals(3, released.path("points").size()),
                         () -> assertEquals(1.65, released.path("points").get(2).path("overall").asDouble()),
-                        () -> assertEquals(409, response.statusCode()),
-                        () -> assertEquals("DOCUMENT_RELEASED", json(response).path("outcome").asText()),
-                        () -> assertEquals("assessments/payments-2026-q4/v1", json(response).path("tag").asText()),
+                        () -> List.of(response, draft, save, submit).forEach(refusal -> {
+                            assertEquals(409, refusal.statusCode());
+                            assertEquals("DOCUMENT_RELEASED", json(refusal).path("outcome").asText());
+                            assertEquals("assessments/payments-2026-q4/v1", json(refusal).path("tag").asText());
+                        }),
                         () -> assertEquals("released", assessment.path("state").asText()),
                         () -> assertEquals("released", scope.path("assessments").get(0).path("state").asText()),
                         () -> assertTrue(list.path("open").isNull()),

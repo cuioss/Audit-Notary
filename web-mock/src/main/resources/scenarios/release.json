@@ -358,9 +358,30 @@
       }
     },
     "released-meanwhile": {
-      "description": "Somebody released Payments 2026 Q4 while it was in review: the release answers DOCUMENT_RELEASED with the tag, and the assessment, the scope, the list and the trend read as released.",
+      "description": "Somebody released Payments 2026 Q4 while it was in review: the release, a draft, a save and a submit answer DOCUMENT_RELEASED with the tag, and the assessment, the scope, the list and the trend read as released.",
       "routes": {
         "POST /api/v1/releases/samm-assessments/payments-2026-q4": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "assessments/payments-2026-q4/v1"
+          }
+        },
+        "PUT /api/v1/drafts/samm-assessments/payments-2026-q4": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "assessments/payments-2026-q4/v1"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/payments-2026-q4/save": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "assessments/payments-2026-q4/v1"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/payments-2026-q4/transitions/samm.submit": {
           "status": 409,
           "body": {
             "outcome": "DOCUMENT_RELEASED",

@@ -3269,7 +3269,7 @@
       }
     },
     "assessment-released-meanwhile": {
-      "description": "Noor Haddad released Payments 2026 Q4 while it was open: a save and a draft answer DOCUMENT_RELEASED, the assessment, the scope, the list and the trend read as released, and the event document-transitioned tells an open sheet.",
+      "description": "Noor Haddad released Payments 2026 Q4 while it was open: a save, a draft, a submit and a release answer DOCUMENT_RELEASED, the assessment, the scope, the list and the trend read as released, and the event document-transitioned tells an open sheet.",
       "routes": {
         "POST /api/v1/documents/samm-assessments/payments-2026-q4/save": {
           "status": 409,
@@ -3279,6 +3279,20 @@
           }
         },
         "PUT /api/v1/drafts/samm-assessments/payments-2026-q4": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "assessments/payments-2026-q4/v1"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/payments-2026-q4/transitions/samm.submit": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "assessments/payments-2026-q4/v1"
+          }
+        },
+        "POST /api/v1/releases/samm-assessments/payments-2026-q4": {
           "status": 409,
           "body": {
             "outcome": "DOCUMENT_RELEASED",
@@ -3454,6 +3468,36 @@
           }
         },
         "POST /api/v1/samm/organisation/assessments": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/identity/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/shop/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/organisation/save": {
           "status": 503,
           "body": {
             "outcome": "GIT_UNAVAILABLE"
