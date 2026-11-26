@@ -136,7 +136,9 @@ describe('the table', () => {
     await useProfile('empty');
     render(PersonsView);
     expect(await screen.findByText('No persons yet')).toBeInTheDocument();
-    expect(screen.getByText(/Add the people of a workshop or a team below/)).toBeInTheDocument();
+    expect(screen.getByText('Add the first persons below.')).toBeInTheDocument();
+    // The lede of the entry says what prefilling means; the page does not say it twice.
+    expect(screen.getAllByText(/before they log in/)).toHaveLength(1);
     expect(screen.queryByLabelText('Search by name')).toBeNull();
     expect(screen.getByTestId('persons-add')).toBeInTheDocument();
   });

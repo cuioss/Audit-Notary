@@ -93,11 +93,14 @@ describe('with candidates', () => {
 
   it('shows the candidates again with a notice when the choice cannot be taken over', async () => {
     const { kit, onnavigate } = await open('first-login#candidates-not-bindable');
+    // The mascot belongs to calm surfaces: it is there before a refusal and gone while the refusal is shown.
+    expect(document.querySelector('img[data-pose="welcome"]')).not.toBeNull();
     await saveEntry();
     await fireEvent.click(await screen.findByLabelText('Rowan Newman (Payments, Developer)'));
     await fireEvent.click(screen.getByTestId('welcome-continue'));
     expect(await screen.findByText('That entry cannot be taken over')).toBeInTheDocument();
     expect(screen.getByText(/Perhaps someone else took it over meanwhile/)).toBeInTheDocument();
+    expect(document.querySelector('img[data-pose="welcome"]')).toBeNull();
     expect(screen.getByLabelText('Robin Newcomer (Payments, Developer)')).not.toBeChecked();
     expect(screen.getByLabelText('Rowan Newman (Payments, Developer)')).not.toBeChecked();
     expect(onnavigate).not.toHaveBeenCalled();

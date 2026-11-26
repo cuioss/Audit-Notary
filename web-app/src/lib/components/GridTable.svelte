@@ -61,7 +61,9 @@
     color: var(--color-text-muted);
   }
 
+  /* A name is read whole: the row head keeps room before the other columns take the rest. */
   .grid :global(tbody th) {
+    min-inline-size: 8rem;
     font-weight: var(--weight-medium);
   }
 
@@ -91,6 +93,7 @@
     .grid :global(td) {
       border-block-end: none;
       padding-block: var(--space-1);
+      min-inline-size: 0;
     }
 
     .grid :global(td) {
@@ -106,7 +109,8 @@
     }
 
     /* A control in a stacked cell keeps its own width instead of filling the column. */
-    .grid :global(td > *) {
+    .grid :global(td > *),
+    .grid :global(td .btn) {
       justify-self: start;
     }
 

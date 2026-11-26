@@ -143,6 +143,12 @@ describe('the check', () => {
       'POST /api/v1/catalogs/import/backstage/preview',
     ]);
     expect(screen.getByText('This is a check, nothing is written yet')).toBeInTheDocument();
+    // Nothing is written yet, so the counts and the lists are the ones to come, never "created".
+    expect(screen.getByTestId('import-counts')).toHaveTextContent('To create');
+    expect(screen.getByTestId('import-counts')).toHaveTextContent('To update');
+    expect(screen.getByTestId('import-counts')).not.toHaveTextContent('Created');
+    expect(screen.getByRole('heading', { name: 'Entries to create' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Entries to update' })).toBeInTheDocument();
     expect(screen.getByTestId('count-created')).toHaveTextContent('3');
     expect(screen.getByTestId('count-updated')).toHaveTextContent('2');
     expect(screen.getByTestId('count-unchanged')).toHaveTextContent('4');
@@ -215,6 +221,8 @@ describe('the import', () => {
       { documents: [{ name: 'Pasted text 1', content: YAML }] },
     ]);
     expect(screen.queryByText('This is a check, nothing is written yet')).toBeNull();
+    expect(screen.getByTestId('import-counts')).toHaveTextContent('Created');
+    expect(screen.getByRole('heading', { name: 'Created entries' })).toBeInTheDocument();
     expect(screen.getByTestId('count-created')).toHaveTextContent('3');
     expect(
       within(screen.getByTestId('created-service-checkout-ui')).getByRole('link', {

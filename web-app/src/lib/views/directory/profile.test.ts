@@ -219,11 +219,9 @@ describe('Is this still right?', () => {
     await fireEvent.input(screen.getByTestId('profile-name'), { target: { value: 'Alex Q.' } });
     const act = screen.getByTestId('profile-confirm-act');
     expect(act).toHaveAttribute('aria-disabled', 'true');
-    expect(
-      screen.getByText(
-        'You have changes that are not saved. Save them, which confirms the entry as well.',
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Save your changes first.')).toBeInTheDocument();
+    // The notice says once that a saved change confirms; the reason of the disabled act does not say it again.
+    expect(screen.getAllByText(/confirms the entry as well/)).toHaveLength(1);
     expect(act).not.toHaveClass('btn--primary');
     expect(save()).toHaveClass('btn--primary');
     await fireEvent.click(act);

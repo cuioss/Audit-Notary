@@ -93,7 +93,11 @@ Read the concept first, then the component you are about to change.
 - Navigation that is the screen's act is a `Link look="primary"`.
 - A step of a workflow acts on the saved document: with unsaved changes the sheet says so and offers "Save for everyone,
   then <step>"; a step is never sent over changes only the person has. The step that is the release reads "Release".
-- Destructive acts live behind a confirmation.
+- Destructive acts live behind a confirmation. The two kinds keep their own words: *retire* (a catalog entry stays for
+  what refers to it; German *stilllegen*) and *erase* (a person's entry is gone; German *löschen*). A row of a table
+  offers such an act as a quiet button (`variant="ghost"`): the confirmation is the weight of the decision.
+- A preview reads in the future: counts and lists of a check that writes nothing say *to create* and *to update*, never
+  *created* (the result says that). The notice of a preview and the introduction of the page never say the same sentence.
 - The release view reads the act "Release" and nothing else; that the person confirms their identity once more is a
   line in the margin. A refusal of the release is told by `ReleaseFlow` once for every category (changed since the
   review, released meanwhile, mandatory fields missing, the Git server); a lens adds no notice of its own.
@@ -172,6 +176,9 @@ Check each item before you hand a change over.
 - [ ] Forced colours: the component still shows its state (`@media (forced-colors: active)`).
 - [ ] Phone (390 px): nothing scrolls sideways, targets are 44 px (a link in a stacked row or in a head gets its
       padding, not a box), the status of a sheet stays above the record.
+- [ ] Notices of a page of sections stand in the width of the sections; a name of a table row is never broken between its
+      words, an id or a reference (`Chip`) is never broken in the middle; the mascot is gone while a refusal or an error
+      shows; a radio group's target is its label (44 px on a phone), not the 13 px glyph.
 - [ ] A sentence is said once on a screen: a read-only sheet says so in its status and not again in a notice, and the
       reason of a disabled act is not the sentence of the status beside it.
 - [ ] German: no clipped or overlapping text with the longer words.

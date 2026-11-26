@@ -273,27 +273,29 @@
   intro={$t('directory.persons.intro')}
   testId="persons-view"
 >
-  {#if failure}
-    <Notice tone="danger" title={$t(failure)} live />
-  {/if}
-  {#if catalogFailure}
-    <Notice tone="danger" title={$t(catalogFailure)} live />
-  {/if}
-  {#if managed}
-    <div data-testid="managed-notice">
-      <Notice
-        tone="attention"
-        title={$t('directory.managed.title')}
-        body={$t('directory.managed.body')}
-        live
-      />
-    </div>
-  {/if}
-  {#if !administer}
-    <div data-testid="persons-read-only">
-      <Notice tone="info" title={$t('directory.persons.read-only')} />
-    </div>
-  {/if}
+  <div class="persons__notices">
+    {#if failure}
+      <Notice tone="danger" title={$t(failure)} live />
+    {/if}
+    {#if catalogFailure}
+      <Notice tone="danger" title={$t(catalogFailure)} live />
+    {/if}
+    {#if managed}
+      <div data-testid="managed-notice">
+        <Notice
+          tone="attention"
+          title={$t('directory.managed.title')}
+          body={$t('directory.managed.body')}
+          live
+        />
+      </div>
+    {/if}
+    {#if !administer}
+      <div data-testid="persons-read-only">
+        <Notice tone="info" title={$t('directory.persons.read-only')} />
+      </div>
+    {/if}
+  </div>
   {#if announcement}
     <p class="persons__done" role="status" aria-live="polite" data-testid="persons-done">
       {announcement}
@@ -301,7 +303,7 @@
   {/if}
 
   <section class="persons__section" aria-labelledby="persons-table-title">
-    <h2 id="persons-table-title" class="persons__heading">{$t('directory.persons.table')}</h2>
+    <h2 id="persons-table-title" class="sr-only">{$t('directory.persons.table')}</h2>
     {#if list === null}
       {#if !failure}<p class="persons__muted">{$t('common.loading')}</p>{/if}
     {:else}
@@ -363,6 +365,7 @@
               {#if administer}
                 <td data-label={$t('directory.persons.col.act')}>
                   <Button
+                    variant="ghost"
                     icon="act.close"
                     disabledReason={hasName(person) ? null : $t('directory.persons.erase.former')}
                     aria-label={$t('directory.persons.erase.named', { name: person.name ?? '' })}
@@ -490,6 +493,18 @@
     flex-direction: column;
     gap: var(--space-4);
     max-inline-size: 64rem;
+  }
+
+  /* The notices stand in the width of the page's sections, not of the whole column. */
+  .persons__notices {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-inline-size: 64rem;
+  }
+
+  .persons__notices:empty {
+    display: none;
   }
 
   .persons__heading {

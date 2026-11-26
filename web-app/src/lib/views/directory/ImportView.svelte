@@ -193,6 +193,14 @@
    * @param catalog a catalog of a created or updated entry
    * @returns the word for one of its entries
    */
+  /** The titles of the lists of created and updated entries: in the check they are still to come. */
+  let createdTitle = $derived(
+    step === 'preview' ? 'import.preview.created.title' : 'import.created.title',
+  );
+  let updatedTitle = $derived(
+    step === 'preview' ? 'import.preview.updated.title' : 'import.updated.title',
+  );
+
   const kindOf = (catalog: string): string => catalogKind($messagesStore, catalog);
 </script>
 
@@ -243,7 +251,6 @@
             label={$t('import.pick')}
             accept=".yaml,.yml,.json,text/yaml,application/json"
             multiple
-            icon="act.next"
             onpick={(files) => void picked(files)}
             testId="import-pick"
           />
@@ -316,11 +323,15 @@
         {/if}
         <dl class="counts" data-testid="import-counts">
           <div>
-            <dt>{$t('import.count.created')}</dt>
+            <dt>
+              {$t(step === 'preview' ? 'import.preview.count.created' : 'import.count.created')}
+            </dt>
             <dd data-testid="count-created">{result.created.length}</dd>
           </div>
           <div>
-            <dt>{$t('import.count.updated')}</dt>
+            <dt>
+              {$t(step === 'preview' ? 'import.preview.count.updated' : 'import.count.updated')}
+            </dt>
             <dd data-testid="count-updated">{result.updated.length}</dd>
           </div>
           <div>
@@ -334,9 +345,9 @@
         </dl>
 
         {#if result.created.length > 0}
-          <h2 class="import__heading">{$t('import.created.title')}</h2>
+          <h2 class="import__heading">{$t(createdTitle)}</h2>
           <GridTable
-            caption={$t('import.created.title')}
+            caption={$t(createdTitle)}
             heads={[$t('import.col.name'), $t('import.col.kind'), $t('import.col.id')]}
             testId="import-created"
           >
@@ -357,9 +368,9 @@
         {/if}
 
         {#if result.updated.length > 0}
-          <h2 class="import__heading">{$t('import.updated.title')}</h2>
+          <h2 class="import__heading">{$t(updatedTitle)}</h2>
           <GridTable
-            caption={$t('import.updated.title')}
+            caption={$t(updatedTitle)}
             heads={[$t('import.col.name'), $t('import.col.kind'), $t('import.col.changed')]}
             testId="import-updated"
           >
@@ -389,7 +400,7 @@
           >
             {#each result.leftOut as item, position (position)}
               <tr data-testid="left-out-{position}" data-reason={item.reason}>
-                <th scope="row">
+                <th scope="row" class="left-out__entity">
                   <Chip value={item.entity} />
                   {#if item.field}
                     <span class="left-out__field">{item.field}</span>
@@ -558,6 +569,19 @@
     font-size: var(--text-xl);
     font-weight: var(--weight-semibold);
     font-variant-numeric: tabular-nums;
+  }
+
+  /* An entity reference is read whole, not broken at its hyphen: the table gives the column the width it needs. */
+  .left-out__entity :global(.chip) {
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  @container (max-width: 40rem) {
+    .left-out__entity :global(.chip) {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
   }
 
   .left-out__field {

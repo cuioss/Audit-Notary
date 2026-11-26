@@ -229,22 +229,31 @@ the right, the act *Erase*), then the entry of several persons at once as rows d
 memberships, with the one primary act at the end. The table is `GridTable`: on a narrow column each row stands as a block
 of labelled lines, so nothing scrolls sideways. Erasing asks first in a dialog that names the person by the name the table
 shows and says that it cannot be undone; a directory kept in the organisation's own source is one notice that says nothing
-was changed. Without the right the page says so once, in a notice, and shows neither act.
+was changed. Without the right the page says so once, in a notice, and shows neither act. The notices of the page stand in
+the width of its sections, never across the whole column; the *Erase* of a row is a quiet act (no box) because the dialog
+that follows is the weight of the decision; the name of a row keeps room, so a name is not broken between its words. The
+words differ on purpose: *retire* (catalog entries) keeps the entry and what refers to it, *erase* (a person) removes the
+entry for good, and the German *stilllegen* and *löschen* keep that difference.
 
 The import is a wizard of three steps named above the column (choose documents, check, result), with the current step
 marked by `aria-current` and by weight, not by colour. Choosing is a `FilePicker` and a field to paste into; the chosen
 documents are a list with their size and a box on the one the server found invalid. The check writes nothing and says so
-in a notice; it shows what would be created and updated as tables, what stays unchanged as a figure and what was left out
+in a notice, and reads in the future: the figures and lists are those *to create* and *to update*, never *created* before
+anything is written; it shows what would be created and updated as tables, what stays unchanged as a figure and what was left out
 as a table of the entity, the sentence of its reason and its detail. The import is the one primary act and is not offered
-when nothing would change; the result repeats the tables with the entries linked.
+when nothing would change; the result repeats the tables with the entries linked. What the introduction says once (nothing
+is fetched from Backstage) is not said again in the notice of the check, which says that nothing is written. An entity
+reference of the left-out table is read whole: its column keeps room, so an id is not broken in the middle.
 
 The own entry is the form of the first login in the register's layout: the name, the memberships as rows of a team and a
 role, the information on data processing. When the confirmation is due, the question *Is this still right?* stands above
-the form with its one act; while there are unsaved changes that act says why it cannot be taken, because saving confirms
-as well. Elsewhere in the shell the due confirmation is an information notice with a link, on every view but this one.
+the form with its one act; while there are unsaved changes that act says why it cannot be taken ("Save your changes first."), because the
+question already says that saving confirms as well, and the reason does not say it again. Elsewhere in the shell the due confirmation is an information notice with a link, on every view but this one.
 
 The first login shows the candidates an administrator prepared as one group of radio buttons by name, team and role, with
-the choice to create a new entry as its last option; a refusal of the choice is an attention notice above the group.
+the choice to create a new entry as its last option; a refusal of the choice is an attention notice above the group, and the
+mascot goes while a refusal or an error is shown. The way from the list of the catalogs to the persons and the import is two
+rows of the same list (`RowLink`) under a hairline, not text links.
 
 == The Access Pages
 

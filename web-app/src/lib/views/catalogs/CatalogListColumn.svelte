@@ -1,6 +1,5 @@
 <script lang="ts">
   import ColumnHead from '../../components/ColumnHead.svelte';
-  import Link from '../../components/Link.svelte';
   import RowLink from '../../components/RowLink.svelte';
   import { CATALOGS } from '../../api/types';
   import { catalogName } from '../../catalogs/catalogs';
@@ -41,12 +40,18 @@
   {/each}
 </ul>
 <nav class="directory" aria-label={$t('directory.nav')} data-testid="directory-nav">
-  <Link href={PERSONS_ADDRESS} quiet data-testid="directory-persons">
-    {$t('directory.persons.title')}
-  </Link>
-  <Link href={IMPORT_ADDRESS} quiet data-testid="directory-import">
-    {$t('import.title')}
-  </Link>
+  <ul class="column__list">
+    <li>
+      <RowLink href={PERSONS_ADDRESS} testId="directory-persons">
+        <span class="row__title">{$t('directory.persons.title')}</span>
+      </RowLink>
+    </li>
+    <li>
+      <RowLink href={IMPORT_ADDRESS} testId="directory-import">
+        <span class="row__title">{$t('import.title')}</span>
+      </RowLink>
+    </li>
+  </ul>
 </nav>
 
 <style>
@@ -56,11 +61,6 @@
     margin-block-start: var(--space-4);
     padding-block-start: var(--space-3);
     border-block-start: 1px solid var(--color-border);
-  }
-
-  /* A link of the list is a touch target of the phone's size. */
-  .directory :global(a) {
-    padding-block: var(--space-3);
   }
 
   .column__list {

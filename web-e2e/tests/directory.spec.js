@@ -441,7 +441,9 @@ test.describe('the Backstage import (UC-CAT-3)', () => {
     await expect(page.getByTestId('import-result')).toContainText(
       'Das ist eine Prüfung, noch wird nichts geschrieben',
     );
-    await expect(page.getByTestId('import-counts')).toContainText('Angelegt');
+    // Nothing is written yet: the counts are those to come, not "created".
+    await expect(page.getByTestId('import-counts')).toContainText('Anzulegen');
+    await expect(page.getByTestId('import-counts')).not.toContainText('Angelegt');
     await expect(page.getByTestId('import-counts')).toContainText('Unverändert');
     await expect(page.getByTestId('import-counts')).toContainText('Ausgelassen');
     await expect(page.getByTestId('left-out-2')).toContainText(
@@ -534,9 +536,7 @@ test.describe('the persons (UC-CAT-4, UC-CAT-5)', () => {
     await useScenario(request, 'empty');
     await login(page, PERSONS_ADDRESS);
     await expect(page.getByText('No persons yet')).toBeVisible();
-    await expect(
-      page.getByText('Add the people of a workshop or a team below, before they log in.'),
-    ).toBeVisible();
+    await expect(page.getByText('Add the first persons below.')).toBeVisible();
     await expect(page.getByTestId('persons-table')).toHaveCount(0);
     await expect(page.getByTestId('persons-search')).toHaveCount(0);
     await expect(page.getByTestId('persons-add')).toBeVisible();
@@ -1173,9 +1173,7 @@ test.describe('"Is this still right?" (UC-ACC-5)', () => {
     await login(page, PROFILE_ADDRESS);
     await page.getByTestId('profile-name').fill('Alexandra Example');
     await expect(page.getByTestId('profile-confirm-act')).toBeDisabled();
-    await expect(page.getByTestId('profile-confirm')).toContainText(
-      'You have changes that are not saved. Save them, which confirms the entry as well.',
-    );
+    await expect(page.getByTestId('profile-confirm')).toContainText('Save your changes first.');
     await clearActs(request);
     await page.getByTestId('profile-confirm-act').click({ force: true });
     expect(await writes(request)).toEqual([]);
@@ -1218,7 +1216,7 @@ test.describe('"Is this still right?" (UC-ACC-5)', () => {
     await expect(page.getByTestId('profile-confirm-act')).toHaveText('Ja, das stimmt');
     await page.getByTestId('profile-name').fill('Alexandra Example');
     await expect(page.getByTestId('profile-confirm')).toContainText(
-      'Sie haben Änderungen, die nicht gespeichert sind.',
+      'Speichern Sie zuerst Ihre Änderungen.',
     );
     await expect(page.getByTestId('profile-save')).toHaveText('Speichern');
     await page.getByTestId('profile-save').click();

@@ -141,7 +141,10 @@
 </script>
 
 <WizardPage title={$t('welcome.title')} intro={$t('welcome.intro')} testId="welcome-view">
-  <MascotFigure pose="welcome" />
+  <!-- The mascot stays on calm surfaces: not beside a refusal or an error. -->
+  {#if !failure && !refused}
+    <MascotFigure pose="welcome" />
+  {/if}
   {#if failure}
     <Notice tone="danger" title={$t(failure)} live />
   {/if}
