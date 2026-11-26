@@ -11,6 +11,16 @@ import {
   newEntryAddress,
 } from './helpers/catalogs.js';
 import {
+  NEW_SCOPE_ADDRESS,
+  OPEN,
+  RELEASED,
+  assessmentAddress,
+  choose,
+  fillNewAssessment,
+  loginToSamm,
+  newAssessmentAddress,
+} from './helpers/samm.js';
+import {
   CANDIDATES,
   DESCRIPTOR,
   IMPORT_ADDRESS,
@@ -570,5 +580,239 @@ test.describe('at 390 px', () => {
     await expect(page.getByTestId('leave-stay')).toBeInViewport();
     await expect(page.getByTestId('leave-confirm')).toBeInViewport();
     await expectNoSeriousViolations(page, 'profile leave question (phone)');
+  });
+  /** Fails when a control is smaller than the phone size of a target (AUN-WEB-2): 44 px, with the rounding of a box. */
+  async function expectTarget(locator) {
+    await locator.scrollIntoViewIfNeeded();
+    await expect(locator).toBeInViewport();
+    const box = await locator.boundingBox();
+    expect(box.height).toBeGreaterThanOrEqual(43.5);
+    expect(box.width).toBeGreaterThanOrEqual(43.5);
+  }
+
+  test('the form of a new scope fits, its controls are targets of the phone size and its targets are a list', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToSamm(page, NEW_SCOPE_ADDRESS);
+    await expect(page.getByTestId('new-scope-sheet')).toBeVisible();
+    await expectNoSideways(page);
+    await expectTarget(page.getByTestId('new-scope-title'));
+    await expectTarget(page.getByTestId('new-scope-model'));
+    await expectTarget(page.getByTestId('new-scope-subject'));
+    // The targets collapse to a list: the column heads are gone, each control names what it sets.
+    const row = page.getByTestId('new-scope-targets-editor').locator('[data-practice="sm"]');
+    await row.scrollIntoViewIfNeeded();
+    await expect(
+      page.getByTestId('new-scope-targets-editor').locator('.head').first(),
+    ).toBeHidden();
+    await expect(row.locator('.row__cap').first()).toBeVisible();
+    await expectTarget(page.getByTestId('new-scope-targets-editor-sm-target'));
+    await choose(page, 'new-scope-targets-editor-sm-target', '2');
+    await expectTarget(page.getByTestId('new-scope-targets-editor-sm-due'));
+    await expectNoSideways(page);
+    await page.getByTestId('create-scope').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('create-scope')).toBeInViewport();
+    await expectNoSeriousViolations(page, 'new scope (phone)');
+    await page.getByTestId('new-scope-title').fill('Typed');
+    await page.getByTestId('bottom-nav-samm').click();
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expect(page.getByTestId('leave-stay')).toBeInViewport();
+    await expect(page.getByTestId('leave-confirm')).toBeInViewport();
+    await expectNoSeriousViolations(page, 'new scope leave question (phone)');
+  });
+
+  test('the form of a new scope that was refused fits, and the refusal is at its fields', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop#scope-invalid');
+    await loginToSamm(page, NEW_SCOPE_ADDRESS);
+    await page.getByTestId('new-scope-title').fill('Bad');
+    await choose(page, 'new-scope-subject', 'Payments');
+    await choose(page, 'new-scope-targets-editor-ta-target', '2.5');
+    await page.getByTestId('create-scope').scrollIntoViewIfNeeded();
+    await page.getByTestId('create-scope').click();
+    await expect(page.getByTestId('save-state')).toContainText('Nothing was created.');
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'new scope refused (phone)');
+  });
+
+  test('the form of a new assessment fits, its acts are in reach, and the open notice links to the open one', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToSamm(page, newAssessmentAddress('shop'));
+    await expect(page.getByTestId('new-assessment-sheet')).toBeVisible();
+    await expectTarget(page.getByTestId('new-assessment-title'));
+    await expectTarget(page.getByTestId('new-assessment-date'));
+    await expectTarget(page.getByTestId('new-assessment-model'));
+    await expectTarget(page.getByTestId('assessor-add'));
+    await page.getByTestId('assessor-add').click();
+    await expectTarget(page.getByTestId('assessor-0-remove'));
+    await expectTarget(page.getByTestId('assessor-0-person'));
+    await fillNewAssessment(page, 'Web shop 2026 Q4');
+    await page.getByTestId('create-assessment').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('create-assessment')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'new assessment (phone)');
+    await page.goto(newAssessmentAddress('payments'));
+    await expect(page.getByTestId('open-notice')).toBeVisible();
+    await expectTarget(page.getByTestId('open-notice').getByRole('link'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'new assessment while one is open (phone)');
+  });
+
+  test('the targets of a scope are a list, their controls are targets of the phone size, and the save is in reach', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToSamm(page, '/samm/payments');
+    await expect(page.getByTestId('targets-ta-target')).toBeVisible();
+    await expect(page.getByTestId('targets').locator('.head').first()).toBeHidden();
+    await expect(
+      page.getByTestId('targets').locator('[data-practice="ta"] .row__cap').first(),
+    ).toBeVisible();
+    await expectTarget(page.getByTestId('targets-ta-target'));
+    await expectTarget(page.getByTestId('targets-ta-due'));
+    await expectNoSideways(page);
+    await choose(page, 'targets-ta-target', '3');
+    await page.getByTestId('save-targets').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('save-targets')).toBeInViewport();
+    await expectTarget(page.getByTestId('save-targets'));
+    await expectNoSeriousViolations(page, 'targets (phone)');
+    await expect(page.getByRole('img', { name: /Overall score of the released/ })).toBeVisible();
+  });
+
+  test('the conflict of the targets fits, and both ways of deciding are targets of the phone size', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop#targets-conflict');
+    await loginToSamm(page, '/samm/payments');
+    await choose(page, 'targets-ta-target', '3');
+    await page.getByTestId('save-targets').scrollIntoViewIfNeeded();
+    await page.getByTestId('save-targets').click();
+    const conflict = page.getByTestId('conflict-target-ta');
+    await expect(conflict).toBeVisible();
+    await expectTarget(conflict.getByRole('button', { name: 'Keep mine' }));
+    await expectTarget(conflict.getByRole('button', { name: 'Take the target of Jordan Weber' }));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'targets conflict (phone)');
+  });
+
+  test('the targets read only fit and offer no control', async ({ page, request }) => {
+    await useScenario(request, 'read-only');
+    await loginToSamm(page, '/samm/payments');
+    await expect(page.getByTestId('targets')).toBeVisible();
+    await expect(page.getByTestId('targets-ta-target')).toHaveCount(0);
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'targets read only (phone)');
+  });
+
+  test('the evidence of a practice is a list of cards, its acts are targets of the phone size, and the editor and the question are in the viewport', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToSamm(page, assessmentAddress(OPEN.scope, OPEN.assessment, 'sb'));
+    await expect(page.getByTestId('evidence-editor-table')).toBeVisible();
+    await page.getByTestId('evidence').scrollIntoViewIfNeeded();
+    await expectNoSideways(page);
+    await expectTarget(page.getByRole('button', { name: 'Edit row 1' }));
+    await expectTarget(page.getByRole('button', { name: 'Remove row 1' }));
+    await expectTarget(page.getByRole('button', { name: 'Add row' }));
+    await expectNoSeriousViolations(page, 'evidence (phone)');
+    await page.getByRole('button', { name: 'Add row' }).click();
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expect(page.getByTestId('evidence-editor-apply')).toBeInViewport();
+    await expectTarget(page.getByTestId('evidence-editor-field-title'));
+    await expectTarget(page.getByTestId('evidence-editor-field-url'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'evidence editor (phone)');
+    await page.getByTestId('evidence-editor-cancel').click();
+    await page.getByRole('button', { name: 'Remove row 1' }).click();
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expect(page.getByTestId('evidence-editor-remove-cancel')).toBeInViewport();
+    await expect(page.getByTestId('evidence-editor-remove-confirm')).toBeInViewport();
+    await expectNoSeriousViolations(page, 'evidence removal question (phone)');
+  });
+
+  test('the evidence that was refused fits, with the rows marked', async ({ page, request }) => {
+    await useScenario(request, 'workshop#evidence-invalid');
+    await loginToSamm(page, assessmentAddress(OPEN.scope, OPEN.assessment, 'sb'));
+    await page.getByTestId('comment-sb-b-1').fill('x');
+    await page.getByTestId('save-everyone').scrollIntoViewIfNeeded();
+    await page.getByTestId('save-everyone').click();
+    await page.getByTestId('evidence-editor-errors').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('evidence-editor-errors')).toBeVisible();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'evidence refused (phone)');
+  });
+
+  test('a frozen practice and a frozen assessment fit, and the way on is a target of the phone size', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToSamm(page, assessmentAddress(RELEASED.scope, RELEASED.assessment, 'sb'));
+    await expect(page.getByTestId('practice-sheet')).toBeVisible();
+    await expectTarget(page.getByTestId('start-new-assessment'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'frozen practice (phone)');
+    await page.goto(assessmentAddress(RELEASED.scope, RELEASED.assessment));
+    await expect(page.getByTestId('assessment-sheet')).toBeVisible();
+    await expectTarget(page.getByTestId('start-new-assessment'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'frozen assessment (phone)');
+  });
+
+  test('the links of the overview, the address of an evidence link and the view switch are targets of the phone size', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToSamm(page, '/samm');
+    await expect(page.getByTestId('samm-overview')).toBeVisible();
+    for (const link of await page.getByTestId('samm-overview').locator('a.link').all()) {
+      await expectTarget(link);
+    }
+    await page.goto(assessmentAddress(RELEASED.scope, RELEASED.assessment, 'sb'));
+    await expectTarget(page.getByTestId('evidence-editor-table').getByRole('link').first());
+    await page.goto(assessmentAddress(RELEASED.scope, RELEASED.assessment));
+    await expect(page.getByTestId('assessment-sheet')).toBeVisible();
+    await expectTarget(page.locator('label', { hasText: 'Table' }));
+    await expectNoSideways(page);
+  });
+
+  test('the form of a new assessment keeps the removal of an assessor under the person it removes', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToSamm(page, newAssessmentAddress('shop'));
+    await page.getByTestId('assessor-add').click();
+    const remove = page.getByTestId('assessor-0-remove');
+    await expectTarget(remove);
+    // Both boxes are read after the scroll of the check: a box is relative to the viewport.
+    const select = await page.getByTestId('assessor-0-person').boundingBox();
+    expect((await remove.boundingBox()).y).toBeGreaterThanOrEqual(select.y + select.height);
+    await expect(remove).toHaveAccessibleName('Remove assessor 2');
+    await expectNoSideways(page);
+  });
+
+  test('the refused comparison and the trend with the left-out versions fit', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop#model-versions-differ');
+    await loginToSamm(page, assessmentAddress(RELEASED.scope, RELEASED.assessment));
+    await expect(page.getByTestId('versions-differ')).toBeVisible();
+    await page.getByTestId('versions-differ').scrollIntoViewIfNeeded();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'versions differ (phone)');
   });
 });

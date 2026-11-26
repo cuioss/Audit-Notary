@@ -54,6 +54,12 @@ field of the generated form
 |`tests/helpers/directory.js`
 |The addresses and paths of the directory pages, the static fixtures (persons, result of the import, candidates, the
 limits) and the shared steps; the first test of `directory.spec.js` compares the fixtures with the mock
+
+|`tests/helpers/samm.js`
+|The addresses and paths of the SAMM completion, the static fixtures (the fixed ids of the creates, the pinned models,
+the evidence links and the targets of Payments, the released assessment and its tag), the shared steps and `patchRead`,
+which changes the answer of one read where the mock has no state for it; the first test of `samm-completion.spec.js`
+compares the fixtures with the mock
 |===
 
 == Specs
@@ -107,21 +113,38 @@ question, `MANAGED_BY_SOURCE` and the page without the right; the candidates of 
 with a pseudonym on screen; the own entry at `/settings/profile` with "Is this still right?", the saved change that
 confirms and the question before leaving; the notice of the shell while the confirmation is due; English and German
 
+|`samm-completion.spec.js`
+|The SAMM completion (UC-SAMM-1 to UC-SAMM-5): a new scope at `/samm/new` (the targets, the question before leaving,
+every refusal, the first user of `empty`), the targets of a scope (0 to 3 in steps of one half, the due day only with a
+target, `null` removes, the part `targets`, the conflict per practice, no draft), a new assessment at `/samm/{scope}/new`
+(the model version and the date prefilled, the creator as first assessor, further assessors, `ASSESSMENT_OPEN` from the
+page and from the server), the evidence links and the AsciiDoc comment of a practice (https only, add, edit and remove
+behind a question, at most 50, refusals at the link), the frozen assessment (`DOCUMENT_RELEASED` to every write, "Start a
+new assessment" only with `edit`, a release found by a save), `MODEL_VERSIONS_DIFFER`, the trend with "other versions
+left out", the read-only and the degraded profile; English and German where the text matters
+
 |`theme-readability.spec.js`
 |The axe-core audit of every view in both themes, and of the states of the documents lens, the release, the palette, the
-catalogs lens and the directory pages
+catalogs lens, the directory pages and the SAMM completion (the forms with their refusals and notices, the targets, the
+evidence with its editor and question, the frozen practice, the refused comparison)
 
 |`fonts.spec.js`
 |Every request stays on the own origin, and Inter is loaded
 
 |`mobile.spec.js`
 |On a narrow screen the bottom bar replaces the rail, and "More" holds the other lenses; the pages outside the shell,
-the notices, the documents lens, the catalogs lens and the directory pages at 390 px: nothing scrolls sideways, the acts
-are in reach, axe
+the notices, the documents lens, the catalogs lens, the directory pages and the SAMM completion at 390 px: nothing
+scrolls sideways, the acts are in reach and the controls hold the target size of 44 px, the targets of a scope are a list
+(no column heads), the evidence links are cards, axe
 |===
 
 A new view gets its address in `navigation.spec.js` and its audit in `theme-readability.spec.js`; a new profile of
 `web-mock` gets the spec of the flow it exists for.
+
+The mock stores nothing, and a state it has no profile for is not invented in the page: where a flow needs one (a
+trend that leaves versions out, a scope whose targets another assessor saved, a scope that shows no open assessment
+while the server knows one, fifty evidence links), the test fetches the real answer and changes it with `patchRead`, and
+says so in a comment.
 
 == Cold start
 

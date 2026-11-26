@@ -27,6 +27,7 @@ import type {
   DocumentDraft,
   DocumentTransition,
   JsonObject,
+  JsonValue,
   Person,
   Saved,
   SaveRequest,
@@ -112,6 +113,12 @@ export interface DocumentControllerOptions {
   self?: () => string | null;
   /** The delay of the draft; {@link DRAFT_DELAY_MS} by default. */
   draftDelayMs?: number;
+  /**
+   * Whether the part keeps the person's changes as a draft; `true` by default. A part of a document that has no draft (the
+   * roadmap of a SAMM scope, rest-api.adoc, SAMM Requests) keeps them in the page until they are saved for everyone, and the
+   * sheet asks before it is left.
+   */
+  drafts?: boolean;
   /** Called after a save for everyone. */
   onsaved?: (answer: Saved) => void;
   /** Called when the view should read the document again: after a transition, and after `DOCUMENT_RELEASED`. */
@@ -197,6 +204,7 @@ export class DocumentController {
   private readonly client: ApiClient;
   private readonly keys: FieldKeys;
   private readonly delay: number;
+  private readonly drafts: boolean;
   private readonly self: () => string | null;
   private readonly options: DocumentControllerOptions;
 
@@ -209,6 +217,7 @@ export class DocumentController {
     this.client = options.client ?? apiClient;
     this.keys = options.keys ?? POINTER_KEYS;
     this.delay = options.draftDelayMs ?? DRAFT_DELAY_MS;
+    this.drafts = options.drafts ?? true;
     this.self = options.self ?? (() => get(session)?.user.pseudonym ?? null);
     // A step-up through the identity provider keeps nothing of this page: the changes are kept as the draft before the
     // app leaves. A draft that cannot be kept keeps the person on the page (the hook rejects), and no edit is accepted
@@ -325,7 +334,7 @@ export class DocumentController {
     const previous = this.snapshot;
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
-    if (!previous || !this.dirty) return;
+    if (!this.drafts || !previous || !this.dirty) return;
     const pending: Record<string, unknown> = $state.snapshot(this.edits);
     const request = this.requestFor(previous.part, pending);
     // The changes are kept in the controller until the write succeeds: a draft that could not be written must not take
@@ -449,7 +458,14 @@ export class DocumentController {
    * @param next the value the form holds now
    */
   setValue(next: JsonObject): void {
-    this.edit(diffFields(this.baseline, next));
+    const changed = diffFields(this.baseline, next);
+    // A field the running save sends equals the baseline while it runs, but it is still the person's change until the
+    // save settles: refused, the page shows the loaded value again and it must still be an edit of the next save.
+    for (const [key, value] of Object.entries(this.pendingSent ?? {})) {
+      if (!Object.hasOwn(changed, key) && Object.hasOwn(this.edits, key))
+        changed[key] = value as JsonValue;
+    }
+    this.edit(changed);
   }
 
   private edit(edits: Record<string, unknown>): void {
@@ -463,10 +479,13 @@ export class DocumentController {
     // next one when it returns. Conflicts still to decide stay the state, too.
     if (this.saveState === 'saving') return;
     this.saveState = this.open > 0 ? 'conflict' : 'changed';
+    // Without drafts nothing follows to settle the state: a change taken back leaves nothing to save.
+    if (!this.drafts && !this.dirty && this.open === 0) this.saveState = 'clean';
     this.schedule();
   }
 
   private schedule(): void {
+    if (!this.drafts) return;
     if (this.timer) clearTimeout(this.timer);
     this.timer = setTimeout(() => void this.keepDraft(), this.delay);
   }
@@ -507,6 +526,15 @@ export class DocumentController {
     this.timer = null;
     const snapshot = this.snapshot;
     if (!snapshot) return;
+    if (!this.drafts) {
+      // Nothing can be kept for the departure for the identity provider, which keeps nothing of the page: the person
+      // stays on it, with the changes and the reason.
+      if (rethrow && this.dirty) {
+        this.failure = 'samm.targets.step-up-stays';
+        throw new Error('changes without a draft cannot leave the page');
+      }
+      return;
+    }
     if (!this.dirty) {
       if (this.saveState === 'changed') this.saveState = 'clean';
       return;

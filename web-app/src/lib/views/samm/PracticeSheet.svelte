@@ -11,25 +11,30 @@
   import Sheet from '../../components/Sheet.svelte';
   import SheetHead from '../../components/SheetHead.svelte';
   import StatusLabel from '../../components/StatusLabel.svelte';
-  import TextArea from '../../components/TextArea.svelte';
   import Toggle from '../../components/Toggle.svelte';
   import type {
     ConflictField,
     SammAssessment,
+    SammEvidenceLink,
     SammModel,
     SammQuestion,
     SammScope,
   } from '../../api/types';
   import { DocumentController, type DocumentSnapshot } from '../../documents/controller.svelte';
   import { errorKey } from '../../forms/fieldErrors';
+  import AsciiDocField from '../../forms/AsciiDocField.svelte';
+  import AsciiDocView from '../../forms/AsciiDocView.svelte';
   import { saveLabel } from '../../documents/saveLabel';
   import { currentLocale, t } from '../../i18n';
+  import { evidenceErrorsOf } from '../../samm/evidence';
   import { historyEntries } from '../../samm/history';
-  import { SAMM_KEYS } from '../../samm/fieldKeys';
+  import { EVIDENCE_KEY, SAMM_KEYS } from '../../samm/fieldKeys';
+  import { canEditSamm } from '../../samm/rights';
   import { findPractice, formatScore, practiceScore, practicesInOrder } from '../../samm/scores';
   import StepUpDialog from '../../stepup/StepUpDialog.svelte';
   import { session } from '../../stores/app';
   import { now } from '../../stores/clock';
+  import EvidenceEditor from './EvidenceEditor.svelte';
   import { stateTone } from './workflow';
 
   /**
@@ -73,12 +78,9 @@
     practice?.streams.flatMap((stream) => stream.questions) ?? [],
   );
   let loaded = $derived(assessment?.answers[practiceId] ?? {});
-  let rights = $derived(
-    $session?.rights.find((right) => right.repository === 'samm-assessments')?.actions ?? [],
-  );
-  let readonly = $derived(
-    !assessment || assessment.state === 'released' || !rights.includes('edit'),
-  );
+  let canEdit = $derived(canEditSamm($session));
+  let frozen = $derived(assessment?.state === 'released');
+  let readonly = $derived(!assessment || frozen || !canEdit);
 
   // A save may ask for step-up (UC-ACC-3): the controller's handler decides whether and how. The identity provider keeps
   // nothing of this page, so the changes are kept as the draft before the app leaves, and no edit is accepted from then.
@@ -134,6 +136,27 @@
     );
   }
 
+  /** The evidence links the page shows: the own change, else what was saved for everyone, else what was loaded. */
+  let evidence = $derived(
+    (controller.fieldValue(EVIDENCE_KEY, assessment?.evidence?.[practiceId] ?? []) as
+      SammEvidenceLink[] | null) ?? [],
+  );
+
+  function setEvidence(links: SammEvidenceLink[]) {
+    if (locked) return;
+    controller.change(EVIDENCE_KEY, links);
+  }
+
+  /** What a refusal of the draft or the save says about the evidence of this practice. */
+  let evidenceErrors = $derived(evidenceErrorsOf(controller.errors, practiceId));
+
+  /** @param links a list of evidence links @returns the titles of its links, for the sentence of a conflict */
+  function titlesOf(links: unknown): string {
+    return Array.isArray(links)
+      ? (links as SammEvidenceLink[]).map((link) => link.title).join(', ')
+      : '';
+  }
+
   function commentOf(id: string): string {
     return (
       (controller.fieldValue(`${id}/comment`, loaded[id]?.comment) as string | null | undefined) ??
@@ -160,7 +183,7 @@
           blob: part?.blob ?? '',
           savedBy: part?.savedBy ?? null,
           frozen: assessment.state === 'released',
-          canEdit: rights.includes('edit'),
+          canEdit,
         }
       : null;
     untrack(() => controller.sync(next));
@@ -421,20 +444,29 @@
                         {/each}
                       </ul>
                     </Disclosure>
-                    <Disclosure open={commentOf(question.id) !== ''}>
-                      {#snippet summary()}{commentOf(question.id) !== ''
-                          ? $t('practice.comment')
-                          : $t('practice.comment.add')}{/snippet}
-                      <TextArea
-                        label={$t('practice.comment')}
-                        hint={$t('field.free-text.hint')}
-                        value={commentOf(question.id)}
-                        readonly={locked}
-                        error={fieldErrors[`${question.id}/comment`] ?? null}
-                        oninput={(value) => setComment(question.id, value)}
-                        testId="comment-{question.id}"
-                      />
-                    </Disclosure>
+                    {#if !locked || commentOf(question.id) !== ''}
+                      <Disclosure open={commentOf(question.id) !== ''}>
+                        {#snippet summary()}{commentOf(question.id) !== ''
+                            ? $t('practice.comment')
+                            : $t('practice.comment.add')}{/snippet}
+                        {#if locked}
+                          <AsciiDocView
+                            source={commentOf(question.id)}
+                            fallback
+                            testId="comment-{question.id}"
+                          />
+                        {:else}
+                          <AsciiDocField
+                            label={$t('practice.comment')}
+                            hint={[$t('field.free-text.hint'), $t('practice.comment.format')]}
+                            value={commentOf(question.id)}
+                            error={fieldErrors[`${question.id}/comment`] ?? null}
+                            onchange={(next) => setComment(question.id, next ?? '')}
+                            testId="comment-{question.id}"
+                          />
+                        {/if}
+                      </Disclosure>
+                    {/if}
                   </div>
                 </div>
               </li>
@@ -442,6 +474,49 @@
           </ol>
         </section>
       {/each}
+
+      {#if !locked || evidence.length > 0}
+        <section class="stream evidence" aria-labelledby="evidence-title" data-testid="evidence">
+          <header class="stream__head">
+            <h2 class="stream__title" id="evidence-title">{$t('samm.evidence.heading')}</h2>
+          </header>
+          <p class="evidence__lede">{$t('samm.evidence.lede')}</p>
+          {#if controller.conflicts[EVIDENCE_KEY]}
+            {@const conflict = controller.conflicts[EVIDENCE_KEY]}
+            <div class="conflict" data-testid="conflict-evidence">
+              <p class="conflict__text">
+                {$t('samm.evidence.conflict', {
+                  name: conflict.by.name,
+                  other: titlesOf(conflict.other) || $t('samm.evidence.conflict.none'),
+                  own: titlesOf(conflict.own) || $t('samm.evidence.conflict.none'),
+                })}
+              </p>
+              <div class="conflict__acts">
+                <Button
+                  onclick={() => controller.resolve(EVIDENCE_KEY, 'own')}
+                  disabledReason={controller.locked ? $t('practice.conflict.locked') : null}
+                >
+                  {$t('practice.conflict.keep-own')}
+                </Button>
+                <Button
+                  onclick={() => controller.resolve(EVIDENCE_KEY, 'other')}
+                  disabledReason={controller.locked ? $t('practice.conflict.locked') : null}
+                >
+                  {$t('samm.evidence.conflict.take-other', { name: conflict.by.name })}
+                </Button>
+              </div>
+            </div>
+          {/if}
+          <EvidenceEditor
+            links={evidence}
+            {questions}
+            readonly={locked}
+            errors={evidenceErrors}
+            onchange={setEvidence}
+            testId="evidence-editor"
+          />
+        </section>
+      {/if}
 
       <nav class="pager" aria-label={$t('practice.pager')}>
         {#if previous}
@@ -467,7 +542,12 @@
           {label}
           testId="save-state"
         />
-        {#if !readonly}
+        {#if frozen && canEdit && scope}
+          <!-- The way on from a frozen assessment: a new one (rest-api.adoc, SAMM Requests, A Frozen Assessment). -->
+          <Link href="/samm/{scope.id}/new" look="primary" data-testid="start-new-assessment">
+            {$t('samm.frozen.start')}
+          </Link>
+        {:else if !readonly}
           <Button
             variant="primary"
             icon="act.save"
@@ -590,6 +670,12 @@
 
   .questions {
     list-style: none;
+  }
+
+  .evidence__lede {
+    max-inline-size: var(--measure);
+    margin-block: var(--space-3);
+    color: var(--color-text-secondary);
   }
 
   .question {

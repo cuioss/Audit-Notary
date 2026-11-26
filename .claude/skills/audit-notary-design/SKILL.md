@@ -37,6 +37,13 @@ Read the concept first, then the component you are about to change.
    notice with a link, never a gate). The pages are `WizardPage` (import, profile) and `DashboardPage` (persons); the
    erasure of a person and every other destructive act asks first in a `Dialog` that names the person by name and says
    that it cannot be undone.
+   `web-app/src/lib/views/samm/` also holds the forms of the SAMM completion: `NewScopeSheet` and `NewAssessmentSheet` (a new
+   object is a sheet whose first save creates it; nothing is stored before, and `LeaveGuard` from `lib/documents/` asks
+   before the page is left), `TargetsEditor` (the practices by business function as a `GridTable` of a `Select` and a date
+   field with `labelHidden` labels, one component for the form of a new scope and for the roadmap in the scope sheet) and
+   `EvidenceEditor` (a `DataTable` with a dialog over a copy, removal asked first). The roadmap of a scope has no draft:
+   the document controller takes `drafts: false`, and the status says "Not saved for everyone yet". A released assessment is
+   frozen; the way on is the primary link *Start a new assessment* to `/samm/{scope}/new`, never a button that writes.
 3. For a chart, use the five series colours in model order (`--color-series-1` … `-5`); they are validated for
    colour-vision and normal-vision separation against both sheet colours (`#ffffff`, `#161d2e`). A new chart colour
    needs the same validation before it lands: with the validator of the `dataviz` skill where your agent has that
@@ -173,12 +180,16 @@ Check each item before you hand a change over.
 - [ ] A change the person did not cause (a save by someone else, a new object) is announced politely; focus moves to
       a new object's heading.
 - [ ] A chart has a legend for two series or more, direct labels where few, and the same figures as a table.
+      A chart is drawn at the width it has on the page (`bind:clientWidth`), never scaled down as a whole, so its text keeps
+      its size on a phone; the first and the last axis label stay inside the figure.
 - [ ] Forced colours: the component still shows its state (`@media (forced-colors: active)`).
 - [ ] Phone (390 px): nothing scrolls sideways, targets are 44 px (a link in a stacked row or in a head gets its
       padding, not a box), the status of a sheet stays above the record.
 - [ ] Notices of a page of sections stand in the width of the sections; a name of a table row is never broken between its
       words, an id or a reference (`Chip`) is never broken in the middle; the mascot is gone while a refusal or an error
       shows; a radio group's target is its label (44 px on a phone), not the 13 px glyph.
+- [ ] A section whose list is empty says so under its heading (no heading over nothing); the act that removes a row names
+      the row in its accessible name and stands under the field it removes, not beside it.
 - [ ] A sentence is said once on a screen: a read-only sheet says so in its status and not again in a notice, and the
       reason of a disabled act is not the sentence of the status beside it.
 - [ ] German: no clipped or overlapping text with the longer words.

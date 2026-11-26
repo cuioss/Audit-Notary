@@ -9,6 +9,11 @@
   interface Props {
     /** The label. */
     label: string;
+    /**
+     * Whether the label is read by assistive technology only: for a control in a table row whose column head says what
+     * it is, so that the row is not a list of labels.
+     */
+    labelHidden?: boolean;
     /** The value, bindable. */
     value?: string;
     /** The field error, the text of a refusal for this field. */
@@ -40,6 +45,7 @@
 
   let {
     label,
+    labelHidden = false,
     value = $bindable(''),
     error = null,
     required = false,
@@ -66,7 +72,7 @@
 </script>
 
 <div class="field">
-  <label class="field__label" for={id}
+  <label class="field__label" class:sr-only={labelHidden} for={id}
     >{label}{#if mark}<span class="field__mark">{mark}</span>{/if}</label
   >
   {#each hints as line, index (index)}

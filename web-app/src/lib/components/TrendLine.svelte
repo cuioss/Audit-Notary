@@ -28,13 +28,20 @@
 
   let { points, max, label }: Props = $props();
 
-  const W = 560;
   const H = 180;
+  /** The width the figure has on the page: the chart is drawn at that width, so its text keeps its size on a phone. */
+  let measured = $state(0);
+  let W = $derived(measured >= 240 ? Math.min(measured, 640) : 560);
   const PAD = { top: 16, right: 56, bottom: 34, left: 28 };
   let active: number | null = $state(null);
 
   const x = (index: number, count: number) =>
     PAD.left + (count <= 1 ? 0 : (index * (W - PAD.left - PAD.right)) / (count - 1));
+  /** The axis label of the first point starts at the edge and the last one ends at it, so neither leaves the figure. */
+  const anchorOf = (index: number, count: number) =>
+    count > 1 && index === 0 ? 'start' : count > 1 && index === count - 1 ? 'end' : 'middle';
+  const labelX = (index: number, count: number) =>
+    count > 1 && index === 0 ? 0 : count > 1 && index === count - 1 ? W : x(index, count);
   // A non-positive max uses a 0–1 scale instead of dividing by zero.
   let top = $derived(max > 0 ? max : 1);
   const y = (value: number) => PAD.top + (1 - value / top) * (H - PAD.top - PAD.bottom);
@@ -49,7 +56,7 @@
   let ticks = $derived(Array.from({ length: Math.floor(top) + 1 }, (_, index) => index));
 </script>
 
-<figure class="trend">
+<figure class="trend" bind:clientWidth={measured}>
   <svg class="trend__chart" viewBox="0 0 {W} {H}" role="img" aria-label={label}>
     {#each ticks as tick (tick)}
       <line class="trend__grid" x1={PAD.left} x2={W - PAD.right} y1={y(tick)} y2={y(tick)} />
@@ -72,8 +79,11 @@
       >
         <circle class="trend__hit" cx={x(index, points.length)} cy={y(point.value)} r="16" />
         <circle class="trend__marker" cx={x(index, points.length)} cy={y(point.value)} r="5" />
-        <text class="trend__axis" x={x(index, points.length)} y={H - 10} text-anchor="middle"
-          >{point.label}</text
+        <text
+          class="trend__axis"
+          x={labelX(index, points.length)}
+          y={H - 10}
+          text-anchor={anchorOf(index, points.length)}>{point.label}</text
         >
         <text
           class="trend__value"
@@ -85,14 +95,17 @@
       </g>
     {/each}
   </svg>
-  <table class="sr-only">
-    <caption>{label}</caption>
-    <tbody>
-      {#each points as point, index (index)}
-        <tr><th scope="row">{point.label}</th><td>{point.text}</td></tr>
-      {/each}
-    </tbody>
-  </table>
+  <!-- The wrapper clips the table: a table that is itself positioned ignores `width: 1px` and widens the page. -->
+  <div class="sr-only">
+    <table>
+      <caption>{label}</caption>
+      <tbody>
+        {#each points as point, index (index)}
+          <tr><th scope="row">{point.label}</th><td>{point.text}</td></tr>
+        {/each}
+      </tbody>
+    </table>
+  </div>
 </figure>
 
 <style>

@@ -787,6 +787,22 @@ describe('the step-up of a save and a transition (UC-ACC-3)', () => {
     expect(controller.failure).toBe('error.network');
   });
 
+  it('stays on the page with its changes when a part without a draft is asked to confirm the identity elsewhere', async () => {
+    const { controller, client, navigate } = await open('workshop', N3, { drafts: false });
+    vi.spyOn(client, 'saveDocument').mockRejectedValue(
+      new ApiError('STEP_UP_REQUIRED', 403, [], { stepUp: '/api/v1/auth/login?step-up=mfa' }),
+    );
+    const draft = vi.spyOn(client, 'saveDraft');
+    controller.change('/summary', 'Only on this page.');
+    await controller.save();
+    // The provider keeps nothing of the page and there is no draft: the app does not leave.
+    expect(navigate).not.toHaveBeenCalled();
+    expect(draft).not.toHaveBeenCalled();
+    expect(controller.leaving).toBe(false);
+    expect(controller.failure).toBe('samm.targets.step-up-stays');
+    expect(controller.edits['/summary']).toBe('Only on this page.');
+  });
+
   it('uses the handler it was given', async () => {
     const { client, document } = await open('workshop');
     const own = new DocumentController({ repository: REPOSITORY, client });
@@ -1098,6 +1114,22 @@ describe('answers that belong to an earlier moment', () => {
     await saving;
     expect(controller.edits).toEqual({});
     expect(controller.dirty).toBe(false);
+  });
+
+  it('keeps the value a running save sends as a change while another value is changed, so a refusal loses nothing', async () => {
+    const { controller, client } = await open('workshop', N3, {}, { draft: null });
+    const base = controller.value;
+    const request = deferred<Saved>();
+    vi.spyOn(client, 'saveDocument').mockImplementation(() => request.promise);
+    controller.setValue({ ...base, summary: 'B' });
+    const saving = controller.save();
+    controller.setValue({ ...controller.value, actions: [{ what: 'a' }] });
+    expect(controller.edits).toEqual({ '/summary': 'B', '/actions': [{ what: 'a' }] });
+    request.reject(new ApiError('REJECTED', 502));
+    await saving;
+    expect(controller.edits).toEqual({ '/summary': 'B', '/actions': [{ what: 'a' }] });
+    expect(controller.value.summary).toBe('B');
+    expect(controller.dirty).toBe(true);
   });
 
   it('shows the value saved while nothing was changed back', async () => {

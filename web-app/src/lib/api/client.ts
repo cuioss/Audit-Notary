@@ -43,10 +43,16 @@ import type {
   RenderedAsciiDoc,
   RevisionList,
   SammAssessment,
+  SammAssessmentCreated,
+  SammAssessmentDraft,
   SammComparison,
   SammModel,
+  SammModelList,
   SammScope,
+  SammScopeCreated,
+  SammScopeDraft,
   SammScopeList,
+  SammTrend,
   SaveRequest,
   Saved,
   SearchResults,
@@ -488,6 +494,65 @@ export class ApiClient {
     return this.request<SammModel>('GET', `/api/v1/samm/models/${seg(version)}`);
   }
 
+  /**
+   * The pinned model versions, newest first, the one a new scope or assessment takes marked `default` (PROVISIONAL).
+   *
+   * @returns the versions; none for an installation that pins none
+   * @throws ApiError `FORBIDDEN` without the right to read
+   */
+  getSammModels(): Promise<SammModelList> {
+    return this.request<SammModelList>('GET', '/api/v1/samm/models');
+  }
+
+  /**
+   * Creates a scope with its targets: the server assigns the address segment and writes the first commit (PROVISIONAL).
+   * Needs `edit` on `samm-assessments`.
+   *
+   * @param scope the title, the subject reference, the model version and the targets
+   * @returns the id, the address and the blob ids of the new scope
+   * @throws ApiError `VALIDATION` with pointers into the body (`/subject` with `REFERENCE_NOT_FOUND` for a subject that
+   * does not resolve), `FORBIDDEN`, `REJECTED`, `GIT_UNAVAILABLE`
+   */
+  createSammScope(scope: SammScopeDraft): Promise<SammScopeCreated> {
+    return this.request<SammScopeCreated>('POST', '/api/v1/samm/scopes', scope);
+  }
+
+  /**
+   * Starts an assessment of a scope: empty, a draft, the user its first assessor (PROVISIONAL). Needs `edit` on
+   * `samm-assessments`.
+   *
+   * @param scope the scope's address segment
+   * @param assessment the title, the date, the model version and the further assessors
+   * @returns the id, the address and the state of the new assessment
+   * @throws ApiError `NOT_FOUND`, `ASSESSMENT_OPEN` (`details.assessment` names the open one), `VALIDATION`
+   * (`/assessors/<n>` with `PSEUDONYM_UNKNOWN`), `FORBIDDEN`, `REJECTED`, `GIT_UNAVAILABLE`
+   */
+  createSammAssessment(
+    scope: string,
+    assessment: SammAssessmentDraft,
+  ): Promise<SammAssessmentCreated> {
+    return this.request<SammAssessmentCreated>(
+      'POST',
+      `/api/v1/samm/${seg(scope)}/assessments`,
+      assessment,
+    );
+  }
+
+  /**
+   * The overall, function and practice scores of the released assessments of a scope over time, one model version,
+   * oldest first (PROVISIONAL).
+   *
+   * @param scope the scope's address segment
+   * @param modelVersion the version of the points; the one of the latest released assessment without it
+   * @returns the points, and how many released assessments of other versions are left out
+   * @throws ApiError `NOT_FOUND`
+   */
+  getSammTrend(scope: string, modelVersion?: string): Promise<SammTrend> {
+    const query =
+      modelVersion === undefined ? '' : `?modelVersion=${encodeURIComponent(modelVersion)}`;
+    return this.request<SammTrend>('GET', `/api/v1/samm/${seg(scope)}/trend${query}`);
+  }
+
   /** @returns the SAMM scopes with their latest released and their open assessment */
   getSammScopes(): Promise<SammScopeList> {
     return this.request<SammScopeList>('GET', '/api/v1/samm/scopes');
@@ -506,6 +571,8 @@ export class ApiClient {
    * @param from the earlier assessment
    * @param to the later assessment
    * @returns the score differences per business function, practice and stream (AUN-SAMM-5)
+   * @throws ApiError `MODEL_VERSIONS_DIFFER` (`details.from` and `details.to`, each `{assessment, modelVersion}`) for two
+   * assessments taken with different model versions, `NOT_FOUND`
    */
   compareSamm(scope: string, from: string, to: string): Promise<SammComparison> {
     return this.request<SammComparison>(

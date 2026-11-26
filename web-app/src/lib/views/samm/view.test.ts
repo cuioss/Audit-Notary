@@ -1,6 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('$app/navigation', () => ({
+  beforeNavigate: () => {},
+  afterNavigate: () => {},
+  goto: vi.fn(),
+}));
+
 import { apiClient, type EventListener } from '../../api/client';
 import { ApiError } from '../../api/errors';
 import { clearModels } from '../../samm/store';
@@ -180,5 +187,167 @@ describe('SammView', () => {
     releaseFirst();
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Payments 2026 Q4');
+  });
+
+  it('drops the answer of the first read of a scope when a refresh was read meanwhile', async () => {
+    await useProfile('workshop');
+    const original = apiClient.getSammScope.bind(apiClient);
+    let releaseFirst: () => void = () => {};
+    const reads: string[] = [];
+    vi.spyOn(apiClient, 'getSammScope').mockImplementation(async (id) => {
+      reads.push(id);
+      if (reads.length === 1) {
+        await new Promise<void>((resolve) => (releaseFirst = resolve));
+        return { ...(await original(id)), title: 'Stale' };
+      }
+      return original(id);
+    });
+    render(SammView, { params: { scope: 'payments' } });
+    await vi.waitFor(() => expect(reads).toHaveLength(1));
+    for (const listener of listeners) {
+      listener('document-transitioned', {
+        repository: 'samm-assessments',
+        id: 'payments-2026-q4',
+        state: 'released',
+      });
+    }
+    await vi.waitFor(() => expect(reads).toHaveLength(2));
+    expect(await screen.findByTestId('scope-sheet')).toBeInTheDocument();
+    releaseFirst();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Payments');
+    expect(screen.getByRole('heading', { level: 1 })).not.toHaveTextContent('Stale');
+  });
+
+  it('opens the form of a new scope at /samm/new and names it in the breadcrumb', async () => {
+    await useProfile('workshop');
+    const onnavigate = vi.fn();
+    render(SammView, { route: 'samm.new', params: {}, onnavigate });
+    expect(await screen.findByTestId('new-scope-sheet')).toBeInTheDocument();
+    expect(get(breadcrumb)).toEqual([{ label: 'New scope', href: '/samm/new' }]);
+  });
+
+  it('creates the scope, reads the scopes again and moves to its address', async () => {
+    await useProfile('workshop');
+    const onnavigate = vi.fn();
+    const scopes = vi.spyOn(apiClient, 'getSammScopes');
+    render(SammView, { route: 'samm.new', params: {}, onnavigate });
+    await screen.findByTestId('new-scope-sheet');
+    await fireEvent.input(screen.getByTestId('new-scope-title'), { target: { value: 'Mobile' } });
+    await fireEvent.click(screen.getByTestId('new-scope-kind-organisation'));
+    await fireEvent.click(screen.getByTestId('create-scope'));
+    await vi.waitFor(() =>
+      expect(onnavigate).toHaveBeenCalledWith('/samm/mobile', { replace: true }),
+    );
+    expect(scopes).toHaveBeenCalledTimes(2);
+  });
+
+  it('opens the form of a new assessment at /samm/{scope}/new', async () => {
+    await useProfile('workshop');
+    render(SammView, { route: 'samm.assessment.new', params: { scope: 'shop' } });
+    expect(await screen.findByTestId('new-assessment-sheet')).toBeInTheDocument();
+    await vi.waitFor(() =>
+      expect(get(breadcrumb).map((entry) => entry.label)).toEqual(['Web shop', 'New assessment']),
+    );
+  });
+
+  it('offers no form to a reader and says why on the overview', async () => {
+    await useProfile('read-only');
+    render(SammView, { route: 'samm.new', params: {} });
+    expect(await screen.findByTestId('new-scope-no-right')).toBeInTheDocument();
+    expect(screen.queryByTestId('new-scope-link')).not.toBeInTheDocument();
+  });
+
+  it('reads the scopes again when one was created elsewhere, and the open scope with them', async () => {
+    await useProfile('workshop');
+    const scopes = vi.spyOn(apiClient, 'getSammScopes');
+    const scope = vi.spyOn(apiClient, 'getSammScope');
+    render(SammView, { params: { scope: 'payments' } });
+    expect(await screen.findByTestId('scope-sheet')).toBeInTheDocument();
+    for (const listener of listeners) {
+      listener('document-created', { repository: 'samm-assessments', id: 'mobile', kind: 'scope' });
+      listener('document-created', { repository: 'other', id: 'x', kind: 'scope' });
+    }
+    await vi.waitFor(() => expect(scopes).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(scope).toHaveBeenCalledTimes(2));
+  });
+
+  it('reads the scope again when its targets were saved elsewhere', async () => {
+    await useProfile('workshop');
+    const scope = vi.spyOn(apiClient, 'getSammScope');
+    render(SammView, { params: { scope: 'payments' } });
+    expect(await screen.findByTestId('scope-sheet')).toBeInTheDocument();
+    for (const listener of listeners) {
+      listener('document-saved', {
+        repository: 'samm-assessments',
+        id: 'payments',
+        part: 'targets',
+        fields: ['/ta'],
+      });
+    }
+    await vi.waitFor(() => expect(scope).toHaveBeenCalledTimes(2));
+  });
+
+  it('reads the assessment, its scope and the lists again when another person released it', async () => {
+    await useProfile('workshop');
+    render(SammView, { params: { scope: 'payments', assessment: '2026-q4' } });
+    expect(await screen.findByTestId('assessment-sheet')).toBeInTheDocument();
+    expect(screen.queryByTestId('start-new-assessment')).not.toBeInTheDocument();
+    const scopes = vi.spyOn(apiClient, 'getSammScopes');
+    const scope = vi.spyOn(apiClient, 'getSammScope');
+    const assessment = vi.spyOn(apiClient, 'getSammAssessment');
+    // Noor Haddad releases it while this sheet is open: the event is all this page hears of it.
+    vi.stubGlobal('fetch', scenarioFetch('workshop#assessment-released-meanwhile').fetch);
+    for (const listener of listeners) {
+      listener('document-transitioned', {
+        repository: 'samm-assessments',
+        id: 'payments-2026-q4',
+        state: 'released',
+        version: 1,
+      });
+      listener('document-transitioned', { repository: 'other', id: 'x', state: 'released' });
+    }
+    expect(await screen.findByTestId('start-new-assessment')).toBeInTheDocument();
+    expect(scopes).toHaveBeenCalledTimes(1);
+    expect(scope).toHaveBeenCalledTimes(1);
+    expect(assessment).toHaveBeenCalledTimes(1);
+  });
+
+  it('reads the scope again with the assessment when a save found it released meanwhile', async () => {
+    const { goto } = await (async () => {
+      await useProfile('workshop');
+      return {
+        goto: (state: string) => vi.stubGlobal('fetch', scenarioFetch(`workshop#${state}`).fetch),
+      };
+    })();
+    const scope = vi.spyOn(apiClient, 'getSammScope');
+    render(SammView, { params: { scope: 'payments', assessment: '2026-q4', practice: 'sm' } });
+    expect(await screen.findByTestId('practice-sheet')).toBeInTheDocument();
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
+    // Another person released the assessment: the save is refused, and the scope's open assessment is gone with it.
+    goto('assessment-released-meanwhile');
+    const reads = scope.mock.calls.length;
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    await vi.waitFor(() => expect(scope.mock.calls.length).toBeGreaterThan(reads));
+    expect(await screen.findByTestId('start-new-assessment')).toBeInTheDocument();
+  });
+
+  it('says when the pinned models cannot be read', async () => {
+    await useProfile('workshop');
+    vi.spyOn(apiClient, 'getSammModels').mockRejectedValue(new ApiError('NETWORK', 0));
+    render(SammView, { params: {} });
+    expect(await screen.findByRole('alert')).toHaveTextContent('No connection to Audit Notary');
+  });
+
+  it('keeps the scope when a read after a save fails', async () => {
+    await useProfile('workshop');
+    render(SammView, { params: { scope: 'payments' } });
+    expect(await screen.findByTestId('scope-sheet')).toBeInTheDocument();
+    vi.spyOn(apiClient, 'getSammScope').mockRejectedValue(new ApiError('NETWORK', 0));
+    for (const listener of listeners) {
+      listener('document-saved', { repository: 'samm-assessments', id: 'payments' });
+    }
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(screen.getByTestId('scope-sheet')).toBeInTheDocument();
   });
 });

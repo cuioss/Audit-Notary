@@ -383,6 +383,20 @@ describe('TrendLine', () => {
     ).toEqual(['1.00', '1.50', '2.00']);
     expect(container.querySelector('table caption')).toHaveTextContent('Overall score');
     expect(container.querySelectorAll('tbody tr')).toHaveLength(3);
+    // The table is clipped by a wrapper: a positioned table ignores `width: 1px` and widens the page on a phone.
+    expect(container.querySelector('table')?.parentElement).toHaveClass('sr-only');
+  });
+
+  it('keeps the first and the last axis label inside the figure', () => {
+    const { container } = render(TrendLine, { points, max: 3, label: 'Overall score' });
+    const axis = [...container.querySelectorAll('.trend__axis')];
+    expect(axis.map((text) => text.getAttribute('text-anchor'))).toEqual([
+      'start',
+      'middle',
+      'end',
+    ]);
+    expect(axis[0].getAttribute('x')).toBe('0');
+    expect(axis[2].getAttribute('x')).toBe('560');
   });
 
   it('marks a point under the pointer; its value stands without it', async () => {

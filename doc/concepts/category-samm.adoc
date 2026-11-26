@@ -119,6 +119,11 @@ xref:../specification/rest-api.adoc#_decided_samm[REST API Register, Open Questi
 . The comparison of two assessments of different model versions is refused with `MODEL_VERSIONS_DIFFER` (`422`); the
   trend of a scope reads the released assessments of one model version and counts the others as omitted.
 . The pinned model versions are listed by `GET /api/v1/samm/models`; pinning stays configuration.
+. The screens read the register as follows (rest-api.adoc, Open Questions, points 20 to 26): a new assessment takes the model
+  version of the scope's newest assessment; the targets of a scope are kept on the page until they are saved, and leaving
+  asks (a scope has no draft); a due day belongs to a target; the evidence links are drawn as links only when they are
+  absolute `https` addresses; the act that starts an assessment stands in the scope, in the frozen practice and in the
+  released assessment.
 
 == Related
 

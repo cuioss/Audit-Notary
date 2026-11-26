@@ -70,7 +70,7 @@
     <SammReleaseView params={address.params} />
   {/key}
 {:else if lensOf(route) === 'samm' && address}
-  <SammView params={address.params} />
+  <SammView {route} params={address.params} {onnavigate} />
 {:else if route === 'categories.release' && address}
   {#key `${address.params.category}/${address.params.document}`}
     <DocumentReleaseView params={address.params} />

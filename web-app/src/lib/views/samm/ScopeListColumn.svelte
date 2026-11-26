@@ -1,5 +1,6 @@
 <script lang="ts">
   import ColumnHead from '../../components/ColumnHead.svelte';
+  import Link from '../../components/Link.svelte';
   import RowLink from '../../components/RowLink.svelte';
   import ScoreMeter from '../../components/ScoreMeter.svelte';
   import StatusLabel from '../../components/StatusLabel.svelte';
@@ -17,9 +18,11 @@
     scopes: SammScopeList | null;
     /** The selected scope. */
     selected: string | null;
+    /** Whether the user may create a scope: the link to the form is offered only then. */
+    canCreate?: boolean;
   }
 
-  let { scopes, selected }: Props = $props();
+  let { scopes, selected, canCreate = false }: Props = $props();
 </script>
 
 <ColumnHead kind="samm" kindLabel={$t('lens.samm')} title={$t('samm.scopes.title')} href="/samm" />
@@ -53,6 +56,11 @@
       </li>
     {/each}
   </ul>
+  {#if canCreate}
+    <p class="column__act">
+      <Link href="/samm/new" data-testid="new-scope-link">{$t('samm.new.scope.act')}</Link>
+    </p>
+  {/if}
 {/if}
 
 <style>
@@ -66,6 +74,11 @@
   .column__loading {
     padding: var(--space-4);
     color: var(--color-text-muted);
+  }
+
+  .column__act {
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
   }
 
   .row__title {

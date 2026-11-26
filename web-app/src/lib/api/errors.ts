@@ -18,6 +18,7 @@ export const OUTCOMES = [
   'MANDATORY_FIELDS_MISSING',
   'CHANGED_SINCE_REVIEW',
   'MODEL_VERSIONS_DIFFER',
+  'ASSESSMENT_OPEN',
   'TOO_MANY_LOGINS',
   'NOT_FOUND',
   'TOO_LARGE',
@@ -138,6 +139,10 @@ export function errorMessageKey(error: unknown): string {
       return 'error.not-bindable';
     case 'TOO_LARGE':
       return 'error.too-large';
+    case 'ASSESSMENT_OPEN':
+      return 'error.assessment-open';
+    case 'MODEL_VERSIONS_DIFFER':
+      return 'error.model-versions-differ';
     case 'VALIDATION':
       return 'error.validation';
     case 'TIMEOUT':
