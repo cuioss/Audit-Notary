@@ -327,7 +327,8 @@ as written.
 
 The same `SchemaForm` renders a document that is read, a revision and a document as of a date, with `readOnly` set:
 every component shows its value as text and not as a control. A `DateTimeField` shows the localised date and time; a
-`Select` the text of the option; a `Toggle` yes or no; a `CatalogPicker`, a `PersonPicker` and a `DocumentRefField` the
+`Select` the text of the option; a `Toggle` yes or no (a boolean that is absent is an empty value and shows the dash);
+a `CatalogPicker`, a `PersonPicker` and a `DocumentRefField` the
 name, the person or the title with their marks and the link; a `DataTable` the table without the row editor; an
 `AsciiDocField` the rendered source (the same request), and the source as preformatted text, with a note that it is not
 rendered, when the renderer is unavailable or the source exceeds the preview limit, so that what is read is never

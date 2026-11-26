@@ -58,6 +58,12 @@ describe('the same form, read (AUN-WEB-4, Read-Only Rendering)', () => {
     expect(read('Service').value).toHaveTextContent('team:payment-api');
   });
 
+  it('shows a boolean that is absent as a dash, and an explicit false as No', async () => {
+    await open('test-note', { ...CLEAN_NOTE, pinned: false }, { readonly: true });
+    expect(read('Pinned').value).toHaveTextContent('No');
+    expect(read('Pinned').value).not.toHaveTextContent('–');
+  });
+
   it('shows the table without the row editor, and a dash for an empty value', async () => {
     await open('test-note', { ...MARKED_NOTE }, { readonly: true });
     const table = screen.getByTestId('table--actions');
@@ -65,7 +71,7 @@ describe('the same form, read (AUN-WEB-4, Read-Only Rendering)', () => {
     expect(within(table).getAllByRole('row')).toHaveLength(4);
     expect(read('Summary').value).toHaveTextContent('–');
     expect(read('Summary').value).toHaveTextContent('No value');
-    expect(read('Pinned').value).toHaveTextContent('No');
+    expect(read('Pinned').value).toHaveTextContent('No value');
   });
 
   it('shows the rendered source of an AsciiDoc field, and no preview heading', async () => {
@@ -166,7 +172,11 @@ describe('the same form, read (AUN-WEB-4, Read-Only Rendering)', () => {
 
   it('reads in German, with the labels of the catalogue and the marks in German', async () => {
     currentLocale.set('de');
-    await open('test-note', { ...MARKED_NOTE, owner: 'p-7d52e8' }, { readonly: true });
+    await open(
+      'test-note',
+      { ...MARKED_NOTE, owner: 'p-7d52e8', pinned: false },
+      { readonly: true },
+    );
     useMessages('de');
     expect(await screen.findByText('Titel', { selector: 'dt' })).toBeInTheDocument();
     expect(await screen.findByText('Nicht mehr in Gebrauch')).toBeInTheDocument();

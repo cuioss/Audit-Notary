@@ -191,7 +191,7 @@ describe('DataTable with a row editor (AUN-WEB-4, Choosing the Component, rule 1
     await rerender({ value: { checks: [{ name: 'b' }] } });
     await fireEvent.click(within(dialog).getByRole('button', { name: 'Remove row' }));
     expect(onchange).not.toHaveBeenCalled();
-    expect(cells(table('/checks'))).toEqual([['b', 'No']]);
+    expect(cells(table('/checks'))).toEqual([['b', '–No value']]);
   });
 
   it('keeps a table of no rows as an empty list once the last row is removed', async () => {

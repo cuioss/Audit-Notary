@@ -51,7 +51,7 @@
   let text = $derived(typeof value === 'string' ? value : '');
 </script>
 
-{#if isEmptyValue(value) && node.kind !== 'toggle'}
+{#if isEmptyValue(value)}
   <span class="read__empty"
     ><span aria-hidden="true">–</span><span class="sr-only">{$t('form.read.empty')}</span></span
   >
