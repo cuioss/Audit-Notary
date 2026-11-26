@@ -124,7 +124,7 @@ Variations::
 * *Only what I may read*: the event stream carries the saves of repositories the user may read, and it ends with the
   session (xref:01-access.adoc#UC-ACC-6[UC-ACC-6]).
 Outcome:: the user's work is kept as a draft, visible only to them, until it is saved.
-Open points:: whether the AsciiDoc preview runs on the server only or with a sanitising client renderer
+Open points:: the AsciiDoc preview runs on the server only, decided provisionally
 (xref:../concepts/web-app.adoc#_open_questions[Web App, Open Questions]).
 Changes:: xref:01-access.adoc#change-events[Access, the event stream and the session].
 Requirements:: xref:../specification/web-app.adoc#AUN-WEB-4[AUN-WEB-4] (generated forms),
