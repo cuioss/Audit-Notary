@@ -45,8 +45,10 @@
 
   let entry = $derived.by(() => {
     if (kind !== 'catalog' || entries.current.state !== 'found') return null;
-    const id = parseCatalogRef(value)?.id;
-    return entries.current.value.find((candidate) => candidate.id === id) ?? null;
+    // A reference into another catalog (`team:ledger` in the service catalog) names no entry of this one.
+    const parts = parseCatalogRef(value);
+    if (parts === null || parts.catalog !== catalog) return null;
+    return entries.current.value.find((candidate) => candidate.id === parts.id) ?? null;
   });
 
   /**

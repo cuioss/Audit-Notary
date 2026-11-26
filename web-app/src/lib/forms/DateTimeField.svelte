@@ -3,6 +3,7 @@
   import TextField from '../components/TextField.svelte';
   import { t } from '../i18n';
   import { instantToLocalInput, localInputToInstant } from './dateTime';
+  import { isDate } from './validate';
 
   /**
    * A date and a time, or a date alone (AUN-WEB-4, Values). A `date-time` is stored as an RFC 3339 instant in UTC to
@@ -33,11 +34,7 @@
 
   let held = $derived(typeof value === 'string' ? value : '');
   let shown = $derived(
-    format === 'date'
-      ? /^\d{4}-\d{2}-\d{2}$/.test(held)
-        ? held
-        : ''
-      : (instantToLocalInput(held) ?? ''),
+    format === 'date' ? (isDate(held) ? held : '') : (instantToLocalInput(held) ?? ''),
   );
   let unreadable = $derived(value !== undefined && value !== null && value !== '' && shown === '');
 

@@ -106,6 +106,15 @@
     return [{ value: held, label: heldLabel }, ...offered];
   });
 
+  /** Whether the server could not narrow a cut-off list: the local filter of that list is no answer. */
+  let searchFailed = $derived(truncated && query !== '' && narrowed.current.state === 'failed');
+  /** Whether the list is known to hold nobody for the typed name: a cut-off list says so only after the server did. */
+  let nobody = $derived(
+    query !== '' &&
+      shown.length === 0 &&
+      !searchFailed &&
+      (!truncated || narrowed.current.state === 'found'),
+  );
   let narrowable = $derived(
     truncated || (everyone.current.state === 'found' && listed.length >= NARROW_FROM),
   );
@@ -137,7 +146,9 @@
           bind:value={filter}
           testId={testId ? `${testId}-narrow` : undefined}
         />
-        {#if query !== '' && shown.length === 0}
+        {#if searchFailed}
+          <p class="picker__note">{$t('form.picker.unavailable')}</p>
+        {:else if nobody}
           <p class="picker__note">{$t('form.person.none')}</p>
         {/if}
       </div>

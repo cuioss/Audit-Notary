@@ -5,6 +5,7 @@
   import { t } from '../i18n';
   import { provideForm, useForm, type FormContext } from './context';
   import { effectiveErrors, isAffectedBy, isWithin, placeOf } from './fieldErrors';
+  import OtherErrors from './OtherErrors.svelte';
   import SchemaField from './SchemaField.svelte';
   import {
     childNodes,
@@ -67,7 +68,19 @@
     effectiveErrors(standing, validateWith(parent.root, item.schema, draft), touched),
   );
   let known = $derived(fieldPointers(parent.root, draft, item));
-  let placed = $derived(shown.map((error) => ({ ...error, place: placeOf(error.pointer, known) })));
+  /**
+   * The error of a scalar row stands at the row itself, which is the one control; the errors of an object row that
+   * name none of its fields are listed under them.
+   */
+  let placed = $derived(
+    shown.map((error) => ({
+      ...error,
+      place:
+        placeOf(error.pointer, known) ??
+        (item.kind !== 'section' && error.pointer === '' ? '' : null),
+    })),
+  );
+  let unplaced = $derived(placed.filter((error) => error.place === null));
   let missing = $derived(new Set(missingWith(parent.root, item, draft)));
 
   const context: FormContext = {
@@ -101,6 +114,7 @@
       <SchemaField node={field} />
     {/each}
   </div>
+  <OtherErrors errors={unplaced} testId="row-other-errors" />
   <div class="editor__acts">
     <Button variant="ghost" onclick={oncancel}>{$t('common.cancel')}</Button>
     <Button variant="primary" onclick={() => onapply($state.snapshot(draft))}

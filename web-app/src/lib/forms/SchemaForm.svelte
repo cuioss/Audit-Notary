@@ -1,10 +1,9 @@
 <script lang="ts">
   import { untrack } from 'svelte';
-  import Chip from '../components/Chip.svelte';
   import type { FieldError } from '../api/errors';
-  import { t } from '../i18n';
   import { provideForm, type FormContext } from './context';
-  import { effectiveErrors, errorKey, isAffectedBy, isWithin, placeOf } from './fieldErrors';
+  import { effectiveErrors, isAffectedBy, isWithin, placeOf } from './fieldErrors';
+  import OtherErrors from './OtherErrors.svelte';
   import SchemaField from './SchemaField.svelte';
   import {
     childNodes,
@@ -123,7 +122,8 @@
       const nextValue = isObject(updated) ? (updated as JsonObject) : {};
       server =
         server === null ? null : server.filter((error) => !isAffectedBy(changed, error.pointer));
-      touched = [...touched, changed];
+      // Only a verdict of the server makes the places changed since it matter; each place is kept once.
+      if (server !== null && !touched.includes(changed)) touched = [...touched, changed];
       value = nextValue;
       onchange?.(nextValue, {
         errors: effectiveErrors(server, validate(schema, nextValue), touched),
@@ -175,23 +175,7 @@
       <SchemaField node={field} />
     {/each}
   </div>
-  {#if unplaced.length > 0}
-    <section
-      class="schema-form__other"
-      aria-labelledby="schema-form-other"
-      data-testid="form-other-errors"
-    >
-      <p class="schema-form__other-title" id="schema-form-other">{$t('form.errors.other')}</p>
-      <ul class="schema-form__other-list">
-        {#each unplaced as error, index (index)}
-          <li>
-            {#if error.pointer !== ''}<Chip value={error.pointer} />{/if}
-            {$t(errorKey(error.code))}
-          </li>
-        {/each}
-      </ul>
-    </section>
-  {/if}
+  <OtherErrors errors={unplaced} testId="form-other-errors" />
 </div>
 
 <style>
@@ -199,23 +183,5 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-5);
-  }
-
-  .schema-form__other {
-    margin-block-start: var(--space-6);
-    padding-block-start: var(--space-4);
-    border-block-start: 1px solid var(--color-danger);
-    color: var(--color-danger);
-  }
-
-  .schema-form__other-title {
-    margin: 0 0 var(--space-2);
-    font-weight: var(--weight-medium);
-  }
-
-  .schema-form__other-list {
-    margin: 0;
-    padding-inline-start: var(--space-5);
-    font-size: var(--text-sm);
   }
 </style>

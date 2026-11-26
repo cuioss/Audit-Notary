@@ -155,6 +155,39 @@ describe('the verdict of the server (AUN-WEB-4, Validation)', () => {
     ]);
   });
 
+  it('shows the error of a section at the section, and not under the form', async () => {
+    await open(
+      'form-sections',
+      { scope: { tags: ['a'] } },
+      { errors: [{ pointer: '/scope', code: 'TYPE' }] },
+    );
+    expect(holder('/scope')).toHaveTextContent('This is not the kind of value the field takes.');
+    expect(screen.queryByTestId('form-other-errors')).toBeNull();
+  });
+
+  it('shows the error of a row of scalars in the row editor, where its one control stands', async () => {
+    await open('form-sections', { scope: { tags: ['a'] } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit row 1' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Tags: row 1' });
+    await fireEvent.input(within(dialog).getByLabelText(/^Tags/), {
+      target: { value: 'x'.repeat(31) },
+    });
+    expect(dialog).toHaveTextContent('This text is too long.');
+    expect(within(dialog).queryByTestId('row-other-errors')).toBeNull();
+  });
+
+  it('lists the error of a whole row of fields in the row editor, with the errors of no field', async () => {
+    await open(
+      'test-note',
+      { ...CLEAN_NOTE },
+      { errors: [{ pointer: '/actions/0', code: 'TYPE' }] },
+    );
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit row 1' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Actions: row 1' });
+    const other = within(dialog).getByTestId('row-other-errors');
+    expect(other).toHaveTextContent('This is not the kind of value the field takes.');
+  });
+
   it('shows an error that names a row that is no longer there at the table', async () => {
     await open(
       'test-note',

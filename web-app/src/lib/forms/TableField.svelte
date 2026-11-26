@@ -7,7 +7,7 @@
   import DataTable, { type TableColumn } from './DataTable.svelte';
   import ReadValue from './ReadValue.svelte';
   import RowEditor from './RowEditor.svelte';
-  import { childPointer, getAt, tableColumns, type FieldNode } from './schema';
+  import { childPointer, getAt, jsonEqual, tableColumns, type FieldNode } from './schema';
   import { labelOf } from './texts';
 
   /**
@@ -25,9 +25,11 @@
     hints: string[];
     /** The error of the list as a whole, as text. */
     error: string | null;
+    /** Whether the table is read: the form, a section above or the property says so. */
+    reading?: boolean;
   }
 
-  let { node, label, hints, error }: Props = $props();
+  let { node, label, hints, error, reading = false }: Props = $props();
 
   const form = useForm();
 
@@ -35,7 +37,6 @@
     const held = form.valueAt(node.pointer);
     return Array.isArray(held) ? held : [];
   });
-  let reading = $derived(form.readonly || node.readOnly);
   let columnNodes = $derived(tableColumns(node, form.root));
   let columns = $derived(
     columnNodes.map((column): TableColumn => ({
@@ -50,10 +51,14 @@
   );
   let canRemove = $derived(rows.length > minItems);
 
-  /** The row in the editor: its index, or `null` for a row to add; `undefined` while there is none. */
-  let editing: { index: number | null } | undefined = $state();
+  /**
+   * The row in the editor: its index, or `null` for a row to add, and the row as it was when the editor opened;
+   * `undefined` while there is none. The row is what the draft is applied to: a row that has changed since is not.
+   */
+  let editing: { index: number | null; row: unknown } | undefined = $state();
   let editorOpen = $state(false);
-  let removing: number | undefined = $state();
+  /** The row to remove, with the row as it was when the question was asked. */
+  let removing: { index: number; row: unknown } | undefined = $state();
   let removeOpen = $state(false);
   let table: DataTable | undefined = $state();
 
@@ -64,33 +69,44 @@
 
   /** @param index the row to edit, or `null` to add one */
   function openEditor(index: number | null): void {
-    editing = { index };
+    editing = { index, row: index === null ? undefined : $state.snapshot(rows[index]) };
     editorOpen = true;
   }
 
-  /** @param draft the row as the editor leaves it */
+  /**
+   * Applies the draft to the row the editor was opened on. The form may have changed while the editor was open (a row
+   * removed or moved by another change, the limit reached): then nothing is written, so no other row is overwritten
+   * and no limit is passed.
+   *
+   * @param draft the row as the editor leaves it
+   */
   function apply(draft: unknown): void {
-    const index = editing?.index ?? null;
+    const opened = editing;
     editorOpen = false;
     editing = undefined;
-    if (index === null) {
-      if (draft !== undefined) commit([...rows, draft]);
-    } else if (draft !== undefined) {
-      // An emptied scalar row would leave a hole in the list: the row stays as it was.
-      commit(
-        rows.map((row, position) => (position === index ? draft : row)),
-        childPointer(node.pointer, index),
-      );
+    // An emptied scalar row would leave a hole in the list: the row stays as it was.
+    if (opened === undefined || draft === undefined) return;
+    if (opened.index === null) {
+      if (maxItems === null || rows.length < maxItems) commit([...rows, draft]);
+      return;
     }
+    const index = opened.index;
+    if (!jsonEqual(rows[index], opened.row)) return;
+    commit(
+      rows.map((row, position) => (position === index ? draft : row)),
+      childPointer(node.pointer, index),
+    );
   }
 
+  /** Removes the row the question was asked about, unless it is no longer there or the list would pass `minItems`. */
   function confirmRemove(): void {
-    const index = removing;
+    const asked = removing;
     removeOpen = false;
     removing = undefined;
-    if (index === undefined) return;
-    commit(rows.filter((_, position) => position !== index));
-    void table?.focusRow(index);
+    if (asked === undefined || rows.length <= minItems) return;
+    if (!jsonEqual(rows[asked.index], asked.row)) return;
+    commit(rows.filter((_, position) => position !== asked.index));
+    void table?.focusRow(asked.index);
   }
 
   /** @param index a row @param direction `-1` to move it up, `1` down */
@@ -121,7 +137,7 @@
       onadd={() => openEditor(null)}
       onedit={(row) => openEditor(row)}
       onremove={(row) => {
-        removing = row;
+        removing = { index: row, row: $state.snapshot(rows[row]) };
         removeOpen = true;
       }}
       onmove={move}
@@ -151,7 +167,7 @@
       <RowEditor
         {node}
         index={editing.index}
-        initial={editing.index === null ? undefined : rows[editing.index]}
+        initial={editing.row}
         onapply={apply}
         oncancel={() => (editorOpen = false)}
       />
@@ -159,7 +175,7 @@
   </Dialog>
   <Dialog
     bind:open={removeOpen}
-    title={$t('form.table.remove.title', { number: (removing ?? 0) + 1, table: label })}
+    title={$t('form.table.remove.title', { number: (removing?.index ?? 0) + 1, table: label })}
     closeLabel={$t('common.close')}
     onclose={() => (removing = undefined)}
   >

@@ -135,7 +135,7 @@ describe('DataTable with a row editor (AUN-WEB-4, Choosing the Component, rule 1
     const { onchange } = await open('test-note', { ...CLEAN_NOTE });
     await fireEvent.click(screen.getByRole('button', { name: 'Remove row 1' }));
     const dialog = await screen.findByRole('dialog', { name: 'Remove row 1 of Actions?' });
-    expect(dialog).toHaveTextContent('Saved versions still hold it.');
+    expect(dialog).toHaveTextContent('Versions already saved stay as they are.');
     await fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     expect(onchange).not.toHaveBeenCalled();
     await fireEvent.click(screen.getByRole('button', { name: 'Remove row 1' }));
@@ -144,6 +144,54 @@ describe('DataTable with a row editor (AUN-WEB-4, Choosing the Component, rule 1
     expect(last(onchange).actions).toEqual([(CLEAN_NOTE.actions as JsonObject[])[1]]);
     // The row the focus came from is gone: it moves on to the row that took its place.
     await waitFor(() => expect(screen.getByRole('button', { name: 'Edit row 1' })).toHaveFocus());
+  });
+
+  it('writes nothing when the row it was opened on is no longer where it was', async () => {
+    const rows = (CLEAN_NOTE.actions as JsonObject[]).concat({ what: 'Third' });
+    const { onchange, rerender } = await open('test-note', { ...CLEAN_NOTE, actions: rows });
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit row 2' }));
+    const dialog = await editor('Actions: row 2');
+    await fireEvent.input(within(dialog).getByLabelText(/^What/), { target: { value: 'Edited' } });
+    // Another change drops the first row while the editor is open: index 1 now holds the third row.
+    await rerender({ value: { ...CLEAN_NOTE, actions: rows.slice(1) } });
+    await fireEvent.click(within(dialog).getByRole('button', { name: 'Apply changes' }));
+    expect(onchange).not.toHaveBeenCalled();
+    expect(cells(table('/actions')).map((row) => row[0])).toEqual([
+      'Rotate the staging keys',
+      'Third',
+    ]);
+  });
+
+  it('adds no row to a list that became full while the editor was open', async () => {
+    const rows = ['p-1', 'p-2', 'p-3', 'p-4'];
+    const { onchange, rerender } = await open('form-sections', { scope: { reviewers: rows } });
+    await fireEvent.click(
+      within(table('/scope/reviewers')).getByRole('button', { name: 'Add row' }),
+    );
+    const dialog = await editor('Reviewers: new row');
+    await waitFor(() =>
+      expect(
+        (within(dialog).getByLabelText(/^Reviewers/) as HTMLSelectElement).options.length,
+      ).toBeGreaterThan(1),
+    );
+    await fireEvent.change(within(dialog).getByLabelText(/^Reviewers/), {
+      target: { value: 'p-61c0d4' },
+    });
+    await rerender({ value: { scope: { reviewers: [...rows, 'p-5'] } } });
+    await fireEvent.click(within(dialog).getByRole('button', { name: 'Add to the list' }));
+    expect(onchange).not.toHaveBeenCalled();
+  });
+
+  it('removes no row when the row asked about is gone or the list would fall below its minimum', async () => {
+    const { onchange, rerender } = await open('form-validation', {
+      checks: [{ name: 'a' }, { name: 'b' }],
+    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Remove row 2' }));
+    const dialog = await screen.findByRole('dialog', { name: /Remove row 2/ });
+    await rerender({ value: { checks: [{ name: 'b' }] } });
+    await fireEvent.click(within(dialog).getByRole('button', { name: 'Remove row' }));
+    expect(onchange).not.toHaveBeenCalled();
+    expect(cells(table('/checks'))).toEqual([['b', 'No']]);
   });
 
   it('keeps a table of no rows as an empty list once the last row is removed', async () => {

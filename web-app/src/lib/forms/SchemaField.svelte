@@ -30,9 +30,11 @@
     node: FieldNode;
     /** How deep the property stands in sections; the heading level follows it. */
     depth?: number;
+    /** Whether a section above is read-only: its properties are read, whatever they say themselves. */
+    inheritedReadOnly?: boolean;
   }
 
-  let { node, depth = 0 }: Props = $props();
+  let { node, depth = 0, inheritedReadOnly = false }: Props = $props();
 
   const form = useForm();
 
@@ -53,7 +55,7 @@
       .filter((text): text is string => !!text)
       .join(' ') || null,
   );
-  let reading = $derived(form.readonly || node.readOnly);
+  let reading = $derived(form.readonly || inheritedReadOnly || node.readOnly);
   let level = $derived(Math.min(6, form.headingLevel + depth));
   /** Unique on the page: a row editor over the form holds sections with the same pointers. */
   const sectionId = uniqueId('section');
@@ -112,15 +114,16 @@
     {#each hints as line, index (index)}
       <p class="field__hint">{line}</p>
     {/each}
+    {#if error}<p class="field__error">{error}</p>{/if}
     <div class="fields">
       {#each childNodes(node, form.root) as child (child.pointer)}
-        <SchemaField node={child} depth={depth + 1} />
+        <SchemaField node={child} depth={depth + 1} inheritedReadOnly={reading} />
       {/each}
     </div>
   </section>
 {:else if node.kind === 'table'}
   <div class="field" data-pointer={node.pointer}>
-    <TableField {node} {label} {hints} {error} />
+    <TableField {node} {label} {hints} {error} {reading} />
   </div>
 {:else if reading || node.kind === 'plain'}
   <div class="field" data-pointer={node.pointer}>

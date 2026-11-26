@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { currentLocale } from '../i18n';
 import { open } from './formHarness';
-import { CLEAN_NOTE, MARKED_NOTE, useMessages } from './testkit';
+import { CLEAN_NOTE, MARKED_NOTE, schemaOf, useMessages, useProfile } from './testkit';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -49,6 +49,13 @@ describe('the same form, read (AUN-WEB-4, Read-Only Rendering)', () => {
     expect(await within(table).findByText('Former member')).toBeInTheDocument();
     expect(await within(table).findByText('Team Payments, role Developer')).toBeInTheDocument();
     expect(await within(table).findByText('Unknown person')).toBeInTheDocument();
+  });
+
+  it('does not take a reference into another catalog for the entry of the same id', async () => {
+    await open('test-note', { ...CLEAN_NOTE, service: 'team:payment-api' }, { readonly: true });
+    expect(await within(read('Service').value).findByText('Not found')).toBeInTheDocument();
+    expect(within(read('Service').value).queryByText('Payment API')).toBeNull();
+    expect(read('Service').value).toHaveTextContent('team:payment-api');
   });
 
   it('shows the table without the row editor, and a dash for an empty value', async () => {
@@ -131,6 +138,23 @@ describe('the same form, read (AUN-WEB-4, Read-Only Rendering)', () => {
     expect(read('Origin').value).toHaveTextContent('import');
     expect(read('Created').value.textContent).toMatch(/Nov \d, 2026/);
     expect(container.querySelector('[data-pointer="/origin"] input')).toBeNull();
+    expect(container.querySelector('[data-pointer="/name"] input')).not.toBeNull();
+  });
+
+  it('reads every property of a section that is readOnly, tables included, and edits the rest', async () => {
+    const schema = structuredClone(await schemaOf(useProfile(), 'form-sections'));
+    (schema.properties as Record<string, Record<string, unknown>>).scope.readOnly = true;
+    const { container } = await open(
+      'form-sections',
+      { name: 'x', scope: { teams: ['team:payments'], tags: ['a', 'b'] } },
+      { schema },
+    );
+    const scope = container.querySelector('[data-pointer="/scope"]') as HTMLElement;
+    expect(scope.querySelector('input, select, textarea')).toBeNull();
+    expect(
+      within(scope).queryByRole('button', { name: /Add row|Edit row|Remove row|Move/ }),
+    ).toBeNull();
+    expect(within(scope).getAllByRole('table').length).toBeGreaterThan(0);
     expect(container.querySelector('[data-pointer="/name"] input')).not.toBeNull();
   });
 

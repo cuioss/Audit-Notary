@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '../api/errors';
 import { field, last, open } from './formHarness';
 import PickerHarness from './PickerHarness.svelte';
 import { createFormServices } from './services';
@@ -144,6 +145,31 @@ describe('PersonPicker (AUN-WEB-4, The Pickers)', () => {
     await waitFor(() => expect(options(select)).toEqual(['Choose…', 'Person 7']));
     await fireEvent.input(narrow, { target: { value: '99' } });
     await screen.findByText('No person matches.');
+  });
+
+  it('says that the search failed, and not that nobody matches, when the server cannot narrow a cut-off list', async () => {
+    const kit = useProfile();
+    useMessages('en');
+    const persons = Array.from({ length: 9 }, (_, index) => ({
+      pseudonym: `p-${index}`,
+      name: `Person ${index}`,
+      state: 'bound' as const,
+      memberships: [],
+    }));
+    vi.spyOn(kit.client, 'listPersons').mockImplementation(async (query) => {
+      if (query) throw new ApiError('NETWORK', 0);
+      return { persons, truncated: true };
+    });
+    render(PickerHarness, {
+      services: createFormServices(kit.client),
+      label: 'Reviewer',
+      onchange: vi.fn(),
+    });
+    const narrow = await screen.findByLabelText('Narrow the list by name');
+    // The cut-off list holds no "Zed": the local filter finds nobody, which is no answer.
+    await fireEvent.input(narrow, { target: { value: 'Zed' } });
+    await screen.findByText('The list could not be loaded.');
+    expect(screen.queryByText('No person matches.')).toBeNull();
   });
 
   it('offers no field to narrow a short list that is whole', async () => {
