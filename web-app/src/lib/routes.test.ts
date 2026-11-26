@@ -267,6 +267,142 @@ describe('the SAMM completion', () => {
   });
 });
 
+describe('the threat models', () => {
+  it.each([
+    ['/threat-models', '', 'threat-models', {}, undefined],
+    ['/threat-models/payment-api', '', 'threat-models.service', { service: 'payment-api' }, undefined],
+    [
+      '/threat-models/payment-api/new',
+      '',
+      'threat-models.new',
+      { service: 'payment-api' },
+      undefined,
+    ],
+    [
+      '/threat-models/payment-api/new',
+      '?recipe=stride-light',
+      'threat-models.new',
+      { service: 'payment-api' },
+      { recipe: 'stride-light' },
+    ],
+    [
+      '/threat-models/payment-api/checkout-flow',
+      '',
+      'threat-models.model',
+      { service: 'payment-api', model: 'checkout-flow' },
+      undefined,
+    ],
+    [
+      '/threat-models/payment-api/checkout-flow',
+      '?at=v2',
+      'threat-models.model',
+      { service: 'payment-api', model: 'checkout-flow' },
+      { at: 'v2' },
+    ],
+    [
+      '/threat-models/payment-api/checkout-flow/release',
+      '',
+      'threat-models.release',
+      { service: 'payment-api', model: 'checkout-flow' },
+      undefined,
+    ],
+  ])('reads %s%s as %s', (path, search, route, params, query) => {
+    const address = parseAddress(path, search);
+    expect(address?.route).toBe(route);
+    expect(address?.params).toEqual(params);
+    if (query) {
+      expect(address?.query).toEqual(query);
+    } else {
+      expect(address).not.toHaveProperty('query');
+    }
+  });
+
+  it('reads the new page before the model, so that new is never a model', () => {
+    expect(ROUTES.indexOf('threat-models.new')).toBeLessThan(ROUTES.indexOf('threat-models.model'));
+    expect(parseAddress('/threat-models/payment-api/new')?.route).toBe('threat-models.new');
+    expect(parseAddress('/threat-models/new')?.params).toEqual({ service: 'new' });
+    expect(parseAddress('/threat-models/new')?.route).toBe('threat-models.service');
+    expect(lensOf('threat-models.new')).toBe('threat-models');
+    expect(routeTitleKey('threat-models.new')).toBe('lens.threat-models');
+    expect(routesUnder('threat-models')).toEqual([
+      'threat-models',
+      'threat-models.service',
+      'threat-models.new',
+      'threat-models.model',
+      'threat-models.release',
+    ]);
+  });
+
+  it('writes the admitted names, each encoded, and refuses a value that breaks its pattern', () => {
+    expect(
+      formatAddress({
+        route: 'threat-models.new',
+        params: { service: 'payment-api' },
+        query: { recipe: 'stride-light' },
+      }),
+    ).toBe('/threat-models/payment-api/new?recipe=stride-light');
+    expect(formatAddress({ route: 'threat-models.new', params: { service: 'payment-api' } })).toBe(
+      '/threat-models/payment-api/new',
+    );
+    expect(
+      formatAddress({
+        route: 'threat-models.model',
+        params: { service: 'payment-api', model: 'checkout-flow' },
+        query: { at: 'v2' },
+      }),
+    ).toBe('/threat-models/payment-api/checkout-flow?at=v2');
+    expect(() =>
+      formatAddress({
+        route: 'threat-models.new',
+        params: { service: 'payment-api' },
+        query: { recipe: 'Stride Light' },
+      }),
+    ).toThrow('query value refused');
+  });
+
+  it('ignores a name the address does not admit and refuses a bad or repeated value', () => {
+    expect(parseAddress('/threat-models/payment-api/new', '?kind=x')).toEqual({
+      route: 'threat-models.new',
+      params: { service: 'payment-api' },
+    });
+    expect(parseAddress('/threat-models/payment-api/new', '?recipe=A')).toBeNull();
+    expect(parseAddress('/threat-models/payment-api/new', '?recipe=a&recipe=b')).toBeNull();
+    expect(parseAddress('/threat-models/payment-api/checkout-flow', '?at=zzz')).toBeNull();
+    expect(parseAddress('/threat-models/payment-api', '?recipe=a')).toEqual({
+      route: 'threat-models.service',
+      params: { service: 'payment-api' },
+    });
+  });
+
+  it.each([
+    '/threat-models',
+    '/threat-models/payment-api',
+    '/threat-models/payment-api/new',
+    '/threat-models/payment-api/new?recipe=stride-light',
+    '/threat-models/payment-api/checkout-flow',
+    '/threat-models/payment-api/checkout-flow?at=v2',
+    '/threat-models/payment-api/checkout-flow?at=4be0c3a',
+    '/threat-models/payment-api/checkout-flow/release',
+  ])('lets %s pass as a return', (address) => {
+    expect(checkReturn(address)).toBe(address);
+  });
+
+  it.each([
+    '/threat-models/payment-api/new?recipe=',
+    '/threat-models/payment-api/new?recipe=Stride',
+    '/threat-models/payment-api/new?recipe=a&recipe=b',
+    '/threat-models/payment-api/new?at=v1',
+    '/threat-models/payment-api/new#x',
+    '/threat-models/payment-api/checkout-flow?recipe=stride-light',
+    '/threat-models/payment-api/checkout-flow?at=zzz',
+    '/threat-models/payment-api/checkout-flow/release?at=v1',
+    '/threat-models/payment-api?recipe=stride-light',
+    '/threat-models?at=v1',
+  ])('replaces %s by the start page', (candidate) => {
+    expect(checkReturn(candidate)).toBe('/');
+  });
+});
+
 describe('the Reports lens', () => {
   it.each([
     ['/reports', '', 'reports', {}],
