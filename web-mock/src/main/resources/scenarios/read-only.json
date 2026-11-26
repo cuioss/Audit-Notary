@@ -811,31 +811,22 @@
       "status": 200,
       "body_file": "directory-me-kim.json"
     },
-    "POST /api/v1/directory/me/confirmation": {
-      "status": 200,
+    "PUT /api/v1/directory/me": {
+      "status": 403,
       "body": {
-        "outcome": "CONFIRMED",
-        "confirmedAt": "2026-11-26"
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/directory/me/confirmation": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
       }
     }
   },
   "states": {
     "ready": {
-      "description": "Everything is fetched; edits are refused.",
-      "routes": {
-        "PUT /api/v1/directory/me": {
-          "status": 403,
-          "body": {
-            "outcome": "FORBIDDEN"
-          }
-        },
-        "POST /api/v1/directory/me/confirmation": {
-          "status": 403,
-          "body": {
-            "outcome": "FORBIDDEN"
-          }
-        }
-      }
+      "description": "Everything is fetched; edits are refused."
     },
     "preview-hostile": {
       "description": "The renderer answers HTML that the allow-list must cut down: the web app shows no script, no handler, no unsafe link.",

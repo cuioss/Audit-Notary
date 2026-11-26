@@ -83,8 +83,8 @@ class DirectoryAndCatalogsTest {
 
     private static Set<String> reservedIds() {
         Set<String> reserved = new TreeSet<>();
-        Pattern web = Pattern.compile("/catalogs/\\{catalog}/([a-z-]+)");
-        Pattern api = Pattern.compile("[A-Z]+ /api/v1/catalogs/(?:" + String.join("|", CATALOGS) + ")/([a-z-]+)");
+        Pattern web = Pattern.compile("/catalogs/\\{catalog}/([a-z0-9-]+)");
+        Pattern api = Pattern.compile("[A-Z]+ /api/v1/catalogs/(?:" + String.join("|", CATALOGS) + ")/([a-z0-9-]+)");
         try (var in = CLASS_LOADER.getResourceAsStream(CanonicalAddresses.RESOURCE)) {
             MockClient.MAPPER.readTree(in).path("addresses").forEach(route -> {
                 var matcher = web.matcher(route.path("pattern").asText());
@@ -1154,6 +1154,19 @@ class DirectoryAndCatalogsTest {
             try (var workshop = start("workshop"); var first = start("first-login")) {
                 assertEquals(get(first, DIRECTORY + "me").path("informationText"),
                         get(workshop, DIRECTORY + "me").path("informationText"));
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"read-only#ready", "read-only#preview-hostile", "read-only#preview-unavailable"})
+        @DisplayName("read-only refuses saving and confirming with 403 in every state, not only in ready")
+        void shouldRefuseTheWritesOfAReaderInEveryState(String reference) {
+            try (var client = start(reference)) {
+                var save = client.change("PUT", DIRECTORY + "me", "{}");
+                var confirmation = client.change("POST", DIRECTORY + "me/confirmation", null);
+                assertAll(reference,
+                        () -> assertEquals(403, save.statusCode()),
+                        () -> assertEquals(403, confirmation.statusCode()));
             }
         }
 
