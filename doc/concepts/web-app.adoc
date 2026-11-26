@@ -264,6 +264,17 @@ bodies in xref:../specification/rest-api.adoc#_decided_directory[REST API Regist
   so a sheet with unsaved changes offers "Save for everyone, then <step>"; the person's own draft comes back only into a
   sheet they can edit; a conflict is decided per field in one panel above the form.
 
+Decided provisionally with the SAMM completion (UC-SAMM-1 to UC-SAMM-5), recorded with the bodies in
+xref:../specification/rest-api.adoc#_decided_samm[REST API Register, Open Questions]; the owner may change each one:
+
+. A new scope is the page `/samm/new` and a new assessment the page `/samm/<scope>/new`; the targets are edited in the
+  sheet of the scope, and the trend of the scope reads its own request.
+. The practice sheet keeps comments as AsciiDoc fields and evidence as titled `https` links per practice; there is no
+  upload.
+. A released assessment is frozen: its sheets are read-only and the one act is *Start a new assessment*. A scope that has
+  an open assessment offers no second one and links the open one.
+. A comparison of two model versions is refused with a notice that names both versions.
+
 == Related
 
 * xref:authentication-and-identity.adoc[Authentication and Identity]

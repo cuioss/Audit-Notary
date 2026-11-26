@@ -505,10 +505,20 @@ of <<_the_step_up_handler>>
 
 6+h|SAMM
 
+|`GET /api/v1/samm/models`
+|none
+|The pinned model versions: `{"models": [{"version", "source", "checksum", "pinnedAt", "default"}]}`, newest first, the one
+the application takes for a new scope or assessment has `default: true`. A version that is not in the list cannot be
+chosen. The exact body is in <<_samm_requests>>
+|`403 FORBIDDEN`; an empty `models` for an installation that pins none (the web app then offers neither a new scope nor a
+new assessment)
+|xref:category-samm.adoc#AUN-SAMM-1[AUN-SAMM-1], xref:../use-cases/04-samm.adoc#UC-SAMM-7[UC-SAMM-7]
+|`PROVISIONAL`
+
 |`GET /api/v1/samm/models/{version}`
 |none
 |A pinned model version: business functions, practices, streams, questions and their answer sets
-|none
+|`404 NOT_FOUND` for a version that is not pinned
 |xref:category-samm.adoc#AUN-SAMM-1[AUN-SAMM-1]
 |`PROVISIONAL`
 
@@ -520,19 +530,90 @@ of <<_the_step_up_handler>>
 |xref:category-samm.adoc#AUN-SAMM-2[AUN-SAMM-2]
 |`PROVISIONAL`
 
+|`POST /api/v1/samm/scopes`
+|`{"title", "subject", "modelVersion", "targets"}`: a new scope; `subject` is `team:<id>`, `service:<id>` or
+`organisation`; `targets` (optional) maps a practice id to `{"target", "due"}`. The exact body is in <<_samm_requests>>
+|`201 {"outcome": "CREATED", "id", "document", "address", "at", "parts"}`: the server assigns the address segment `id` and
+the document id and writes the first commit
+|`422 VALIDATION` per field (`/title`, `/subject`, `/modelVersion`, `/targets/<practice>/target`, `/targets/<practice>/due`),
+among them `REFERENCE_NOT_FOUND` for a subject that does not resolve (AUN-SAMM-2); `FORBIDDEN` without `edit` on
+`samm-assessments`; `REJECTED`; `GIT_UNAVAILABLE`
+|xref:category-samm.adoc#AUN-SAMM-2[AUN-SAMM-2], xref:category-samm.adoc#AUN-SAMM-6[AUN-SAMM-6],
+xref:../use-cases/04-samm.adoc#UC-SAMM-1[UC-SAMM-1]
+|`PROVISIONAL`
+
 |`GET /api/v1/samm/scopes/{scope}`
 |none
-|The scope: subject, model version, targets and the assessments with state, score and release
-|none
+|The scope: subject, model version, targets and the assessments with state, score and release; with `document` and the
+`parts` `data` and `targets` (blob ids, the blob of the next save of the targets). The exact body is in <<_samm_requests>>
+|`404 NOT_FOUND`
 |xref:category-samm.adoc#AUN-SAMM-2[AUN-SAMM-2], xref:category-samm.adoc#AUN-SAMM-6[AUN-SAMM-6]
+|`PROVISIONAL`
+
+|`POST /api/v1/documents/samm-assessments/{scope}/save`
+|`{"parts": {"targets": {"blob", "fields"}}}`: the roadmap of a scope, the generic save of the scope as a document
+(<<_document_lifecycle_requests>>); `fields` maps `/<practice>` to `{"target", "due"}`, or to `null` to remove the target
+of the practice
+|`{"outcome": "SAVED", "at", "parts"}` with the new blob id of `targets`
+|`CONFLICT` per practice with the target of both sides; `VALIDATION` with `part` `targets`; `FORBIDDEN` without `edit`;
+`REJECTED`; `GIT_UNAVAILABLE`. A scope has no draft, no workflow and no release: the request is direct and never answers
+`DOCUMENT_RELEASED`. The bodies are in <<_samm_requests>>
+|xref:category-samm.adoc#AUN-SAMM-6[AUN-SAMM-6], xref:../use-cases/04-samm.adoc#UC-SAMM-1[UC-SAMM-1]
+|`PROVISIONAL`
+
+|`POST /api/v1/samm/{scope}/assessments`
+|`{"title", "date", "modelVersion", "assessors"}`: a new assessment of the scope; `assessors` are pseudonyms of the
+directory, bound or not. The exact body is in <<_samm_requests>>
+|`201 {"outcome": "CREATED", "id", "document", "scope", "address", "state": "draft", "at", "parts"}`: the assessment is
+empty; `answers` and `evidence` are empty and every practice file is written by its first save
+|`404 NOT_FOUND` for a scope that does not exist; `409 ASSESSMENT_OPEN` with `assessment`, the address segment of the
+assessment that is in `draft` or `in-review` already (PROVISIONAL: at most one is open); `422 VALIDATION` per field
+(`/title`, `/date`, `/modelVersion`, `/assessors`, `/assessors/<n>` with `PSEUDONYM_UNKNOWN`); `FORBIDDEN` without `edit`;
+`REJECTED`; `GIT_UNAVAILABLE`
+|xref:category-samm.adoc#AUN-SAMM-1[AUN-SAMM-1], xref:../use-cases/04-samm.adoc#UC-SAMM-2[UC-SAMM-2],
+xref:data-protection.adoc#AUN-DP-5[AUN-DP-5]
+|`PROVISIONAL`
+
+|`GET /api/v1/samm/{scope}/trend`
+|none; the optional query `modelVersion` names the version of the points (default: the one of the latest released
+assessment)
+|The scores of the released assessments of the scope over time, oldest first, each with the overall, the business function
+and the practice scores, unrounded; `omitted` counts the released assessments of other model versions. The exact body is
+in <<_samm_requests>>
+|`404 NOT_FOUND`; an empty `points` for a scope without a released assessment
+|xref:../use-cases/04-samm.adoc#UC-SAMM-5[UC-SAMM-5]; AUN-SAMM-5 names no trend
 |`PROVISIONAL`
 
 |`GET /api/v1/samm/{scope}/compare?from=<assessment>&to=<assessment>`
 |none
 |Per business function, practice and stream: score `from`, score `to`, difference (shape PROVISIONAL)
-|`MODEL_VERSIONS_DIFFER`
+|`422 MODEL_VERSIONS_DIFFER` (status PROVISIONAL) with `from` and `to`, each `{"assessment", "modelVersion"}`; `404
+NOT_FOUND` for an assessment that is no assessment of the scope; `422 VALIDATION` with the pointer `/from` or `/to` and
+the code `REQUIRED`. The two assessments may be in any state: an open one is read as saved (PROVISIONAL). The bodies are in
+<<_samm_requests>>
 |xref:category-samm.adoc#AUN-SAMM-5[AUN-SAMM-5]
-|`SPECIFIED`
+|`SPECIFIED`; the status of `MODEL_VERSIONS_DIFFER` and the comparison of an open assessment `PROVISIONAL`
+
+|`GET /api/v1/documents/samm-assessments/{id}`
+|none
+|One assessment in the SAMM shape, which keeps its own layout: the answers per practice and question, the loaded `parts`,
+the signed `history`, the `release` and, new, `evidence` per practice. The comment of an answer is an AsciiDoc fragment.
+A released assessment reads `state` `released` and is frozen. The exact body is in <<_samm_requests>>
+|`404 NOT_FOUND`
+|xref:category-samm.adoc#AUN-SAMM-1[AUN-SAMM-1], xref:category-samm.adoc#AUN-SAMM-7[AUN-SAMM-7]
+|`PROVISIONAL`
+
+|`PUT /api/v1/drafts/samm-assessments/{id}` and `POST /api/v1/documents/samm-assessments/{id}/save`
+|The generic body (<<_document_lifecycle_requests>>); the part is a practice id, `fields` maps `<question>/answer`,
+`<question>/comment` and `evidence` (the whole list of the practice's evidence links) to the new value
+|As the generic request: `DRAFT_SAVED`, `SAVED` with the new blob id of the practice
+|`CONFLICT` per practice; `VALIDATION` per field, among them the evidence (`PATTERN` for a link that is not an absolute
+`https` address, `REQUIRED`, `MAX_LENGTH`, `MAX_ITEMS`); `409 DOCUMENT_RELEASED` with `tag` for a released assessment,
+for the draft and the save alike (the assessment is frozen, the draft stays); `FORBIDDEN`; `REJECTED`;
+`GIT_UNAVAILABLE`; `STEP_UP_REQUIRED`. The bodies are in <<_samm_requests>>
+|xref:category-samm.adoc#AUN-SAMM-3[AUN-SAMM-3], xref:category-samm.adoc#AUN-SAMM-4[AUN-SAMM-4],
+xref:category-samm.adoc#AUN-SAMM-7[AUN-SAMM-7]
+|`SPECIFIED`; the evidence key, its refusals and the draft of a frozen assessment `PROVISIONAL`
 
 6+h|ISMS
 
@@ -1517,6 +1598,349 @@ else is blocked (<<_decided_directory>>, point 13).
 sheet that someone saved, created or retired an entry; the web app reads the list and the entry again (PROVISIONAL).
 
 
+[#_samm_requests]
+== SAMM Requests
+
+The requests of the use cases UC-SAMM-1 to UC-SAMM-5 beyond the ones of the first SAMM lens
+(xref:../use-cases/04-samm.adoc[Use Cases: OWASP SAMM Assessments]). The rows are in <<_requests>>, *SAMM*; this section
+fixes their bodies and the addresses of the new views. Every body is PROVISIONAL unless a row says otherwise; the
+decisions are in <<_decided_samm>>. The values are those of the mock: the scopes `payments`, `identity`, `shop` and
+`organisation`, the practice ids of the model (`sm`, `pc`, `eg`, `ta`, `sr`, `sa`, `sb`, `sd`, `dm`, `aa`, `rt`, `st`,
+`im`, `em`, `om`) and today, 2026-11-26.
+
+[#_samm_addresses]
+=== The Addresses
+
+The lens *SAMM* has `/samm`, `/samm/{scope}`, `/samm/{scope}/{assessment}`, `/samm/{scope}/{assessment}/release` and
+`/samm/{scope}/{assessment}/{practice}`. The step adds two addresses to `canonical-addresses.json`, each before the
+address whose placeholder it would otherwise be read as:
+
+[cols="2,3,3"]
+|===
+|Route id |Address |Shows
+
+|`samm.new`
+|`/samm/new`
+|The form of a new scope: title, subject (a team, a service or the organisation), the model version and the targets;
+nothing is stored before the save (`POST /api/v1/samm/scopes`), then the page moves to the address of the scope. The
+route comes before `samm.scope` in the file
+
+|`samm.assessment.new`
+|`/samm/{scope}/new`
+|The form of a new assessment of the scope: title, date, model version, assessors; nothing is stored before the save
+(`POST /api/v1/samm/{scope}/assessments`), then the page moves to the address of the assessment. The route comes before
+`samm.assessment` in the file. Refused with a reason while the scope has an open assessment
+|===
+
+The segment `new` is reserved in `{scope}` and in `{assessment}`: the server never assigns it as an address segment,
+and neither `models` nor `scopes` (they are paths of the API under `/api/v1/samm/`). `/samm/new/{x}` reads as the
+assessment `{x}` of a scope `new`, which does not exist: the not-found view. The targets editor, the trend and the way
+to start a new assessment have no address of their own: they are parts of the scope sheet and of the frozen assessment.
+The new addresses admit no query.
+
+=== The Pinned Models
+
+`GET /api/v1/samm/models`:
+
+[source,json]
+----
+{
+  "models": [
+    { "version": "v2.2.0", "source": "https://github.com/owaspsamm/core/tree/v2.2.0/model",
+      "checksum": "sha256:1b9d4e0c7a52f8316d0e94ab5c27f3d8e61a09b4c2d57e8f130a64b9c8d71e2f", "pinnedAt": "2026-02-03",
+      "default": true },
+    { "version": "v2.1.0", "source": "https://github.com/owaspsamm/core/tree/v2.1.0/model",
+      "checksum": "sha256:6e30a97d12c4b5f808e1d7a3490c6b2f5d81e3a07c94b6d2185f0e7a3c49d86b", "pinnedAt": "2025-03-17",
+      "default": false }
+  ]
+}
+----
+
+The versions are those of `samm.yaml` (AUN-SAMM-1), newest first; `default` is `true` for exactly one entry of a
+non-empty list. The checksum is that of the vendored model files; the values above are fixtures. Both tags exist in
+https://github.com/owaspsamm/core/tags[owaspsamm/core]. A version that is not listed answers `404 NOT_FOUND` on
+`GET /api/v1/samm/models/{version}` and is refused with `ENUM` where a body names it. The web app has no request that
+pins a version (UC-SAMM-7 is configuration): it shows the list in the form of a new scope and a new assessment.
+
+=== A New Scope
+
+`POST /api/v1/samm/scopes`:
+
+[source,json]
+----
+{
+  "title": "Mobile Apps",
+  "subject": "team:mobile",
+  "modelVersion": "v2.2.0",
+  "targets": {
+    "sm": { "target": 2 },
+    "ta": { "target": 2.5, "due": "2027-03-31" },
+    "sb": { "target": 1.5 }
+  }
+}
+----
+
+`subject` is `team:<id>`, `service:<id>` or `organisation` (AUN-SAMM-2), the form a `CatalogPicker` stores; `title` is
+1 to 200 characters; `modelVersion` is a pinned version, the default when absent; `targets` is optional: a practice of
+the model maps to a `target`, one of 0, 0.5, 1, 1.5, 2, 2.5 or 3, and an optional `due`, a date `YYYY-MM-DD`. A
+practice without an entry has no target. The request answers `201`
+
+[source,json]
+----
+{
+  "outcome": "CREATED", "id": "mobile", "document": "mobile", "address": "/samm/mobile", "at": "2026-11-26T09:30:00Z",
+  "parts": {
+    "data": { "blob": "c41e07d", "savedAt": "2026-11-26T09:30:00Z",
+              "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example" } },
+    "targets": { "blob": "9a02f5b", "savedAt": "2026-11-26T09:30:00Z",
+                 "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example" } }
+  }
+}
+----
+
+`id` is the address segment the server derives from the title (lower case, a number appended on a collision),
+`document` the document id (a ULID in the application; the mock uses the same text as `id`). The refusals, `422`, with
+pointers into the body, like the create of a catalog entry:
+
+[source,json]
+----
+{ "outcome": "VALIDATION", "errors": [
+    { "pointer": "/title", "code": "REQUIRED" },
+    { "pointer": "/subject", "code": "REFERENCE_NOT_FOUND" },
+    { "pointer": "/targets/ta/target", "code": "ENUM" },
+    { "pointer": "/targets/rt/due", "code": "PATTERN" } ] }
+----
+
+The other codes: `MAX_LENGTH` and `TYPE` for `/title`, `PATTERN` for a `/subject` of none of the three forms,
+`ENUM` for `/modelVersion` and for a practice id the model does not have (`/targets/<practice>`). A subject that does not
+resolve is the refusal AUN-SAMM-2 asks for: the pointer names the reference. A user without `edit` on `samm-assessments`
+gets `403 FORBIDDEN`.
+
+=== A Scope and Its Targets
+
+`GET /api/v1/samm/scopes/payments` keeps its members (the targets are shortened) and gains `document` and `parts`:
+
+[source,json]
+----
+{
+  "id": "payments", "document": "payments", "title": "Payments",
+  "subject": { "kind": "team", "id": "payments", "name": "Payments" },
+  "modelVersion": "v2.2.0",
+  "targets": { "sm": { "target": 2 }, "ta": { "target": 2.5, "due": "2027-03-31" } },
+  "parts": {
+    "data": { "blob": "5e7a1d0", "savedAt": "2026-01-12T10:00:00Z",
+              "savedBy": { "pseudonym": "p-7d2e58", "name": "Noor Haddad", "role": "Chief Information Security Officer" } },
+    "targets": { "blob": "b81c4f3", "savedAt": "2026-09-08T08:41:00Z",
+                 "savedBy": { "pseudonym": "p-7d2e58", "name": "Noor Haddad", "role": "Chief Information Security Officer" } }
+  },
+  "assessments": [ "…" ]
+}
+----
+
+The targets are saved with the generic save of a document, the scope being the document: `POST
+/api/v1/documents/samm-assessments/payments/save` with the part `targets`. `fields` maps `/<practice>` to the whole
+entry of the practice, or to `null` to remove it; the form sends the practices that changed:
+
+[source,json]
+----
+{ "parts": { "targets": { "blob": "b81c4f3", "fields": {
+    "/ta": { "target": 3, "due": "2027-03-31" },
+    "/rt": { "target": 2, "due": "2027-09-30" },
+    "/om": null } } } }
+----
+
+It answers `{"outcome": "SAVED", "at": "2026-11-26T09:45:00Z", "parts": {"targets": {"blob": "a41f09c", "savedAt": "…",
+"savedBy": {"…": "…"}}}}`. Per-field refusals, `422`, with the part and the pointer into the value of the part, which is
+the map of the practices:
+
+[source,json]
+----
+{ "outcome": "VALIDATION", "errors": [
+    { "part": "targets", "pointer": "/ta/target", "code": "ENUM" },
+    { "part": "targets", "pointer": "/rt/due", "code": "PATTERN" } ] }
+----
+
+A conflict, `409`, per practice with the whole entry of both sides:
+
+[source,json]
+----
+{ "outcome": "CONFLICT", "conflicts": [
+    { "part": "targets", "blob": "c05e92a", "fields": [
+        { "pointer": "/ta", "own": { "target": 3, "due": "2027-03-31" }, "other": { "target": 2 },
+          "by": { "pseudonym": "p-2b7f10", "name": "Jordan Weber", "role": "Team Lead" } } ] } ] }
+----
+
+A scope is no workflow: no draft (`PUT /api/v1/drafts/…` is not used for it), no submit, no release, never frozen. A save
+writes one signed commit to `main`. The event `document-saved` (`part` `targets`) and, after a create, `document-created`
+(`kind` `scope`) reach the other tabs; the lists and an open scope sheet read again.
+
+=== A New Assessment
+
+`POST /api/v1/samm/shop/assessments`:
+
+[source,json]
+----
+{ "title": "Web shop 2026 Q4", "date": "2026-11-26", "modelVersion": "v2.2.0", "assessors": ["p-4c1a9e", "p-2b7f10"] }
+----
+
+`title` is 1 to 200 characters, `date` a date `YYYY-MM-DD`, `modelVersion` a pinned version (the default when absent),
+`assessors` one to 30 pseudonyms of the person directory, bound or not yet bound (UC-SAMM-2). The assessment starts
+empty. It answers `201`
+
+[source,json]
+----
+{
+  "outcome": "CREATED", "id": "2026-q4", "document": "shop-2026-q4", "scope": "shop",
+  "address": "/samm/shop/2026-q4", "state": "draft", "at": "2026-11-26T09:35:00Z", "parts": {}
+}
+----
+
+`id` is the address segment the server derives from the title within the scope (lower case, a number appended on a
+collision), `document` the document id, `parts` empty: no practice file exists before its first save. The refusals:
+
+[source,json]
+----
+{ "outcome": "VALIDATION", "errors": [
+    { "pointer": "/date", "code": "PATTERN" },
+    { "pointer": "/modelVersion", "code": "ENUM" },
+    { "pointer": "/assessors/1", "code": "PSEUDONYM_UNKNOWN" } ] }
+----
+
+and `404 NOT_FOUND` for an unknown scope. A scope that has an assessment in `draft` or `in-review` refuses a second one,
+`409`:
+
+[source,json]
+----
+{ "outcome": "ASSESSMENT_OPEN", "assessment": "2026-q4", "state": "draft" }
+----
+
+The web app links the open assessment from this refusal. The event `document-created` (`kind` `assessment`) reaches the
+other tabs.
+
+=== The Assessment
+
+`GET /api/v1/documents/samm-assessments/payments-2026-q4` keeps the SAMM shape of the first lens and gains `evidence`
+(shortened):
+
+[source,json]
+----
+{
+  "id": "payments-2026-q4", "repository": "samm-assessments", "scope": "payments", "slug": "2026-q4",
+  "title": "Payments 2026 Q4", "date": "2026-11-24", "modelVersion": "v2.2.0", "state": "draft",
+  "assessors": [ { "pseudonym": "p-4c1a9e", "name": "Alex Example", "role": "Security Champion" } ],
+  "answers": { "sb": { "sb-b-1": { "answer": 1,
+      "comment": "Dependency scanning runs in *every* pipeline.\n\n* Scanner: `trivy`\n* The SBOM is not yet published." } } },
+  "evidence": {
+    "sb": [ { "question": "sb-b-1", "title": "Pipeline of the payment service", "url": "https://ci.example/payments/pipeline" },
+            { "question": null, "title": "Dependency policy", "url": "https://wiki.example/payments/dependency-policy" } ]
+  },
+  "parts": { "sb": { "blob": "4f10c8e", "savedAt": "2026-11-25T09:48:00Z",
+                     "savedBy": { "pseudonym": "p-9e33a1", "name": "Sam Okafor", "role": "Developer" } } },
+  "history": [ "…" ],
+  "release": null
+}
+----
+
+* `comment` is an AsciiDoc fragment of at most 8,000 characters, shown with the preview of `POST /api/v1/render/asciidoc`.
+* `evidence` maps a practice id to its links in the order they were entered; a practice without a link is absent, an
+  assessment without any has `"evidence": {}` (the member is always present). `question` is a question id of the
+  practice or `null` for the practice as a whole; `title` is 1 to 200 characters; `url` is an absolute `https` address of
+  at most 2,048 characters; a practice holds at most 50 links. Evidence is a link, never a file (AUN-SAMM-7).
+* The blob of a practice covers its answers, its comments and its evidence: one file of the layout of the use case
+  change `change-evidence-per-practice` is read and written together.
+* A released assessment reads `"state": "released"`, `release` set; it is frozen.
+
+*A save with a comment and evidence*, `POST /api/v1/documents/samm-assessments/payments-2026-q4/save`, the generic body:
+
+[source,json]
+----
+{ "parts": { "sb": { "blob": "4f10c8e", "fields": {
+    "sb-b-1/answer": 1,
+    "sb-b-1/comment": "Dependency scanning runs in *every* pipeline.",
+    "evidence": [ { "question": "sb-b-1", "title": "Pipeline of the payment service",
+                    "url": "https://ci.example/payments/pipeline" } ] } } } }
+----
+
+The keys of the practice are `<question>/answer`, `<question>/comment` and `evidence`, which holds the whole list; an
+empty list or `null` removes the evidence of the practice. The answer is the generic `SAVED` with the new blob of `sb`.
+The draft takes the same body. The per-field refusals name the pointer into the assessment as the SAMM read shows it,
+`/answers/<practice>/<question>/answer`, `…/comment` and `/evidence/<practice>/<n>/<member>`:
+
+[source,json]
+----
+{ "outcome": "VALIDATION", "errors": [
+    { "part": "sb", "pointer": "/evidence/sb/1/url", "code": "PATTERN" },
+    { "part": "sb", "pointer": "/evidence/sb/0/title", "code": "REQUIRED" },
+    { "part": "sb", "pointer": "/answers/sb/sb-b-1/comment", "code": "MAX_LENGTH" } ] }
+----
+
+`PATTERN` is a `url` that is no absolute `https` address (`http://…`, a relative path, a `file:` address), `REQUIRED` an
+empty `title` or `url`, `MAX_LENGTH` a text above its limit, `MAX_ITEMS` the pointer `/evidence/<practice>` with more
+than 50 links, `ENUM` a `question` the practice does not have. A conflict on the evidence is one field,
+`/evidence/<practice>`, whose `own` and `other` are the two lists.
+
+*A frozen assessment.* Every write to a released assessment, the draft, the save, the submit and the release alike,
+answers `409`
+
+[source,json]
+----
+{ "outcome": "DOCUMENT_RELEASED", "tag": "assessments/payments-2026-q2/v1" }
+----
+
+and nothing is written. The web app does not offer a write for it: the sheets are read-only with the release as seal and
+one act, *Start a new assessment*, which opens `/samm/{scope}/new` (the scope of the assessment). That form prefills the
+model version of the frozen assessment when it is pinned and refuses with the reason when `ASSESSMENT_OPEN` is the answer.
+An assessment released while it was open elsewhere answers the save with the same `409`; the draft stays and the sheet
+reads the assessment again.
+
+=== The Trend
+
+`GET /api/v1/samm/payments/trend` (shortened; every point holds the five business functions and the fifteen practices):
+
+[source,json]
+----
+{
+  "scope": "payments", "modelVersion": "v2.2.0", "omitted": 0,
+  "points": [
+    { "assessment": "2025-q4", "document": "payments-2025-q4", "title": "Payments 2025 Q4", "date": "2025-12-08",
+      "overall": 0.9583333333333334,
+      "functions": { "governance": 0.9583333333333334, "design": 1.0, "implementation": 1.25,
+                     "verification": 0.8333333333333334, "operations": 0.75 },
+      "practices": { "sm": 1.125, "pc": 0.625, "eg": 1.125, "…": "…" } },
+    { "assessment": "2026-q2", "document": "payments-2026-q2", "title": "Payments 2026 Q2", "date": "2026-06-16",
+      "overall": 1.3583333333333332,
+      "functions": { "governance": 1.4166666666666667, "design": 1.6666666666666667, "implementation": 1.5416666666666667,
+                     "verification": 0.9583333333333334, "operations": 1.2083333333333333 },
+      "practices": { "sm": 1.25, "pc": 1.125, "eg": 1.875, "…": "…" } }
+  ]
+}
+----
+
+The points are the released assessments of the model version `modelVersion`, oldest first by `date`, scores unrounded as
+AUN-SAMM-5 asks. `omitted` is the number of the scope's released assessments taken with another model version, which the
+trend does not mix (a comparison across versions is deferred). The query `modelVersion` asks for another version; the
+default is the version of the latest released assessment. A scope without a released assessment answers `"points": []`
+with `modelVersion` `null`. The trend of several scopes belongs to the lens *Reports* (the next step).
+
+=== The Comparison and `MODEL_VERSIONS_DIFFER`
+
+`GET /api/v1/samm/payments/compare?from=2026-q2&to=2026-q4` for two assessments taken with different versions of the model
+answers `422`
+
+[source,json]
+----
+{
+  "outcome": "MODEL_VERSIONS_DIFFER",
+  "from": { "assessment": "2026-q2", "modelVersion": "v2.1.0" },
+  "to": { "assessment": "2026-q4", "modelVersion": "v2.2.0" }
+}
+----
+
+and nothing is compared. The web app shows a notice that names both versions and offers no comparison; the scores of each
+assessment stay readable. A missing `from` or `to` is `422 VALIDATION` with the pointer `/from` or `/to` and the code
+`REQUIRED`; an assessment that is none of the scope's is `404 NOT_FOUND`. An open assessment may be compared (its scores
+are those of the answers as saved), the two may be in any state.
+
 [#_the_step_up_handler]
 == The Step-Up Handler
 
@@ -1692,7 +2116,8 @@ Another or no `reason` is shown as the general failure. One action: "Try again",
 == Notes
 
 * *The assessment is a document.* The SAMM views read and write an assessment through the generic document requests;
-only the scope list, the scope, the model and the comparison are SAMM-specific.
+only the scope list, the scope and its creation, the models, the creation of an assessment, the trend and the comparison
+are SAMM-specific (<<_samm_requests>>).
 * *The release names no reviewed revision yet.* `CHANGED_SINCE_REVIEW` is therefore answered by the state of the
 server, not by a comparison with the revision the approver saw. A request that carries the reviewed revision would
 make the check exact.
@@ -2080,3 +2505,69 @@ the status `409` for `BINDING_CANDIDATES` and `NOT_BINDABLE` is wanted; whether 
 a link to the parent of the current page; whether the persons search should be an address query; whether a user with no
 right to administer the catalogs may change their own entry, which the mock profile `read-only` refuses; and whether the
 person who confirms an entry with unsaved changes should confirm the changed entry instead of being asked to save.
+
+[#_decided_samm]
+*Decided provisionally* with the SAMM completion (UC-SAMM-1 to UC-SAMM-5), so that no screen is blocked; the owner may
+change each one. The bodies and addresses are in <<_samm_requests>>:
+
+. *The addresses.* The lens *SAMM* gains `/samm/new` (`samm.new`, a new scope) and `/samm/{scope}/new`
+  (`samm.assessment.new`, a new assessment), each before the route it would collide with. The segment `new` is reserved
+  as a scope and as an assessment; so are `models` and `scopes` as scopes, which are paths below `/api/v1/samm/`.
+. *The creates are requests of their own,* `POST /api/v1/samm/scopes` and `POST /api/v1/samm/{scope}/assessments`, because
+  a scope names a subject and an assessment names its scope, and the server derives the address segment of both. The
+  generic `POST /api/v1/documents/{repository}` would need the web app to know the layout of the two document kinds.
+  The server assigns the address segment (a lower-case slug of the title, a number appended on a collision) and the
+  document id.
+. *The scope is a document without a workflow.* Its targets are saved with the generic save of a document, the part
+  `targets`, so the conflict, the validation and the step-up of the document controller serve it; there is no draft, no
+  submit, no release and no `DOCUMENT_RELEASED`. The scope read gains `document` and `parts`.
+. *The title and the subject of a scope cannot be changed* after the create; only the targets can. A scope of another
+  subject is a new scope. A subject may have several scopes: the register does not forbid it.
+. *A subject is written as the reference* `team:<id>`, `service:<id>` or `organisation` (AUN-SAMM-2) and read as
+  `{kind, id, name}`.
+. *A target is 0 to 3 in steps of 0.5,* with an optional due date; a practice without an entry has no target and no gap.
+  AUN-SAMM-6 says "in steps of the model"; the model has no step, and 0.5 is the step of the targets of the mock (1.5,
+  2, 2.5). The targets save sends the practices that changed, each as a whole entry, and `null` removes one.
+. *At most one assessment of a scope is open* (`draft` or `in-review`); a second one is refused with `409
+  ASSESSMENT_OPEN` that names the open one. The scope list shows one open assessment per scope already.
+. *A new assessment starts empty:* no answer is copied from an earlier one. The form of a new assessment prefills the model
+  version of the assessment it was started from. Copying answers is a later decision.
+. *Evidence belongs to the practice,* like the answers (the change `change-evidence-per-practice`): the read has
+  `evidence` per practice, the practice's blob covers answers, comments and evidence, and the save carries the whole list
+  under the key `evidence`. A link has an optional `question`, a title and an absolute `https` address; a practice holds at
+  most 50. `http`, relative and `file:` addresses are refused with `PATTERN`, there is no upload (AUN-SAMM-7).
+. *The comment of an answer is AsciiDoc* of at most 8,000 characters, previewed by the server like every AsciiDoc field
+  (`POST /api/v1/render/asciidoc`); the existing plain comments are valid AsciiDoc.
+. *The pointers of a SAMM refusal* are those of the assessment as the SAMM read shows it
+  (`/answers/<practice>/<question>/answer`, `/evidence/<practice>/<n>/<member>`), as the existing conflicts already are;
+  the generic form keeps pointers into the value of a part. The scope's refusals are into the targets part
+  (`/<practice>/target`).
+. *A frozen assessment* is a released one: every write (draft, save, submit, release) answers `409 DOCUMENT_RELEASED` with
+  the tag, the draft included, and the sheets are read-only. The way on is *Start a new assessment*, a link to
+  `/samm/{scope}/new`; there is no request that copies or reopens a released assessment.
+. *`MODEL_VERSIONS_DIFFER` is `422`* and names both assessments with their versions. AUN-SAMM-5 names the outcome, not the
+  status. The comparison accepts an assessment in any state, as the first SAMM lens already uses it (an open assessment
+  against the last release), reading the answers as saved.
+. *The trend is one request per scope,* `GET /api/v1/samm/{scope}/trend`: released assessments of one model version, oldest
+  first, with the overall, the function and the practice scores, and the number of the others (`omitted`). UC-SAMM-5 asks
+  for a trend of several scopes as well; that is a report of the lens *Reports* (the next step). The scope sheet's chart
+  reads this request instead of the assessments of the scope.
+. *The pinned models are a list,* `GET /api/v1/samm/models`, with source, checksum, date and a default; pinning is not
+  a web request (UC-SAMM-7 is configuration). The checksum is shown nowhere in the web app yet. The pickers offer only a
+  pinned version; with none, the web app offers no new scope and no new assessment and says why.
+. *The rights:* creating a scope, saving its targets and creating an assessment need `edit` on `samm-assessments`; reading
+  needs `read`. Without `edit` the acts are shown disabled with the reason, and the requests answer `403 FORBIDDEN`.
+. *The SAMM schemas are not served to the form kit:* the forms of a scope and an assessment are written for the SAMM lens
+  (a subject picker, a targets table, an assessor picker), and the register fixes their limits. The scope and the
+  assessment are not offered by `GET /api/v1/categories/{category}/schema`.
+. *The mock answers the creates with fixed ids* (`mobile`, `2026-q4` of `shop`) and by the path of the scope: a scope that
+  has an open assessment answers `ASSESSMENT_OPEN`, a scope that has none answers `CREATED`; the e2e flows type the same
+  values.
+
+For the owner: whether the scope and the assessment should be created through the generic `POST
+/api/v1/documents/samm-assessments` with a schema of the two kinds served to the form kit (2, 17); whether the title and
+the subject of a scope may change (4) and whether a subject may have several scopes (4); the step of a target and
+whether the targets of a scope must be complete (6); whether more than one assessment of a scope may be open at once (7);
+whether a new assessment should offer to start from the answers of the last released one (8); the limits of the evidence
+and the comment (9, 10); the status `422` of `MODEL_VERSIONS_DIFFER` (13); whether the trend may mix model versions with a
+marker instead of leaving the others out (14); and whether the web app should pin a model version (15).

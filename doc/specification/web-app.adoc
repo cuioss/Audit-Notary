@@ -93,6 +93,10 @@ Directory and Catalog Requests]): the lens *Catalogs* gains `/catalogs/<catalog>
 directory entry is `/settings/profile`. The administration pages belong to the lens *Catalogs* although their path starts
 with `/directory`, which never meets `/catalogs/<catalog>`.
 
+Provisionally (decided with the SAMM completion, xref:rest-api.adoc#_samm_addresses[REST API Register, SAMM Requests]): the
+lens *SAMM* gains `/samm/new` (a new scope) and `/samm/<scope>/new` (a new assessment); the segment `new` is reserved as a
+scope and as an assessment.
+
 Three more addresses are shown without the shell: `/login` (local users), `/signed-out` and `/login-problem`
 (provisional, xref:rest-api.adoc#_addresses_outside_the_shell[REST API Register, Addresses Outside the Shell]). They are
 in `canonical-addresses.json` as `outsideShell`, so the web app routes them and the check of a login's `return` refuses
