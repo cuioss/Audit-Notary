@@ -66,7 +66,9 @@ reports a reference into a repository the user may not read as not found; the fo
 
 |`422`
 |`VALIDATION`
-|`errors`: a list of `{"pointer", "code"}` with a JSON Pointer into the request body
+|`errors`: a list of `{"pointer", "code"}` with a JSON Pointer into the request body; for a request without a body
+(PROVISIONAL), a JSON Pointer into its query parameters read as one object, a parameter name to its value (`/q`), or to
+the array of its values when it is repeated (`/ref`; an element is `/ref/3`)
 
 |`503`
 |`GIT_UNAVAILABLE`
@@ -249,8 +251,9 @@ are used today
 document may reference, the bound ones (`state` `bound`) and the prefilled, unbound ones (`unbound`), ordered by
 name, at most 100; `q` keeps the entries whose name contains the text, upper and lower case alike; `truncated` is `true`
 when more entries matched. `team` and `role` are catalog references (`team:payments`). The erased are not listed. A
-client filters the answer by the typed text as well, so that an answer that ignores `q` still serves. The exact body
-is in <<_form_kit_requests>>
+client filters the entries it received by the typed text as well, which covers only a complete answer: with
+`truncated` `true` the answer is incomplete, and the client asks again with `q` and does not present its local filter
+as the full set of matches. The server filters by `q`. The exact body is in <<_form_kit_requests>>
 |`403 FORBIDDEN` for a user without a mapped right (the entries are personal data, as the binding candidates of
 xref:directory.adoc#AUN-DIR-2[AUN-DIR-2] are)
 |xref:data-protection.adoc#AUN-DP-5[AUN-DP-5], xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4]
@@ -782,14 +785,16 @@ that needs them; the server's `MANDATORY_FIELDS_MISSING` decides.
 (specified) and `PSEUDONYM_UNKNOWN`; the text is the catalogue key `form.error.<code>`, with `form.error.invalid` for
 another code.
 . *The picker lists are whole lists:* `GET /api/v1/catalogs/{catalog}` carries `retired`, and
-`GET /api/v1/directory/persons` is capped at 100 with `truncated`; the client filters locally as well, so a server that
-ignores `q` works. A single pseudonym resolves with `GET /api/v1/directory/persons/{pseudonym}` to `bound`, `unbound`
-or `former`.
+`GET /api/v1/directory/persons` is capped at 100 with `truncated`; the client filters locally as well, which is
+complete only while `truncated` is `false` (with `true` it asks the server with `q`; the server filters by `q`). A
+single pseudonym resolves with `GET /api/v1/directory/persons/{pseudonym}` to `bound`, `unbound` or `former`.
 . *`GET /api/v1/references/resolve`* resolves document and catalog references to a title and a canonical address, so
 that a read view links them; it is no picker. A picker for documents waits for the document list of the document
 lifecycle.
 . *The preview is rendered only by the server,* in safe mode `secure`, sanitised against one allow-list, at most 65,536
 bytes. The web app builds its elements from the parsed answer with the same allow-list, so no view needs `{@html}`.
+. *A request without a body names its input errors by query parameter.* The pointer of a `422 VALIDATION` is then a
+JSON Pointer into the query parameters read as one object (`/ref`), as the common table says.
 . *`NOT_FOUND` is a common refusal* (`404`), for an object that does not exist and for one the user may not read.
 . *The pointers of the form are those of its own value.* How the pointers of a save's answer, which name the request
 body, map onto them is decided with the save of generic documents.

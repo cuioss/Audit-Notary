@@ -82,7 +82,8 @@ the plan, because UC-ACC-6 needs it); `preview-hostile` makes the renderer answe
 |`read-only`
 |`ready`, `preview-hostile`, `preview-unavailable`
 |The right `read` only (also on `test-notes`), with the SAMM data and the form kit requests of `workshop` (the two
-preview states included); an edit answers `FORBIDDEN`
+preview states included); the one edit the mock models, `PUT /api/v1/directory/me`, answers `FORBIDDEN`, and no other
+write is modelled (the `test-notes` documents have no write route)
 
 |`degraded`
 |`unreachable`, `recovered`
@@ -336,7 +337,9 @@ The anti-CSRF header is required as for every POST. A render is listed in `GET /
 request, with its source (the mock logs no body); it is no save, so tests that assert the acts of an edit filter by
 path. The states `preview-hostile` (`render-asciidoc-hostile.json`: script, handlers, `javascript:` and `data:` links,
 `style`, `iframe`, `form`, `svg`, an `img`, a table) and `preview-unavailable` (`503 {"outcome": "RENDER_UNAVAILABLE"}`)
-replace the handler. A source over the limit needs no state: it answers `413` by itself.
+replace the handler. A source over the limit needs no state: it answers `413` by itself. The HTTP adapter reads a request body at most up to 1 MiB (`MockEngine.MAX_BODY_BYTES`, far above
+any source within the limit); a larger body is answered with the same `413` before it is buffered, whatever the
+request.
 
 == Use by the Web App and the End-to-End Suite
 

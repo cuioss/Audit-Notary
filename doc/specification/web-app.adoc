@@ -150,7 +150,7 @@ another type than the one named (`x-catalog` on a number) is ignored.
 |4 |`type: string` with `x-asciidoc: true` |`AsciiDocField`
 |5 |`type: string` with `format: gdr-link` |`DocumentRefField`
 |6 |`type: string` with `format: date-time` or `format: date` |`DateTimeField`
-|7 |`enum` |`Select`
+|7 |`enum` whose members are all strings, numbers or booleans |`Select`
 |8 |`type: boolean` |`Toggle`
 |9 |`type: string` |`Field` (text; a text area with `x-free-text: true`)
 |10 |`type: integer` or `type: number` |`Field` (number)
@@ -178,8 +178,12 @@ names a field by the JSON Pointer of its place in that value
 |===
 |Component |Value
 
-|`Field` (text), `Select`
-|A string, or for an `enum` of numbers the number; an empty text field removes the property from the value
+|`Field` (text)
+|A string; an empty text field removes the property from the value
+
+|`Select`
+|The member of the `enum` as the schema holds it, with its JSON type: a string, a number or a boolean (`true` stays the
+boolean, not the text `"true"`)
 
 |`Field` (number)
 |A number; an empty field removes the property
@@ -325,7 +329,9 @@ The same `SchemaForm` renders a document that is read, a revision and a document
 every component shows its value as text and not as a control. A `DateTimeField` shows the localised date and time; a
 `Select` the text of the option; a `Toggle` yes or no; a `CatalogPicker`, a `PersonPicker` and a `DocumentRefField` the
 name, the person or the title with their marks and the link; a `DataTable` the table without the row editor; an
-`AsciiDocField` the rendered source (the same request); an empty value a dash. The marks *retired*, *not yet bound*,
+`AsciiDocField` the rendered source (the same request), and the source as preformatted text, with a note that it is not
+rendered, when the renderer is unavailable or the source exceeds the preview limit, so that what is read is never
+lost; an empty value a dash. The marks *retired*, *not yet bound*,
 *former* and *not found* are part of the reading, not of the editing. The same labels, sections and hints apply, so
 that what is read has the shape of what was edited.
 

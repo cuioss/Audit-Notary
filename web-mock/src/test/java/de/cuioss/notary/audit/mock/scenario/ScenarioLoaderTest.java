@@ -153,6 +153,19 @@ class ScenarioLoaderTest {
     }
 
     @Test
+    @DisplayName("admits every handler of the enum by its id, and only those")
+    void shouldAdmitEveryHandler() {
+        for (Handler handler : Handler.values()) {
+            var root = valid();
+            ((ObjectNode) root.path("routes")).set("POST /api/v1/handler",
+                    MAPPER.createObjectNode().put("handler", handler.id()));
+            assertEquals(handler, loader.read("sample.json", root).routes().get("POST /api/v1/handler").handler());
+            assertEquals(Optional.of(handler), Handler.byId(handler.id()));
+        }
+        assertEquals(Optional.empty(), Handler.byId("render-markdown"));
+    }
+
+    @Test
     @DisplayName("reads a route that names a built-in handler")
     void shouldReadAHandlerRoute() {
         // Arrange
@@ -163,7 +176,7 @@ class ScenarioLoaderTest {
         var route = loader.read("sample.json", root).routes().get("POST /api/v1/render/asciidoc");
         // Assert
         assertAll(
-                () -> assertEquals("render-asciidoc", route.handler()),
+                () -> assertEquals(Handler.RENDER_ASCIIDOC, route.handler()),
                 () -> assertNull(loader.read("sample.json", valid()).routes().get("GET /api/v1/status").handler()));
     }
 

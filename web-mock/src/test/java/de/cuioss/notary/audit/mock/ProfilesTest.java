@@ -13,6 +13,7 @@ package de.cuioss.notary.audit.mock;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.cuioss.notary.audit.mock.runtime.CanonicalAddresses;
+import de.cuioss.notary.audit.mock.runtime.MockEngine;
 import de.cuioss.notary.audit.mock.scenario.Route;
 import de.cuioss.notary.audit.mock.scenario.ScenarioLoader;
 import de.cuioss.notary.audit.mock.scenario.ScenarioRegistry;
@@ -731,6 +732,24 @@ class ProfilesTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"workshop", "read-only"})
+        @DisplayName("keep every entry of the person list equal to the person it lists (the two fixtures mirror each other)")
+        void shouldKeepTheListAndThePersonsConsistent(String profile) {
+            try (var client = MockClient.start(profile).login()) {
+                var persons = json(client.get("/api/v1/directory/persons")).path("persons");
+                persons.forEach(entry -> {
+                    var pseudonym = entry.path("pseudonym").asText();
+                    var person = json(client.get("/api/v1/directory/persons/" + pseudonym));
+                    assertAll(pseudonym,
+                            () -> assertEquals(entry.path("name"), person.path("name")),
+                            () -> assertEquals(entry.path("state"), person.path("state")),
+                            () -> assertEquals(entry.path("memberships"), person.path("memberships")));
+                });
+                assertEquals(5, persons.size());
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"workshop", "read-only"})
         @DisplayName("answer a person as bound, unbound and former, and an unknown pseudonym as NOT_FOUND")
         void shouldServeAPerson(String profile) {
             try (var client = MockClient.start(profile).login()) {
@@ -901,6 +920,21 @@ class ProfilesTest {
                         () -> assertEquals("TOO_LARGE", json(over).path("outcome").asText()),
                         () -> assertEquals(65_536, json(over).path("limit").asInt()),
                         () -> assertEquals(413, multibyte.statusCode()));
+            }
+        }
+
+        @Test
+        @DisplayName("refuse a body above the transport cap with 413 TOO_LARGE before it is buffered")
+        void shouldRefuseAnOversizedBody() {
+            try (var client = MockClient.start("workshop").login()) {
+                var over = client.change("POST", RENDER,
+                        "{\"source\":\"" + "a".repeat(MockEngine.MAX_BODY_BYTES) + "\"}");
+                var atCap = client.change("POST", RENDER, "{\"source\":\"" + "a".repeat(65_536) + "\"}");
+                assertAll(
+                        () -> assertEquals(413, over.statusCode()),
+                        () -> assertEquals("TOO_LARGE", json(over).path("outcome").asText()),
+                        () -> assertEquals(65_536, json(over).path("limit").asInt()),
+                        () -> assertEquals(200, atCap.statusCode()));
             }
         }
 

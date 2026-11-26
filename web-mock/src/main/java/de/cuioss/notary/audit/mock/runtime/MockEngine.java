@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.cuioss.notary.audit.mock.WebMockLogMessages;
+import de.cuioss.notary.audit.mock.scenario.Handler;
 import de.cuioss.notary.audit.mock.scenario.Link;
 import de.cuioss.notary.audit.mock.scenario.Route;
 import de.cuioss.notary.audit.mock.scenario.Scenario;
@@ -53,7 +54,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * requests (status, messages, login, callback); the session check; the anti-CSRF and {@code Origin} check of
  * state-changing requests; the first-login restriction; the refusal of a session without a right outside the shell;
  * the built-in session, logout and event stream; the links of the current state; the routes of the state, then of
- * the scenario (a route may name a built-in handler instead of a body, {@link Route#HANDLERS}); otherwise
+ * the scenario (a route may name a built-in handler instead of a body, {@link Handler}); otherwise
  * {@code 404 MOCK_NO_ROUTE}.
  */
 public final class MockEngine implements AutoCloseable {
@@ -94,6 +95,14 @@ public final class MockEngine implements AutoCloseable {
     private static final String LOGIN_PROBLEM = "/login-problem?reason=";
     private static final String TOO_MANY_LOGINS = "TOO_MANY_LOGINS";
     private static final String LOCATION = "Location";
+
+    /**
+     * The most bytes of a request body the adapter buffers. A source of the AsciiDoc preview (at most 65,536 bytes
+     * of UTF-8) escaped in JSON needs at most six times that (six bytes for a control character), so the cap is far
+     * above any body the mock answers.
+     */
+    public static final int MAX_BODY_BYTES = 1_048_576;
+
     private static final String SET_COOKIE = "Set-Cookie";
     private static final String FORM = "application/x-www-form-urlencoded";
 
@@ -276,12 +285,11 @@ public final class MockEngine implements AutoCloseable {
                 .orElseGet(() -> noRoute(request));
     }
 
-    /** The answer a built-in handler computes; the loader admits only the names of {@link Route#HANDLERS}. */
-    private MockResponse handled(String handler, MockRequest request) {
-        if (Route.RENDER_ASCIIDOC.equals(handler)) {
-            return renderAsciiDoc(request);
-        }
-        throw new IllegalStateException("No handler named " + handler);
+    /** The answer a built-in handler computes; the switch is exhaustive over {@link Handler}. */
+    private MockResponse handled(Handler handler, MockRequest request) {
+        return switch (handler) {
+            case RENDER_ASCIIDOC -> renderAsciiDoc(request);
+        };
     }
 
     /**
@@ -669,6 +677,17 @@ public final class MockEngine implements AutoCloseable {
             return copy;
         }
         return body;
+    }
+
+    /**
+     * The answer to a body above {@link #MAX_BODY_BYTES}: {@code 413 TOO_LARGE} with the limit of the only request
+     * that takes a large text, the AsciiDoc source (doc/specification/rest-api.adoc, <em>Form Kit Requests</em>). The
+     * adapter answers it before it buffers the rest of the body.
+     *
+     * @return the refusal
+     */
+    public MockResponse bodyTooLarge() {
+        return json(413, object().put(OUTCOME, "TOO_LARGE").put("limit", AsciiDocPreview.LIMIT_BYTES));
     }
 
     private MockResponse noRoute(MockRequest request) {
