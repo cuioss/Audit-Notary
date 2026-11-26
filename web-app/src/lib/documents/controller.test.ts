@@ -1116,6 +1116,22 @@ describe('answers that belong to an earlier moment', () => {
     expect(controller.dirty).toBe(false);
   });
 
+  it('keeps the value a running save sends as a change while another value is changed, so a refusal loses nothing', async () => {
+    const { controller, client } = await open('workshop', N3, {}, { draft: null });
+    const base = controller.value;
+    const request = deferred<Saved>();
+    vi.spyOn(client, 'saveDocument').mockImplementation(() => request.promise);
+    controller.setValue({ ...base, summary: 'B' });
+    const saving = controller.save();
+    controller.setValue({ ...controller.value, actions: [{ what: 'a' }] });
+    expect(controller.edits).toEqual({ '/summary': 'B', '/actions': [{ what: 'a' }] });
+    request.reject(new ApiError('REJECTED', 502));
+    await saving;
+    expect(controller.edits).toEqual({ '/summary': 'B', '/actions': [{ what: 'a' }] });
+    expect(controller.value.summary).toBe('B');
+    expect(controller.dirty).toBe(true);
+  });
+
   it('shows the value saved while nothing was changed back', async () => {
     const { controller, client } = await open('workshop', N3, {}, { draft: null });
     const base = controller.value;

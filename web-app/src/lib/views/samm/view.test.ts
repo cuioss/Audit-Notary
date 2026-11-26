@@ -189,6 +189,36 @@ describe('SammView', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Payments 2026 Q4');
   });
 
+  it('drops the answer of the first read of a scope when a refresh was read meanwhile', async () => {
+    await useProfile('workshop');
+    const original = apiClient.getSammScope.bind(apiClient);
+    let releaseFirst: () => void = () => {};
+    const reads: string[] = [];
+    vi.spyOn(apiClient, 'getSammScope').mockImplementation(async (id) => {
+      reads.push(id);
+      if (reads.length === 1) {
+        await new Promise<void>((resolve) => (releaseFirst = resolve));
+        return { ...(await original(id)), title: 'Stale' };
+      }
+      return original(id);
+    });
+    render(SammView, { params: { scope: 'payments' } });
+    await vi.waitFor(() => expect(reads).toHaveLength(1));
+    for (const listener of listeners) {
+      listener('document-transitioned', {
+        repository: 'samm-assessments',
+        id: 'payments-2026-q4',
+        state: 'released',
+      });
+    }
+    await vi.waitFor(() => expect(reads).toHaveLength(2));
+    expect(await screen.findByTestId('scope-sheet')).toBeInTheDocument();
+    releaseFirst();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Payments');
+    expect(screen.getByRole('heading', { level: 1 })).not.toHaveTextContent('Stale');
+  });
+
   it('opens the form of a new scope at /samm/new and names it in the breadcrumb', async () => {
     await useProfile('workshop');
     const onnavigate = vi.fn();

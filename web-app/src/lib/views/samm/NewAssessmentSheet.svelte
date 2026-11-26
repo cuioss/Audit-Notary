@@ -71,8 +71,11 @@
   let assessors = $state<(string | undefined)[]>([]);
   let errors = $state<FieldError[] | null>(null);
   let failure = $state<string | null>(null);
-  /** The address segment of the assessment the server names as open already. */
-  let openElsewhere = $state<string | null>(null);
+  /**
+   * The assessment the server names as open already (an `ASSESSMENT_OPEN` refusal), with the scope as it was read then.
+   * The name holds only until a newer read of the scope supersedes it: the scope read is authoritative.
+   */
+  let openElsewhere = $state.raw<{ id: string; scope: SammScope | null } | null>(null);
   let saving = $state(false);
   let created = false;
   let destroyed = false;
@@ -83,8 +86,18 @@
   let pins = $derived(models?.models ?? []);
   let open = $derived(
     scope?.assessments.find((entry) => entry.state !== 'released') ??
-      (openElsewhere ? { id: openElsewhere, title: openElsewhere } : null),
+      (openElsewhere && openElsewhere.scope === scope
+        ? { id: openElsewhere.id, title: openElsewhere.id }
+        : null),
   );
+  // A newer read of the scope supersedes the refusal: what it shows is the truth, so the refusal is forgotten with its
+  // notice (it stays until that read completes).
+  $effect.pre(() => {
+    if (openElsewhere && openElsewhere.scope !== scope) {
+      openElsewhere = null;
+      failure = null;
+    }
+  });
   let prefilled = $derived.by(() => {
     const wanted = [scope?.assessments[0]?.modelVersion, scope?.modelVersion];
     return (
@@ -178,7 +191,7 @@
       if (isApiError(error) && error.outcome === 'VALIDATION') errors = error.errors;
       if (isApiError(error) && error.outcome === 'ASSESSMENT_OPEN') {
         const named = error.details.assessment;
-        openElsewhere = typeof named === 'string' ? named : null;
+        openElsewhere = typeof named === 'string' ? { id: named, scope } : null;
         oncreated?.();
       }
       failure = errorMessageKey(error);

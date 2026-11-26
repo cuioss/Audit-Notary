@@ -15,6 +15,7 @@
     MAX_EVIDENCE_URL,
     isHttpsUrl,
     linkProblem,
+    locateLink,
     type EvidenceErrors,
   } from '../../samm/evidence';
 
@@ -54,11 +55,17 @@
   let table: DataTable | undefined = $state();
   /** The link in the editor: its position, or `null` for one to add; `undefined` while the editor is closed. */
   let editing = $state<{ index: number | null } | undefined>();
+  /** The link as it stood when the editor opened on it: what the position is checked against before it is applied. */
+  let opened: SammEvidenceLink | null = null;
+  /** What the dialog says when the list changed or filled up while it was open; the typed values stay. */
+  let dialogNote = $state<string | null>(null);
   let editorOpen = $state(false);
   let titleText = $state('');
   let urlText = $state('');
   let questionId = $state('');
   let removing = $state<number | null>(null);
+  /** The link as it stood when its removal was asked: what the position is checked against before it goes. */
+  let removingLink: SammEvidenceLink | null = null;
   let removeOpen = $state(false);
   let showProblem = $state(false);
   /** Whether the list was reordered or shortened since the server's refusal: its row numbers no longer fit. */
@@ -115,6 +122,8 @@
     urlText = held?.url ?? '';
     questionId = held?.question ?? '';
     showProblem = false;
+    dialogNote = null;
+    opened = held ? { ...held } : null;
     editing = { index };
     editorOpen = true;
   }
@@ -129,7 +138,28 @@
       title: titleText.trim(),
       url: urlText.trim(),
     };
-    const index = editing?.index ?? null;
+    let index = editing?.index ?? null;
+    // The list may have been replaced by a newer one while the dialog was open (live refresh): the position it was
+    // opened with is checked against the list as it stands now, and the typed values stay.
+    if (index !== null && opened !== null) {
+      const found = locateLink(links, opened, index);
+      if (found !== index) {
+        if (found < 0) {
+          // The link is gone or was changed by someone else: applying would add what is typed as a new link.
+          editing = { index: null };
+          opened = null;
+        } else {
+          editing = { index: found };
+        }
+        dialogNote = $t('samm.evidence.stale');
+        return;
+      }
+    }
+    if (index === null && links.length >= MAX_EVIDENCE) {
+      dialogNote = $t('samm.evidence.max', { count: MAX_EVIDENCE });
+      return;
+    }
+    index = editing?.index ?? null;
     onchange?.(
       index === null
         ? [...links, link]
@@ -148,10 +178,15 @@
   }
 
   async function remove() {
-    const index = removing;
+    const asked = removing;
+    const confirmed = removingLink;
     removeOpen = false;
     removing = null;
-    if (index === null || index >= links.length) return;
+    removingLink = null;
+    if (asked === null) return;
+    // The link that was confirmed is the one that goes, wherever a newer list holds it now; one that is gone stays gone.
+    const index = confirmed === null ? asked : locateLink(links, confirmed, asked);
+    if (index < 0 || index >= links.length) return;
     rowsStale = true;
     onchange?.(links.filter((_, position) => position !== index));
     await tick();
@@ -178,6 +213,7 @@
     onedit={(row) => openEditor(row)}
     onremove={(row) => {
       removing = row;
+      removingLink = links[row] ? { ...links[row] } : null;
       removeOpen = true;
     }}
     onmove={move}
@@ -246,6 +282,9 @@
       placeholder={$t('samm.evidence.practice')}
       testId="{testId}-field-question"
     />
+    {#if dialogNote}
+      <p class="note" role="alert" data-testid="{testId}-dialog-note">{dialogNote}</p>
+    {/if}
     <div class="acts">
       <Button onclick={() => (editorOpen = false)} data-testid="{testId}-cancel">
         {$t('common.cancel')}
@@ -290,6 +329,11 @@
     flex-direction: column;
     gap: var(--space-1);
     list-style: none;
+    color: var(--color-danger);
+    font-size: var(--text-sm);
+  }
+
+  .note {
     color: var(--color-danger);
     font-size: var(--text-sm);
   }

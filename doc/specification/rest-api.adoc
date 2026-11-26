@@ -2585,7 +2585,8 @@ of the register that a screen needs and the register leaves open:
 . *A due day belongs to a target.* The editor offers the day only for a practice that has a target; "no target" removes the
   entry and with it the day. The empty day is no day; it is never sent as `""`.
 . *The scope sheet shows the trend from two points.* One released assessment has no line to draw; the sheet then shows no
-  trend. A trend that omits released assessments of other model versions says how many.
+  trend. A trend that omits released assessments of other model versions says how many, also when what is left is too
+  little for a line.
 . *A link of the evidence leads out of the app only when it is absolute `https`.* The table draws such a link as an anchor
   (`rel="noopener noreferrer"`, a new tab) and every other value, which the server refuses on a save and which can
   only come from a hand-edited repository, as text. The editor refuses an address that is not `https` before it keeps a
@@ -2601,6 +2602,16 @@ of the register that a screen needs and the register leaves open:
   that round trip. The page therefore stays, keeps the targets and says so (`samm.targets.step-up-stays`); the save
   succeeds only where the installation asks for no confirmation. It completes once a draft or a session storage is chosen
   for the roadmap.
+. *What a dialog was opened on is checked when it is applied.* The evidence list may be replaced by a live refresh while
+  the dialog of a link, or the question before a removal, is open. Applying an edit or a removal finds the link it was
+  opened on again (same title, address and question); an edit that cannot find it, or finds it elsewhere, applies nothing
+  the first time, says so in the dialog and keeps the typed values, and a second apply goes through (a link that is gone
+  becomes a new link); a removal removes the confirmed link wherever it stands, and nothing when it is gone. A link added
+  when the list reached 50 meanwhile is refused in the dialog with the limit.
+. *A half-typed due day counts as unsaved input.* It is no change (it is not part of the targets), but leaving the page
+  asks, the save state reads "changed" and the save waits with the reason until the day is finished or cleared.
+. *A new scope with targets waits for the practices of its chosen model version.* Until they are read, the act says why;
+  a scope without targets is not held back, and a version without a model file clears the targets as before.
 
 For the owner: whether the scope and the assessment should be created through the generic `POST
 /api/v1/documents/samm-assessments` with a schema of the two kinds served to the form kit (2, 18); whether the title and
@@ -2615,4 +2626,5 @@ unsaved targets survive leaving the page (21); whether a due day may stand witho
 draw a single released assessment (23); and whether the evidence of a hand-edited repository that holds a non-`https` address
 should be drawn as text (24); and which draft or session storage the roadmap should use, because a step-up requested on the
 save of the targets cannot complete until one is chosen (27; found in the design review: the scope sheet has no draft, so
-the page stays and shows `samm.targets.step-up-stays`).
+the page stays and shows `samm.targets.step-up-stays`). Also: whether a refreshed list should instead interrupt a dialog
+that is open on it (28).

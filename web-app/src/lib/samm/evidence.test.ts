@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_EVIDENCE_URL, evidenceErrorsOf, isHttpsUrl, linkProblem } from './evidence';
+import {
+  MAX_EVIDENCE_URL,
+  evidenceErrorsOf,
+  isHttpsUrl,
+  linkProblem,
+  locateLink,
+} from './evidence';
 
 describe('the evidence links of a practice (AUN-SAMM-7)', () => {
   it('takes an absolute https address and nothing else', () => {
@@ -38,5 +44,14 @@ describe('the evidence links of a practice (AUN-SAMM-7)', () => {
       list: 'MAX_ITEMS',
     });
     expect(evidenceErrorsOf(null, 'sb')).toEqual({ rows: {}, list: null });
+  });
+
+  it('finds a link again in a list that was replaced meanwhile, and says when it is gone', () => {
+    const a = { question: null, title: 'A', url: 'https://a.example/' };
+    const b = { question: 'q', title: 'B', url: 'https://b.example/' };
+    expect(locateLink([a, b], a, 0)).toBe(0);
+    expect(locateLink([b, a], a, 0)).toBe(1);
+    expect(locateLink([b, { ...a, title: 'A2' }], a, 0)).toBe(-1);
+    expect(locateLink([], a, 0)).toBe(-1);
   });
 });

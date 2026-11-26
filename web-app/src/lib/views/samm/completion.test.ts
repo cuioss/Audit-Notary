@@ -24,6 +24,7 @@ import NewScopeSheet from './NewScopeSheet.svelte';
 import PracticeSheet from './PracticeSheet.svelte';
 import ScopeSheet from './ScopeSheet.svelte';
 import AssessmentSheet from './AssessmentSheet.svelte';
+import EvidenceEditor from './EvidenceEditor.svelte';
 import SammOverview from './SammOverview.svelte';
 import ScopeListColumn from './ScopeListColumn.svelte';
 
@@ -239,6 +240,29 @@ describe('NewScopeSheet', () => {
     });
   });
 
+  it('waits for the practices of the chosen version before it creates a scope with targets', async () => {
+    const { models } = await useProfile('workshop');
+    const create = vi.spyOn(apiClient, 'createSammScope');
+    render(NewScopeSheet, { models, canCreate: true, onnavigate: vi.fn() });
+    await fireEvent.input(screen.getByTestId('new-scope-title'), { target: { value: 'Old' } });
+    await fireEvent.click(screen.getByTestId('new-scope-kind-organisation'));
+    await screen.findByTestId('new-scope-targets-editor-ta-target');
+    await choose('new-scope-targets-editor-ta-target', '2.5');
+    expect(screen.getByTestId('create-scope')).not.toHaveAttribute('aria-disabled', 'true');
+    // Another version: until its practices are read the targets are not sent.
+    const wanted = screen.getByTestId('new-scope-model') as HTMLSelectElement;
+    await fireEvent.change(wanted, { target: { value: 'v2.1.0' } });
+    expect(screen.getByTestId('create-scope')).toHaveAttribute('aria-disabled', 'true');
+    expect(
+      screen.getByText(
+        'The practices of this model version are still loading. Create the scope in a moment.',
+      ),
+    ).toBeInTheDocument();
+    await screen.findByText(/The practices of this model version cannot be shown/);
+    expect(screen.getByTestId('create-scope')).not.toHaveAttribute('aria-disabled', 'true');
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it('follows no address that is none of the app', async () => {
     const { models } = await useProfile('workshop');
     vi.spyOn(apiClient, 'createSammScope').mockResolvedValue({
@@ -390,6 +414,24 @@ describe('NewAssessmentSheet', () => {
       '/samm/shop/2026-q4',
     );
     expect(oncreated).toHaveBeenCalled();
+  });
+
+  it('forgets the assessment a refusal named once a newer read of the scope shows none open', async () => {
+    const { models } = await useProfile('workshop#shop-assessment-created');
+    const scope = { ...(await apiClient.getSammScope('shop')), assessments: [] };
+    const view = render(NewAssessmentSheet, {
+      scope,
+      models,
+      canCreate: true,
+      onnavigate: vi.fn(),
+    });
+    await fireEvent.input(screen.getByTestId('new-assessment-title'), { target: { value: 'T' } });
+    await fireEvent.click(screen.getByTestId('create-assessment'));
+    await screen.findByTestId('open-notice');
+    // Someone released it meanwhile: the scope read again holds no open assessment, and starting one is possible.
+    await view.rerender({ scope: { ...scope, assessments: [] } });
+    await vi.waitFor(() => expect(screen.queryByTestId('open-notice')).not.toBeInTheDocument());
+    expect(screen.getByTestId('create-assessment')).not.toHaveAttribute('aria-disabled', 'true');
   });
 
   it('shows the refusal at the fields and at the assessor it names', async () => {
@@ -698,6 +740,56 @@ describe('ScopeSheet, the roadmap', () => {
     expect(screen.getByTestId('trend-omitted')).toHaveTextContent(
       '2 released assessments taken with another model version are not shown; the trend shows v2.2.0 only.',
     );
+  });
+
+  it('says what the trend leaves out even when it has too few points for a chart', async () => {
+    await useProfile('workshop');
+    const { scope } = await read('payments', '2026-q4');
+    vi.spyOn(apiClient, 'getSammTrend').mockResolvedValue({
+      scope: 'payments',
+      modelVersion: 'v2.2.0',
+      omitted: 2,
+      points: [
+        {
+          assessment: 'b',
+          document: 'b',
+          title: 'B',
+          date: '2026-01-01',
+          overall: 2,
+          functions: {},
+          practices: {},
+        },
+      ],
+    });
+    render(ScopeSheet, { scope });
+    expect(await screen.findByTestId('trend-omitted')).toHaveTextContent(
+      '2 released assessments taken with another model version are not shown',
+    );
+  });
+
+  it('asks before it is left with a half-typed due date, and saves nothing until it is finished or cleared', async () => {
+    await useProfile('workshop');
+    const { scope } = await read('payments', '2026-q4');
+    render(ScopeSheet, { scope });
+    const due = (await screen.findByTestId('targets-ta-due')) as HTMLInputElement;
+    // A date the browser cannot read yet is no value: the field reports a bad input.
+    Object.defineProperty(due, 'validity', { value: { badInput: true }, configurable: true });
+    await fireEvent.input(due, { target: { value: '' } });
+    expect(screen.getByTestId('save-state')).toHaveTextContent(
+      'Changed. Not saved for everyone yet.',
+    );
+    expect(screen.getByTestId('save-targets')).toHaveAttribute('aria-disabled', 'true');
+    expect(
+      screen.getByText('A due date is not complete. Finish it or clear it first.'),
+    ).toBeInTheDocument();
+    expect(navigation.callback).not.toBeNull();
+    const cancel = vi.fn();
+    navigation.callback?.({ cancel, to: { url: new URL('http://localhost/samm') }, type: 'link' });
+    expect(cancel).toHaveBeenCalled();
+    // Finished: a day again.
+    Object.defineProperty(due, 'validity', { value: { badInput: false }, configurable: true });
+    await fireEvent.input(due, { target: { value: '2027-04-01' } });
+    expect(screen.getByTestId('save-targets')).not.toHaveAttribute('aria-disabled', 'true');
   });
 
   it('shows no trend when it cannot be read', async () => {
@@ -1054,5 +1146,91 @@ describe('AssessmentSheet, frozen and refused comparison', () => {
     render(AssessmentSheet, { scope, assessment, model });
     expect(await screen.findByTestId('since-list')).toBeInTheDocument();
     expect(screen.queryByTestId('versions-differ')).not.toBeInTheDocument();
+  });
+});
+
+describe('EvidenceEditor, a list that changes while its dialog is open', () => {
+  const link = (title: string) => ({
+    question: null,
+    title,
+    url: `https://wiki.example/${title.toLowerCase()}`,
+  });
+  const questions: never[] = [];
+
+  it('applies an edit to the link it was opened on, not to the one now at its position', async () => {
+    const onchange = vi.fn();
+    const view = render(EvidenceEditor, { links: [link('A'), link('B')], questions, onchange });
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit row 1' }));
+    await fireEvent.input(screen.getByTestId('evidence-field-title'), { target: { value: 'A2' } });
+    // Someone else saved the list in the other order.
+    await view.rerender({ links: [link('B'), link('A')] });
+    await fireEvent.click(screen.getByTestId('evidence-apply'));
+    // Nothing was applied: the dialog says so and keeps what was typed.
+    expect(onchange).not.toHaveBeenCalled();
+    expect(screen.getByTestId('evidence-dialog-note')).toHaveTextContent(
+      'The list changed while this window was open.',
+    );
+    expect(screen.getByTestId('evidence-field-title')).toHaveValue('A2');
+    await fireEvent.click(screen.getByTestId('evidence-apply'));
+    expect(onchange).toHaveBeenCalledWith([link('B'), { ...link('A'), title: 'A2' }]);
+  });
+
+  it('applies an edit of an unchanged list at once', async () => {
+    const onchange = vi.fn();
+    render(EvidenceEditor, { links: [link('A'), link('B')], questions, onchange });
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit row 2' }));
+    await fireEvent.input(screen.getByTestId('evidence-field-title'), { target: { value: 'B2' } });
+    await fireEvent.click(screen.getByTestId('evidence-apply'));
+    expect(onchange).toHaveBeenCalledWith([link('A'), { ...link('B'), title: 'B2' }]);
+  });
+
+  it('removes the link that was confirmed, wherever the newer list holds it', async () => {
+    const onchange = vi.fn();
+    const view = render(EvidenceEditor, { links: [link('A'), link('B')], questions, onchange });
+    await fireEvent.click(screen.getByRole('button', { name: 'Remove row 1' }));
+    await view.rerender({ links: [link('B'), link('A')] });
+    await fireEvent.click(screen.getByTestId('evidence-remove-confirm'));
+    expect(onchange).toHaveBeenCalledWith([link('B')]);
+  });
+
+  it('removes nothing when the confirmed link is gone', async () => {
+    const onchange = vi.fn();
+    const view = render(EvidenceEditor, { links: [link('A'), link('B')], questions, onchange });
+    await fireEvent.click(screen.getByRole('button', { name: 'Remove row 1' }));
+    await view.rerender({ links: [link('B')] });
+    await fireEvent.click(screen.getByTestId('evidence-remove-confirm'));
+    expect(onchange).not.toHaveBeenCalled();
+  });
+
+  it('keeps the typed values and says the limit when the list filled up while a link was being added', async () => {
+    const onchange = vi.fn();
+    const forty9 = Array.from({ length: 49 }, (_, index) => link(`L${index}`));
+    const view = render(EvidenceEditor, { links: forty9, questions, onchange });
+    await fireEvent.click(screen.getByRole('button', { name: 'Add row' }));
+    await fireEvent.input(screen.getByTestId('evidence-field-title'), { target: { value: 'New' } });
+    await fireEvent.input(screen.getByTestId('evidence-field-url'), {
+      target: { value: 'https://wiki.example/new' },
+    });
+    await view.rerender({ links: [...forty9, link('Fifty')] });
+    await fireEvent.click(screen.getByTestId('evidence-apply'));
+    expect(onchange).not.toHaveBeenCalled();
+    expect(screen.getByTestId('evidence-dialog-note')).toHaveTextContent(
+      'At most 50 links per practice.',
+    );
+    expect(screen.getByTestId('evidence-field-title')).toHaveValue('New');
+  });
+
+  it('accepts the fiftieth link', async () => {
+    const onchange = vi.fn();
+    const forty9 = Array.from({ length: 49 }, (_, index) => link(`L${index}`));
+    render(EvidenceEditor, { links: forty9, questions, onchange });
+    await fireEvent.click(screen.getByRole('button', { name: 'Add row' }));
+    await fireEvent.input(screen.getByTestId('evidence-field-title'), { target: { value: 'New' } });
+    await fireEvent.input(screen.getByTestId('evidence-field-url'), {
+      target: { value: 'https://wiki.example/new' },
+    });
+    await fireEvent.click(screen.getByTestId('evidence-apply'));
+    expect(onchange).toHaveBeenCalledOnce();
+    expect(onchange.mock.calls[0][0]).toHaveLength(50);
   });
 });

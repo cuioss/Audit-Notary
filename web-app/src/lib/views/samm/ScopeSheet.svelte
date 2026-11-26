@@ -167,6 +167,7 @@
           ? $t('samm.targets.save.invalid')
           : $t('samm.targets.save.failed');
       default:
+        if (incompleteDue) return $t('samm.targets.save.changed');
         return saveLabel(
           controller,
           $t,
@@ -198,9 +199,19 @@
   }
 
   let released = $derived(trend?.points ?? []);
+
+  /** Whether a due day is half typed: it is not a change yet, but leaving would lose it and saving would not carry it. */
+  let incompleteDue = $state(false);
+  let saveState = $derived(
+    readonly && controller.saveState === 'clean'
+      ? 'read-only'
+      : incompleteDue && controller.saveState === 'clean'
+        ? 'changed'
+        : controller.saveState,
+  );
 </script>
 
-<LeaveGuard dirty={() => controller.dirty} />
+<LeaveGuard dirty={() => controller.dirty || incompleteDue} />
 
 {#if scope === null}
   <Sheet><p class="muted">{$t('common.loading')}</p></Sheet>
@@ -237,18 +248,21 @@
       testId="scope"
     />
 
-    {#if released.length > 1}
+    <!-- The chart needs two points; the note about what it leaves out stands whenever something is left out. -->
+    {#if released.length > 1 || (trend && trend.omitted > 0)}
       <section class="section">
         <h2 class="section__title">{$t('samm.scope.trend')}</h2>
-        <TrendLine
-          points={released.map((entry) => ({
-            label: entry.title,
-            value: entry.overall,
-            text: formatScore(entry.overall, $currentLocale),
-          }))}
-          max={3}
-          label={$t('samm.scope.trend-label', { title: scope.title })}
-        />
+        {#if released.length > 1}
+          <TrendLine
+            points={released.map((entry) => ({
+              label: entry.title,
+              value: entry.overall,
+              text: formatScore(entry.overall, $currentLocale),
+            }))}
+            max={3}
+            label={$t('samm.scope.trend-label', { title: scope.title })}
+          />
+        {/if}
         {#if trend && trend.omitted > 0}
           <p class="section__note" data-testid="trend-omitted">
             {$t('samm.scope.trend-omitted', {
@@ -342,6 +356,7 @@
           {readonly}
           {errors}
           onchange={(next) => controller.setValue(next as unknown as JsonObject)}
+          onincomplete={(incomplete) => (incompleteDue = incomplete)}
           testId="targets"
         />
       </section>
@@ -354,11 +369,7 @@
 
     {#snippet status()}
       <div class="status">
-        <SaveState
-          state={readonly && controller.saveState === 'clean' ? 'read-only' : controller.saveState}
-          {label}
-          testId="save-state"
-        />
+        <SaveState state={saveState} {label} testId="save-state" />
         {#if canEdit}
           <Button
             variant="primary"
@@ -367,9 +378,11 @@
             onclick={() => void controller.save()}
             disabledReason={controller.open > 0
               ? $t('practice.save.resolve-first', { count: controller.open })
-              : controller.dirty
-                ? null
-                : $t('practice.save.nothing')}
+              : incompleteDue
+                ? $t('samm.targets.save.incomplete-due')
+                : controller.dirty
+                  ? null
+                  : $t('practice.save.nothing')}
             data-testid="save-targets"
           >
             {$t('samm.targets.save')}

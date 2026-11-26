@@ -172,15 +172,18 @@
     scope = null;
     assessment = null;
     let current = true;
+    // The first read of a scope and the reads that follow share one numbering: an older answer never replaces a newer
+    // snapshot (a refresh that finished first).
+    const read = ++latestScopeRead;
     apiClient
       .getSammScope(id)
       .then((loaded) => {
-        if (!current) return;
+        if (!current || read !== latestScopeRead) return;
         scope = loaded;
         succeed('scope');
       })
       .catch((error) => {
-        if (current) fail('scope', error);
+        if (current && read === latestScopeRead) fail('scope', error);
       });
     return () => {
       current = false;

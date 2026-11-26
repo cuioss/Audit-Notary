@@ -585,7 +585,9 @@ test.describe('at 390 px', () => {
   async function expectTarget(locator) {
     await locator.scrollIntoViewIfNeeded();
     await expect(locator).toBeInViewport();
-    expect((await locator.boundingBox()).height).toBeGreaterThanOrEqual(43.5);
+    const box = await locator.boundingBox();
+    expect(box.height).toBeGreaterThanOrEqual(43.5);
+    expect(box.width).toBeGreaterThanOrEqual(43.5);
   }
 
   test('the form of a new scope fits, its controls are targets of the phone size and its targets are a list', async ({
@@ -793,9 +795,10 @@ test.describe('at 390 px', () => {
     await useScenario(request, 'workshop');
     await loginToSamm(page, newAssessmentAddress('shop'));
     await page.getByTestId('assessor-add').click();
-    const select = await page.getByTestId('assessor-0-person').boundingBox();
     const remove = page.getByTestId('assessor-0-remove');
     await expectTarget(remove);
+    // Both boxes are read after the scroll of the check: a box is relative to the viewport.
+    const select = await page.getByTestId('assessor-0-person').boundingBox();
     expect((await remove.boundingBox()).y).toBeGreaterThanOrEqual(select.y + select.height);
     await expect(remove).toHaveAccessibleName('Remove assessor 2');
     await expectNoSideways(page);

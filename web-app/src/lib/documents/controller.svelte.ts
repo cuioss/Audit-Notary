@@ -27,6 +27,7 @@ import type {
   DocumentDraft,
   DocumentTransition,
   JsonObject,
+  JsonValue,
   Person,
   Saved,
   SaveRequest,
@@ -457,7 +458,14 @@ export class DocumentController {
    * @param next the value the form holds now
    */
   setValue(next: JsonObject): void {
-    this.edit(diffFields(this.baseline, next));
+    const changed = diffFields(this.baseline, next);
+    // A field the running save sends equals the baseline while it runs, but it is still the person's change until the
+    // save settles: refused, the page shows the loaded value again and it must still be an edit of the next save.
+    for (const [key, value] of Object.entries(this.pendingSent ?? {})) {
+      if (!Object.hasOwn(changed, key) && Object.hasOwn(this.edits, key))
+        changed[key] = value as JsonValue;
+    }
+    this.edit(changed);
   }
 
   private edit(edits: Record<string, unknown>): void {

@@ -32,6 +32,8 @@
     onchange?: (targets: Record<string, SammTarget>) => void;
     /** Whether the table shows its values and offers no control. */
     readonly?: boolean;
+    /** Called with whether a due day is half typed: it is no change yet, but it is lost when the page is left. */
+    onincomplete?: (incomplete: boolean) => void;
     /** The codes of the errors of a refusal, per practice and field. */
     errors?: TargetErrors;
     /** A test id prefix. */
@@ -42,6 +44,7 @@
     model,
     targets,
     onchange,
+    onincomplete,
     readonly = false,
     errors = {},
     testId = 'targets',
@@ -67,16 +70,31 @@
     return code ? $t(errorKey(code)) : null;
   }
 
+  /** The practices whose due date is half typed. */
+  let incomplete = $state<Record<string, true>>({});
+  let anyIncomplete = $derived(
+    Object.keys(incomplete).some((practice) => targets[practice] !== undefined),
+  );
+  $effect(() => {
+    onincomplete?.(!readonly && anyIncomplete);
+  });
+
   function setTarget(practice: string, text: string) {
+    // Without a target there is no due date to finish.
+    if (parseTarget(text) === null) delete incomplete[practice];
     onchange?.(withTarget(targets, practice, parseTarget(text), targets[practice]?.due));
   }
 
   function setDue(practice: string, typed: string, input: HTMLInputElement) {
     const entry = targets[practice];
     if (!entry) return;
-    // A half-typed date reads as empty; clearing the day then would wipe what the person is typing.
-    if (typed === '' && input.validity.badInput) return;
-    if (typed !== '' && !isDate(typed)) return;
+    // A half-typed date reads as empty; clearing the day then would wipe what the person is typing. It is no change, so
+    // the owner is told it is pending instead: leaving asks, and saving waits until it is finished or cleared.
+    if ((typed === '' && input.validity.badInput) || (typed !== '' && !isDate(typed))) {
+      incomplete[practice] = true;
+      return;
+    }
+    delete incomplete[practice];
     onchange?.(withTarget(targets, practice, entry.target, typed));
   }
 </script>

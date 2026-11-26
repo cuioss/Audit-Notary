@@ -80,3 +80,25 @@ export function evidenceErrorsOf(errors: FieldError[] | null, practice: string):
   }
   return found;
 }
+
+/**
+ * Finds a link again in a list that may have been replaced meanwhile: a confirmation or an editor holds the position the
+ * link had, and that position is only trusted while the list still holds the same link there.
+ *
+ * @param links the list as it stands
+ * @param original the link as it stood when the position was taken
+ * @param index the position it had
+ * @returns `index` while the list holds the same link there; else the first position of the same link; `-1` when it is gone
+ */
+export function locateLink(
+  links: readonly SammEvidenceLink[],
+  original: SammEvidenceLink,
+  index: number,
+): number {
+  const same = (link: SammEvidenceLink | undefined) =>
+    link !== undefined &&
+    link.title === original.title &&
+    link.url === original.url &&
+    link.question === original.question;
+  return same(links[index]) ? index : links.findIndex((link) => same(link));
+}

@@ -121,12 +121,19 @@
     ),
   );
 
+  // Targets that were chosen for another version are cleaned up when the chosen version's practices are read; they are not
+  // sent before that, so creating waits for it (a scope without targets need not).
+  let targetsPending = $derived(
+    !modelFailed && model?.version !== version && Object.keys(targets).length > 0,
+  );
   let reason = $derived(
     title.trim() === ''
       ? $t('samm.new.scope.need-title')
       : subject === ''
         ? $t('samm.new.scope.need-subject')
-        : null,
+        : targetsPending
+          ? $t('samm.new.scope.model-pending')
+          : null,
   );
   let saveState = $derived<SaveStateKind>(
     saving ? 'saving' : errors || failure ? 'failed' : dirty ? 'changed' : 'clean',
