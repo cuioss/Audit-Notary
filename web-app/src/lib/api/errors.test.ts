@@ -7,6 +7,9 @@ describe('errors', () => {
     expect(isOutcome('TIMEOUT')).toBe(false);
     // The refusal of the person save that names a pseudonym no candidate has (rest-api.adoc, directory/me).
     expect(isOutcome('NOT_BINDABLE')).toBe(true);
+    // The refusals of the catalogs: an id that exists, an entry that is retired.
+    expect(isOutcome('ID_TAKEN')).toBe(true);
+    expect(isOutcome('RETIRED')).toBe(true);
   });
 
   it('maps a failure to the text a view shows', () => {
@@ -29,6 +32,8 @@ describe('errors', () => {
     expect(errorMessageKey(new ApiError('TOO_MANY_LOGINS', 503))).toBe('error.too-many-logins');
     expect(errorMessageKey(new ApiError('CONFLICT', 409))).toBe('error.conflict');
     expect(errorMessageKey(new ApiError('VALIDATION', 422))).toBe('error.validation');
+    expect(errorMessageKey(new ApiError('ID_TAKEN', 409))).toBe('error.id-taken');
+    expect(errorMessageKey(new ApiError('RETIRED', 409))).toBe('error.retired');
     expect(errorMessageKey(new Error('x'))).toBe('error.unexpected');
     expect(isApiError(new ApiError('VALIDATION', 422))).toBe(true);
   });

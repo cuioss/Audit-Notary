@@ -1,7 +1,9 @@
 <script lang="ts">
   import Select, { type SelectOption } from '../components/Select.svelte';
   import { t } from '../i18n';
-  import { useLookup } from './lookup.svelte';
+  import type { CatalogEntry } from '../api/types';
+  import { parseCatalogRef, useLookup } from './lookup.svelte';
+  import type { Lookup } from './services';
   import ResolvedValue from './ResolvedValue.svelte';
   import { useFormServices } from './services';
 
@@ -10,12 +12,15 @@
    * reference to one still resolves, but the picker offers only the entries that are not retired. A held value that
    * names a retired entry is shown with the name and the mark *retired* and can be kept or replaced; a held value that
    * names no entry is shown as the reference itself with the mark *not found*. The value is `<catalog>:<id>`.
+   *
+   * A field that names several catalogs (`x-catalog` as an array, PROVISIONAL) lists their entries grouped by catalog
+   * and stores the reference with the prefix of the catalog it came from.
    */
   interface Props {
     /** The label. */
     label: string;
-    /** The catalog. */
-    catalog: string;
+    /** The catalog, or the catalogs of a field that names several. */
+    catalog: string | string[];
     /** The held reference, or nothing. */
     value?: string;
     /** The field error. */
@@ -33,18 +38,68 @@
   let { label, catalog, value, error = null, mark, hint, onchange, testId }: Props = $props();
 
   const services = useFormServices();
-  const entries = useLookup(() => services.catalog(catalog));
+  let catalogs = $derived([catalog].flat());
+  let grouped = $derived(catalogs.length > 1);
+
+  /** What the field's catalogs held. */
+  interface Read {
+    read: { catalog: string; entries: CatalogEntry[] }[];
+    failed: boolean;
+  }
+
+  /** The entries of every catalog the field names; one that cannot be read leaves the others. */
+  const entries = useLookup<Read>(() =>
+    Promise.all(catalogs.map((name) => services.catalog(name))).then((answers): Lookup<Read> => {
+      const read: Read['read'] = [];
+      answers.forEach((answer, index) => {
+        if (answer.state === 'found')
+          read.push({ catalog: catalogs[index], entries: answer.value });
+      });
+      return read.length === 0
+        ? { state: 'failed' }
+        : { state: 'found', value: { read, failed: read.length < answers.length } };
+    }),
+  );
 
   let held = $derived(typeof value === 'string' && value !== '' ? value : '');
   let options = $derived.by((): SelectOption[] => {
-    const list = entries.current.state === 'found' ? entries.current.value : [];
-    const offered = list
+    const read = entries.current.state === 'found' ? entries.current.value.read : [];
+    const all = read.flatMap((part) =>
+      part.entries.map((entry) => ({
+        value: `${part.catalog}:${entry.id}`,
+        label: entry.name,
+        retired: entry.retired === true,
+        group: grouped ? $t(`catalog.${part.catalog}.name`) : undefined,
+      })),
+    );
+    const offered = all
       .filter((entry) => !entry.retired)
-      .map((entry) => ({ value: `${catalog}:${entry.id}`, label: entry.name }));
+      .map(({ value: ref, label, group }) => ({ value: ref, label, group }));
     if (held === '' || offered.some((option) => option.value === held)) return offered;
-    const known = list.find((entry) => `${catalog}:${entry.id}` === held);
-    return [{ value: held, label: known?.name ?? held }, ...offered];
+    const known = all.find((entry) => entry.value === held);
+    return [{ value: held, label: known?.label ?? held, group: known?.group }, ...offered];
   });
+  /**
+   * Whether the held entry has a mark to show (retired, or no entry of that name): nothing is shown for a plain one. A
+   * reference that is malformed, or that names a catalog the field does not name, names no entry of the field and is
+   * marked. One whose catalog is named but could not be read is not: its existence is unknown, the note says so.
+   */
+  let marked = $derived.by(() => {
+    if (held === '') return false;
+    const parts = parseCatalogRef(held);
+    if (parts === null || !catalogs.includes(parts.catalog)) return true;
+    if (entries.current.state !== 'found') return false;
+    const part = entries.current.value.read.find(
+      (candidate) => candidate.catalog === parts.catalog,
+    );
+    if (part === undefined) return false;
+    const entry = part.entries.find((candidate) => candidate.id === parts.id);
+    return entry === undefined || entry.retired === true;
+  });
+  let unavailable = $derived(
+    entries.current.state === 'failed' ||
+      (entries.current.state === 'found' && entries.current.value.failed),
+  );
 </script>
 
 <Select
@@ -59,10 +114,10 @@
   {testId}
 >
   {#snippet after()}
-    {#if entries.current.state === 'failed'}
+    {#if unavailable}
       <span class="picker__note">{$t('form.picker.unavailable')}</span>
     {/if}
-    {#if held !== ''}
+    {#if marked}
       <ResolvedValue kind="catalog" value={held} {catalog} marksOnly />
     {/if}
   {/snippet}

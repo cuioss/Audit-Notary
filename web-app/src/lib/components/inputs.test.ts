@@ -6,7 +6,7 @@ import AnswerScale from './AnswerScale.svelte';
 import Button from './Button.svelte';
 import FieldFrame from './FieldFrame.svelte';
 import Link from './Link.svelte';
-import Select from './Select.svelte';
+import Select, { groupOptions } from './Select.svelte';
 import SegmentedControl from './SegmentedControl.svelte';
 import TextArea from './TextArea.svelte';
 import TextField from './TextField.svelte';
@@ -244,6 +244,36 @@ describe('the fields of the form kit (AUN-WEB-4)', () => {
     expect(screen.getByText('below')).toBeInTheDocument();
     await fireEvent.change(select, { target: { value: '0' } });
     expect(onchange).toHaveBeenCalledWith('0');
+  });
+
+  it('draws the options of a group under its heading, and the others as they come', () => {
+    render(Select, {
+      label: 'Depends on',
+      options: [
+        { value: 'a:1', label: 'One', group: 'Services' },
+        { value: 'x', label: 'Loose' },
+        { value: 'b:1', label: 'Other', group: 'External' },
+        { value: 'a:2', label: 'Two', group: 'Services' },
+      ],
+      placeholder: 'Choose…',
+      testId: 'grouped',
+    });
+    const select = screen.getByTestId('grouped') as HTMLSelectElement;
+    const groups = [...select.querySelectorAll('optgroup')].map((group) => [
+      group.label,
+      [...group.querySelectorAll('option')].map((option) => option.textContent),
+    ]);
+    expect(groups).toEqual([
+      ['Services', ['One', 'Two']],
+      ['External', ['Other']],
+    ]);
+    expect([...select.children].map((child) => child.tagName)).toEqual([
+      'OPTION',
+      'OPTGROUP',
+      'OPTION',
+      'OPTGROUP',
+    ]);
+    expect(groupOptions([])).toEqual([]);
   });
 
   it('gives a text area a mark, hints and content below', () => {

@@ -50,6 +50,15 @@
     text-decoration: underline;
   }
 
+  /* On the phone the title is a touch target of 44 px; the negative margin keeps the head as high as before. */
+  @media (max-width: 767px) {
+    .column-head__title :global(.link) {
+      display: inline-block;
+      padding-block: var(--space-3);
+      margin-block: calc(var(--space-3) * -1);
+    }
+  }
+
   .column-head__meta {
     font-size: var(--text-sm);
     color: var(--color-text-muted);

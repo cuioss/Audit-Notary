@@ -24,6 +24,11 @@ Read the concept first, then the component you are about to change.
    (`web-app/src/lib/documents/`) and builds its sheet the same way. A lens that releases a document uses
    `ReleaseFlow` (`documents/ReleaseFlow.svelte`), which every category shares; it hands in its words, its stage (the
    seal), its record and the way a value is drawn, and never builds the release page again.
+   `web-app/src/lib/views/catalogs/` is the Catalogs lens (`CatalogsView`, `EntryListColumn`, `EntrySheet`,
+   `ServiceNeeds`): an entry is a sheet over `SchemaForm` with the category `catalog` and the catalog as the kind, and has
+   no draft (the last save wins); a retirement is a destructive act behind a confirmation, in the margin. The mark of an
+   entry is `KindMark` kind `entry`. A field that names several catalogs (`x-catalog` as an array) is a `CatalogPicker`
+   whose `Select` groups the options by catalog (`SelectOption.group`).
 3. For a chart, use the five series colours in model order (`--color-series-1` … `-5`); they are validated for
    colour-vision and normal-vision separation against both sheet colours (`#ffffff`, `#161d2e`). A new chart colour
    needs the same validation before it lands: with the validator of the `dataviz` skill where your agent has that
@@ -157,7 +162,10 @@ Check each item before you hand a change over.
       a new object's heading.
 - [ ] A chart has a legend for two series or more, direct labels where few, and the same figures as a table.
 - [ ] Forced colours: the component still shows its state (`@media (forced-colors: active)`).
-- [ ] Phone (390 px): nothing scrolls sideways, targets are 44 px, the status of a sheet stays above the record.
+- [ ] Phone (390 px): nothing scrolls sideways, targets are 44 px (a link in a stacked row or in a head gets its
+      padding, not a box), the status of a sheet stays above the record.
+- [ ] A sentence is said once on a screen: a read-only sheet says so in its status and not again in a notice, and the
+      reason of a disabled act is not the sentence of the status beside it.
 - [ ] German: no clipped or overlapping text with the longer words.
 
 ## 5. The screenshot-critique loop

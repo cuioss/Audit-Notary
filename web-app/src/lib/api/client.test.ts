@@ -256,6 +256,61 @@ describe('the form kit requests (rest-api.adoc, Form Kit Requests)', () => {
   });
 });
 
+describe('the catalog requests (rest-api.adoc, Directory and Catalog Requests)', () => {
+  it('reads the schema and one entry with GET, the segments encoded', async () => {
+    fetchMock.mockImplementation(async () => json(200, { ok: true }));
+    await client.getCatalogSchema('service');
+    await client.getCatalogEntry('service', 'payment-api');
+    await client.getCatalogEntry('team', 'a b');
+    expect(fetchMock.mock.calls.map((call) => [call[0], call[1].method])).toEqual([
+      ['/api/v1/catalogs/service/schema', 'GET'],
+      ['/api/v1/catalogs/service/payment-api', 'GET'],
+      ['/api/v1/catalogs/team/a%20b', 'GET'],
+    ]);
+  });
+
+  it('creates, changes and retires with the anti-CSRF header, and sends the entry as value', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json(200, SESSION))
+      .mockResolvedValueOnce(json(201, { outcome: 'CREATED', address: '/catalogs/team/x' }))
+      .mockResolvedValueOnce(json(200, { outcome: 'SAVED' }))
+      .mockResolvedValueOnce(json(200, { outcome: 'RETIRED' }));
+    await client.createCatalogEntry('team', { id: 'x', name: 'X' });
+    await client.changeCatalogEntry('team', 'x', { id: 'x', name: 'Y' });
+    await client.retireCatalogEntry('team', 'x');
+    const calls = fetchMock.mock.calls.slice(1);
+    expect(calls.map((call) => [call[0], call[1].method])).toEqual([
+      ['/api/v1/catalogs/team', 'POST'],
+      ['/api/v1/catalogs/team/x', 'PUT'],
+      ['/api/v1/catalogs/team/x/retirement', 'POST'],
+    ]);
+    expect(calls.every((call) => call[1].headers[CSRF_HEADER] === 'token-1')).toBe(true);
+    expect(JSON.parse(calls[0][1].body)).toEqual({ value: { id: 'x', name: 'X' } });
+    expect(JSON.parse(calls[1][1].body)).toEqual({ value: { id: 'x', name: 'Y' } });
+    expect(calls[2][1].body).toBeUndefined();
+  });
+
+  it('reports the refusals by their outcome, the field errors with their pointers', async () => {
+    fetchMock.mockResolvedValueOnce(json(200, SESSION));
+    fetchMock.mockResolvedValueOnce(json(409, { outcome: 'ID_TAKEN' }));
+    fetchMock.mockResolvedValueOnce(json(409, { outcome: 'RETIRED' }));
+    fetchMock.mockResolvedValueOnce(
+      json(422, { outcome: 'VALIDATION', errors: [{ pointer: '/name', code: 'REQUIRED' }] }),
+    );
+    await expect(client.createCatalogEntry('team', {})).rejects.toMatchObject({
+      outcome: 'ID_TAKEN',
+      status: 409,
+    });
+    await expect(client.changeCatalogEntry('team', 'x', {})).rejects.toMatchObject({
+      outcome: 'RETIRED',
+    });
+    await expect(client.changeCatalogEntry('team', 'x', {})).rejects.toMatchObject({
+      outcome: 'VALIDATION',
+      errors: [{ pointer: '/name', code: 'REQUIRED' }],
+    });
+  });
+});
+
 describe('the document lifecycle requests (rest-api.adoc, Document Lifecycle Requests)', () => {
   it('reads the categories, the list of a repository and the search with GET', async () => {
     fetchMock.mockImplementation(async () => json(200, { ok: true }));

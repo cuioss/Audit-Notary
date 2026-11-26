@@ -1,6 +1,6 @@
 <script lang="ts">
   import { hasNoRights } from '../access/access';
-  import { lensOf, parseAddress, routeTitleKey } from '../routes';
+  import { lensOf, parseAddress, routesUnder, routeTitleKey } from '../routes';
   import { session } from '../stores/app';
   import LoginProblemView from './access/LoginProblemView.svelte';
   import LoginView from './access/LoginView.svelte';
@@ -12,6 +12,7 @@
   import SettingsView from './SettingsView.svelte';
   import WelcomeView from './WelcomeView.svelte';
   import DocumentReleaseView from './documents/DocumentReleaseView.svelte';
+  import CatalogsView from './catalogs/CatalogsView.svelte';
   import DocumentsView from './documents/DocumentsView.svelte';
   import SammReleaseView from './samm/SammReleaseView.svelte';
   import SammView from './samm/SammView.svelte';
@@ -29,6 +30,12 @@
   }
 
   let { pathname, search = '', onnavigate }: Props = $props();
+
+  /**
+   * The routes of the catalogs lens this view draws: the addresses under `/catalogs`, read from the canonical addresses;
+   * the directory pages of the lens (`/directory/...`) follow with their own views.
+   */
+  const CATALOG_ROUTES = routesUnder('catalogs');
 
   let address = $derived(parseAddress(pathname, search));
   let route = $derived(address?.route ?? null);
@@ -65,6 +72,8 @@
   {/key}
 {:else if lensOf(route) === 'categories' && address}
   <DocumentsView {route} params={address.params} query={address.query} {onnavigate} />
+{:else if CATALOG_ROUTES.includes(route) && address}
+  <CatalogsView {route} params={address.params} {onnavigate} />
 {:else}
   {#key route}
     <LensPlaceholderView titleKey={routeTitleKey(route)} {route} />

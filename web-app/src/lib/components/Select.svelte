@@ -3,6 +3,22 @@
   export interface SelectOption {
     value: string;
     label: string;
+    /** The heading of the group the option stands under (a list that mixes catalogs); none for an option of no group. */
+    group?: string;
+  }
+
+  /** The options in the order they come, the ones of a group together at the group's first place. */
+  export function groupOptions(
+    options: SelectOption[],
+  ): { label: string | null; options: SelectOption[] }[] {
+    const groups: { label: string | null; options: SelectOption[] }[] = [];
+    for (const option of options) {
+      const label = option.group ?? null;
+      const found = label === null ? undefined : groups.find((group) => group.label === label);
+      if (found) found.options.push(option);
+      else groups.push({ label, options: [option] });
+    }
+    return groups;
   }
 </script>
 
@@ -53,6 +69,7 @@
   }: Props = $props();
 
   const id = uniqueId('select');
+  let groups = $derived(groupOptions(options));
   let hints = $derived(
     (Array.isArray(hint) ? hint : [hint]).filter((line): line is string => !!line),
   );
@@ -81,8 +98,18 @@
     data-testid={testId}
   >
     <option value="">{placeholder}</option>
-    {#each options as option (option.value)}
-      <option value={option.value}>{option.label}</option>
+    {#each groups as group (group.label === null ? `o:${group.options[0].value}` : `g:${group.label}`)}
+      {#if group.label === null}
+        {#each group.options as option (option.value)}
+          <option value={option.value}>{option.label}</option>
+        {/each}
+      {:else}
+        <optgroup label={group.label}>
+          {#each group.options as option (option.value)}
+            <option value={option.value}>{option.label}</option>
+          {/each}
+        </optgroup>
+      {/if}
     {/each}
   </select>
   {#if after}
@@ -122,6 +149,7 @@
   }
 
   /* A picker hands over a holder that has nothing to say yet (no mark): it must not leave a blank line. */
+  .field__after:empty,
   .field__after:has(> :global(:only-child:empty)) {
     display: none;
   }

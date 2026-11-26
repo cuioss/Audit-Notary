@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { schemaOf, useProfile } from './testkit';
 import {
+  catalogsOf,
   chooseKind,
   childNodes,
   childPointer,
@@ -302,5 +303,29 @@ describe('isScalarKind', () => {
     const others: FieldKind[] = ['section', 'table', 'plain'];
     expect(scalars.every((kind) => isScalarKind(kind))).toBe(true);
     expect(others.some((kind) => isScalarKind(kind))).toBe(false);
+  });
+});
+
+describe('catalogsOf (x-catalog as a catalog or an array of them, PROVISIONAL)', () => {
+  it('reads a catalog, an array of catalogs and nothing else', () => {
+    expect(catalogsOf({ 'x-catalog': 'service' })).toEqual(['service']);
+    expect(catalogsOf({ 'x-catalog': ['service', 'external'] })).toEqual(['service', 'external']);
+    expect(catalogsOf({ 'x-catalog': ['service', 3, '', null, 'external'] })).toEqual([
+      'service',
+      'external',
+    ]);
+    expect(catalogsOf({ 'x-catalog': '' })).toEqual([]);
+    expect(catalogsOf({ 'x-catalog': 7 })).toEqual([]);
+    expect(catalogsOf({})).toEqual([]);
+  });
+
+  it('chooses the catalog picker for a string with several catalogs, and a table for a list of them', () => {
+    const root = {};
+    expect(chooseKind({ type: 'string', 'x-catalog': ['a', 'b'] }, root)).toBe('catalog');
+    expect(chooseKind({ type: 'string', 'x-catalog': [] }, root)).toBe('text');
+    expect(
+      chooseKind({ type: 'array', items: { type: 'string', 'x-catalog': ['a', 'b'] } }, root),
+    ).toBe('table');
+    expect(chooseKind({ type: 'number', 'x-catalog': ['a'] }, root)).toBe('number');
   });
 });

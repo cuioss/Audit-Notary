@@ -19,8 +19,8 @@
     kind: 'catalog' | 'person' | 'docref';
     /** The held value: `<catalog>:<id>`, a pseudonym or `<alias>:<kind>/<id>`. */
     value: string;
-    /** The catalog of a catalog reference. */
-    catalog?: string;
+    /** The catalog of a catalog reference, or the catalogs a field that names several takes. */
+    catalog?: string | string[];
     /** Whether only the marks are shown, because the name stands in the control beside. */
     marksOnly?: boolean;
   }
@@ -29,7 +29,16 @@
 
   const services = useFormServices();
 
-  const entries = useLookup(() => (kind === 'catalog' ? services.catalog(catalog) : null));
+  /** The catalogs the reference may name, and the one its prefix says: that catalog is the one to read. */
+  let allowed = $derived([catalog].flat().filter((name) => name !== ''));
+  let parts = $derived(kind === 'catalog' ? parseCatalogRef(value) : null);
+  let named = $derived(parts !== null && allowed.includes(parts.catalog) ? parts.catalog : null);
+
+  const entries = useLookup(() =>
+    kind === 'catalog' && (named ?? allowed[0]) !== undefined
+      ? services.catalog(named ?? allowed[0])
+      : null,
+  );
   const person = useLookup(() => (kind === 'person' ? services.person(value) : null));
   const reference = useLookup(() => (kind === 'docref' ? services.reference(value) : null));
   const teams = useLookup(() =>
@@ -45,9 +54,8 @@
 
   let entry = $derived.by(() => {
     if (kind !== 'catalog' || entries.current.state !== 'found') return null;
-    // A reference into another catalog (`team:ledger` in the service catalog) names no entry of this one.
-    const parts = parseCatalogRef(value);
-    if (parts === null || parts.catalog !== catalog) return null;
+    // A reference into another catalog (`team:ledger` in the service catalog) names no entry of the field's.
+    if (parts === null || named === null) return null;
     return entries.current.value.find((candidate) => candidate.id === parts.id) ?? null;
   });
 

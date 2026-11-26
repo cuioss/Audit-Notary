@@ -3,6 +3,13 @@ import { useScenario } from './helpers/mock.js';
 import { expectNoSeriousViolations } from './helpers/a11y.js';
 import { LOCAL_ACCOUNT, login, loginLocal } from './helpers/login.js';
 import { NOTES, field, loginToDocuments, noteAddress } from './helpers/documents.js';
+import {
+  catalogAddress,
+  entryAddress,
+  fillNewService,
+  loginToCatalogs,
+  newEntryAddress,
+} from './helpers/catalogs.js';
 
 /**
  * The phone layout (pm-web-app design, below 768 px): the rail gives way to the bottom bar with "More".
@@ -235,5 +242,137 @@ test.describe('at 390 px', () => {
     await expect(page.getByTestId('due-request').first()).toBeVisible();
     await expectNoSideways(page);
     await expectNoSeriousViolations(page, 'due with release requests (phone)');
+  });
+  test('the catalogs and the entries of a catalog fit, and the act to add one is reachable', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'catalog-admin');
+    await loginToCatalogs(page, catalogAddress('service'));
+    await expect(page.getByTestId('entry-list')).toBeVisible();
+    await expect(page.getByTestId('new-entry')).toBeInViewport();
+    await expect(page.getByTestId('entry-ledger')).toContainText('Retired');
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'catalog entries (phone)');
+  });
+
+  test('the sheet of a service fits, with its needs and its dependencies as stacked rows', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'catalog-admin');
+    await loginToCatalogs(page, entryAddress('service', 'payment-api'));
+    await expect(page.getByTestId('entry-sheet')).toBeVisible();
+    await expect(page.getByTestId('save-entry')).toBeInViewport();
+    await page.getByTestId('service-needs').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('needs-confidentiality')).toBeVisible();
+    await page.getByTestId('depends-table').scrollIntoViewIfNeeded();
+    // Below 40 rem the table stacks: each cell names itself, and the head row is not drawn.
+    await expect(page.getByTestId('depends-service:customer-db')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'service sheet (phone)');
+  });
+
+  test('a list of one column and a reason that wraps keep their width, their dot and their targets', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'catalog-admin');
+    await loginToCatalogs(page, entryAddress('service', 'payment-api'));
+    await expect(page.getByTestId('entry-sheet')).toBeVisible();
+    // A list of one column has no label column: its cell and its caption take the width of the list.
+    const list = field(page, '/repositories');
+    await list.scrollIntoViewIfNeeded();
+    const frame = await list.locator('table').boundingBox();
+    const cell = await list.locator('tbody td').first().boundingBox();
+    const caption = await list.locator('caption').boundingBox();
+    expect(cell.width).toBeGreaterThan(frame.width - 2);
+    expect(caption.width).toBeGreaterThan(frame.width - 2);
+    // The reason of an entry that does not count is a sentence: it wraps, and the dot stays beside its first line.
+    const row = page.getByTestId('depends-external:psp-provider');
+    await row.scrollIntoViewIfNeeded();
+    const measure = await row.locator('[data-tone]').evaluate((label) => {
+      const dot = label.querySelector('.status__dot').getBoundingClientRect();
+      const word = label.querySelector('.status__word');
+      const box = word.getBoundingClientRect();
+      const line = parseFloat(getComputedStyle(word).lineHeight);
+      return {
+        lines: Math.round(box.height / line),
+        offset: dot.top + dot.height / 2 - (box.top + line / 2),
+      };
+    });
+    expect(measure.lines).toBeGreaterThan(1);
+    expect(Math.abs(measure.offset)).toBeLessThan(3);
+    // The links of the stacked rows are targets of the phone's size.
+    for (const link of await page.getByTestId('service-needs').getByRole('link').all()) {
+      expect((await link.boundingBox()).height).toBeGreaterThanOrEqual(43.5);
+    }
+  });
+
+  test('a circle of dependencies and the retired entry fit', async ({ page, request }) => {
+    await useScenario(request, 'catalog-admin');
+    await loginToCatalogs(page, entryAddress('service', 'reporting'));
+    await expect(page.getByTestId('cycle-notice')).toBeVisible();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'service on a circle (phone)');
+    await page.goto(entryAddress('service', 'ledger'));
+    await expect(page.getByTestId('retired-notice')).toBeVisible();
+    await expect(page.getByTestId('entry-state')).toBeVisible();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'retired entry (phone)');
+  });
+
+  test('the form of a new service fits, and saving is reachable', async ({ page, request }) => {
+    await useScenario(request, 'catalog-admin');
+    await loginToCatalogs(page, newEntryAddress('service'));
+    await expect(page.getByTestId('entry-form')).toBeVisible();
+    await expect(page.getByTestId('save-entry')).toBeInViewport();
+    await fillNewService(page, field, { id: 'notification-gateway', name: 'Notification gateway' });
+    await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'changed');
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'new catalog entry (phone)');
+  });
+
+  test('the question before a retirement is a dialog in the viewport, and both answers are reachable', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'catalog-admin');
+    await loginToCatalogs(page, entryAddress('service', 'customer-portal'));
+    await page.getByTestId('retire-entry').scrollIntoViewIfNeeded();
+    await page.getByTestId('retire-entry').click();
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expect(page.getByTestId('retire-cancel')).toBeInViewport();
+    await expect(page.getByTestId('retire-confirm')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'retire question (phone)');
+  });
+
+  test('a sheet without the right fits and says why nothing can be changed', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'read-only');
+    await loginToCatalogs(page, entryAddress('service', 'payment-api'));
+    await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'read-only');
+    await expect(page.getByTestId('save-state')).toContainText('Changing it needs the right');
+    await expect(page.getByTestId('no-right-notice')).toHaveCount(0);
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'catalog entry read only (phone)');
+  });
+
+  test('a refusal on the form fits, and the field it marks is reachable', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'catalog-admin#catalog-invalid');
+    await loginToCatalogs(page, newEntryAddress('service'));
+    await fillNewService(page, field, { id: 'notification-gateway', name: 'Notification gateway' });
+    await page.getByTestId('save-entry').click();
+    await expect(page.getByTestId('failure-notice')).toBeVisible();
+    await field(page, '/owner/team').scrollIntoViewIfNeeded();
+    await expect(field(page, '/owner/team')).toContainText('This reference leads nowhere.');
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'catalog entry with errors (phone)');
   });
 });

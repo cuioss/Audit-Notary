@@ -110,6 +110,8 @@ describe('WelcomeView against first-login', () => {
     vi.stubGlobal('fetch', scenarioFetch('first-login#invalid-team').fetch);
     render(WelcomeView, { onnavigate: () => {} });
     await fireEvent.click(await screen.findByTestId('welcome-save'));
-    expect(await screen.findByText('Pick an entry from the list.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('This reference leads nowhere. Check it or choose another.'),
+    ).toBeInTheDocument();
   });
 });

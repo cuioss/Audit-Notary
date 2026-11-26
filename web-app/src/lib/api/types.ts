@@ -98,6 +98,119 @@ export interface CatalogList {
   entries: CatalogEntry[];
 }
 
+/** The catalogs the Catalogs lens shows, in the order of its first column (rest-api.adoc, The Addresses). */
+export const CATALOGS = ['team', 'role', 'service', 'system', 'external'] as const;
+
+/** One of the five catalogs. */
+export type CatalogId = (typeof CATALOGS)[number];
+
+/** `GET /api/v1/catalogs/{catalog}/schema` (PROVISIONAL): the JSON Schema of the entries of a catalog. */
+export interface CatalogSchema {
+  catalog: string;
+  schema: JsonSchema;
+}
+
+/** The three levels of a protection need, in rising order (BSI-Standard 200-2). */
+export const PROTECTION_LEVELS = ['normal', 'high', 'very-high'] as const;
+
+/** One level of a protection need. */
+export type ProtectionLevel = (typeof PROTECTION_LEVELS)[number];
+
+/** The three dimensions of a protection need. */
+export const PROTECTION_DIMENSIONS = ['confidentiality', 'integrity', 'availability'] as const;
+
+/** One dimension of a protection need. */
+export type ProtectionDimension = (typeof PROTECTION_DIMENSIONS)[number];
+
+/** A protection need per dimension. */
+export type ProtectionNeeds = Record<ProtectionDimension, ProtectionLevel>;
+
+/**
+ * One service or external party a service reaches through `dependsOn` (PROVISIONAL): `counts` when it is a service that
+ * is not retired and whose needs are known; an external party has none.
+ */
+export interface Dependency {
+  /** The reference, `<catalog>:<id>`. */
+  ref: string;
+  name: string;
+  /** How many steps from the service: 1 is a direct dependency. */
+  depth: number;
+  /** The reference it was first reached from. */
+  via: string;
+  retired: boolean;
+  counts: boolean;
+  protectionNeeds: ProtectionNeeds | null;
+}
+
+/** What a service's protection needs come to once the dependencies are read (AUN-DIR-5; PROVISIONAL). */
+export interface EffectiveNeeds {
+  /** The highest value per dimension over the service and every dependency that counts. */
+  protectionNeeds: ProtectionNeeds;
+  /** The reference that decides each dimension: the first of the service itself and then the dependencies. */
+  decidedBy: Record<ProtectionDimension, string>;
+  /** Every service and external party reachable through `dependsOn`, breadth first. */
+  dependencies: Dependency[];
+  /** The references of the services on a cycle the service is on or reaches; `null` without one. */
+  cycle: string[] | null;
+}
+
+/** One line of the signed history of a catalog entry (PROVISIONAL). */
+export interface CatalogHistoryLine {
+  kind: 'create' | 'save' | 'retire';
+  at: string;
+  by: Person;
+}
+
+/** `GET /api/v1/catalogs/{catalog}/{id}` (PROVISIONAL): the whole entry. */
+export interface CatalogEntryRead {
+  catalog: string;
+  id: string;
+  name: string;
+  retired: boolean;
+  /** The entry as the schema of its catalog holds it. */
+  value: JsonObject;
+  /** The effective protection needs of a service; `null` for every other catalog. */
+  effective: EffectiveNeeds | null;
+  at: string;
+  /** The signed history, newest first. */
+  history: CatalogHistoryLine[];
+}
+
+/** `201` of `POST /api/v1/catalogs/{catalog}`. */
+export interface CatalogCreated {
+  outcome: 'CREATED';
+  catalog: string;
+  id: string;
+  address: string;
+  at: string;
+}
+
+/** `200` of `PUT /api/v1/catalogs/{catalog}/{id}`. */
+export interface CatalogSaved {
+  outcome: 'SAVED';
+  catalog: string;
+  id: string;
+  at: string;
+}
+
+/** `200` of `POST /api/v1/catalogs/{catalog}/{id}/retirement`. */
+export interface CatalogRetired {
+  outcome: 'RETIRED';
+  catalog: string;
+  id: string;
+  at: string;
+}
+
+/** `catalog-changed` on the event stream (PROVISIONAL): someone saved, created or retired an entry. */
+export const CATALOG_CHANGED_EVENT = 'catalog-changed';
+
+/** The data of `catalog-changed`. */
+export interface CatalogChangedEvent {
+  catalog: string;
+  id: string;
+  by?: Person;
+}
+
 /** The body of `PUT /api/v1/directory/me`. */
 export interface DirectoryEntry {
   name: string;
