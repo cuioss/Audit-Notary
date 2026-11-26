@@ -58,3 +58,16 @@ before the end of that day (UTC).
 * Tasks and measures must be referenced by issue-tracker id; the application must not store task state in Git.
 
 Measures and tasks are fields `issues: [<tracker-id>]`, entered by the user or the agent.
+
+[#_open_questions]
+== Open Questions
+
+Decided provisionally with the Reports lens (UC-ISMS-3), recorded with the bodies in
+xref:rest-api.adoc#_decided_reports[REST API Register, Open Questions]; the owner may change each one:
+
+. *Reporting dates* (AUN-ISMS-3): `as-of` is a calendar date (UTC) or a tag name; the answer names the commit it read
+  and lists the tags of the register; a date after today, a name that is no tag and a value of neither form are refused with
+  `422` (`FUTURE`, `UNKNOWN_TAG`, `PATTERN`). The entries are summaries of the released entries as they were then.
+. *The shape of an entry in the list* (AUN-ISMS-2): number, title, rating (`low` to `critical`), treatment (`mitigate`,
+  `accept`, `transfer`, `avoid`), owning team, version, release time, review date and origin; the schema of a risk belongs to
+  the ISMS lens.

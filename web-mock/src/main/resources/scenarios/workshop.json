@@ -161,6 +161,131 @@
     "GET /api/v1/samm/payments/compare": {
       "body_file": "samm-compare-payments-workshop.json"
     },
+    "GET /api/v1/reports/summary": {
+      "status": 200,
+      "body_file": "reports-summary-workshop.json"
+    },
+    "GET /api/v1/reports/samm-trend": {
+      "status": 200,
+      "body_file": "reports-samm-trend.json",
+      "requires": {
+        "repository": "samm-assessments",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/reports/threat-evaluation": {
+      "status": 200,
+      "body_file": "reports-threat-evaluation.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/samm/payments/compare?from=2025-q4&to=2026-q2": {
+      "body_file": "samm-compare-payments-2025-q4-2026-q2.json"
+    },
+    "GET /api/v1/samm/payments/compare?from=nope": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      }
+    },
+    "GET /api/v1/isms/risks": {
+      "status": 200,
+      "body_file": "reports-risks-now.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks?as-of=2026-03-01": {
+      "status": 200,
+      "body_file": "reports-risks-2026-03.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks?as-of=audit-2026-03": {
+      "status": 200,
+      "body_file": "reports-risks-audit-2026-03.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks?as-of=2026-06-30": {
+      "status": 200,
+      "body_file": "reports-risks-2026-06.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks?as-of=management-review-2026-06": {
+      "status": 200,
+      "body_file": "reports-risks-management-review-2026-06.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks?as-of=2025-06-01": {
+      "status": 200,
+      "body_file": "reports-risks-before-first.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks?as-of=2027-01-01": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/as-of",
+            "code": "FUTURE"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks?as-of=2026-13-45": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/as-of",
+            "code": "PATTERN"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks?as-of=no-such-tag": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/as-of",
+            "code": "UNKNOWN_TAG"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
     "GET /api/v1/documents/samm-assessments/payments-2026-q4/diff": {
       "body_file": "samm-diff-payments-2026-q4-draft.json"
     },
@@ -2934,6 +3059,18 @@
             "repository": "samm-assessments",
             "action": "edit"
           }
+        },
+        "GET /api/v1/reports/summary": {
+          "status": 200,
+          "body_file": "reports-summary-scope-created.json"
+        },
+        "GET /api/v1/reports/samm-trend": {
+          "status": 200,
+          "body_file": "reports-samm-trend-scope-created.json",
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "read"
+          }
         }
       },
       "events": [
@@ -3147,6 +3284,10 @@
             "repository": "samm-assessments",
             "action": "edit"
           }
+        },
+        "GET /api/v1/reports/summary": {
+          "status": 200,
+          "body_file": "reports-summary-assessment-created.json"
         }
       },
       "events": [
@@ -3201,6 +3342,10 @@
             "repository": "samm-assessments",
             "action": "edit"
           }
+        },
+        "GET /api/v1/reports/summary": {
+          "status": 200,
+          "body_file": "reports-summary-assessment-created.json"
         }
       },
       "events": [
@@ -3310,6 +3455,18 @@
         },
         "GET /api/v1/samm/payments/trend": {
           "body_file": "samm-trend-payments-released.json"
+        },
+        "GET /api/v1/reports/summary": {
+          "status": 200,
+          "body_file": "reports-summary-released.json"
+        },
+        "GET /api/v1/reports/samm-trend": {
+          "status": 200,
+          "body_file": "reports-samm-trend-released.json",
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "read"
+          }
         }
       },
       "events": [
@@ -3516,6 +3673,266 @@
             "repository": "samm-assessments",
             "action": "edit"
           }
+        }
+      }
+    },
+    "trend-mixed-models": {
+      "description": "The scopes of the trend report are of different model versions: Payments is v2.2.0 with its older assessment left out (omitted 1, one point), Web shop is v2.1.0 (its one point still says v2.2.0 in the data); the other reads are as in ready.",
+      "routes": {
+        "GET /api/v1/reports/samm-trend": {
+          "status": 200,
+          "body_file": "reports-samm-trend-mixed-models.json",
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "read"
+          }
+        }
+      }
+    },
+    "no-threat-models": {
+      "description": "No service has a threat model: the evaluation lists no model and all eight services without one, the summary counts them; the other reports are as in ready.",
+      "routes": {
+        "GET /api/v1/reports/threat-evaluation": {
+          "status": 200,
+          "body_file": "reports-threat-evaluation-none.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/reports/summary": {
+          "status": 200,
+          "body_file": "reports-summary-no-threat-models.json"
+        }
+      }
+    },
+    "risk-register-git-unavailable": {
+      "description": "The Git server of the ISMS register cannot be reached: the status is degraded and the register as of a past date or tag answers GIT_UNAVAILABLE (503); the register as of now and every other report answer 200.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": true,
+            "loginProvider": "oidc",
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "DOWN"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              },
+              {
+                "alias": "test-notes",
+                "fetch": "UP"
+              }
+            ]
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-03-01": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=audit-2026-03": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-06-30": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=management-review-2026-06": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        }
+      }
+    },
+    "risk-register-empty": {
+      "description": "The register holds no released entry: as of now and as of the listed dates it lists nothing, there is no tag (the listed names answer UNKNOWN_TAG; an unlisted value falls to the keyless route), and the summary counts no risk; the other reports are as in ready.",
+      "routes": {
+        "GET /api/v1/isms/risks": {
+          "status": 200,
+          "body_file": "reports-risks-empty.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-03-01": {
+          "status": 200,
+          "body": {
+            "asOf": {
+              "requested": "2026-03-01",
+              "date": "2026-03-01",
+              "tag": null,
+              "commit": null,
+              "at": null
+            },
+            "tags": [],
+            "risks": []
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-06-30": {
+          "status": 200,
+          "body": {
+            "asOf": {
+              "requested": "2026-06-30",
+              "date": "2026-06-30",
+              "tag": null,
+              "commit": null,
+              "at": null
+            },
+            "tags": [],
+            "risks": []
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2025-06-01": {
+          "status": 200,
+          "body": {
+            "asOf": {
+              "requested": "2025-06-01",
+              "date": "2025-06-01",
+              "tag": null,
+              "commit": null,
+              "at": null
+            },
+            "tags": [],
+            "risks": []
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=audit-2026-03": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "UNKNOWN_TAG"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=management-review-2026-06": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "UNKNOWN_TAG"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2027-01-01": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "FUTURE"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-13-45": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "PATTERN"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=no-such-tag": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "UNKNOWN_TAG"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/reports/summary": {
+          "status": 200,
+          "body_file": "reports-summary-no-risks.json"
         }
       }
     }

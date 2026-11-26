@@ -177,7 +177,9 @@ Requirements:: xref:../specification/category-samm.adoc#AUN-SAMM-5[AUN-SAMM-5] (
 yet.
 Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Reports*); decided
 provisionally: the trend of a scope is `GET /api/v1/samm/{scope}/trend` (one model version, the others counted as omitted)
-and `MODEL_VERSIONS_DIFFER` is `422` (xref:../specification/rest-api.adoc#_decided_samm[REST API Register, Open Questions]).
+and `MODEL_VERSIONS_DIFFER` is `422` (xref:../specification/rest-api.adoc#_decided_samm[REST API Register, Open Questions]);
+decided provisionally with the Reports lens: the trend of several scopes is `GET /api/v1/reports/samm-trend` and the
+comparison has the page `/reports/samm-compare?scope=&from=&to=` (xref:../specification/rest-api.adoc#_decided_reports[REST API Register, Open Questions]).
 
 [#UC-SAMM-6]
 == UC-SAMM-6: Turn Gaps into Risks

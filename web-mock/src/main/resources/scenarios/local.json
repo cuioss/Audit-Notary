@@ -143,8 +143,8 @@
           {
             "kind": "review",
             "lens": "threat-models",
-            "title": "Payment gateway: checkout flow",
-            "address": "/threat-models/payment-gateway/checkout-flow",
+            "title": "Payment API: checkout flow",
+            "address": "/threat-models/payment-api/checkout-flow",
             "due": "2026-12-01"
           },
           {
@@ -227,6 +227,131 @@
     },
     "GET /api/v1/samm/payments/compare": {
       "body_file": "samm-compare-payments-workshop.json"
+    },
+    "GET /api/v1/reports/summary": {
+      "status": 200,
+      "body_file": "reports-summary-workshop.json"
+    },
+    "GET /api/v1/reports/samm-trend": {
+      "status": 200,
+      "body_file": "reports-samm-trend.json",
+      "requires": {
+        "repository": "samm-assessments",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/reports/threat-evaluation": {
+      "status": 200,
+      "body_file": "reports-threat-evaluation.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/samm/payments/compare?from=2025-q4&to=2026-q2": {
+      "body_file": "samm-compare-payments-2025-q4-2026-q2.json"
+    },
+    "GET /api/v1/samm/payments/compare?from=nope": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      }
+    },
+    "GET /api/v1/isms/risks": {
+      "status": 200,
+      "body_file": "reports-risks-now.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks?as-of=2026-03-01": {
+      "status": 200,
+      "body_file": "reports-risks-2026-03.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks?as-of=audit-2026-03": {
+      "status": 200,
+      "body_file": "reports-risks-audit-2026-03.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks?as-of=2026-06-30": {
+      "status": 200,
+      "body_file": "reports-risks-2026-06.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks?as-of=management-review-2026-06": {
+      "status": 200,
+      "body_file": "reports-risks-management-review-2026-06.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks?as-of=2025-06-01": {
+      "status": 200,
+      "body_file": "reports-risks-before-first.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks?as-of=2027-01-01": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/as-of",
+            "code": "FUTURE"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks?as-of=2026-13-45": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/as-of",
+            "code": "PATTERN"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks?as-of=no-such-tag": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/as-of",
+            "code": "UNKNOWN_TAG"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
     },
     "GET /api/v1/documents/samm-assessments/payments-2026-q4/diff": {
       "body_file": "samm-diff-payments-2026-q4-draft.json"

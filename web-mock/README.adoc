@@ -65,7 +65,8 @@ Without the scripts: `java -cp … de.cuioss.notary.audit.mock.cli.WebMockCli --
 `note-*` and `category-*` states of _Document Lifecycle_ and the SAMM states of _SAMM Completion_ (`scope-created`,
 `scope-invalid`, `targets-saved`, `targets-invalid`, `targets-conflict`, `targets-conflict-resolved`,
 `shop-assessment-created`, `organisation-assessment-created`, `assessment-invalid`, `assessment-released-meanwhile`,
-`evidence-invalid`, `model-versions-differ`, `models-none`, `samm-git-unavailable`)
+`evidence-invalid`, `model-versions-differ`, `models-none`, `samm-git-unavailable`) and the report states of _Reports_
+(`trend-mixed-models`, `no-threat-models`, `risk-register-git-unavailable`, `risk-register-empty`)
 |An assessor in a populated installation: Due list with every kind, catalogs, and the SAMM lens — four scopes, the
 open workshop *Payments 2026 Q4* (draft, eleven practices answered) and released assessments to compare with; a draft
 and a save for everyone succeed. `saved-by-other` pushes a `document-saved` event and serves the assessment with
@@ -84,7 +85,9 @@ hold `administer-catalogs`, so every catalog and directory write answers `403 FO
 older than the interval, confirming it or saving it moves to `confirmation-done`; `entry-invalid` refuses saving the own
 entry with `422`, `entry-git-unavailable` answers saving and confirming `503 GIT_UNAVAILABLE`. The SAMM lens answers the
 pinned models, the trend of every scope, the create of a scope and of an assessment, the save of the targets of a scope,
-the evidence of an assessment and the refusal of every write to a released one (_SAMM Completion_)
+the evidence of an assessment and the refusal of every write to a released one (_SAMM Completion_); it answers the four
+requests of the lens *Reports* (the dashboard summary, the trend of every scope, the threat evaluation and the risk
+register as of a date) and the comparison pair of the report page (_Reports_)
 
 |`first-login`
 |`form`, `invalid-team`, `registered`, `registered-bound`, `candidates`, `candidates-chosen`, `candidates-not-bindable`, `candidates-refused`
@@ -104,13 +107,15 @@ holds the SAMM assessments too); the writes of the own entry (`PUT /api/v1/direc
 and the person directory as `workshop` does (_Directory and Catalogs_); every catalog and directory write answers
 `403 FORBIDDEN` (`requires`, no right `administer-catalogs`). It reads the pinned models and the four trends of the SAMM
 lens; creating a scope, creating an assessment and saving the targets answer `403 FORBIDDEN` (`requires`, no right `edit`
-on `samm-assessments`)
+on `samm-assessments`). It answers the reports of `workshop` (_Reports_)
 
 |`degraded`
 |`unreachable`, `recovered`
 |The fetch of `samm-assessments` fails: status `degraded`, a save answers `GIT_UNAVAILABLE` (a draft is still kept), and
 so do creating a scope, creating an assessment and saving the targets; the models and the trends stay readable;
-`recovered` pushes the `status` event with the healthy status, and the creates and the save answer as in `workshop`
+`recovered` pushes the `status` event with the healthy status, and the creates and the save answer as in `workshop`; the
+reports answer as in `workshop`, except that the risk register as of a past date or tag answers `503 GIT_UNAVAILABLE` in
+`unreachable` and its data after `recovered` (_Reports_)
 
 |`empty`
 |`ready`, `scope-created`, `assessment-created`, `no-model`
@@ -119,7 +124,8 @@ so do creating a scope, creating an assessment and saving the targets; the model
 `system` and `external` and the person list are empty, every entry read answers `404`, and the catalog and directory
 writes answer as in `catalog-admin` `ready` (_Directory and Catalogs_). No scope exists and one model is pinned; creating
 the scope *Mobile Apps* (`scope-created`) and then its first assessment (`assessment-created`) is the flow of a first
-user, `no-model` pins none (_SAMM Completion_)
+user, `no-model` pins none (_SAMM Completion_). The reports are empty and follow that chain: zeros in the summary, no
+scope in the trend (then *Mobile Apps* without a point), no threat model, no risk (_Reports_)
 
 |`no-rights`
 |`ready`
@@ -147,14 +153,16 @@ stays the one of the identity provider; `changed` answers `CHANGED_SINCE_REVIEW`
 `503 TOO_MANY_LOGINS` with `Retry-After: 60`, writes nothing and keeps the state (`POST /mock/goto/review` leaves it);
 `released` serves the frozen assessment with its tag `assessments/payments-2026-q4/v1` (its trend holds the third point);
 `released-meanwhile` answers the release, a draft, a save and a submit `409 DOCUMENT_RELEASED` with that tag and serves the released reads (assessment,
-scope, list, trend). The models and the four trends are read in every state
+scope, list, trend, and the summary and the trend report). The models and the four trends are read in every state. The
+user holds no right on `threat-models`: the summary has no `threatModels` section and the threat evaluation answers `403 FORBIDDEN`; the
+trend report, the risk register and the comparison pair answer as in `workshop` (_Reports_)
 
 |`local`
 |`ready`
 |The login provider is `local`: `GET /api/v1/auth/login` answers `302` to the web app's page `/login?return=<address>`
 and `POST /j_security_check` with the user `alex` and the password `local-password` signs in (`Origin` required); the
 status names `loginProvider: local` and `stepUp: off`. The data and the user are those of `workshop`; of the SAMM
-completion it answers the models and the four trends only
+completion it answers the models and the four trends only, and it answers the reports of `workshop` (_Reports_)
 
 |`catalog-admin`
 |`ready`, `service-created`, `service-retired`, `catalog-invalid`, `catalog-id-taken`, `catalog-rejected`,
@@ -333,6 +341,24 @@ the empty assessment of `empty`
 |`samm-scope-payments-targets-saved.json`
 |`payments` with the targets of the state `targets-saved`
 
+|`samm-compare-payments-2025-q4-2026-q2.json`
+|The comparison pair of the report page, computed from the two assessments and the model (_Reports_)
+
+|`reports-summary-*.json`
+|The dashboard summary: `workshop` (all states without a file of their own, `read-only`, `degraded`, `local`), `-scope-created`,
+`-assessment-created`, `-released`, `-release` and `-release-released` (no `threatModels`), `-empty`, `-empty-scope-created`,
+`-empty-assessment-created`, `-no-threat-models`, `-no-risks` (_Reports_)
+
+|`reports-samm-trend*.json`
+|The trend of every scope: the base, `-released`, `-scope-created`, `-mixed-models`, `-empty-created` (_Reports_)
+
+|`reports-threat-evaluation*.json`
+|The threat evaluation: six models and two services without a model; `-none` for the state `no-threat-models` (_Reports_)
+
+|`reports-risks-*.json`
+|The risk register: `-now` and the answers as of `2026-03-01`, `audit-2026-03`, `2026-06-30`,
+`management-review-2026-06` and `2025-06-01` (`-before-first`), `-empty` (_Reports_)
+
 |`samm-scope-<scope>-assessment-created.json`, `samm-scopes-<scope>-assessment-created.json`,
 `samm-assessment-shop-2026-q4.json`, `samm-assessment-organisation-2026-h2.json`
 |The scope read, the list and the empty assessment of the states `shop-assessment-created` and
@@ -395,7 +421,7 @@ The scenario files and their data files are static fixtures, and the format has 
 (no generator, no `derive_from`). Where a fixture mirrors another source (the catalog lists and the entries behind them,
 the service states and their baseline, the retired snapshot and the dependency graph, the outage refusals and the write
 routes, the reserved ids and the routes, the handler ids and `Handler`), a test reads both and fails on drift
-(`DirectoryAndCatalogsTest`, `scenarioFetch.test.ts`). That is the accepted guard (decided provisionally; the
+(`DirectoryAndCatalogsTest`, `SammCompletionTest`, `ReportsLensTest`, `scenarioFetch.test.ts`). That is the accepted guard (decided provisionally; the
 alternative is a scenario-format change that derives the lists when a scenario is loaded).
 
 == Fixture Categories
@@ -743,6 +769,205 @@ state while the data of both assessments still say `v2.2.0`. The creates of `pay
 their path (`ASSESSMENT_OPEN`), not because the data holds an open assessment; a scope other than the four and `mobile`
 has no route. The scope read of `mobile` is the same in `empty`, where its first save is by Alex Example, while the
 assessment names Sam Firstuser. After a create the state allows no second create of a scope.
+
+== Reports
+
+The requests of the lens *Reports* (UC-SAMM-5, UC-TM-4, UC-ISMS-3; `doc/specification/rest-api.adoc`, _Reports Requests_;
+everything PROVISIONAL except the request `GET /api/v1/isms/risks?as-of=`, whose answer is PROVISIONAL too). A report only
+reads: it has no write, no event and no state change of its own. Today is the fixed 2026-11-26, and the data files are
+written by a generator that asserts the figures below, so that the card of the dashboard and its report never disagree.
+
+*The routes.* `workshop`, `read-only`, `degraded` and `local` answer all of them; `release` and `empty` answer them with the
+differences named in the table:
+
+[cols="2,3,3"]
+|===
+|Request |Right (`requires`) |Answer
+
+|`GET /api/v1/reports/summary`
+|none (the request never answers `FORBIDDEN`)
+|`reports-summary-workshop.json` (in `release` `reports-summary-release.json`, in `empty` `reports-summary-empty.json`)
+
+|`GET /api/v1/reports/samm-trend`
+|`read` on `samm-assessments`
+|`reports-samm-trend.json` (in `empty` `{"scopes": []}`)
+
+|`GET /api/v1/reports/threat-evaluation`
+|`read` on `threat-models`
+|`reports-threat-evaluation.json` (in `release` `403 FORBIDDEN`, Noor Haddad has no right on `threat-models`; in `empty` no model and no service)
+
+|`GET /api/v1/isms/risks` and the keys `?as-of=<value>`
+|`read` on `isms-register`
+|The register as of now and the keys below
+
+|`GET /api/v1/samm/payments/compare?from=2025-q4&to=2026-q2`
+|as the keyless route of the profile; only this order is keyed: the specified reverse order (`delta` changes its sign) is not served, the keyless route answers it
+|`samm-compare-payments-2025-q4-2026-q2.json` in `workshop`, `read-only`, `release`, `degraded` and `local`; `?from=nope` answers
+`404 NOT_FOUND`
+|===
+
+*The summary* (`workshop`): `samm` 4 scopes, 1 without a release, 2 open, the latest of `payments` (`2026-q2`, 1.3583333333333332,
+change 0.3999999999999998), `shop` (`2026-q3`, 1.2333333333333334) and `organisation` (`2026-h1`, 1.2083333333333335), the
+last two with `change` `null`; `threatModels` 8 services, 6 with a model, 2 without, 13 open and 10 untreated threats, 2
+overdue, 1 due soon; `risks` 7 entries (critical 1, high 3, medium 2, low 1), 1 due soon, 1 overdue, the newest release
+`2026-11-12T10:41:00Z`. The variants follow the state: `scope-created` 5 scopes and 2 without release,
+`shop-assessment-created` and `organisation-assessment-created` 3 open, `assessment-released-meanwhile` (and `release`
+`released`, `released-meanwhile`) 1 open with *Payments 2026 Q4* (`2026-11-24`, 1.65, change 0.29166666666666674) as latest.
+`no-threat-models` counts 0 with a model and 8 without, `risk-register-empty` counts no risk.
+
+*The trend of every scope* repeats the points of the request of each scope (`samm-trend-*.json`, unrounded, without
+`practices`) in the order of the scope list; `identity` has `"modelVersion": null` and no point. `scope-created` adds
+*Mobile Apps* last without a point. `trend-mixed-models`: `payments` is `v2.2.0` with one point and `omitted` 1, `shop` is
+`v2.1.0` (its point still says `v2.2.0` in the data: a documented contradiction, the page reads the report's version).
+
+*The threat evaluation* (the dates are computed from today; `v` is the version of the last release):
+
+[cols="3,1,1,1,1,1,1,1"]
+|===
+|Service, model (address `/threat-models/<service>/<model>`) |State, `v` |Last review |Days since |Review due |Due in |Status |Threats (all/open/untreated/transferred)
+
+|`customer-portal`, `portal` (very high, `P6M`)
+|released, 2
+|2025-12-02
+|359
+|2026-06-02
+|-177
+|`overdue`
+|6/2/2/0
+
+|`identity-provider`, `login-flow` (very high)
+|released, 2
+|2026-04-14
+|226
+|2026-10-14
+|-43
+|`overdue`
+|7/4/3/0
+
+|`payment-api`, `checkout-flow` (very high)
+|released, 3
+|2026-06-01
+|178
+|2026-12-01
+|5
+|`due-soon`
+|9/3/2/1
+
+|`reporting`, `report-generation` (normal, `P24M`)
+|released, 1
+|2025-03-10
+|626
+|2027-03-10
+|104
+|`ok`
+|4/0/0/0
+
+|`customer-db`, `storage` (very high)
+|released, 1
+|2026-09-29
+|58
+|2027-03-29
+|123
+|`ok`
+|5/1/0/0
+
+|`notification-service`, `notification-flows` (normal)
+|draft, `null`
+|`null`
+|`null`
+|`null`
+|`null`
+|`unreleased`
+|3/3/3/0
+|===
+
+The services without a model are `notification-gateway` (planned, `mobile`) and `report-scheduler` (active,
+`security-office`), both `normal`, at `/threat-models/<service>`; the retired `ledger` is in neither list. The figures
+are fixed for the threat models of the next step: `checkout-flow` has 3 open threats (2 untreated), 4 mitigated and 2
+accepted, one of them `T-07` "Replay of a payment authorisation", transferred and the origin of the risk `R-009`;
+`login-flow` 4 open (3 untreated) and 3 mitigated; `storage` 1 open with a countermeasure, 3 mitigated and 1 accepted;
+`portal` 2 open (both untreated), 3 mitigated and 1 accepted; `report-generation` 3 mitigated and 1 accepted;
+`notification-flows` 3 open, all untreated. `no-threat-models` lists no model and the eight services that are not
+retired: the very-high ones first (`customer-db`, `customer-portal`, `identity-provider`, `payment-api`), then the normal
+ones (`notification-gateway`, `notification-service`, `report-scheduler`, `reporting`), each group by name without regard to case.
+
+*The risk register.* The two tags are `management-review-2026-06` (commit `b81d4e6`, `2026-06-18T13:05:00Z`) and
+`audit-2026-03` (`3f9a1c2`, `2026-02-27T16:20:00Z`); as of now the commit is `e41c9a7` (`2026-11-12T10:41:00Z`).
+
+[cols="1,2,3"]
+|===
+|`?as-of=` |File |Risks
+
+|none
+|`reports-risks-now.json`
+|`R-004` v3 high, `R-007` v1 low, `R-009` v2 critical (origin `T-07`), `R-012` v2 high, `R-015` v1 medium (origin
+`payments-2026-q2#st`), `R-018` v1 high, `R-021` v1 medium; every address is `/isms/risks/<entry>`
+
+|`2026-03-01`, `audit-2026-03`
+|`reports-risks-2026-03.json`, `reports-risks-audit-2026-03.json`
+|`R-004` v1 medium, `R-007` v1, `R-012` v1 medium, as at the commit `3f9a1c2` (the tag one carries `tag` and the date `2026-02-27`);
+every address is pinned, `?at=v1`
+
+|`2026-06-30`, `management-review-2026-06`
+|`reports-risks-2026-06.json`, `reports-risks-management-review-2026-06.json`
+|`R-004` v2 high, `R-007` v1, `R-009` v1 high, `R-012` v1 medium, as at the commit `b81d4e6` (every address is pinned: `?at=v2`, `?at=v1`)
+
+|`2025-06-01`
+|`reports-risks-before-first.json`
+|none, `commit` and `at` `null`
+
+|`2027-01-01`, `2026-13-45`, `no-such-tag`
+|inline
+|`422 VALIDATION`, pointer `/as-of`, code `FUTURE`, `PATTERN`, `UNKNOWN_TAG`
+|===
+
+*The states of `workshop`.*
+
+[cols="1,3"]
+|===
+|State |What changes
+
+|`trend-mixed-models`
+|The trend report: `payments` `v2.2.0` with one point and `omitted` 1, `shop` `v2.1.0`
+
+|`no-threat-models`
+|The evaluation lists no model and eight services without one; the summary counts them
+
+|`risk-register-git-unavailable`
+|The status is `degraded` with `isms-register` `DOWN`; the register as of `2026-03-01`, `audit-2026-03`, `2026-06-30` and
+`management-review-2026-06` answers `503 GIT_UNAVAILABLE`; the register as of now, `2025-06-01`, the `422` values and every other
+report stay `200`
+
+|`risk-register-empty`
+|The register lists no risk as of now or on the listed days (the dates answer with the requested day and `commit` `null`), has
+no tag, so the listed tag names answer `422 UNKNOWN_TAG`; the summary counts no risk. A value that is not keyed (another day or
+tag name) falls to the keyless route, as in every state
+|===
+
+The states `scope-created`, `shop-assessment-created`, `organisation-assessment-created` and `assessment-released-meanwhile` of
+_SAMM Completion_ also change the summary and the trend report as the list says; in `release` the states `released` and
+`released-meanwhile` do, in `empty` the states `scope-created` and `assessment-created` (the trend then lists *Mobile Apps*
+without a point). `empty` has no tag either: besides `2026-03-01`, `2025-06-01` and `2026-06-30` (empty, `commit` `null`) its
+tag names answer `422 UNKNOWN_TAG`. `degraded` answers the four past values `503 GIT_UNAVAILABLE` in `unreachable` and the
+files of `workshop` after `recovered`.
+
+*Limits.*
+
+* *Any other `as-of` value is read as of now.* The keys are those of the table; the keyless route answers every other value
+(also a date that exists), and the date of the answer then reads today.
+* *The comparison keys cover one pair.* The keyless route answers the pair `2026-q2` to `2026-q4` whatever is asked, the
+swapped order and the scopes other than `payments` (one assessment each) are not mocked. A state that overrides the keyless
+route wins over the keys of the scenario (a state is looked up first): in `model-versions-differ` every pair, `from=nope`
+included, answers `422 MODEL_VERSIONS_DIFFER`, the pair `2025-q4` to `2026-q2` of the report page and of the assessment sheet
+too.
+* *In the state `risk-register-empty` and in `empty` the keys are repeated for the same reason* (the keyless route of the
+state would answer every value), the `422` values included.
+* *`trend-mixed-models` contradicts the data:* the assessments of `shop` still say `v2.2.0`.
+* *The evaluation's data must be reproduced by the threat models of the next step* (the figures above); the Due items of
+the threat models name `payment-api` (title *Payment API: checkout flow*, due 2026-12-01) in `workshop`, `degraded`
+and `local`.
+* The report routes are static: no request body or `Accept-Language` changes an answer, and nothing in them is derived at
+run time (_Fixtures and Drift Tests_: `ReportsLensTest` reads the data files and fails on drift).
 
 == Query-Keyed Routes
 

@@ -97,7 +97,14 @@ and `targets-conflict`), answers `DOCUMENT_RELEASED` to every write of a release
 `models-none` and `samm-git-unavailable`; `read-only` answers the creates and the targets save `403 FORBIDDEN` (no right
 `edit`), `release` answers `DOCUMENT_RELEASED` to the release of a document released meanwhile (`released-meanwhile`),
 `degraded` answers them `503 GIT_UNAVAILABLE`, and `empty` has no scope and one pinned model and runs the first-user chain
-`scope-created` and `assessment-created`; a request about a document that no route names
+`scope-created` and `assessment-created`; the lens *Reports*: `workshop`, `read-only`, `degraded` and `local` answer the dashboard
+summary (`GET /api/v1/reports/summary`), the trend of every scope, the threat evaluation, the risk register as of a date
+(`GET /api/v1/isms/risks?as-of=`: two tags, a date or a tag, `422` for `FUTURE`, `PATTERN` and `UNKNOWN_TAG`) and the comparison
+pair `2025-q4` to `2026-q2`, with the fixed today 2026-11-26; `workshop` carries the states `trend-mixed-models`,
+`no-threat-models`, `risk-register-git-unavailable` (the register as of a past commit answers `503 GIT_UNAVAILABLE`) and
+`risk-register-empty`; `release` answers the summary without the section `threatModels` and the threat evaluation
+`403 FORBIDDEN` (no right on `threat-models`); `empty` answers zeros and empty lists, which follow its chain; `degraded` answers
+the register as of a past commit `503 GIT_UNAVAILABLE` until `recovered`; a request about a document that no route names
 answers `404 NOT_FOUND` for a repository of the scenario's rights
 
 |Control

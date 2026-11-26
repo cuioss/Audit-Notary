@@ -1,0 +1,55 @@
+{
+  "today": "2026-11-26",
+  "samm": {
+    "scopes": 4,
+    "withoutRelease": 1,
+    "open": 3,
+    "latest": [
+      {
+        "scope": "payments",
+        "name": "Payments",
+        "assessment": "2026-q2",
+        "date": "2026-06-16",
+        "overall": 1.3583333333333332,
+        "change": 0.3999999999999998
+      },
+      {
+        "scope": "shop",
+        "name": "Web shop",
+        "assessment": "2026-q3",
+        "date": "2026-09-22",
+        "overall": 1.2333333333333334,
+        "change": null
+      },
+      {
+        "scope": "organisation",
+        "name": "Organisation",
+        "assessment": "2026-h1",
+        "date": "2026-05-04",
+        "overall": 1.2083333333333335,
+        "change": null
+      }
+    ]
+  },
+  "threatModels": {
+    "services": 8,
+    "withModel": 6,
+    "withoutModel": 2,
+    "openThreats": 13,
+    "untreatedThreats": 10,
+    "overdue": 2,
+    "dueSoon": 1
+  },
+  "risks": {
+    "entries": 7,
+    "byRating": {
+      "critical": 1,
+      "high": 3,
+      "medium": 2,
+      "low": 1
+    },
+    "dueSoon": 1,
+    "overdue": 1,
+    "latestRelease": "2026-11-12T10:41:00Z"
+  }
+}

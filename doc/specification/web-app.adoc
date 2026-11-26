@@ -97,6 +97,11 @@ Provisionally (decided with the SAMM completion, xref:rest-api.adoc#_samm_addres
 lens *SAMM* gains `/samm/new` (a new scope) and `/samm/<scope>/new` (a new assessment); the segment `new` is reserved as a
 scope and as an assessment.
 
+Provisionally (decided with the Reports lens, xref:rest-api.adoc#_reports_addresses[REST API Register, Reports Requests]): the
+lens *Reports* gains `/reports/samm-trend`, `/reports/samm-compare`, `/reports/threat-evaluation` and
+`/reports/risk-register`, with the allowed queries `scope`, `from`, `to` and `as-of`; `/reports/<report>` stays for every
+other name and is the not-found view. The address of a risk (`/isms/risks/<entry>`) admits `at`.
+
 Three more addresses are shown without the shell: `/login` (local users), `/signed-out` and `/login-problem`
 (provisional, xref:rest-api.adoc#_addresses_outside_the_shell[REST API Register, Addresses Outside the Shell]). They are
 in `canonical-addresses.json` as `outsideShell`, so the web app routes them and the check of a login's `return` refuses

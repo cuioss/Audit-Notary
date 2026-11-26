@@ -76,3 +76,18 @@ Transfer, issues and evaluation:
 A recipe is `categories/threat-models/recipes/<id>.yaml`: `title`, ordered `steps`, each with `title`, `guidance`
 (AsciiDoc fragment) and `fills` (JSON Pointer into the model file). The web app renders a recipe as `WizardPage`; the MCP
 server exposes recipes through the tool `read_recipe` (xref:mcp-server.adoc#AUN-MCP-6[MCP Server, AUN-MCP-6]).
+
+[#_open_questions]
+== Open Questions
+
+Decided provisionally with the Reports lens (UC-TM-4), recorded with the bodies in
+xref:rest-api.adoc#_decided_reports[REST API Register, Open Questions]; the owner may change each one:
+
+. *Evaluation* (AUN-TM-4): `GET /api/v1/reports/threat-evaluation` returns one row per threat model with `open`, `untreated`
+  and `transferred` threats, `lastReview`, `daysSinceReview`, `reviewDue`, `dueInDays` and a `status` (`ok`, `due-soon`,
+  `overdue`, `unreleased`); "due soon" is 30 days. The services of the catalog that are not retired and have no model are
+  listed beside it.
+. *Untreated* (AUN-TM-4): a threat with the status `open` that has no countermeasure and carries no reference into the risk
+  register.
+. *Review due date* (AUN-TM-3): counted from the `last-review` of the last released version, with `P6M`, `P12M` or `P24M` by
+  the highest effective protection need; a model that was never released has none.

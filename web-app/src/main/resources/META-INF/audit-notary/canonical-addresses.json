@@ -7,7 +7,11 @@
   },
   "queries": {
     "at": "(v[0-9]{1,4}|[0-9a-f]{7,40})",
-    "kind": "[a-z0-9][a-z0-9-]{0,63}"
+    "kind": "[a-z0-9][a-z0-9-]{0,63}",
+    "scope": "[a-z0-9][a-z0-9._-]{0,127}",
+    "from": "[a-z0-9][a-z0-9._-]{0,127}",
+    "to": "[a-z0-9][a-z0-9._-]{0,127}",
+    "as-of": "[A-Za-z0-9][A-Za-z0-9._/-]{0,127}"
   },
   "addresses": [
     { "route": "due", "pattern": "/" },
@@ -29,7 +33,7 @@
     { "route": "incidents.release", "pattern": "/incidents/{year}/{incident}/release" },
     { "route": "isms", "pattern": "/isms" },
     { "route": "isms.risks", "pattern": "/isms/risks" },
-    { "route": "isms.risk", "pattern": "/isms/risks/{entry}" },
+    { "route": "isms.risk", "pattern": "/isms/risks/{entry}", "query": ["at"] },
     { "route": "isms.risk.release", "pattern": "/isms/risks/{entry}/release" },
     { "route": "isms.documents", "pattern": "/isms/documents" },
     { "route": "isms.document", "pattern": "/isms/documents/{id}" },
@@ -50,6 +54,14 @@
     { "route": "catalogs.import", "pattern": "/directory/import" },
     { "route": "catalogs.persons", "pattern": "/directory/persons" },
     { "route": "reports", "pattern": "/reports" },
+    { "route": "reports.samm-trend", "pattern": "/reports/samm-trend", "query": ["scope"] },
+    {
+      "route": "reports.samm-compare",
+      "pattern": "/reports/samm-compare",
+      "query": ["scope", "from", "to"]
+    },
+    { "route": "reports.threat-evaluation", "pattern": "/reports/threat-evaluation" },
+    { "route": "reports.risk-register", "pattern": "/reports/risk-register", "query": ["as-of"] },
     { "route": "reports.report", "pattern": "/reports/{report}" },
     { "route": "settings", "pattern": "/settings" },
     { "route": "settings.profile", "pattern": "/settings/profile" },

@@ -1,0 +1,74 @@
+{
+  "asOf": {
+    "requested": "audit-2026-03",
+    "date": "2026-02-27",
+    "tag": "audit-2026-03",
+    "commit": "3f9a1c2",
+    "at": "2026-02-27T16:20:00Z"
+  },
+  "tags": [
+    {
+      "tag": "management-review-2026-06",
+      "commit": "b81d4e6",
+      "at": "2026-06-18T13:05:00Z"
+    },
+    {
+      "tag": "audit-2026-03",
+      "commit": "3f9a1c2",
+      "at": "2026-02-27T16:20:00Z"
+    }
+  ],
+  "risks": [
+    {
+      "id": "R-004",
+      "entry": "r-004",
+      "title": "Build agents run unpatched images",
+      "rating": "medium",
+      "treatment": "mitigate",
+      "owner": {
+        "kind": "team",
+        "id": "security-office",
+        "name": "Security Office"
+      },
+      "version": 1,
+      "releasedAt": "2025-11-06T14:02:00Z",
+      "reviewDue": "2026-05-06",
+      "reference": null,
+      "address": "/isms/risks/r-004?at=v1"
+    },
+    {
+      "id": "R-007",
+      "entry": "r-007",
+      "title": "Signing keys held by a single administrator",
+      "rating": "low",
+      "treatment": "accept",
+      "owner": {
+        "kind": "team",
+        "id": "security-office",
+        "name": "Security Office"
+      },
+      "version": 1,
+      "releasedAt": "2026-02-18T11:20:00Z",
+      "reviewDue": "2026-11-18",
+      "reference": null,
+      "address": "/isms/risks/r-007?at=v1"
+    },
+    {
+      "id": "R-012",
+      "entry": "r-012",
+      "title": "Supplier access to production",
+      "rating": "medium",
+      "treatment": "mitigate",
+      "owner": {
+        "kind": "team",
+        "id": "security-office",
+        "name": "Security Office"
+      },
+      "version": 1,
+      "releasedAt": "2025-12-09T09:30:00Z",
+      "reviewDue": "2026-06-09",
+      "reference": null,
+      "address": "/isms/risks/r-012?at=v1"
+    }
+  ]
+}

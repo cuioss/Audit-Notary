@@ -1,0 +1,30 @@
+{
+  "today": "2026-11-26",
+  "samm": {
+    "scopes": 0,
+    "withoutRelease": 0,
+    "open": 0,
+    "latest": []
+  },
+  "threatModels": {
+    "services": 0,
+    "withModel": 0,
+    "withoutModel": 0,
+    "openThreats": 0,
+    "untreatedThreats": 0,
+    "overdue": 0,
+    "dueSoon": 0
+  },
+  "risks": {
+    "entries": 0,
+    "byRating": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "dueSoon": 0,
+    "overdue": 0,
+    "latestRelease": null
+  }
+}

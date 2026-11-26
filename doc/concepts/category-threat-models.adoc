@@ -107,6 +107,15 @@ Not a diagram editor; Threat Dragon has one. The value lies in the life cycle:
 . Which recipes ship with the application, and whether a recipe is itself a schema-driven document.
 . Deferred: detection of an outdated model from the diffs of the service's repositories since the last review.
 
+Decided provisionally with the Reports lens (UC-TM-4), recorded in
+xref:../specification/rest-api.adoc#_decided_reports[REST API Register, Open Questions]; the owner may change each one:
+
+. The evaluation across services is one request, `GET /api/v1/reports/threat-evaluation`, one row per threat model with its
+  service, the highest effective protection need, the review due date and the open, untreated and transferred threats;
+  the lens *Threat models* and the report show the same answer.
+. An untreated threat is open, has no countermeasure and is not transferred; a model that was never released is
+  `unreleased` and has no review date; the services without a model are listed beside the table, a planned one too.
+
 == Related
 
 * xref:category-samm.adoc[SAMM] — Threat Assessment practice

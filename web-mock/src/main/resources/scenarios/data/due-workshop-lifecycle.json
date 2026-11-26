@@ -17,8 +17,8 @@
     {
       "kind": "review",
       "lens": "threat-models",
-      "title": "Payment gateway: checkout flow",
-      "address": "/threat-models/payment-gateway/checkout-flow",
+      "title": "Payment API: checkout flow",
+      "address": "/threat-models/payment-api/checkout-flow",
       "due": "2026-12-01"
     },
     {

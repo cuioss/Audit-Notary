@@ -275,6 +275,18 @@ xref:../specification/rest-api.adoc#_decided_samm[REST API Register, Open Questi
   an open assessment offers no second one and links the open one.
 . A comparison of two model versions is refused with a notice that names both versions.
 
+Decided provisionally with the Reports lens (UC-SAMM-5, UC-TM-4, UC-ISMS-3), recorded with the bodies in
+xref:../specification/rest-api.adoc#_decided_reports[REST API Register, Open Questions]; the owner may change each one:
+
+. The lens *Reports* is a `DashboardPage` at `/reports` that links to four reports: the SAMM trend of every scope
+  (`/reports/samm-trend`), the comparison of two assessments (`/reports/samm-compare?scope=&from=&to=`), the threat
+  evaluation (`/reports/threat-evaluation`) and the risk register as of a date (`/reports/risk-register?as-of=`). The
+  query of an address is part of its canonical form.
+. A chart states its figures twice, as direct labels and as a table; the business functions and the scopes take the chart
+  series in their fixed order, and a scope beyond the fifth is in the table only.
+. The table of the threat evaluation is one component: the lens *Threat models* shows the same.
+. A report is read-only and has no export.
+
 == Related
 
 * xref:authentication-and-identity.adoc[Authentication and Identity]

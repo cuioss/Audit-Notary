@@ -88,6 +88,40 @@ class CanonicalAddressesTest {
         assertEquals(CanonicalAddresses.FALLBACK, addresses.checkReturn(candidate));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"/reports", "/reports/samm-trend", "/reports/samm-trend?scope=payments",
+            "/reports/samm-compare", "/reports/samm-compare?scope=payments",
+            "/reports/samm-compare?scope=payments&from=2026-q2&to=2026-q4",
+            "/reports/samm-compare?to=2026-q4&from=2026-q2&scope=payments", "/reports/threat-evaluation",
+            "/reports/risk-register", "/reports/risk-register?as-of=2026-03-01",
+            "/reports/risk-register?as-of=audit-2026-03", "/reports/risk-register?as-of=risks%2FR-012%2Fv2",
+            "/reports/risk-register?as-of=risks/R-012/v2", "/isms/risks/r-012?at=v2"})
+    @DisplayName("keeps a return address of the Reports lens, with its allowed query")
+    void shouldKeepReportAddressesWithAllowedQuery(String address) {
+        assertEquals(address, addresses.checkReturn(address));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/reports/samm-trend?as-of=2026-03-01", "/reports/samm-trend?from=a",
+            "/reports/samm-compare?as-of=2026-03-01", "/reports/samm-compare?scope=payments&scope=shop",
+            "/reports/samm-compare?scope=Payments", "/reports/threat-evaluation?scope=payments",
+            "/reports/risk-register?scope=payments", "/reports/risk-register?as-of=",
+            "/reports/risk-register?as-of=%2Fetc", "/reports/risk-register?as-of=a&as-of=b",
+            "/reports/risk-register?as-of=2026-03-01#x", "/reports?as-of=2026-03-01",
+            "/isms/risks/r-012?at=zzz", "/isms/risks/r-012?as-of=2026-03-01", "/isms/risks/r-012/release?at=v2"})
+    @DisplayName("replaces a return address of the Reports lens with a name it does not admit or a bad value by /")
+    void shouldReplaceReportAddressesWithOtherQueries(String candidate) {
+        assertEquals(CanonicalAddresses.FALLBACK, addresses.checkReturn(candidate));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/reports/samm-trend", "/reports/samm-compare", "/reports/threat-evaluation",
+            "/reports/risk-register", "/reports/trends"})
+    @DisplayName("knows every report as a canonical path")
+    void shouldKnowTheReportPaths(String path) {
+        assertTrue(addresses.isCanonical(path));
+    }
+
     @Test
     @DisplayName("refuses a query of more than 256 characters")
     void shouldLimitTheQuery() {

@@ -93,4 +93,6 @@ Flow::
 . *An entry* opens as it was then.
 Outcome:: the reader sees the register as of the reporting date, released entries only.
 Requirements:: xref:../specification/category-isms.adoc#AUN-ISMS-3[AUN-ISMS-3] (reporting dates).
-Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Reports*).
+Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Reports*); decided
+provisionally: the page `/reports/risk-register?as-of=`, which lists summaries of the released entries and opens an entry as it
+was then (xref:../specification/rest-api.adoc#_decided_reports[REST API Register, Open Questions]).

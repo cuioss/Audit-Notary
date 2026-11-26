@@ -1,0 +1,110 @@
+{
+  "scopes": [
+    {
+      "scope": "payments",
+      "title": "Payments",
+      "subject": {
+        "kind": "team",
+        "id": "payments",
+        "name": "Payments"
+      },
+      "modelVersion": "v2.2.0",
+      "omitted": 0,
+      "points": [
+        {
+          "assessment": "2025-q4",
+          "document": "payments-2025-q4",
+          "title": "Payments 2025 Q4",
+          "date": "2025-12-08",
+          "overall": 0.9583333333333334,
+          "functions": {
+            "governance": 0.9583333333333334,
+            "design": 1.0,
+            "implementation": 1.25,
+            "verification": 0.8333333333333334,
+            "operations": 0.75
+          }
+        },
+        {
+          "assessment": "2026-q2",
+          "document": "payments-2026-q2",
+          "title": "Payments 2026 Q2",
+          "date": "2026-06-16",
+          "overall": 1.3583333333333332,
+          "functions": {
+            "governance": 1.4166666666666667,
+            "design": 1.6666666666666667,
+            "implementation": 1.5416666666666667,
+            "verification": 0.9583333333333334,
+            "operations": 1.2083333333333333
+          }
+        }
+      ]
+    },
+    {
+      "scope": "identity",
+      "title": "Identity Platform",
+      "subject": {
+        "kind": "team",
+        "id": "identity",
+        "name": "Identity Platform"
+      },
+      "modelVersion": null,
+      "omitted": 0,
+      "points": []
+    },
+    {
+      "scope": "shop",
+      "title": "Web shop",
+      "subject": {
+        "kind": "service",
+        "id": "shop",
+        "name": "Web shop"
+      },
+      "modelVersion": "v2.2.0",
+      "omitted": 0,
+      "points": [
+        {
+          "assessment": "2026-q3",
+          "document": "shop-2026-q3",
+          "title": "Web shop 2026 Q3",
+          "date": "2026-09-22",
+          "overall": 1.2333333333333334,
+          "functions": {
+            "governance": 1.25,
+            "design": 1.4166666666666667,
+            "implementation": 1.5833333333333333,
+            "verification": 1.0416666666666667,
+            "operations": 0.875
+          }
+        }
+      ]
+    },
+    {
+      "scope": "organisation",
+      "title": "Organisation",
+      "subject": {
+        "kind": "organisation",
+        "name": "Organisation"
+      },
+      "modelVersion": "v2.2.0",
+      "omitted": 0,
+      "points": [
+        {
+          "assessment": "2026-h1",
+          "document": "organisation-2026-h1",
+          "title": "Organisation 2026 H1",
+          "date": "2026-05-04",
+          "overall": 1.2083333333333335,
+          "functions": {
+            "governance": 1.0416666666666667,
+            "design": 1.375,
+            "implementation": 1.5,
+            "verification": 1.0833333333333333,
+            "operations": 1.0416666666666667
+          }
+        }
+      ]
+    }
+  ]
+}
