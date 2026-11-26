@@ -7,6 +7,8 @@
     scope: 'state.target',
     assessment: 'lens.samm',
     practice: 'kind.document',
+    category: 'lens.categories',
+    document: 'kind.document',
     'threat-model': 'lens.threat-models',
     incident: 'lens.incidents',
     isms: 'lens.isms',

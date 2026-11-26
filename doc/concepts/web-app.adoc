@@ -238,6 +238,9 @@ one:
   carries no reviewed revision, so a release answers `CHANGED_SINCE_REVIEW` by the state of the document.
 . The search of the top bar finds documents of every category by title and id, from the index, whatever the state of
   the Git server.
+. The documents lens opens its only category in place of `/categories`; a step of the workflow acts on the saved document,
+  so a sheet with unsaved changes offers "Save for everyone, then <step>"; the person's own draft comes back only into a
+  sheet they can edit; a conflict is decided per field in one panel above the form.
 
 == Related
 

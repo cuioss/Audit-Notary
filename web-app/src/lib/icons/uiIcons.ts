@@ -27,6 +27,7 @@ import kindDocumentUrl from './ui/kind-document.svg?url';
 import kindEntityUrl from './ui/kind-entity.svg?url';
 import kindReportUrl from './ui/kind-report.svg?url';
 import lensCatalogsUrl from './ui/lens-catalogs.svg?url';
+import lensCategoriesUrl from './ui/lens-categories.svg?url';
 import lensDaybookUrl from './ui/lens-daybook.svg?url';
 import lensIncidentUrl from './ui/lens-incident.svg?url';
 import lensIsmsUrl from './ui/lens-isms.svg?url';
@@ -75,6 +76,7 @@ export const ICON_URLS = {
   'kind.entity': kindEntityUrl,
   'kind.report': kindReportUrl,
   'lens.catalogs': lensCatalogsUrl,
+  'lens.categories': lensCategoriesUrl,
   'lens.due': lensDaybookUrl,
   'lens.incidents': lensIncidentUrl,
   'lens.isms': lensIsmsUrl,

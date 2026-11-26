@@ -30,8 +30,8 @@
     'threat-models': 'threat-model',
     incidents: 'incident',
     isms: 'isms',
-    // The neutral document mark: a stand-in that the documents lens replaces.
-    categories: 'practice',
+    // The neutral document mark of the generic documents lens.
+    categories: 'document',
   };
 
   const GROUPS = ['overdue', 'today', 'week', 'later'] as const;

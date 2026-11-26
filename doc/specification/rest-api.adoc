@@ -1456,7 +1456,25 @@ blocked; the owner may change each one. The bodies are in <<_document_lifecycle_
   document (`document-saved`, `document-created`, `document-transitioned`, `release-requested`) makes the sheet read it
   again.
 
+. *The generic lens in the web app* (`web-app/src/lib/views/documents/`) takes these readings of the contract, decided
+  provisionally with its construction (none adds a request):
+  `/categories` with exactly one category that is shown is replaced by the address of that category (the history keeps no
+  `/categories` entry), and the column of categories stands beside the documents only with more than one; the rail entry
+  is read with `GET /api/v1/categories` at the start and again whenever the rights of the session change, and on the
+  phone it stands behind "More", because the bar keeps its four lenses; the list of a category merges the documents of
+  every repository of its document types, newest change first, and the filters by state and by title are the browser's;
+  a document is looked for in the repositories of the category in order, and `NOT_FOUND` from all of them, or `VALIDATION`
+  of `at`, is the not-found view; the person's own draft is restored only into a sheet they can edit, so a reader, a
+  frozen document, an earlier state and a switched-off category show the saved value; a step acts on the saved document,
+  so with unsaved changes the sheet offers "Save for everyone, then <step>", and a refused save sends no step; the step
+  that is the release is a link to `…/release`, which stays the placeholder view until the release flow is built; a new
+  document of a category with several document types without `kind` asks which one, and without the right `edit` the
+  address says that creating needs it; the address of a document type whose schema the server does not serve is the
+  not-found view.
+
 For the owner: whether the rail may gain a ninth lens, and whether `/categories/{category}` may list documents, given
 that the use cases of the categories name it for the definition (1); whether a refused draft is right, or the draft
 should be written and the errors only advised (10); whether a pending release request belongs in the approvers' Due as
-well (13); whether the release request should carry the reviewed revision now (14); the status `502` of `REJECTED` (15); whether a switched-off custom category keeps readable, read-only generic addresses (21).
+well (13); whether the release request should carry the reviewed revision now (14); the status `502` of `REJECTED` (15); whether a switched-off custom category keeps readable, read-only generic addresses (21); whether the step-up handler should
+ask a local user for the password only for a step whose transition says `stepUp` (it decides by the method alone and asks
+for every save and every step: 24).

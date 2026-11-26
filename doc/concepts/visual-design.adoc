@@ -173,6 +173,20 @@ team and role, never a name), a box for what needs the person (*not found*, *unk
 The AsciiDoc preview sits under its source behind a hairline margin; it is the server's rendering, cut to an allow-list
 and drawn with the app's own elements.
 
+== The Documents Lens
+
+The documents of the categories without a lens of their own are one more chain of columns: category, documents, document
+(`TriagePage`, xref:../specification/rest-api.adoc#_the_generic_documents_lens[REST API Register, The Generic Documents
+Lens]). The list column holds title, state, version and the last change of each document, with a box only for a pending
+release request; the sheet is the form of the category's schema, read and written in the layout of the record. Three
+things are the lens's own. The steps of the workflow stand above the form as one bar: the one primary act is *Save for
+everyone* while something waits to be saved, and the step otherwise, because a step acts on the saved document; with
+unsaved changes the bar asks to save first. A conflict is one panel above the form that lists every field someone else
+changed, with the two versions side by side and the decision per field; nothing is saved until every field is decided.
+An earlier state of the document reads in the same layout, typeset, under a notice that names it and a link back; the
+choice of the earlier state is in the margin. The neutral kind marks are the category (the stack of sheets of the lens
+icon) and the document (the page with a folded corner).
+
 == The Access Pages
 
 Three pages stand outside the shell, because there is no session to show a shell for: `/login` (the form of local test

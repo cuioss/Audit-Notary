@@ -4,7 +4,7 @@
   import Wordmark from '../brand/Wordmark.svelte';
   import { t } from '../i18n';
   import type { Lens } from '../routes';
-  import { RAIL_FOOT, RAIL_GROUPS, type NavItem } from './nav';
+  import { RAIL_FOOT, railGroups, type NavItem } from './nav';
 
   /**
    * The navigation rail: the mark with the name, the lenses in two groups, Settings at the foot.
@@ -17,9 +17,11 @@
     collapsed: boolean;
     /** Turns the rail between full and icon width. */
     onToggle: () => void;
+    /** Whether the generic documents lens exists, which adds its entry between ISMS and Catalogs. */
+    documents?: boolean;
   }
 
-  let { activeLens, collapsed, onToggle }: Props = $props();
+  let { activeLens, collapsed, onToggle, documents = false }: Props = $props();
 </script>
 
 {#snippet entry(item: NavItem)}
@@ -45,7 +47,7 @@
     </a>
   </div>
   <div class="rail__groups">
-    {#each RAIL_GROUPS as group (group.titleKey)}
+    {#each railGroups(documents) as group (group.titleKey)}
       <section class="rail__group">
         {#if !collapsed}
           <h2 class="rail__group-title">{$t(group.titleKey)}</h2>

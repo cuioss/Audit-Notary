@@ -11,6 +11,7 @@
   import NotFoundView from './NotFoundView.svelte';
   import SettingsView from './SettingsView.svelte';
   import WelcomeView from './WelcomeView.svelte';
+  import DocumentsView from './documents/DocumentsView.svelte';
   import SammReleaseView from './samm/SammReleaseView.svelte';
   import SammView from './samm/SammView.svelte';
 
@@ -22,8 +23,8 @@
     pathname: string;
     /** The query of the current location, with its `?`; the pages outside the shell read `return` and `reason`. */
     search?: string;
-    /** Opens an address inside the app. */
-    onnavigate: (href: string) => void;
+    /** Opens an address inside the app; `replace` takes the place of the current one in the history. */
+    onnavigate: (href: string, options?: { replace?: boolean }) => void;
   }
 
   let { pathname, search = '', onnavigate }: Props = $props();
@@ -57,6 +58,8 @@
   {/key}
 {:else if lensOf(route) === 'samm' && address}
   <SammView params={address.params} />
+{:else if lensOf(route) === 'categories' && route !== 'categories.release' && address}
+  <DocumentsView {route} params={address.params} query={address.query} {onnavigate} />
 {:else}
   {#key route}
     <LensPlaceholderView titleKey={routeTitleKey(route)} {route} />

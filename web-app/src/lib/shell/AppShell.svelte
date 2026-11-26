@@ -1,8 +1,10 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import { hasNoRights } from '../access/access';
+  import { categoryList, hasDocumentsLens, refreshCategories } from '../documents/categories';
   import { t } from '../i18n';
   import { lensAddress, type Lens } from '../routes';
-  import { streamState } from '../stores/app';
+  import { session, streamState } from '../stores/app';
   import BottomBar from './BottomBar.svelte';
   import CommandPalette from './CommandPalette.svelte';
   import NavRail from './NavRail.svelte';
@@ -31,6 +33,21 @@
   let collapsed = $state(readRailCollapsed());
   let searching = $state(false);
 
+  // The rail offers *Documents* only while the server lists a generic category: read it again whenever the rights of the
+  // session change (the first login, a new session). A session without a right and a first login are refused the
+  // request, so none is made (rest-api.adoc, A Session Without Rights).
+  let rights = $derived(
+    `${$session?.firstLoginRequired ?? ''}|${JSON.stringify($session?.rights ?? null)}`,
+  );
+  $effect(() => {
+    void rights;
+    if ($session && !$session.firstLoginRequired && !hasNoRights($session)) {
+      void refreshCategories();
+    } else {
+      categoryList.set(null);
+    }
+  });
+
   function toggle() {
     collapsed = !collapsed;
     writeRailCollapsed(collapsed);
@@ -39,7 +56,7 @@
 
 <a class="skip" href="#main">{$t('shell.skip-to-content')}</a>
 <div class="app-shell" data-stream={$streamState}>
-  <NavRail {activeLens} {collapsed} onToggle={toggle} />
+  <NavRail {activeLens} {collapsed} onToggle={toggle} documents={$hasDocumentsLens} />
   <div class="app-shell__main">
     <TopBar
       {titleKey}
@@ -51,7 +68,7 @@
       <div class="app-shell__notices">{@render notices()}</div>
     {/if}
     <main id="main" class="app-shell__body" tabindex="-1">{@render content()}</main>
-    <BottomBar {activeLens} />
+    <BottomBar {activeLens} documents={$hasDocumentsLens} />
   </div>
 </div>
 <CommandPalette bind:open={searching} {onnavigate} />
