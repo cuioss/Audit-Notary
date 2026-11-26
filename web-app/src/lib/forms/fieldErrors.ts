@@ -50,7 +50,8 @@ export function effectiveErrors(
 
 /**
  * The nearest pointer a field answers to: the pointer itself when it is one of the form's fields, else its closest
- * ancestor that is. An error at no ancestor either (the root, a stale row) is listed under the form.
+ * ancestor that is. An error at no field and at no ancestor of one (the root pointer `''`, a pointer into no known
+ * property) is listed under the form; the error of a row that is no longer there stands at its table.
  *
  * @param pointer the pointer of an error
  * @param known the pointers of the form's fields
@@ -67,10 +68,17 @@ export function placeOf(pointer: string, known: ReadonlySet<string>): string | n
 
 /**
  * @param code the code of an error
- * @returns the catalogue key of its text: `form.error.<code in lower case, with hyphens>`, or `form.error.invalid`
- * when the catalogue has none
+ * @returns the catalogue key its text has: `form.error.<code in lower case, with hyphens>`
+ */
+export function errorKeyOf(code: string): string {
+  return `form.error.${code.toLowerCase().replaceAll('_', '-')}`;
+}
+
+/**
+ * @param code the code of an error
+ * @returns the catalogue key of its text, or `form.error.invalid` when the catalogue has none
  */
 export function errorKey(code: string): string {
-  const key = `form.error.${code.toLowerCase().replaceAll('_', '-')}`;
+  const key = errorKeyOf(code);
   return hasMessage(key) ? key : 'form.error.invalid';
 }

@@ -5,6 +5,8 @@ describe('errors', () => {
   it('knows the outcomes of the server', () => {
     expect(isOutcome('FORBIDDEN')).toBe(true);
     expect(isOutcome('TIMEOUT')).toBe(false);
+    // The refusal of the person save that names a pseudonym no candidate has (rest-api.adoc, directory/me).
+    expect(isOutcome('NOT_BINDABLE')).toBe(true);
   });
 
   it('maps a failure to the text a view shows', () => {

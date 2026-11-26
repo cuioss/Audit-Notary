@@ -173,7 +173,12 @@ describe('SchemaForm: editing the kinds', () => {
     const noted = field('Noted at') as HTMLInputElement;
     expect(noted).toHaveAttribute('type', 'datetime-local');
     expect(noted).toHaveAttribute('step', '1');
-    expect(noted.value).toMatch(/^2025-03-02T\d{2}:00(:00)?$/);
+    // The held instant, 13:00 UTC, as the wall clock of whichever time zone the suite runs in (not only whole hours).
+    const wall = new Date('2025-03-02T14:00:00+01:00');
+    const pad = (n: number) => String(n).padStart(2, '0');
+    expect(noted.value.slice(0, 16)).toBe(
+      `2025-03-02T${pad(wall.getHours())}:${pad(wall.getMinutes())}`,
+    );
     // Another field changes: the offset of the held value stays.
     await fireEvent.input(field('Title'), { target: { value: 'Changed' } });
     expect(last(onchange).noted).toBe('2025-03-02T14:00:00+01:00');
@@ -182,7 +187,9 @@ describe('SchemaForm: editing the kinds', () => {
     await fireEvent.input(noted, { target: { value: noted.value } });
     expect(onchange.mock.calls.length).toBe(before);
     await fireEvent.input(noted, { target: { value: '2026-11-24T10:30:15' } });
-    expect(last(onchange).noted).toMatch(/^2026-11-24T\d{2}:30:15Z$/);
+    expect(last(onchange).noted).toBe(
+      new Date(2026, 10, 24, 10, 30, 15).toISOString().replace(/\.\d{3}Z$/, 'Z'),
+    );
     // A half-typed entry reads as empty: it does not delete the value.
     const half = onchange.mock.calls.length;
     Object.defineProperty(noted, 'validity', { value: { badInput: true }, configurable: true });
@@ -199,6 +206,14 @@ describe('SchemaForm: editing the kinds', () => {
     expect(from).toHaveAttribute('type', 'date');
     await fireEvent.input(from, { target: { value: '2026-12-01' } });
     expect(last(onchange)).toEqual({ metrics: { window: { from: '2026-12-01' } } });
+  });
+
+  it('shows a date that does not exist on the calendar as empty, with the text as it is stored', async () => {
+    await open('form-validation', { closed: '2026-02-30' });
+    const closed = field('Closed on') as HTMLInputElement;
+    expect(closed.value).toBe('');
+    expect(closed.closest('.field')).toHaveTextContent('Stored as');
+    expect(closed.closest('.field')).toHaveTextContent('2026-02-30');
   });
 
   it('shows a held date that is no date as empty, with the text as it is stored', async () => {

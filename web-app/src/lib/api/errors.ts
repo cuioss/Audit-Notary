@@ -22,6 +22,7 @@ export const OUTCOMES = [
   'NOT_FOUND',
   'TOO_LARGE',
   'RENDER_UNAVAILABLE',
+  'NOT_BINDABLE',
 ] as const;
 
 /** An outcome of a refusal of the server. */

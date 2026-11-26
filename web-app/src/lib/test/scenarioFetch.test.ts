@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { bodyOf, mockMessages, renderAsciiDocLikeTheMock, scenarioFetch } from './scenarioFetch';
+import fs from 'node:fs';
+import path from 'node:path';
+import {
+  bodyOf,
+  HANDLERS,
+  mockMessages,
+  renderAsciiDocLikeTheMock,
+  scenarioFetch,
+  SCENARIO_DIR,
+} from './scenarioFetch';
 
 /**
  * The scenario fetch of the unit tests follows the rules of the mock's `ScenarioLoader` and `MockEngine`.
@@ -105,6 +114,17 @@ describe('scenarioFetch', () => {
       login: '/api/v1/auth/login',
     });
     expect((await scenario.fetch('/api/v1/status')).status).toBe(200);
+  });
+
+  it('has exactly the handlers of the mock engine, each with its own answer', () => {
+    // The enum of the mock is the single definition (web-mock `Handler`): its names are read, not copied.
+    const source = fs.readFileSync(
+      path.resolve(SCENARIO_DIR, '../../java/de/cuioss/notary/audit/mock/scenario/Handler.java'),
+      'utf8',
+    );
+    const names = [...source.matchAll(/^\s+[A-Z_]+\("([a-z-]+)"\)[,;]/gm)].map((match) => match[1]);
+    expect(names.length).toBeGreaterThan(0);
+    expect([...HANDLERS.keys()].sort()).toEqual(names.sort());
   });
 
   describe('the preview handler of the mock (render-asciidoc)', () => {

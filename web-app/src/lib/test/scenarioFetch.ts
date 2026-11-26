@@ -24,9 +24,6 @@ interface RouteDefinition {
   body_file?: string;
 }
 
-/** The built-in handlers of the mock's engine (`web-mock` `Handler`). */
-const HANDLERS = new Set(['render-asciidoc']);
-
 /** The most bytes of source the preview handler renders, as the mock's. */
 const RENDER_LIMIT_BYTES = 65_536;
 
@@ -191,6 +188,14 @@ function renderAnswer(bodyText: string): Response {
 }
 
 /**
+ * The built-in handlers of the mock's engine, each name with its own answer. The names are those of the `web-mock`
+ * `Handler` enum; `scenarioFetch.test.ts` fails when the two differ.
+ */
+export const HANDLERS: ReadonlyMap<string, (bodyText: string) => Response> = new Map([
+  ['render-asciidoc', renderAnswer],
+]);
+
+/**
  * The catalogue the mock serves for `GET /api/v1/messages?lang=`: the web app's, with the labels of the fixture
  * categories of `scenarios/messages/` on top; a fixture key that the web app holds too is refused, as the mock refuses
  * to start (`MessageCatalogue`).
@@ -334,14 +339,15 @@ export function scenarioFetch(reference: string): ScenarioFetch {
     }
     const route = current.routes?.[key] ?? scenario.routes[key];
     if (route?.handler !== undefined) {
-      if (!HANDLERS.has(route.handler)) throw new Error(`unknown handler: ${route.handler}`);
+      const handle = HANDLERS.get(route.handler);
+      if (handle === undefined) throw new Error(`unknown handler: ${route.handler}`);
       const text =
         init?.body !== undefined && init.body !== null
           ? String(init.body)
           : request
             ? await request.clone().text()
             : '';
-      return renderAnswer(text);
+      return handle(text);
     }
     return route
       ? answer(route)

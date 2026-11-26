@@ -5,17 +5,10 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import { vi } from 'vitest';
 import type { JsonObject } from './schema';
 import SchemaForm from './SchemaForm.svelte';
-import { schemaOf, useMessages, useProfile } from './testkit';
+import { useMessages, useProfile } from './testkit';
 
-/** The fixture categories of the mock and the kind each holds. */
-const KINDS = {
-  'test-note': 'note',
-  'form-sections': 'sections',
-  'form-validation': 'validation',
-} as const;
-
-/** A fixture category of the mock. */
-export type FixtureCategory = keyof typeof KINDS;
+/** The fixture categories of the mock. */
+export type FixtureCategory = 'test-note' | 'form-sections' | 'form-validation';
 
 /**
  * Opens the form of a fixture category over a profile.
@@ -33,14 +26,16 @@ export async function open(
   profile = 'workshop',
 ) {
   // The schema always comes from the workshop; the profile is what the services meet afterwards.
-  const schema = await schemaOf(useProfile('workshop'), category);
+  // The kind is the first one of the category's answer, so that the schema and the kind of the texts cannot part.
+  const { id: kind, schema } = (await useProfile('workshop').client.getCategorySchema(category))
+    .kinds[0];
   const kit = useProfile(profile);
   useMessages('en');
   const onchange = vi.fn();
   const view = render(SchemaForm, {
     schema,
     category,
-    kind: KINDS[category],
+    kind,
     value,
     services: kit.services,
     onchange,

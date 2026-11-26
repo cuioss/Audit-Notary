@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { messagesStore } from '../i18n';
-import { effectiveErrors, errorKey, isAffectedBy, isWithin, placeOf } from './fieldErrors';
+import {
+  effectiveErrors,
+  errorKey,
+  errorKeyOf,
+  isAffectedBy,
+  isWithin,
+  placeOf,
+} from './fieldErrors';
 import { loadMessages } from '../../test/catalogue-fixture';
 import { useMessages } from './testkit';
 import { BROWSER_CODES, SERVER_CODES } from './validate';
@@ -53,7 +60,7 @@ describe('which errors the form shows', () => {
     for (const lang of ['en', 'de'] as const) {
       const messages = loadMessages(lang);
       for (const code of [...BROWSER_CODES, ...SERVER_CODES]) {
-        const key = `form.error.${code.toLowerCase().replaceAll('_', '-')}`;
+        const key = errorKeyOf(code);
         expect(Object.hasOwn(messages, key), `${lang} ${key}`).toBe(true);
       }
       expect(Object.hasOwn(messages, 'form.error.invalid')).toBe(true);

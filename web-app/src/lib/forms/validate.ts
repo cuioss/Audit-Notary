@@ -41,6 +41,9 @@ export const BROWSER_CODES = [
   'FORMAT',
 ] as const;
 
+/** A code the browser's own check emits. */
+export type BrowserCode = (typeof BROWSER_CODES)[number];
+
 /** The codes of the server that the form has a text for besides the keywords (AUN-DP-2, AUN-DP-5). */
 export const SERVER_CODES = ['REFERENCE_NOT_FOUND', 'PSEUDONYM_UNKNOWN'] as const;
 
@@ -167,8 +170,8 @@ function typeNames(value: unknown): string[] {
   return [typeof value];
 }
 
-function checkString(schema: JsonSchema, value: string): string[] {
-  const codes: string[] = [];
+function checkString(schema: JsonSchema, value: string): BrowserCode[] {
+  const codes: BrowserCode[] = [];
   const length = codePoints(value);
   const min = numberKeyword(schema, 'minLength');
   const max = numberKeyword(schema, 'maxLength');
@@ -187,8 +190,8 @@ function checkString(schema: JsonSchema, value: string): string[] {
   return codes;
 }
 
-function checkNumber(schema: JsonSchema, value: number): string[] {
-  const codes: string[] = [];
+function checkNumber(schema: JsonSchema, value: number): BrowserCode[] {
+  const codes: BrowserCode[] = [];
   const minimum = numberKeyword(schema, 'minimum');
   const maximum = numberKeyword(schema, 'maximum');
   const exclusiveMinimum = numberKeyword(schema, 'exclusiveMinimum');
@@ -200,8 +203,8 @@ function checkNumber(schema: JsonSchema, value: number): string[] {
   return codes;
 }
 
-function checkArray(schema: JsonSchema, value: unknown[]): string[] {
-  const codes: string[] = [];
+function checkArray(schema: JsonSchema, value: unknown[]): BrowserCode[] {
+  const codes: BrowserCode[] = [];
   const min = numberKeyword(schema, 'minItems');
   const max = numberKeyword(schema, 'maxItems');
   if (min !== undefined && value.length < min) codes.push('MIN_ITEMS');
@@ -227,18 +230,21 @@ function check(
   errors: FieldError[],
 ): void {
   if (value === undefined) return;
+  const fail = (code: BrowserCode): void => {
+    errors.push({ pointer, code });
+  };
   const schema = resolveRef(raw, root);
   const type = schema.type;
   if (typeof type === 'string' && !typeNames(value).includes(type)) {
-    errors.push({ pointer, code: 'TYPE' });
+    fail('TYPE');
     return;
   }
   const members = schema.enum;
   if (Array.isArray(members) && !members.some((member) => jsonEqual(member, value))) {
-    errors.push({ pointer, code: 'ENUM' });
+    fail('ENUM');
   }
   if (Object.hasOwn(schema, 'const') && !jsonEqual(schema.const, value)) {
-    errors.push({ pointer, code: 'CONST' });
+    fail('CONST');
   }
   const codes =
     typeof value === 'string'
@@ -248,7 +254,7 @@ function check(
         : Array.isArray(value)
           ? checkArray(schema, value)
           : [];
-  for (const code of codes) errors.push({ pointer, code });
+  codes.forEach(fail);
   if (Array.isArray(value) && isObject(schema.items)) {
     value.forEach((item, index) =>
       check(schema.items as JsonSchema, root, item, childPointer(pointer, index), errors),
