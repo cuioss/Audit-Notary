@@ -357,6 +357,51 @@ describe('the save for everyone', () => {
     expect(controller.fieldValue('/summary', 'x')).toBe('First.');
   });
 
+  it('sends one save for a second press while the first runs', async () => {
+    const { controller, client } = await open('workshop', N3);
+    let finish: (value: Saved) => void = () => {};
+    const save = vi
+      .spyOn(client, 'saveDocument')
+      .mockImplementation(() => new Promise((resolve) => (finish = resolve)));
+    controller.change('/summary', 'First.');
+    const running = controller.save();
+    await controller.save();
+    finish({ outcome: 'SAVED', at: '2026-11-26T10:00:00Z', parts: {} });
+    await running;
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(controller.saveState).toBe('saved');
+  });
+
+  it('does not apply the answer of a save to the document opened meanwhile', async () => {
+    const { controller, client, options } = await open('workshop', N3);
+    const onsaved = vi.fn();
+    options.onsaved = onsaved;
+    let finish: (value: Saved) => void = () => {};
+    vi.spyOn(client, 'saveDocument').mockImplementation(
+      () => new Promise((resolve) => (finish = resolve)),
+    );
+    controller.change('/status', 'open');
+    const running = controller.save();
+    const other = await client.getDocument(REPOSITORY, N1);
+    controller.sync(snapshotOf(other));
+    controller.change('/status', 'open');
+    finish({ outcome: 'SAVED', at: '2026-11-26T10:00:00Z', parts: {} });
+    await running;
+    expect(controller.edits).toEqual({ '/status': 'open' });
+    expect(controller.saveState).toBe('changed');
+    expect(onsaved).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends nothing while a conflict is undecided', async () => {
+    const { controller, client } = await open('workshop#note-conflict');
+    const save = vi.spyOn(client, 'saveDocument');
+    controller.change('/summary', 'Rotate every 90 days.');
+    await controller.save();
+    expect(controller.open).toBe(2);
+    await controller.save();
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
   it('does nothing without changes', async () => {
     const { controller, client } = await open('workshop', N3);
     const save = vi.spyOn(client, 'saveDocument');
@@ -411,6 +456,35 @@ describe('conflicts (AUN-WEB-5)', () => {
     expect(controller.conflicts).toEqual({});
   });
 
+  it('keeps a draft written during a conflict on the blob the form loaded, so a reload cannot overwrite the other value', async () => {
+    const { controller, client } = await open('workshop#note-conflict');
+    const draft = vi.spyOn(client, 'saveDraft');
+    controller.change('/summary', 'Rotate every 90 days.');
+    await controller.save();
+    expect(controller.open).toBe(2);
+    controller.change('/status', 'agreed');
+    await vi.advanceTimersByTimeAsync(DRAFT_DELAY_MS + 10);
+    expect(draft).toHaveBeenCalledTimes(1);
+    expect(draft.mock.calls[0][2].parts.data.blob).not.toBe('5d1e9a0');
+  });
+
+  it('keeps the changes as the draft once the last conflict is decided, and takes no decision while locked', async () => {
+    const { controller, client } = await open('workshop#note-conflict');
+    const draft = vi.spyOn(client, 'saveDraft');
+    controller.change('/summary', 'Rotate every 90 days.');
+    await controller.save();
+    controller.leaving = true;
+    controller.resolve('/summary', 'other');
+    expect(controller.open).toBe(2);
+    controller.leaving = false;
+    controller.resolve('/summary', 'own');
+    expect(controller.saveState).toBe('conflict');
+    controller.resolve('/status', 'own');
+    expect(controller.saveState).toBe('changed');
+    await vi.advanceTimersByTimeAsync(DRAFT_DELAY_MS + 10);
+    expect(draft).toHaveBeenCalledTimes(1);
+  });
+
   it('shows the value as it is after a decision, until the document is read again', async () => {
     const { controller } = await open('workshop#note-conflict');
     controller.change('/summary', 'Rotate every 90 days.');
@@ -454,13 +528,14 @@ describe('conflicts (AUN-WEB-5)', () => {
     expect(controller.edits['q-1/answer']).toBeNull();
   });
 
-  it('reads a conflict that names no field of the part as none to decide', async () => {
+  it('reads a conflict that names no field of the part as a failure that keeps the work', async () => {
     const { controller, client } = await open('workshop', N3);
     vi.spyOn(client, 'saveDocument').mockRejectedValueOnce(new ApiError('CONFLICT', 409));
     controller.change('/summary', 'x');
     await controller.save();
-    expect(controller.saveState).toBe('conflict');
+    expect(controller.saveState).toBe('failed');
     expect(controller.open).toBe(0);
+    expect(controller.edits['/summary']).toBe('x');
   });
 });
 

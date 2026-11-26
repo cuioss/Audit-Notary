@@ -680,7 +680,7 @@ rail entry nor the lens counts the category. The writes answer `403 FORBIDDEN`. 
 === Allowed Queries of an Address
 
 Until now an address was a path. An address gains an *allowed query set*: a few named parameters that belong to the
-view and are part of its canonical form. `canonical-addresses.json` gets two additions (data, shown here, not yet in the
+view and are part of its canonical form. `canonical-addresses.json` has two additions (data; the excerpt shows them as they are in the
 file):
 
 [source,json]
@@ -717,7 +717,7 @@ before `categories.document`.) The rules:
 * `?at=` is allowed on `categories.document` only; later steps add it to the address of the other lenses and add
   `as-of` for the reports, each with its own pattern.
 
-What the code needs, to be built by the mock and UI steps, not by this contract:
+What the code does for it (built by the mock and UI steps, not by this contract):
 
 [cols="2,3"]
 |===

@@ -51,6 +51,7 @@ class CanonicalAddressesTest {
     @ValueSource(strings = {"/categories", "/categories/test-note", "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G",
             "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?at=v1", "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?at=v12",
             "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?at=4be0c3a",
+            "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?%61t=v1",
             "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?at=0123456789abcdef0123456789abcdef01234567",
             "/categories/test-note/new", "/categories/test-note/new?kind=note",
             "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G/release"})
@@ -72,6 +73,9 @@ class CanonicalAddressesTest {
             "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?at=v1&at=v2",
             "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?kind=note",
             "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?at=v1#x",
+            "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?at=v1&&",
+            "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?%zz=v1",
+            "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?at=%ff",
             "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?at=%", "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?at=%zz",
             "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G#x",
             "/categories/test-note/new?at=v1", "/categories/test-note/new?kind=NOTE", "/categories/test-note/new?kind=a&kind=b",

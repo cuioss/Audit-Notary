@@ -159,6 +159,10 @@ export class DocumentController {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private owner = { document: '', part: '' };
   private lastBlob = '';
+  /** Counts the documents and parts shown: an answer that belongs to an earlier one is not applied to the page. */
+  private generation = 0;
+  /** Whether a save for everyone is on its way: a second one is not started. */
+  private saving = false;
 
   /** The handler of the step-up of a save and of a transition; the view mounts its dialog. */
   readonly stepUp: StepUpHandler;
@@ -270,6 +274,7 @@ export class DocumentController {
     if (document !== this.owner.document || part !== this.owner.part) {
       this.flush();
       this.owner = { document, part };
+      this.generation++;
       this.lastBlob = '';
       this.reset();
       this.snapshot = next;
@@ -381,18 +386,24 @@ export class DocumentController {
     return this.afterSave && this.afterSave.from === loaded ? this.afterSave.blob : loaded;
   }
 
-  /** @returns the blob the changes stand on: the one a conflict named, else the one the first change was made on */
-  private baseBlob(): string {
-    return this.conflictBlob || this.editBase || this.currentBlob();
+  /**
+   * @param forSave whether the blob is a save's
+   * @returns the blob the changes stand on: for a save the one a conflict named, else the one the first change was made
+   * on. A draft never takes the blob of a conflict: its fields still hold the own side of the fields not decided, and
+   * restored on that blob they would overwrite the other's value without a conflict.
+   */
+  private baseBlob(forSave: boolean): string {
+    return (forSave ? this.conflictBlob : '') || this.editBase || this.currentBlob();
   }
 
   /**
    * @param part the part
    * @param pending its changes
+   * @param forSave whether the body is a save's, not a draft's
    * @returns the body of a draft or a save
    */
-  private requestFor(part: string, pending: Record<string, unknown>): SaveRequest {
-    return { parts: { [part]: { blob: this.baseBlob(), fields: pending } } };
+  private requestFor(part: string, pending: Record<string, unknown>, forSave = false): SaveRequest {
+    return { parts: { [part]: { blob: this.baseBlob(forSave), fields: pending } } };
   }
 
   /**
@@ -410,12 +421,15 @@ export class DocumentController {
       return;
     }
     this.saveState = 'drafting';
+    const generation = this.generation;
     try {
       const answer = await this.client.saveDraft(
         this.repository,
         snapshot.document,
         this.requestFor(snapshot.part, $state.snapshot(this.edits)),
       );
+      // The page shows another document by now: the answer is not about it.
+      if (generation !== this.generation) return;
       this.errors = null;
       this.draftRefused = false;
       if (this.saveState === 'drafting') {
@@ -423,6 +437,10 @@ export class DocumentController {
         this.stampAt = answer.at ? new Date(answer.at) : new Date();
       }
     } catch (error) {
+      if (generation !== this.generation) {
+        if (rethrow) throw error;
+        return;
+      }
       // A save for everyone started meanwhile keeps its own state.
       if (this.saveState === 'drafting') {
         this.saveState = 'failed';
@@ -440,19 +458,29 @@ export class DocumentController {
   /** Saves for everyone: one signed commit with the blob id the changes stand on. */
   async save(): Promise<void> {
     const snapshot = this.snapshot;
-    if (!snapshot || !this.dirty) return;
+    // A second press while one save runs, or while a conflict is undecided, sends nothing: the first would be written
+    // twice, and the other's value would be overwritten without the person's decision.
+    if (!snapshot || !this.dirty || this.saving || this.open > 0) return;
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
+    this.saving = true;
     this.saveState = 'saving';
     this.failure = null;
     // What this save sends; changes made while it runs stay in `edits` and are kept and saved later.
     const sent: Record<string, unknown> = $state.snapshot(this.edits);
-    const request = this.requestFor(snapshot.part, sent);
+    const request = this.requestFor(snapshot.part, sent, true);
     const loadedAtStart = snapshot.blob;
+    const generation = this.generation;
     try {
       const result = await this.stepUp.run((password) =>
         this.client.saveDocument(this.repository, snapshot.document, request, password),
       );
+      if (generation !== this.generation) {
+        // The page shows another document by now (its changes were kept as a draft): what was saved is the view's to
+        // read again, and nothing of the answer belongs to the page.
+        if (result.status === 'done') this.options.onsaved?.(result.value);
+        return;
+      }
       if (result.status === 'handled') {
         // Nothing was saved for everyone (cancelled, too many logins; or the app is leaving for the provider, after the
         // changes were kept as a draft): the changes stay the person's and are kept as a draft.
@@ -465,7 +493,9 @@ export class DocumentController {
       if (result.status === 'refused') throw result.error;
       this.saved(snapshot, sent, loadedAtStart, result.value);
     } catch (error) {
-      this.refused(error, snapshot.part);
+      if (generation === this.generation) this.refused(error, snapshot.part);
+    } finally {
+      this.saving = false;
     }
   }
 
@@ -510,8 +540,15 @@ export class DocumentController {
     switch (error.outcome) {
       case 'CONFLICT': {
         const found = conflictsOf(error, part, this.keys);
-        this.conflicts = found?.fields ?? {};
-        this.conflictBlob = found?.blob ?? '';
+        if (!found || Object.keys(found.fields).length === 0) {
+          // Nothing to decide: the refusal names no field of this part, so it is a failure that keeps the work; the next
+          // save stands on the blob the refusal names, when it names one.
+          if (found?.blob) this.conflictBlob = found.blob;
+          this.failed(error);
+          return;
+        }
+        this.conflicts = found.fields;
+        this.conflictBlob = found.blob;
         this.saveState = 'conflict';
         return;
       }
@@ -549,7 +586,7 @@ export class DocumentController {
    */
   resolve(key: string, keep: 'own' | 'other'): void {
     const field = this.conflicts[key];
-    if (!field) return;
+    if (!field || this.locked) return;
     if (keep === 'other') {
       const value = this.keys.adopt ? this.keys.adopt(key, field.other) : field.other;
       this.edits = { ...this.edits, [key]: value };
@@ -557,6 +594,11 @@ export class DocumentController {
     const rest = { ...this.conflicts };
     delete rest[key];
     this.conflicts = rest;
+    // The last decision ends the conflict: the changes are the person's again, and are kept as the draft.
+    if (Object.keys(rest).length === 0 && this.saveState === 'conflict') {
+      this.saveState = 'changed';
+      this.schedule();
+    }
   }
 
   /**

@@ -364,6 +364,7 @@ describe('checkReturn with a query', () => {
     `${document}?at=v1#x`,
     `${document}?at=%`,
     `${document}?at=%zz`,
+    `${document}?at=%ff`,
     `${document}?%zz=v1`,
     `${document}#x`,
     '/categories/test-note/new?at=v1',
