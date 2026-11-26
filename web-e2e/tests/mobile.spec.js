@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { useScenario } from './helpers/mock.js';
 import { expectNoSeriousViolations } from './helpers/a11y.js';
 import { LOCAL_ACCOUNT, login, loginLocal } from './helpers/login.js';
+import { NOTES, field, loginToDocuments, noteAddress } from './helpers/documents.js';
 
 /**
  * The phone layout (pm-web-app design, below 768 px): the rail gives way to the bottom bar with "More".
@@ -89,5 +90,106 @@ test.describe('at 390 px', () => {
     await expect(page.getByTestId('bottom-nav-samm')).toBeVisible();
     await expectNoSideways(page);
     await expectNoSeriousViolations(page, 'no rights (phone)');
+  });
+
+  test('the documents list fits, and the act to start a document is reachable', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToDocuments(page, '/categories/test-note');
+    await expect(page.getByTestId('document-list')).toBeVisible();
+    await expect(page.getByTestId('new-document')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'documents list (phone)');
+  });
+
+  test('a document sheet fits, and saving and its steps are reachable', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToDocuments(page, noteAddress(NOTES.N2));
+    await expect(page.getByTestId('document-sheet')).toBeVisible();
+    await expect(page.getByTestId('save-everyone')).toBeInViewport();
+    await page.getByTestId('transition-test-note.submit').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('transition-test-note.submit')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'document sheet (phone)');
+  });
+
+  test('the table of a document fits, and its row editor is a dialog in the viewport', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToDocuments(page, noteAddress(NOTES.N2));
+    await page.getByTestId('table--actions').getByRole('button', { name: 'Add row' }).click();
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'document row editor (phone)');
+  });
+
+  test('the conflict panel fits, and each field can be decided', async ({ page, request }) => {
+    await useScenario(request, 'workshop#note-conflict');
+    await loginToDocuments(page, noteAddress(NOTES.N2));
+    await field(page, '/status').getByRole('combobox').selectOption({ label: 'Agreed' });
+    await field(page, '/summary').getByRole('textbox').fill('Rotate every 90 days.');
+    await page.getByTestId('save-everyone').click();
+    await expect(page.getByTestId('conflict-panel')).toBeVisible();
+    await expect(page.getByTestId('keep-own-/summary')).toBeVisible();
+    await page.getByTestId('keep-own-/summary').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('keep-own-/summary')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'document conflict (phone)');
+  });
+
+  test('the list of empty mandatory fields fits, and leads back to editing', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToDocuments(page, noteAddress(NOTES.N3));
+    await page.getByTestId('transition-test-note.submit').click();
+    await expect(page.getByTestId('missing-fields')).toBeVisible();
+    await expect(page.getByTestId('back-to-editing')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'document missing fields (phone)');
+    await page.getByTestId('back-to-editing').click();
+    await expect(page.getByTestId('missing-fields')).toHaveCount(0);
+  });
+
+  test('an earlier state and the revision picker fit', async ({ page, request }) => {
+    await useScenario(request, 'workshop');
+    await loginToDocuments(page, noteAddress(NOTES.N6, '?at=v1'));
+    await expect(page.getByTestId('revision-notice')).toBeVisible();
+    await page.getByTestId('revision-select').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('revision-select')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'document earlier state (phone)');
+  });
+
+  test('a new document fits, and the question before leaving is in the viewport', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToDocuments(page, '/categories/test-note/new');
+    await field(page, '/title').getByRole('textbox').fill('Typed on a phone');
+    await expect(page.getByTestId('save-everyone')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'new document (phone)');
+    await page.getByTestId('bottom-more').click();
+    await page.getByRole('dialog').getByRole('link', { name: 'Settings' }).click();
+    await expect(page.getByTestId('leave-confirm')).toBeInViewport();
+    await expectNoSeriousViolations(page, 'leave question (phone)');
+  });
+
+  test('a sheet that is read only fits', async ({ page, request }) => {
+    await useScenario(request, 'read-only');
+    await loginToDocuments(page, noteAddress(NOTES.N2));
+    await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'read-only');
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'document read only (phone)');
   });
 });
