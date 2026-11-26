@@ -307,24 +307,26 @@
                 })}
               </td>
               <td data-label={$t('reports.risk.col.review')}>
-                {#if risk.reviewDue === null}
-                  {$t('reports.none')}
-                {:else}
-                  {#if review && 'overdue' in review}
-                    <ReasonBadge
-                      tone="danger"
-                      label={$t('reports.due.overdue', { count: review.overdue })}
-                      testId="risk-review-{risk.entry}"
-                    />
-                  {:else if review}
-                    <ReasonBadge
-                      tone="attention"
-                      label={$t('reports.due.soon', { count: review.soon })}
-                      testId="risk-review-{risk.entry}"
-                    />
+                <span class="cell">
+                  {#if risk.reviewDue === null}
+                    {$t('reports.none')}
+                  {:else}
+                    {#if review && 'overdue' in review}
+                      <ReasonBadge
+                        tone="danger"
+                        label={$t('reports.due.overdue', { count: review.overdue })}
+                        testId="risk-review-{risk.entry}"
+                      />
+                    {:else if review}
+                      <ReasonBadge
+                        tone="attention"
+                        label={$t('reports.due.soon', { count: review.soon })}
+                        testId="risk-review-{risk.entry}"
+                      />
+                    {/if}
+                    <span class="date">{formatDate(risk.reviewDue, $currentLocale)}</span>
                   {/if}
-                  <span class="date">{formatDate(risk.reviewDue, $currentLocale)}</span>
-                {/if}
+                </span>
               </td>
               <td data-label={$t('reports.risk.col.origin')}>
                 {#if risk.reference && linkTarget(risk.reference.address)}
@@ -353,11 +355,18 @@
     color: var(--color-text-secondary);
   }
 
+  /* The day and its hint need the wider column; the tags of the register are a choice beside it. */
   .control {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     align-items: start;
     gap: var(--space-4);
+  }
+
+  @media (min-width: 768px) {
+    .control {
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    }
   }
 
   .control__acts {
@@ -404,6 +413,11 @@
 
   .count {
     font-weight: var(--weight-medium);
+  }
+
+  /* A cell of several lines is one item of the stacked row, so its lines stay in the column of the value. */
+  .cell {
+    display: block;
   }
 
   .date {

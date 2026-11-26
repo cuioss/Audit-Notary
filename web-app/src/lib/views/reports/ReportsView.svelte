@@ -268,6 +268,8 @@
   .figure {
     display: flex;
     flex-direction: column-reverse;
+    /* The reversed column packs from the top: the figures of a row stand on one line whatever the length of the terms. */
+    justify-content: flex-end;
     gap: var(--space-1);
     min-inline-size: 0;
   }

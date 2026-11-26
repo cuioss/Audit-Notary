@@ -49,8 +49,9 @@
 
   let { series, ticks, domain, max, label, legendLabel, testId }: Props = $props();
 
-  const H = 220;
-  const PAD = { top: 16, right: 44, bottom: 34, left: 28 };
+  /** Four or five lines need more height, so their end labels stand close to the ends of their lines. */
+  let H = $derived(series.length >= 4 ? 300 : 220);
+  const PAD = { top: 16, right: 58, bottom: 34, left: 28 };
   /** The width the figure has on the page. */
   let measured = $state(0);
   let W = $derived(measured >= 240 ? Math.min(measured, 760) : 560);
@@ -61,7 +62,7 @@
     const room = W - PAD.left - PAD.right;
     return PAD.left + (span === 0 ? room / 2 : ((value - domain[0]) / span) * room);
   });
-  const y = (value: number) => PAD.top + (1 - value / top) * (H - PAD.top - PAD.bottom);
+  let y = $derived((value: number) => PAD.top + (1 - value / top) * (H - PAD.top - PAD.bottom));
 
   let yTicks = $derived(Array.from({ length: Math.floor(top) + 1 }, (_, index) => index));
   let shown = $derived(thinTicks(ticks, x, W));
@@ -90,6 +91,8 @@
       return { x: x(point.x), y: at, end, moved: Math.abs(at - end) > 1.5, text: point.text };
     });
   });
+  /** The labels stand further from their ends where a leader needs room to run, all at the same distance. */
+  let reach = $derived(ends.some((end) => end?.moved) ? 22 : 12);
 
   const path = (line: Series) =>
     line.points
@@ -154,15 +157,15 @@
         {#if ends[index]?.moved}
           <path
             class="chart__leader"
-            d="M{(ends[index]?.x ?? 0) + 7} {ends[index]?.end} L{(ends[index]?.x ?? 0) + 10} {ends[
-              index
-            ]?.y}"
+            d="M{(ends[index]?.x ?? 0) + 8} {ends[index]?.end} L{(ends[index]?.x ?? 0) +
+              reach -
+              3} {ends[index]?.y}"
           />
         {/if}
         {#if ends[index]}
           <text
             class="chart__value"
-            x={(ends[index]?.x ?? 0) + 12}
+            x={(ends[index]?.x ?? 0) + reach}
             y={ends[index]?.y}
             dominant-baseline="central">{ends[index]?.text}</text
           >
@@ -277,6 +280,32 @@
   @media (forced-colors: active) {
     .chart__line {
       stroke: CanvasText;
+    }
+
+    /* The lines lose their colours: each slot keeps its own dash beside its marker. */
+    .series--2 .chart__line {
+      stroke-dasharray: 8 4;
+    }
+
+    .series--3 .chart__line {
+      stroke-dasharray: 2 4;
+    }
+
+    .series--4 .chart__line {
+      stroke-dasharray: 10 4 2 4;
+    }
+
+    .series--5 .chart__line {
+      stroke-dasharray: 1 7;
+    }
+
+    .chart__value {
+      fill: CanvasText;
+      stroke: Canvas;
+    }
+
+    .chart__grid {
+      stroke: GrayText;
     }
 
     .chart__leader {

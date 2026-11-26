@@ -117,41 +117,45 @@
               {$t(`reports.need.${model.protectionNeed}`)}
             </td>
             <td data-label={$t('reports.threat.col.last')}>
-              {#if model.lastReview}
-                {formatDate(model.lastReview, $currentLocale)}
-                <span class="meta">
-                  {$t('reports.threat.days-ago', { count: model.daysSinceReview ?? 0 })}
-                </span>
-              {:else}
-                {$t('reports.threat.no-review')}
-              {/if}
+              <span class="cell">
+                {#if model.lastReview}
+                  {formatDate(model.lastReview, $currentLocale)}
+                  <span class="meta">
+                    {$t('reports.threat.days-ago', { count: model.daysSinceReview ?? 0 })}
+                  </span>
+                {:else}
+                  {$t('reports.threat.no-review')}
+                {/if}
+              </span>
             </td>
             <td data-label={$t('reports.threat.col.due')}>
-              {#if model.status === 'overdue'}
-                <ReasonBadge
-                  tone="danger"
-                  label={$t('reports.due.overdue', { count: -(model.dueInDays ?? 0) })}
-                  testId="threat-status-{model.service.id}-{model.model}"
-                />
-              {:else if model.status === 'due-soon'}
-                <ReasonBadge
-                  tone="attention"
-                  label={$t('reports.due.soon', { count: model.dueInDays ?? 0 })}
-                  testId="threat-status-{model.service.id}-{model.model}"
-                />
-              {:else}
-                <StatusLabel
-                  tone={statusTone(model.status)}
-                  label={$t(`reports.threat.status.${model.status}`)}
-                  testId="threat-status-{model.service.id}-{model.model}"
-                />
-              {/if}
-              {#if model.reviewDue}
-                <span class="meta">{formatDate(model.reviewDue, $currentLocale)}</span>
-              {/if}
-              {#if months !== null}
-                <span class="meta">{$t('reports.threat.interval', { months })}</span>
-              {/if}
+              <span class="cell">
+                {#if model.status === 'overdue'}
+                  <ReasonBadge
+                    tone="danger"
+                    label={$t('reports.due.overdue', { count: -(model.dueInDays ?? 0) })}
+                    testId="threat-status-{model.service.id}-{model.model}"
+                  />
+                {:else if model.status === 'due-soon'}
+                  <ReasonBadge
+                    tone="attention"
+                    label={$t('reports.due.soon', { count: model.dueInDays ?? 0 })}
+                    testId="threat-status-{model.service.id}-{model.model}"
+                  />
+                {:else}
+                  <StatusLabel
+                    tone={statusTone(model.status)}
+                    label={$t(`reports.threat.status.${model.status}`)}
+                    testId="threat-status-{model.service.id}-{model.model}"
+                  />
+                {/if}
+                {#if model.reviewDue}
+                  <span class="meta">{formatDate(model.reviewDue, $currentLocale)}</span>
+                {/if}
+                {#if months !== null}
+                  <span class="meta">{$t('reports.threat.interval', { months })}</span>
+                {/if}
+              </span>
             </td>
             <td data-label={$t('reports.threat.col.open')}
               ><span class="count">{model.threats.open}</span></td
@@ -168,42 +172,44 @@
     {/if}
   </section>
 
-  <section class="part" aria-labelledby="{testId}-without" data-testid="{testId}-without">
-    <h2 class="part__title" id="{testId}-without">{$t('reports.threat.without.title')}</h2>
-    {#if evaluation.withoutModel.length === 0}
-      <p class="note">{$t('reports.threat.without.empty')}</p>
-    {:else}
-      <GridTable
-        caption={$t('reports.threat.without.table')}
-        heads={[
-          $t('reports.threat.without.col.service'),
-          $t('reports.threat.without.col.owner'),
-          $t('reports.threat.without.col.need'),
-          $t('reports.threat.without.col.state'),
-        ]}
-        testId="{testId}-without-table"
-      >
-        {#each evaluation.withoutModel as entry (entry.service.id)}
-          <tr data-testid="threat-without-{entry.service.id}">
-            <th scope="row">
-              {#if linkTarget(entry.address)}
-                <Link href={entry.address}>{entry.service.name}</Link>
-              {:else}
-                {entry.service.name}
-              {/if}
-            </th>
-            <td data-label={$t('reports.threat.without.col.owner')}>{entry.owner.name}</td>
-            <td data-label={$t('reports.threat.without.col.need')}>
-              {$t(`reports.need.${entry.protectionNeed}`)}
-            </td>
-            <td data-label={$t('reports.threat.without.col.state')}>
-              <StatusLabel tone="neutral" label={$t(`reports.lifecycle.${entry.lifecycle}`)} />
-            </td>
-          </tr>
-        {/each}
-      </GridTable>
-    {/if}
-  </section>
+  {#if services}
+    <section class="part" aria-labelledby="{testId}-without" data-testid="{testId}-without">
+      <h2 class="part__title" id="{testId}-without">{$t('reports.threat.without.title')}</h2>
+      {#if evaluation.withoutModel.length === 0}
+        <p class="note">{$t('reports.threat.without.empty')}</p>
+      {:else}
+        <GridTable
+          caption={$t('reports.threat.without.table')}
+          heads={[
+            $t('reports.threat.without.col.service'),
+            $t('reports.threat.without.col.owner'),
+            $t('reports.threat.without.col.need'),
+            $t('reports.threat.without.col.state'),
+          ]}
+          testId="{testId}-without-table"
+        >
+          {#each evaluation.withoutModel as entry (entry.service.id)}
+            <tr data-testid="threat-without-{entry.service.id}">
+              <th scope="row">
+                {#if linkTarget(entry.address)}
+                  <Link href={entry.address}>{entry.service.name}</Link>
+                {:else}
+                  {entry.service.name}
+                {/if}
+              </th>
+              <td data-label={$t('reports.threat.without.col.owner')}>{entry.owner.name}</td>
+              <td data-label={$t('reports.threat.without.col.need')}>
+                {$t(`reports.need.${entry.protectionNeed}`)}
+              </td>
+              <td data-label={$t('reports.threat.without.col.state')}>
+                <StatusLabel tone="neutral" label={$t(`reports.lifecycle.${entry.lifecycle}`)} />
+              </td>
+            </tr>
+          {/each}
+        </GridTable>
+      {/if}
+    </section>
+  {/if}
 </div>
 
 <style>
@@ -238,6 +244,11 @@
 
   .sort {
     max-inline-size: 18rem;
+  }
+
+  /* A cell of several lines is one item of the stacked row, so its lines stay in the column of the value. */
+  .cell {
+    display: block;
   }
 
   .meta {

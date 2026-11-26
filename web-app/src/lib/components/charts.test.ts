@@ -105,8 +105,54 @@ describe('SeriesChart', () => {
     const ys = [...container.querySelectorAll('.chart__value')].map((node) =>
       Number(node.getAttribute('y')),
     );
-    expect(Math.max(...ys)).toBeLessThanOrEqual(192);
+    // The lowest label stands above the axis labels: the height of the figure less its bottom edge, plus 6.
+    const height = Number(
+      container.querySelector('svg.chart__figure')?.getAttribute('viewBox')?.split(' ')[3],
+    );
+    expect(Math.max(...ys)).toBeLessThanOrEqual(height - 34 + 6);
     expect(new Set(ys).size).toBe(5);
+  });
+
+  it('gives four or five lines a taller figure than three, so their labels move less', () => {
+    const heightOf = (count: number) => {
+      const { container } = render(SeriesChart, {
+        series: Array.from({ length: count }, (_, index) => line(`s${index}`, index + 1, [[0, 1]])),
+        ticks: [{ x: 0, label: 'Only' }],
+        domain: [0, 0],
+        max: 3,
+        label: 'Chart',
+        legendLabel: 'Series',
+      });
+      return Number(
+        container.querySelector('svg.chart__figure')?.getAttribute('viewBox')?.split(' ')[3],
+      );
+    };
+    expect(heightOf(5)).toBeGreaterThan(heightOf(3));
+    expect(heightOf(4)).toBe(heightOf(5));
+  });
+
+  it('draws a leader from the end of its line to a label that stands clear of it', () => {
+    const { container } = render(SeriesChart, {
+      series: [line('a', 1, [[0, 1.5]]), line('b', 2, [[0, 1.5]])],
+      ticks: [{ x: 0, label: 'Only' }],
+      domain: [0, 0],
+      max: 3,
+      label: 'Chart',
+      legendLabel: 'Series',
+    });
+    const leader =
+      container.querySelector('[data-series="b"] .chart__leader')?.getAttribute('d') ?? '';
+    // "M<x> <y> L<x> <y>"
+    const [fromX, , toX] = leader.replace(/[ML]/g, ' ').trim().split(/\s+/).map(Number);
+    const labelX = Number(
+      container.querySelector('[data-series="b"] .chart__value')?.getAttribute('x'),
+    );
+    // The leader runs sideways as well as down, and ends short of the text; every label of the chart stands at the same distance.
+    expect(toX - fromX).toBeGreaterThanOrEqual(8);
+    expect(toX).toBeLessThan(labelX);
+    expect(container.querySelector('[data-series="a"] .chart__value')?.getAttribute('x')).toBe(
+      String(labelX),
+    );
   });
 
   it('gives each of the five slots its own shape beside the colour', () => {

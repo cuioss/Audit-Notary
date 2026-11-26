@@ -1225,6 +1225,8 @@ test.describe('the threat evaluation', () => {
       'No service in the catalog',
     );
     await expect(page.getByTestId('threat-evaluation-table')).toHaveCount(0);
+    // No service: nothing is said about services without a model, least of all that every one has one.
+    await expect(page.getByTestId('threat-evaluation-without')).toHaveCount(0);
   });
 
   test('is read in German, the words of the reviews included', async ({ page, request }) => {
@@ -1501,7 +1503,7 @@ test.describe('the risk register', () => {
     await expect(page.getByTestId('risk-review-r-012')).toHaveText('In 19 Tagen fällig');
     await page.goto(risksAddress('audit-2026-03'));
     await expect(page.getByTestId('risk-result')).toContainText(
-      'Die freigegebenen Risiken bei der Marke audit-2026-03, die den 27.02.2026 festhält.',
+      'Die freigegebenen Risiken bei der Marke audit-2026-03 vom 27.02.2026.',
     );
     await page.goto(risksAddress('2027-01-01'));
     await expect(page.getByTestId('risk-asof-form')).toContainText(

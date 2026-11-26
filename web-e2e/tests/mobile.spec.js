@@ -943,8 +943,16 @@ test.describe('at 390 px', () => {
     await loginToReports(page, compareAddress(PAIR.scope, PAIR.from, PAIR.to), 'samm-compare-view');
     await page.getByTestId('compare-chart').scrollIntoViewIfNeeded();
     await expectNoSideways(page);
-    // The scale of figures is hidden, so the rows carry their words: the scores and the change in text, which is legible.
-    await expect(page.getByTestId('compare-chart').locator('.dumbbell__scale')).toBeHidden();
+    // The scale of figures stays, above the tracks and over the same stretch, and the rows carry their words as well.
+    const ticks = page.getByTestId('compare-chart').locator('.dumbbell__ticks');
+    await expect(ticks).toBeVisible();
+    const first = await ticks.boundingBox();
+    const firstTrack = await page
+      .getByTestId('dumbbell-overall')
+      .locator('.dumbbell__track')
+      .boundingBox();
+    expect(Math.abs(first.x - firstTrack.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(first.width - firstTrack.width)).toBeLessThanOrEqual(1);
     await expectLegibleText(page, 'compare-chart', 12);
     for (const row of PAIR.functions) {
       const line = page.getByTestId(`dumbbell-${row.id}`);
@@ -999,6 +1007,14 @@ test.describe('at 390 px', () => {
     for (const link of await page.getByTestId('threat-evaluation-view').locator('a.link').all()) {
       await expectTarget(link);
     }
+    // Every line of a cell stands in the column of its value, a row without a review date included.
+    for (const id of ['customer-portal-portal', 'notification-service-notification-flows']) {
+      const row = page.getByTestId(`threat-row-${id}`);
+      const values = await row
+        .locator('td[data-label] > *')
+        .evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().left)));
+      expect(new Set(values).size, `${id}: the cells start at one column`).toBe(1);
+    }
     await page.getByTestId('threat-status-customer-portal-portal').scrollIntoViewIfNeeded();
     await expect(page.getByTestId('threat-status-customer-portal-portal')).toBeInViewport();
     await expect(page.getByTestId('threat-status-customer-portal-portal')).toHaveText(
@@ -1025,6 +1041,10 @@ test.describe('at 390 px', () => {
     for (const link of await page.getByTestId('risk-table').locator('a.link').all()) {
       await expectTarget(link);
     }
+    // The badge and the date of the review stand in the column of the value, not under the label.
+    const badge = await page.getByTestId('risk-review-r-007').boundingBox();
+    const date = await page.getByTestId('risk-row-r-007').locator('.date').boundingBox();
+    expect(Math.abs(badge.x - date.x)).toBeLessThanOrEqual(1);
     await page.getByTestId('risk-review-r-007').scrollIntoViewIfNeeded();
     await expect(page.getByTestId('risk-review-r-007')).toBeInViewport();
     await expectNoSideways(page);

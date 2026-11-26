@@ -288,29 +288,35 @@
       />
     {:else}
       <div class="pickers">
-        <Select
-          label={$t('reports.compare.scope')}
-          options={scopes.scopes.map((entry) => ({ value: entry.id, label: entry.title }))}
-          value={query.scope ?? ''}
-          placeholder={$t('reports.compare.scope.placeholder')}
-          onchange={scopeChosen}
-          testId="compare-scope"
-        />
+        <div class="picker picker--scope">
+          <Select
+            label={$t('reports.compare.scope')}
+            options={scopes.scopes.map((entry) => ({ value: entry.id, label: entry.title }))}
+            value={query.scope ?? ''}
+            placeholder={$t('reports.compare.scope.placeholder')}
+            onchange={scopeChosen}
+            testId="compare-scope"
+          />
+        </div>
         {#if query.scope && scope}
-          <Select
-            label={$t('reports.compare.from')}
-            options={assessmentOptions}
-            bind:value={fromPick}
-            placeholder={$t('reports.compare.pick.placeholder')}
-            testId="compare-from"
-          />
-          <Select
-            label={$t('reports.compare.to')}
-            options={assessmentOptions}
-            bind:value={toPick}
-            placeholder={$t('reports.compare.pick.placeholder')}
-            testId="compare-to"
-          />
+          <div class="picker picker--assessment">
+            <Select
+              label={$t('reports.compare.from')}
+              options={assessmentOptions}
+              bind:value={fromPick}
+              placeholder={$t('reports.compare.pick.placeholder')}
+              testId="compare-from"
+            />
+          </div>
+          <div class="picker picker--assessment">
+            <Select
+              label={$t('reports.compare.to')}
+              options={assessmentOptions}
+              bind:value={toPick}
+              placeholder={$t('reports.compare.pick.placeholder')}
+              testId="compare-to"
+            />
+          </div>
           <div class="pickers__act">
             {#if reason}
               <Button variant="primary" disabledReason={reason} data-testid="compare-show">
@@ -439,15 +445,37 @@
     color: var(--color-text-secondary);
   }
 
+  /* The scope is a short name, an assessment a title with its date and state: the assessments get the room. */
   .pickers {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-    align-items: start;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
     gap: var(--space-4);
   }
 
+  .picker {
+    min-inline-size: 0;
+  }
+
+  .picker--scope {
+    flex: 1 1 12rem;
+  }
+
+  .picker--assessment {
+    flex: 2 1 18rem;
+  }
+
+  /* The act stands under the pickers, on the side of the labels, and its reason reads from the same side. */
   .pickers__act {
-    align-self: end;
+    flex: 0 0 100%;
+  }
+
+  .pickers__act :global(.btn-with-reason) {
+    align-items: flex-start;
+  }
+
+  .pickers__act :global(.btn__reason) {
+    text-align: start;
   }
 
   .section {

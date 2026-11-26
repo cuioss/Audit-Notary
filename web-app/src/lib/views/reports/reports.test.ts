@@ -491,7 +491,19 @@ describe('ThreatEvaluationView', () => {
     await useProfile('empty');
     render(ThreatEvaluationView);
     expect(await screen.findByText('No service in the catalog')).toBeInTheDocument();
-    expect(screen.getByText('Every service has a threat model.')).toBeInTheDocument();
+    // No service, so no statement about services without a model, least of all that every one has a model.
+    expect(screen.queryByTestId('threat-evaluation-without')).toBeNull();
+    expect(screen.queryByText('Every service has a threat model.')).toBeNull();
+  });
+
+  it('keeps the lines of a cell together, so a stacked row reads them in the column of the value', async () => {
+    await useProfile('workshop');
+    render(ThreatEvaluationView);
+    const row = await screen.findByTestId('threat-row-customer-portal-portal');
+    for (const cell of row.querySelectorAll('td[data-label]')) {
+      // One item per cell: a second item would flow into the column of the label.
+      expect(cell.children.length).toBeLessThanOrEqual(1);
+    }
   });
 
   it('names a failed read', async () => {

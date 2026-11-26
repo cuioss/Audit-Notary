@@ -273,12 +273,17 @@
   }
 
   @media (max-width: 767px) {
-    .dumbbell__scale {
+    /* The scale stays: the track of every row and the ticks share one column, the scores a column of a fixed width. */
+    .dumbbell__scale,
+    .dumbbell__row {
+      grid-template-columns: minmax(0, 1fr) 7rem;
+    }
+
+    .dumbbell__scale > :first-child {
       display: none;
     }
 
     .dumbbell__row {
-      grid-template-columns: minmax(0, 1fr) auto;
       row-gap: var(--space-1);
     }
 

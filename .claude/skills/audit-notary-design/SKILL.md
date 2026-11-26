@@ -200,6 +200,12 @@ Check each item before you hand a change over.
       the row in its accessible name and stands under the field it removes, not beside it.
 - [ ] A sentence is said once on a screen: a read-only sheet says so in its status and not again in a notice, and the
       reason of a disabled act is not the sentence of the status beside it.
+- [ ] A cell of a `GridTable` that holds several lines (a date and its note, a badge and a date) is one element
+      (`<span class="cell">`): on a stacked row every child of a cell is an item of its own and a second one would
+      flow under the label instead of standing in the column of the value.
+- [ ] A chart of four or five lines has the taller figure and its moved labels a leader that runs sideways; under forced
+      colours the lines keep a dash of their own per slot.
+- [ ] A section that states a negative about a set ("every service has a model") is not drawn when the set is empty.
 - [ ] German: no clipped or overlapping text with the longer words.
 
 ## 5. The screenshot-critique loop
