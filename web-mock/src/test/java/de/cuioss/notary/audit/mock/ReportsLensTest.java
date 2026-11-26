@@ -26,10 +26,13 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static de.cuioss.notary.audit.mock.MockClient.json;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -63,8 +66,11 @@ class ReportsLensTest {
         return MockClient.start(reference).login();
     }
 
+    /** A successful read: the status is {@code 200} before the body is decoded; a refusal is read with {@code client.get}. */
     private static JsonNode get(MockClient client, String path) {
-        return json(client.get(path));
+        var response = client.get(path);
+        assertEquals(200, response.statusCode(), path);
+        return json(response);
     }
 
     private static void goTo(MockClient client, String state) {
@@ -154,11 +160,13 @@ class ReportsLensTest {
             String latest = null;
             for (var risk : risks) {
                 byRating.merge(risk.path("rating").asText(), 1, Integer::sum);
-                long days = ChronoUnit.DAYS.between(TODAY, LocalDate.parse(risk.path("reviewDue").asText()));
-                if (days < 0) {
-                    overdue++;
-                } else if (days <= 30) {
-                    dueSoon++;
+                if (!risk.path("reviewDue").isNull()) {
+                    long days = ChronoUnit.DAYS.between(TODAY, LocalDate.parse(risk.path("reviewDue").asText()));
+                    if (days < 0) {
+                        overdue++;
+                    } else if (days <= 30) {
+                        dueSoon++;
+                    }
                 }
                 String released = risk.path("releasedAt").asText();
                 if (latest == null || released.compareTo(latest) > 0) {
@@ -194,7 +202,8 @@ class ReportsLensTest {
             dueSoon += "due-soon".equals(row.path("status").asText()) ? 1 : 0;
         }
         int withoutModel = evaluation.path("withoutModel").size();
-        var expected = List.of(rows.size() + withoutModel, rows.size(), withoutModel, open, untreated, overdue, dueSoon);
+        int withModel = new HashSet<>(serviceIds(rows)).size();
+        var expected = List.of(withModel + withoutModel, withModel, withoutModel, open, untreated, overdue, dueSoon);
         var actual = List.of(section.path("services").asInt(), section.path("withModel").asInt(),
                 section.path("withoutModel").asInt(), section.path("openThreats").asInt(),
                 section.path("untreatedThreats").asInt(), section.path("overdue").asInt(), section.path("dueSoon").asInt());
@@ -859,7 +868,7 @@ class ReportsLensTest {
         }
 
         @Test
-        @DisplayName("an address carries ?at=v<n> exactly when the version is not the newest one of the entry; every address and reference is canonical")
+        @DisplayName("a past read pins every address to the version it shows (?at=v<n>), the read as of now carries none; every address and reference is canonical")
         void shouldMarkTheOlderVersions() {
             try (var client = start("workshop")) {
                 Map<String, Integer> newest = new LinkedHashMap<>();
@@ -870,8 +879,7 @@ class ReportsLensTest {
                         String entry = risk.path("entry").asText();
                         int version = risk.path("version").asInt();
                         assertTrue(version <= newest.get(entry), entry);
-                        assertEquals(version == newest.get(entry) ? "/isms/risks/" + entry : "/isms/risks/" + entry + "?at=v" + version,
-                                risk.path("address").asText(), value + "/" + entry);
+                        assertEquals("/isms/risks/" + entry + "?at=v" + version, risk.path("address").asText(), value + "/" + entry);
                         assertCanonical(risk.path("address").asText());
                         if (!risk.path("reference").isNull()) {
                             assertCanonical(risk.path("reference").path("address").asText());
@@ -879,6 +887,7 @@ class ReportsLensTest {
                     }
                 }
                 var now = register(client, null).path("risks");
+                now.forEach(risk -> assertEquals("/isms/risks/" + risk.path("entry").asText(), risk.path("address").asText()));
                 now.forEach(risk -> assertCanonical(risk.path("address").asText()));
                 now.forEach(risk -> assertTrue(risk.path("reference").isNull() || risk.path("reference").path("ref").asText().contains(":")));
                 assertCanonical("/isms/risks/r-004");
@@ -1254,7 +1263,14 @@ class ReportsLensTest {
                 assertEquals(services.get(service.path("id").asText()), service.path("name").asText());
                 assertFalse(retired.get(service.path("id").asText()), service.path("id").asText());
             }
-            assertEquals(services.entrySet().stream().filter(e -> !retired.get(e.getKey())).count(), listed.size());
+            var active = services.keySet().stream().filter(id -> !retired.get(id)).collect(Collectors.toSet());
+            var withModelIds = new HashSet<>(serviceIds(evaluation.path("models")));
+            var withoutModelIds = new HashSet<>(serviceIds(evaluation.path("withoutModel")));
+            assertEquals(withoutModelIds.size(), evaluation.path("withoutModel").size(), "a service without a model is listed once");
+            assertTrue(Collections.disjoint(withModelIds, withoutModelIds), "a service is in one population only");
+            var covered = new HashSet<>(withModelIds);
+            covered.addAll(withoutModelIds);
+            assertEquals(active, covered);
             for (var due : List.of("due-workshop-lifecycle.json", "due-workshop-lifecycle-n5-released.json")) {
                 for (var item : data(due).path("items")) {
                     if ("threat-models".equals(item.path("lens").asText())) {

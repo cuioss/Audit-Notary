@@ -3786,7 +3786,7 @@
       }
     },
     "risk-register-empty": {
-      "description": "The register holds no released entry: as of now and as of any date it lists nothing, there is no tag (a name answers UNKNOWN_TAG), and the summary counts no risk; the other reports are as in ready.",
+      "description": "The register holds no released entry: as of now and as of the listed dates it lists nothing, there is no tag (the listed names answer UNKNOWN_TAG; an unlisted value falls to the keyless route), and the summary counts no risk; the other reports are as in ready.",
       "routes": {
         "GET /api/v1/isms/risks": {
           "status": 200,

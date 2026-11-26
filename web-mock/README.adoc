@@ -801,7 +801,7 @@ differences named in the table:
 |The register as of now and the keys below
 
 |`GET /api/v1/samm/payments/compare?from=2025-q4&to=2026-q2`
-|as the keyless route of the profile
+|as the keyless route of the profile; only this order is keyed: the specified reverse order (`delta` changes its sign) is not served, the keyless route answers it
 |`samm-compare-payments-2025-q4-2026-q2.json` in `workshop`, `read-only`, `release`, `degraded` and `local`; `?from=nope` answers
 `404 NOT_FOUND`
 |===
@@ -906,11 +906,11 @@ ones (`notification-gateway`, `notification-service`, `report-scheduler`, `repor
 |`2026-03-01`, `audit-2026-03`
 |`reports-risks-2026-03.json`, `reports-risks-audit-2026-03.json`
 |`R-004` v1 medium, `R-007` v1, `R-012` v1 medium, as at the commit `3f9a1c2` (the tag one carries `tag` and the date `2026-02-27`);
-the older versions carry `?at=v1`
+every address is pinned, `?at=v1`
 
 |`2026-06-30`, `management-review-2026-06`
 |`reports-risks-2026-06.json`, `reports-risks-management-review-2026-06.json`
-|`R-004` v2 high, `R-007` v1, `R-009` v1 high, `R-012` v1 medium, as at the commit `b81d4e6` (`?at=v2`, `?at=v1`)
+|`R-004` v2 high, `R-007` v1, `R-009` v1 high, `R-012` v1 medium, as at the commit `b81d4e6` (every address is pinned: `?at=v2`, `?at=v1`)
 
 |`2025-06-01`
 |`reports-risks-before-first.json`
@@ -939,8 +939,9 @@ the older versions carry `?at=v1`
 report stay `200`
 
 |`risk-register-empty`
-|The register lists no risk as of now or any day (the dates answer with the requested day and `commit` `null`), has no tag, so
-a tag name answers `422 UNKNOWN_TAG`; the summary counts no risk
+|The register lists no risk as of now or on the listed days (the dates answer with the requested day and `commit` `null`), has
+no tag, so the listed tag names answer `422 UNKNOWN_TAG`; the summary counts no risk. A value that is not keyed (another day or
+tag name) falls to the keyless route, as in every state
 |===
 
 The states `scope-created`, `shop-assessment-created`, `organisation-assessment-created` and `assessment-released-meanwhile` of

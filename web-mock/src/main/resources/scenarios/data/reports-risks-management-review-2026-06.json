@@ -51,7 +51,7 @@
       "releasedAt": "2026-02-18T11:20:00Z",
       "reviewDue": "2026-11-18",
       "reference": null,
-      "address": "/isms/risks/r-007"
+      "address": "/isms/risks/r-007?at=v1"
     },
     {
       "id": "R-009",
