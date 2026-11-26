@@ -219,6 +219,26 @@ describe('NewScopeSheet', () => {
     expect(screen.queryByTestId('new-scope-targets-editor')).not.toBeInTheDocument();
   });
 
+  it('sends no target that was chosen for another model version', async () => {
+    const { models } = await useProfile('workshop');
+    const create = vi.spyOn(apiClient, 'createSammScope');
+    render(NewScopeSheet, { models, canCreate: true, onnavigate: vi.fn() });
+    await fireEvent.input(screen.getByTestId('new-scope-title'), { target: { value: 'Old' } });
+    await fireEvent.click(screen.getByTestId('new-scope-kind-organisation'));
+    await screen.findByTestId('new-scope-targets-editor-ta-target');
+    await choose('new-scope-targets-editor-ta-target', '2.5');
+    // Another version whose practices cannot be shown: the target of the first one is not sent with it.
+    await choose('new-scope-model', 'OWASP SAMM v2.1.0');
+    await screen.findByText(/The practices of this model version cannot be shown/);
+    await fireEvent.click(screen.getByTestId('create-scope'));
+    await vi.waitFor(() => expect(create).toHaveBeenCalled());
+    expect(create).toHaveBeenCalledWith({
+      title: 'Old',
+      subject: 'organisation',
+      modelVersion: 'v2.1.0',
+    });
+  });
+
   it('follows no address that is none of the app', async () => {
     const { models } = await useProfile('workshop');
     vi.spyOn(apiClient, 'createSammScope').mockResolvedValue({

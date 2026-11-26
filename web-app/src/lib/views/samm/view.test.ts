@@ -258,6 +258,31 @@ describe('SammView', () => {
     await vi.waitFor(() => expect(scope).toHaveBeenCalledTimes(2));
   });
 
+  it('reads the assessment, its scope and the lists again when another person released it', async () => {
+    await useProfile('workshop');
+    render(SammView, { params: { scope: 'payments', assessment: '2026-q4' } });
+    expect(await screen.findByTestId('assessment-sheet')).toBeInTheDocument();
+    expect(screen.queryByTestId('start-new-assessment')).not.toBeInTheDocument();
+    const scopes = vi.spyOn(apiClient, 'getSammScopes');
+    const scope = vi.spyOn(apiClient, 'getSammScope');
+    const assessment = vi.spyOn(apiClient, 'getSammAssessment');
+    // Noor Haddad releases it while this sheet is open: the event is all this page hears of it.
+    vi.stubGlobal('fetch', scenarioFetch('workshop#assessment-released-meanwhile').fetch);
+    for (const listener of listeners) {
+      listener('document-transitioned', {
+        repository: 'samm-assessments',
+        id: 'payments-2026-q4',
+        state: 'released',
+        version: 1,
+      });
+      listener('document-transitioned', { repository: 'other', id: 'x', state: 'released' });
+    }
+    expect(await screen.findByTestId('start-new-assessment')).toBeInTheDocument();
+    expect(scopes).toHaveBeenCalledTimes(1);
+    expect(scope).toHaveBeenCalledTimes(1);
+    expect(assessment).toHaveBeenCalledTimes(1);
+  });
+
   it('reads the scope again with the assessment when a save found it released meanwhile', async () => {
     const { goto } = await (async () => {
       await useProfile('workshop');

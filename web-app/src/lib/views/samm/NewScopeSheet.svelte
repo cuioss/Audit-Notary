@@ -88,10 +88,19 @@
     if (untrack(() => model?.version) !== wanted) model = null;
     loadModel(wanted)
       .then((loaded) => {
-        if (current) model = loaded;
+        if (!current) return;
+        model = loaded;
+        // A target of a practice the chosen version does not have is not shown and would be refused: it goes.
+        const known = new Set(loaded.functions.flatMap((fn) => fn.practices.map((p) => p.id)));
+        const held = untrack(() => targets);
+        const kept = Object.entries(held).filter(([practice]) => known.has(practice));
+        if (kept.length !== Object.keys(held).length) targets = Object.fromEntries(kept);
       })
       .catch(() => {
-        if (current) modelFailed = true;
+        if (!current) return;
+        modelFailed = true;
+        // The practices cannot be shown, so what was chosen for another version is not sent for this one.
+        targets = {};
       });
     return () => {
       current = false;
@@ -135,7 +144,7 @@
   );
 
   async function create() {
-    if (saving || reason !== null) return;
+    if (saving || created || reason !== null) return;
     saving = true;
     failure = null;
     errors = null;

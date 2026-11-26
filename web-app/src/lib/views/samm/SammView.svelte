@@ -37,7 +37,8 @@
    * scope; nothing is stored before the person creates it (rest-api.adoc, SAMM Requests, The Addresses).
    *
    * Data is read per address and again when the event stream reports a save to the open assessment or to the scope's
-   * targets, or a creation, so what another assessor saved refreshes in place within the 5 seconds of AUN-WEB-5.
+   * targets, a creation, or a transition (a submit or a release by someone else), so what another assessor did refreshes
+   * in place within the 5 seconds of AUN-WEB-5.
    */
   interface Props {
     /** The values of the address: `scope`, `assessment`, `practice`. */
@@ -83,29 +84,40 @@
     model && params.practice ? findPractice(model, params.practice) : null,
   );
 
-  /** Reads the scopes again: after a creation, here or in another tab. */
+  /** The number of the latest read of the scopes; the answer of an older read is dropped. */
+  let latestScopesRead = 0;
+
+  /** Reads the scopes again: after a creation or a transition, here or in another tab. */
   function reloadScopes() {
+    const read = ++latestScopesRead;
     apiClient
       .getSammScopes()
       .then((list) => {
+        if (read !== latestScopesRead) return;
         scopes = list;
         succeed('scopes');
       })
-      .catch((error) => fail('scopes', error));
+      .catch((error) => {
+        if (read === latestScopesRead) fail('scopes', error);
+      });
   }
+
+  /** The number of the latest read of the scope of the address; the answer of an older read is dropped. */
+  let latestScopeRead = 0;
 
   /** Reads the scope of the address again, without dropping the one shown. */
   async function reloadScope() {
     const id = params.scope;
     if (!id) return;
+    const read = ++latestScopeRead;
     try {
       const loaded = await apiClient.getSammScope(id);
-      if (loaded.id === params.scope) {
+      if (read === latestScopeRead && loaded.id === params.scope) {
         scope = loaded;
         succeed('scope');
       }
     } catch (error) {
-      fail('scope', error);
+      if (read === latestScopeRead) fail('scope', error);
     }
   }
 
@@ -133,6 +145,12 @@
         // A scope or an assessment was created, here or in another tab: the lists follow.
         reloadScopes();
         void reloadScope();
+      } else if (event === 'document-transitioned') {
+        // A submit or a release, by someone else or here: the state of the assessment, of its scope (the open
+        // assessment, the trend) and of the lists follow, whichever sheet is open.
+        reloadScopes();
+        void reloadScope();
+        if (summary && saved.id === summary.document) void reloadAssessment(saved.id);
       }
     });
     return () => {
@@ -219,15 +237,7 @@
   async function reloadAfterChange() {
     if (!assessment || !params.scope) return;
     const id = assessment.id;
-    try {
-      const loaded = await apiClient.getSammScope(params.scope);
-      if (loaded.id === params.scope) {
-        scope = loaded;
-        succeed('scope');
-      }
-    } catch (error) {
-      fail('scope', error);
-    }
+    await reloadScope();
     await reloadAssessment(id);
   }
 

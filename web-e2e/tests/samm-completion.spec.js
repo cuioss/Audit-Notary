@@ -1181,7 +1181,7 @@ test.describe('a frozen assessment', () => {
     await expect(page.getByRole('button', { name: /^Edit row/ })).toHaveCount(0);
   });
 
-  test('is what a save finds that was released meanwhile: the notice, the frozen sheet and the way on', async ({
+  test('is what an open sheet learns when another person releases it: the frozen sheet and the way on', async ({
     page,
     request,
   }) => {
@@ -1190,11 +1190,10 @@ test.describe('a frozen assessment', () => {
     await page.getByTestId('answer-sm-a-1-3').check({ force: true });
     await expect(page.getByTestId('save-state')).toContainText('Changed.');
     await expect(page.getByTestId('start-new-assessment')).toHaveCount(0);
-    // Another person releases the assessment while this one works on it.
+    // Another person releases the assessment while this one works on it: the event of the transition is all the page
+    // hears of it, and it reads the assessment, the scope and the list again.
     await gotoState(request, 'assessment-released-meanwhile');
-    await page.getByTestId('save-everyone').click();
-    await expect(page.getByText('This document is released and frozen.').first()).toBeVisible();
-    // The page reads the assessment again: it is released, frozen, and offers the new assessment instead of the save.
+    // The page is released and frozen, and offers the new assessment instead of the save.
     await expect(page.getByTestId('start-new-assessment')).toHaveAttribute(
       'href',
       newAssessmentAddress(OPEN.scope),
@@ -1214,11 +1213,8 @@ test.describe('a frozen assessment', () => {
     await useLanguage(page, 'de');
     await page.getByTestId('answer-sm-a-1-3').check({ force: true });
     await gotoState(request, 'assessment-released-meanwhile');
-    await page.getByTestId('save-everyone').click();
-    await expect(
-      page.getByText('Dieses Dokument ist freigegeben und eingefroren.').first(),
-    ).toBeVisible();
     await expect(page.getByTestId('start-new-assessment')).toHaveText('Neues Assessment beginnen');
+    await expect(page.getByTestId('save-everyone')).toHaveCount(0);
   });
 });
 

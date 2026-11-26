@@ -61,13 +61,21 @@
   let removing = $state<number | null>(null);
   let removeOpen = $state(false);
   let showProblem = $state(false);
+  /** Whether the list was reordered or shortened since the server's refusal: its row numbers no longer fit. */
+  let rowsStale = $state(false);
+  $effect.pre(() => {
+    // A new refusal is about the list as it stands.
+    void errors;
+    rowsStale = false;
+  });
+  let rows = $derived(rowsStale ? {} : errors.rows);
 
   let problem = $derived(linkProblem({ title: titleText, url: urlText }));
   let addReason = $derived(
     links.length >= MAX_EVIDENCE ? $t('samm.evidence.max', { count: MAX_EVIDENCE }) : null,
   );
   let rowErrors = $derived(
-    Object.entries(errors.rows)
+    Object.entries(rows)
       .map(([row, codes]) => ({
         row: Number(row),
         codes: Object.values(codes).filter((code): code is string => !!code),
@@ -90,7 +98,7 @@
   /** @returns the error of the field of the link being edited that the server named, or the browser's advice */
   function fieldError(member: 'title' | 'url'): string | null {
     const index = editing?.index;
-    const server = index === null || index === undefined ? undefined : errors.rows[index]?.[member];
+    const server = index === null || index === undefined ? undefined : rows[index]?.[member];
     if (server) return textOf(server, member);
     if (!showProblem) return null;
     if (member === 'title' && titleText.trim() === '') return $t('form.error.required');
@@ -135,6 +143,7 @@
     if (target < 0 || target >= links.length) return;
     const next = [...links];
     [next[row], next[target]] = [next[target], next[row]];
+    rowsStale = true;
     onchange?.(next);
   }
 
@@ -143,6 +152,7 @@
     removeOpen = false;
     removing = null;
     if (index === null || index >= links.length) return;
+    rowsStale = true;
     onchange?.(links.filter((_, position) => position !== index));
     await tick();
     await table?.focusRow(index);
@@ -161,7 +171,7 @@
     rowCount={links.length}
     {readonly}
     empty={$t('samm.evidence.empty')}
-    flagged={(row) => Object.keys(errors.rows[row] ?? {}).length > 0}
+    flagged={(row) => Object.keys(rows[row] ?? {}).length > 0}
     addDisabledReason={addReason}
     note={errors.list ? textOf(errors.list, 'link') : null}
     onadd={() => openEditor(null)}
@@ -196,7 +206,7 @@
         <li>
           {$t('samm.evidence.error.row', {
             number: entry.row + 1,
-            problems: Object.entries(errors.rows[entry.row] ?? {})
+            problems: Object.entries(rows[entry.row] ?? {})
               .map(([member, code]) =>
                 textOf(code ?? '', member as 'title' | 'url' | 'question' | 'link'),
               )

@@ -55,6 +55,8 @@
   let model = $state<SammModel | null>(null);
   let failed = $state(false);
   let trend = $state<SammTrend | null>(null);
+  /** The scope the trend belongs to. */
+  let trendOf: string | null = null;
   let announcement = $state('');
 
   let canEdit = $derived(canEditSamm($session));
@@ -85,10 +87,16 @@
     const released = scope?.assessments.filter((entry) => entry.state === 'released').length ?? 0;
     if (!id) {
       trend = null;
+      trendOf = null;
       return;
     }
     let current = true;
     void released;
+    // Another scope: the trend of the last one goes at once, so it never stands under this scope's name.
+    if (trendOf !== id) {
+      trend = null;
+      trendOf = id;
+    }
     apiClient
       .getSammTrend(id)
       .then((loaded) => {

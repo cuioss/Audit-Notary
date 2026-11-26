@@ -517,7 +517,16 @@ export class DocumentController {
   async keepDraft(rethrow = false): Promise<void> {
     this.timer = null;
     const snapshot = this.snapshot;
-    if (!snapshot || !this.drafts) return;
+    if (!snapshot) return;
+    if (!this.drafts) {
+      // Nothing can be kept for the departure for the identity provider, which keeps nothing of the page: the person
+      // stays on it, with the changes and the reason.
+      if (rethrow && this.dirty) {
+        this.failure = 'samm.targets.step-up-stays';
+        throw new Error('changes without a draft cannot leave the page');
+      }
+      return;
+    }
     if (!this.dirty) {
       if (this.saveState === 'changed') this.saveState = 'clean';
       return;

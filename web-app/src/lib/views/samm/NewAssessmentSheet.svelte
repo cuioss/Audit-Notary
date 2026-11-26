@@ -155,7 +155,7 @@
   }
 
   async function create() {
-    if (saving || reason !== null || !scope) return;
+    if (saving || created || reason !== null || !scope) return;
     saving = true;
     failure = null;
     errors = null;
