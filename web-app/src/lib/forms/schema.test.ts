@@ -219,6 +219,7 @@ describe('$ref', () => {
     expect(resolveRef({ $ref: 'other.json#/x' }, root).$ref).toBe('other.json#/x');
     expect(resolveRef({ $ref: '#/$defs/missing' }, root).$ref).toBe('#/$defs/missing');
     expect(resolveRef({ $ref: '#/$defs/loop' }, root).$ref).toBe('#/$defs/loop');
+    expect(resolveRef({ $ref: '#/$defs/100%' }, root).$ref).toBe('#/$defs/100%');
   });
 });
 

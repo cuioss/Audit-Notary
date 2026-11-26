@@ -27,8 +27,11 @@
     type?: 'text' | 'password' | 'number' | 'date' | 'datetime-local';
     /** The step of a number or a time: `1` for whole numbers and seconds, `any` for every number. */
     step?: string;
-    /** Called after every change with the text. */
-    oninput?: (value: string) => void;
+    /**
+     * Called after every change with the text and the input itself, so that a caller can tell an emptied field from
+     * one that is only half typed (`validity.badInput`).
+     */
+    oninput?: (value: string, input: HTMLInputElement) => void;
     /** Content below the field: the marks and the notes of what the value is. */
     after?: Snippet;
     /** A test id. */
@@ -82,7 +85,7 @@
     aria-describedby={described}
     oninput={(event) => {
       value = event.currentTarget.value;
-      oninput?.(value);
+      oninput?.(value, event.currentTarget);
     }}
     data-testid={testId}
   />

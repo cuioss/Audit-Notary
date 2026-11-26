@@ -117,11 +117,18 @@ describe('DataTable with a row editor (AUN-WEB-4, Choosing the Component, rule 1
       'Rotate the staging keys',
       'Write the rotation runbook',
     ]);
+    // The focus followed the row to its place and stays on an act that exists there.
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Move up, row 2' })).toHaveFocus(),
+    );
     await fireEvent.click(screen.getByRole('button', { name: 'Move up, row 2' }));
     expect((last(onchange).actions as { what: string }[]).map((row) => row.what)).toEqual([
       'Write the rotation runbook',
       'Rotate the staging keys',
     ]);
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Move down, row 1' })).toHaveFocus(),
+    );
   });
 
   it('asks before it removes a row, and removes it when told', async () => {
@@ -135,6 +142,8 @@ describe('DataTable with a row editor (AUN-WEB-4, Choosing the Component, rule 1
     const again = await screen.findByRole('dialog', { name: 'Remove row 1 of Actions?' });
     await fireEvent.click(within(again).getByRole('button', { name: 'Remove row' }));
     expect(last(onchange).actions).toEqual([(CLEAN_NOTE.actions as JsonObject[])[1]]);
+    // The row the focus came from is gone: it moves on to the row that took its place.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Edit row 1' })).toHaveFocus());
   });
 
   it('keeps a table of no rows as an empty list once the last row is removed', async () => {
@@ -183,6 +192,15 @@ describe('DataTable with a row editor (AUN-WEB-4, Choosing the Component, rule 1
     await fireEvent.input(within(editing).getByLabelText(/^Tags/), { target: { value: 'gamma' } });
     await fireEvent.click(within(editing).getByRole('button', { name: 'Apply changes' }));
     expect(last(onchange)).toEqual({ scope: { tags: ['gamma', 'beta'] } });
+  });
+
+  it('keeps the row of a list of scalars that is emptied in the editor', async () => {
+    const { onchange } = await open('form-sections', { scope: { tags: ['alpha', 'beta'] } });
+    await fireEvent.click(screen.getAllByRole('button', { name: 'Edit row 2' })[0]);
+    const dialog = await editor('Tags: row 2');
+    await fireEvent.input(within(dialog).getByLabelText(/^Tags/), { target: { value: '' } });
+    await fireEvent.click(within(dialog).getByRole('button', { name: 'Apply changes' }));
+    expect(onchange).not.toHaveBeenCalled();
   });
 
   it('adds nothing when the row of a list of scalars is left empty', async () => {

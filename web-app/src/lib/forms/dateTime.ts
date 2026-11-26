@@ -39,6 +39,8 @@ export function localInputToInstant(local: string): string | null {
     moment.getFullYear() === year &&
     moment.getMonth() === month - 1 &&
     moment.getDate() === date &&
-    moment.getHours() === hour;
+    moment.getHours() === hour &&
+    moment.getMinutes() === minute &&
+    moment.getSeconds() === second;
   return same ? moment.toISOString().replace(/\.\d{3}Z$/, 'Z') : null;
 }

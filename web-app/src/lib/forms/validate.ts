@@ -323,7 +323,7 @@ export function missingWith(schema: JsonSchema, start: FieldNode, value: unknown
   const missing: string[] = [];
   const visitSection = (node: FieldNode, current: unknown): void => {
     for (const child of childNodes(node, schema)) {
-      const next = getAt(current, `/${child.name}`);
+      const next = getAt(current, childPointer('', child.name));
       if (child.kind === 'section') {
         visitSection(child, next);
         continue;

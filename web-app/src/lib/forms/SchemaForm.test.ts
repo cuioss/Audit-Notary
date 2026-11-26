@@ -183,6 +183,12 @@ describe('SchemaForm: editing the kinds', () => {
     expect(onchange.mock.calls.length).toBe(before);
     await fireEvent.input(noted, { target: { value: '2026-11-24T10:30:15' } });
     expect(last(onchange).noted).toMatch(/^2026-11-24T\d{2}:30:15Z$/);
+    // A half-typed entry reads as empty: it does not delete the value.
+    const half = onchange.mock.calls.length;
+    Object.defineProperty(noted, 'validity', { value: { badInput: true }, configurable: true });
+    await fireEvent.input(noted, { target: { value: '' } });
+    expect(onchange.mock.calls.length).toBe(half);
+    Object.defineProperty(noted, 'validity', { value: { badInput: false }, configurable: true });
     await fireEvent.input(noted, { target: { value: '' } });
     expect(last(onchange).noted).toBeUndefined();
   });

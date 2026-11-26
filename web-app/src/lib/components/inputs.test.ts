@@ -215,7 +215,7 @@ describe('the fields of the form kit (AUN-WEB-4)', () => {
     expect(input).toHaveAttribute('aria-invalid', 'true');
     expect(screen.getByText('below')).toBeInTheDocument();
     await fireEvent.input(input, { target: { value: '12' } });
-    expect(oninput).toHaveBeenCalledWith('12');
+    expect(oninput).toHaveBeenCalledWith('12', input);
   });
 
   it('keeps the bound value of a text field the text', async () => {

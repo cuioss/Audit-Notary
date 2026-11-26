@@ -4,6 +4,7 @@
   import TextArea from '../components/TextArea.svelte';
   import TextField from '../components/TextField.svelte';
   import Toggle from '../components/Toggle.svelte';
+  import { uniqueId } from '../components/uniqueId';
   import { messagesStore, t } from '../i18n';
   import AsciiDocField from './AsciiDocField.svelte';
   import CatalogPicker from './CatalogPicker.svelte';
@@ -54,7 +55,8 @@
   );
   let reading = $derived(form.readonly || node.readOnly);
   let level = $derived(Math.min(6, form.headingLevel + depth));
-  let sectionId = $derived(`section-${node.pointer.replaceAll('/', '-')}`);
+  /** Unique on the page: a row editor over the form holds sections with the same pointers. */
+  const sectionId = uniqueId('section');
 
   /** @returns the options of a select: the members of the enum, and the held value when it is none of them */
   function selectOptions(): SelectOption[] {
@@ -81,10 +83,11 @@
     else if (chosen !== 'held') form.change(node.pointer, members[Number(chosen)]);
   }
 
-  /** @param typed the text of a number field */
-  function typeNumber(typed: string): void {
+  /** @param typed the text of a number field @param input the input itself */
+  function typeNumber(typed: string, input: HTMLInputElement): void {
     if (typed === '') {
-      form.change(node.pointer, undefined);
+      // `-` or `1e` read as empty while the number is half typed: the value stays until it is emptied for good.
+      if (!input.validity.badInput) form.change(node.pointer, undefined);
       return;
     }
     const parsed = Number(typed);

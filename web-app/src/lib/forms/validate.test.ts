@@ -200,6 +200,8 @@ describe('the date and time of the browser', () => {
     expect(localInputToInstant('2026-11-24T09')).toBeNull();
     expect(localInputToInstant('2026-11-24T09:xx')).toBeNull();
     expect(localInputToInstant('2026-02-30T09:30')).toBeNull();
+    expect(localInputToInstant('2026-11-24T10:30:75')).toBeNull();
+    expect(localInputToInstant('2026-11-24T10:75')).toBeNull();
     expect(localInputToInstant('a-b-cT09:30')).toBeNull();
     expect(localInputToInstant('2026-11-24T09:30T10')).toBeNull();
   });

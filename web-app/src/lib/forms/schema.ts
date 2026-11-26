@@ -141,6 +141,18 @@ export function jsonEqual(a: unknown, b: unknown): boolean {
 }
 
 /**
+ * @param ref a `$ref` that starts with `#`
+ * @returns the pointer it holds, percent-decoded; the text as it is when it is no valid percent-encoding
+ */
+function decodedRef(ref: string): string {
+  try {
+    return decodeURIComponent(ref.slice(1));
+  } catch {
+    return ref.slice(1);
+  }
+}
+
+/**
  * Follows `$ref` to a schema of the same file (`#/$defs/x`, any pointer after the `#`), as the library does, and
  * nothing else: a reference to another file stays unresolved. The keywords beside `$ref` are kept and win.
  *
@@ -154,7 +166,7 @@ export function resolveRef(schema: JsonSchema, root: JsonSchema): JsonSchema {
     const ref = current.$ref;
     if (typeof ref !== 'string') return current;
     if (!ref.startsWith('#')) return current;
-    const target = getAt(root, decodeURIComponent(ref.slice(1)));
+    const target = getAt(root, decodedRef(ref));
     if (!isObject(target)) return current;
     const { $ref: _ref, ...siblings } = current;
     current = { ...target, ...siblings };
@@ -426,7 +438,8 @@ export function fieldPointers(
   const visit = (node: FieldNode, current: unknown): void => {
     pointers.add(node.pointer);
     if (node.kind === 'section') {
-      for (const child of childNodes(node, root)) visit(child, getAt(current, `/${child.name}`));
+      for (const child of childNodes(node, root))
+        visit(child, getAt(current, childPointer('', child.name)));
     } else if (node.kind === 'table' && Array.isArray(current)) {
       const item = itemNode(node, root);
       current.forEach((row, index) => {
@@ -434,7 +447,7 @@ export function fieldPointers(
         if (item.kind === 'section') {
           pointers.add(rowPointer);
           for (const child of childNodes({ ...item, pointer: rowPointer, path: node.path }, root)) {
-            visit({ ...child, inRow: true }, getAt(row, `/${child.name}`));
+            visit({ ...child, inRow: true }, getAt(row, childPointer('', child.name)));
           }
         } else {
           pointers.add(rowPointer);

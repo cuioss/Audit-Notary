@@ -125,15 +125,18 @@ function isScope(value: string): boolean {
 
 /**
  * The address of a link, if the allow-list lets it through: the scheme `https`, `http` or `mailto`, or a fragment of
- * the same document. The white space and the control characters a browser ignores inside a scheme (`java\nscript:`)
- * are removed before the scheme is read, and the cleaned address is the one kept.
+ * the same document. The characters a browser ignores are removed before the scheme is read, as the URL standard does:
+ * the tab and the line breaks anywhere (`java\nscript:`), the control characters and spaces at either end. The cleaned
+ * address is the one kept.
  *
  * @param href the value of `href`
  * @returns the address to link to, or `null` when the link must go
  */
 export function safeHref(href: string): string | null {
-  // eslint-disable-next-line no-control-regex -- control characters are exactly what a browser strips from an address
-  const cleaned = href.replace(/[\u0000- \u007f-\u009f]/g, '');
+  const cleaned = href
+    // eslint-disable-next-line no-control-regex -- control characters are exactly what a browser strips from an address
+    .replace(/^[\u0000-\u0020]+|[\u0000-\u0020]+$/g, '')
+    .replace(/[\t\n\r]/g, '');
   if (cleaned === '') return null;
   if (cleaned.startsWith('#')) return cleaned;
   return SAFE_LINK.test(cleaned) ? cleaned : null;

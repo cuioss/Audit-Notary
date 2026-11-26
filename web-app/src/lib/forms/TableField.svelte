@@ -55,6 +55,7 @@
   let editorOpen = $state(false);
   let removing: number | undefined = $state();
   let removeOpen = $state(false);
+  let table: DataTable | undefined = $state();
 
   /** @param next the rows after the act @param touched the place whose errors go stale */
   function commit(next: unknown[], touched: string = node.pointer): void {
@@ -74,7 +75,8 @@
     editing = undefined;
     if (index === null) {
       if (draft !== undefined) commit([...rows, draft]);
-    } else {
+    } else if (draft !== undefined) {
+      // An emptied scalar row would leave a hole in the list: the row stays as it was.
       commit(
         rows.map((row, position) => (position === index ? draft : row)),
         childPointer(node.pointer, index),
@@ -86,7 +88,9 @@
     const index = removing;
     removeOpen = false;
     removing = undefined;
-    if (index !== undefined) commit(rows.filter((_, position) => position !== index));
+    if (index === undefined) return;
+    commit(rows.filter((_, position) => position !== index));
+    void table?.focusRow(index);
   }
 
   /** @param index a row @param direction `-1` to move it up, `1` down */
@@ -102,6 +106,7 @@
 <FieldFrame hint={hints} {error}>
   {#snippet children()}
     <DataTable
+      bind:this={table}
       caption={label}
       {columns}
       rowCount={rows.length}

@@ -43,10 +43,12 @@
 
   /**
    * @param typed the value of the input
+   * @param input the input itself
    */
-  function handle(typed: string): void {
+  function handle(typed: string, input: HTMLInputElement): void {
     if (typed === '') {
-      onchange(undefined);
+      // A half-typed entry reads as empty; clearing the value then would wipe what the person is typing.
+      if (!input.validity.badInput) onchange(undefined);
     } else if (format === 'date') {
       onchange(typed);
     } else {

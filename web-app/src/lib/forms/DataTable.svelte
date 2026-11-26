@@ -9,7 +9,7 @@
 </script>
 
 <script lang="ts">
-  import type { Snippet } from 'svelte';
+  import { tick, type Snippet } from 'svelte';
   import Button from '../components/Button.svelte';
   import IconButton from '../components/IconButton.svelte';
   import ReasonBadge from '../components/ReasonBadge.svelte';
@@ -75,9 +75,42 @@
   }: Props = $props();
 
   let rows = $derived(Array.from({ length: rowCount }, (_, index) => index));
+  let grid: HTMLElement | undefined = $state();
+
+  /**
+   * Puts the focus on the first act of a row, or on the act to add one when the list has no such row. The caller uses
+   * it after a row has gone, so that the keyboard does not fall to the page.
+   *
+   * @param row the row to take the focus
+   */
+  export async function focusRow(row: number): Promise<void> {
+    await tick();
+    const line = grid?.querySelector(`tr[data-row="${Math.min(row, rowCount - 1)}"]`);
+    const target =
+      line?.querySelector<HTMLElement>('button') ??
+      grid?.querySelector<HTMLElement>('.table__add button');
+    target?.focus();
+  }
+
+  /**
+   * Moves a row and keeps the keyboard where the person is: the focus follows the row to its new place and stays on
+   * the same act, or on the other one when the row has reached the end of the list and the act is gone.
+   */
+  async function move(row: number, direction: -1 | 1): Promise<void> {
+    onmove?.(row, direction);
+    const target = row + direction;
+    await tick();
+    const own = direction === -1 ? 'up' : 'down';
+    const other = direction === -1 ? 'down' : 'up';
+    const line = grid?.querySelector(`tr[data-row="${target}"]`);
+    const button =
+      line?.querySelector<HTMLElement>(`[data-move="${own}"]`) ??
+      line?.querySelector<HTMLElement>(`[data-move="${other}"]`);
+    button?.focus();
+  }
 </script>
 
-<div class="table" data-testid={testId}>
+<div class="table" data-testid={testId} bind:this={grid}>
   {#if rowCount === 0}
     <p class="table__caption">{caption}</p>
     <p class="table__empty">{empty}</p>
@@ -119,14 +152,16 @@
                     <IconButton
                       icon="act.up"
                       label={$t('form.table.up-row', { number: row + 1 })}
-                      onclick={() => onmove?.(row, -1)}
+                      data-move="up"
+                      onclick={() => move(row, -1)}
                     />
                   {/if}
                   {#if row < rowCount - 1}
                     <IconButton
                       icon="act.down"
                       label={$t('form.table.down-row', { number: row + 1 })}
-                      onclick={() => onmove?.(row, 1)}
+                      data-move="down"
+                      onclick={() => move(row, 1)}
                     />
                   {/if}
                   {#if canRemove}

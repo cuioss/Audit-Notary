@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { safeHref, sanitizeHtml, type SafeNode } from './sanitize';
+import { safeHref, sanitizeHtml, type SafeElement, type SafeNode } from './sanitize';
 import { useProfile } from './testkit';
 
 /** @returns the nodes as a compact string for comparison */
@@ -116,10 +116,66 @@ describe('the allow-list of the preview (AUN-WEB-4, AsciiDoc Preview)', () => {
   });
 });
 
+describe('the allow-list against the tricks of the mutation XSS', () => {
+  const hostile: Record<string, string> = {
+    noscript: '<noscript><p title="</noscript><img src=x onerror=alert(1)>">t</p></noscript>',
+    'svg style': '<svg><style><img src=x onerror=alert(1)></style></svg>',
+    'math mglyph':
+      '<math><mtext><table><mglyph><style><!--</style><img title="--&gt;&lt;img src=1 onerror=alert(1)&gt;">',
+    'form nesting':
+      '<form><math><mtext></form><form><mglyph><svg><mtext><style><path id="</style><img onerror=alert(1) src>">',
+    'entity scheme': '<a href="&#106;avascript&colon;alert(1)">x</a>',
+    'tab in scheme': '<a href="java&Tab;script:alert(1)">x</a>',
+    'data url': '<a href="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">x</a>',
+    'external image':
+      '<p><img src="https://tracker.invalid/pixel.gif"><picture><source srcset="x"></picture></p>',
+    'base and meta':
+      '<base href="https://evil.invalid/"><meta http-equiv="refresh" content="0;url=x">',
+    'event on link': '<a href="https://example.org" onfocus="alert(1)" autofocus>x</a>',
+    'style attribute': '<p style="background:url(https://tracker.invalid/x)">x</p>',
+    'unknown element':
+      '<x-evil onclick="alert(1)">in</x-evil><details open ontoggle="alert(1)">d</details>',
+    comment: '<!--><img src=x onerror=alert(1)>-->',
+    listing: '<listing><xmp><img src=x onerror=alert(1)></xmp></listing>',
+  };
+
+  /** @returns every element of the nodes, deep */
+  function elements(nodes: SafeNode[]): SafeElement[] {
+    return nodes.flatMap((node) =>
+      node.type === 'element' ? [node, ...elements(node.children)] : [],
+    );
+  }
+
+  it.each(Object.entries(hostile))(
+    'turns %s into elements of the allow-list and harmless text',
+    (_name, html) => {
+      for (const element of elements(sanitizeHtml(html))) {
+        expect([
+          'img',
+          'svg',
+          'style',
+          'math',
+          'script',
+          'noscript',
+          'form',
+          'details',
+        ]).not.toContain(element.tag);
+        for (const [name, value] of Object.entries(element.attrs)) {
+          expect(['href', 'rel', 'colspan', 'rowspan', 'scope', 'start']).toContain(name);
+          if (name === 'href') expect(value).toMatch(/^(https?:|mailto:|#)/);
+        }
+      }
+    },
+  );
+});
+
 describe('the address of a link', () => {
   it('strips what a browser ignores in a scheme before it reads the scheme', () => {
     expect(safeHref('https://example.org')).toBe('https://example.org');
-    expect(safeHref('  https://exa mple.org ')).toBe('https://example.org');
+    expect(safeHref('  https://exa mple.org ')).toBe('https://exa mple.org');
+    expect(safeHref('\u0001 https://example.org/my\tfile\n')).toBe('https://example.org/myfile');
+    expect(safeHref('\u0001javascript:alert(1)')).toBeNull();
+    expect(safeHref('java script:alert(1)')).toBeNull();
     expect(safeHref('java\tscript:alert(1)')).toBeNull();
     expect(safeHref('')).toBeNull();
     expect(safeHref('#')).toBe('#');

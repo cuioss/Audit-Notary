@@ -63,9 +63,10 @@
   });
   let shown = $derived.by(() => {
     const needle = query.toLowerCase();
-    return needle === ''
+    // The server's answer to a narrowed query is shown as it is; only the whole list is narrowed here.
+    return needle === '' || narrowed.current.state === 'found'
       ? listed
-      : listed.filter((person) => (person.name ?? '').toLowerCase().includes(needle));
+      : listed.filter((person) => personName(person).toLowerCase().includes(needle));
   });
   const holder = useLookup(() => {
     return held !== '' && !listed.some((person) => person.pseudonym === held)
