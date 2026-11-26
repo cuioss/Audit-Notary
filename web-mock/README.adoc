@@ -61,7 +61,7 @@ Without the scripts: `java -cp … de.cuioss.notary.audit.mock.cli.WebMockCli --
 
 |`workshop` (default)
 |`ready`, `saved-by-other`, `conflict`, `forbidden`, `session-replaced`, `session-ended`, `preview-hostile`,
-`preview-unavailable`, and the twenty `note-*` states of _Document Lifecycle_
+`preview-unavailable`, and the `note-*` and `category-*` states of _Document Lifecycle_
 |An assessor in a populated installation: Due list with every kind, catalogs, and the SAMM lens — four scopes, the
 open workshop *Payments 2026 Q4* (draft, eleven practices answered) and released assessments to compare with; a draft
 and a save for everyone succeed. `saved-by-other` pushes a `document-saved` event and serves the assessment with
@@ -171,6 +171,10 @@ navigate to the callback, which answers `400 UNKNOWN_TRANSACTION`; a browser nav
 * *Built in:* `GET /api/v1/session`, `POST /api/v1/auth/logout` (answers `{"redirect": "/signed-out"}`, the
   page of the web app, and clears the cookie), `GET /api/v1/messages?lang=en|de` (`400` for another language) and
   `GET /api/v1/events`.
+* *Unknown documents:* a request about one document (`/api/v1/documents/<repository>/<id>[/...]`, `/api/v1/drafts/...`,
+  `/api/v1/releases/...`) that no route or link answers and whose repository the scenario's rights name answers
+  `404 {"outcome": "NOT_FOUND"}`, as the real server does for a document that does not exist; any other unrouted request
+  answers `404 MOCK_NO_ROUTE`.
 * *Event stream:* `text/event-stream`, frames `id:`, `event:`, `data:`; a `: keepalive` comment every 15 s. Events
   come from entered states and `POST /mock/broadcast`; switching, resetting or jumping first announces the new
   `status`.
@@ -283,7 +287,14 @@ under CC BY-SA 4.0, not under the licence of this repository: see `samm-model-v2
 (`document-test-note-n<k>.json`; `-n2-saved-by-other`, `-n4-released`, `-n4-saved-after`, `-n9-in-review`, `-n9-released`,
 `-n9-reopened` for the states), the revision reads (`-n6-at-v1`, `-n6-at-v2`, `-n6-at-4be0c3a`, `-n6-at-a3d9f20`,
 `-n7-at-v2`, `-n1-at-v1`), the revisions (`-n<k>-revisions`) and the diffs (`-n<k>-diff`, `-n4-saved-after-diff`), the index
-of the search and the Due list of `workshop`
+of the search and the Due list of `workshop`; `-n2-step-up` (N2 with a submit that declares the confirmation),
+`-n5-released` and `due-workshop-lifecycle-n5-released.json` (the release of N5)
+
+|`categories-two.json`, `categories-switched-off.json`, `categories-only-switched-off.json`,
+`categories-meeting-minutes-schema.json`, `documents-meeting-minutes.json`, `document-meeting-minutes-m<k>*.json`,
+`documents-index-minutes.json`
+|The second generic category, _Meeting minutes_ (_Document Lifecycle_): its schema, list, two documents with their
+revisions, the category lists of the states `category-*` and the search index with its two documents
 
 |`categories-*-schema.json`, `catalogs-service.json`, `directory-person*.json`, `references-resolve.json`,
 `render-asciidoc-hostile.json`
@@ -476,8 +487,9 @@ The lists and the search index of these states are copies of the baseline with t
 differs from the baseline in any other note
 
 |`note-saved-by-other`
-|Jordan Weber saved `/summary` and `/pinned` of N2: the read of N2 has the new blob, values and one more history line, the
-draft stays, and the revisions of N2 list the save; event `document-saved` with `part`, `fields` and `by`
+|Jordan Weber saved `/status` (`agreed`) and `/body` (one more bullet) of N2, fields the user's own draft (`/summary`,
+`/pinned`) does not touch: the read of N2 has the new blob, values and one more history line, the draft stays, and the
+revisions of N2 list the save; event `document-saved` with `part`, `fields` and `by`
 
 |`note-conflict`, `note-conflict-resolved`
 |The first save of N2 answers `409 CONFLICT` (blob `5d1e9a0`, fields `/summary` and `/status` with own and other value);
@@ -516,6 +528,59 @@ with Jordan's text, its revisions listing the release `v1` on top
 
 |`note-release-too-many-logins`
 |The release of N4 answers `503 TOO_MANY_LOGINS` with `Retry-After: 60`
+
+|`note-release-incomplete`
+|The release of N4 answers `422 MANDATORY_FIELDS_MISSING` with `missing: ["/owner"]` (the server's own check)
+
+|`note-release-released-meanwhile`
+|The release of N4 answers `409 DOCUMENT_RELEASED` with the tag `v1`; N4 reads released and its revisions list the release
+
+|`note-release-request`, `note-release-request-done`
+|The release request of N5 (Jordan Weber): the release answers `RELEASED` with the tag `v2` and moves on; N5 then reads
+released (version 2, no request, no transitions), its revisions list `v2` on top, the Due list no longer holds the
+request, and the event `document-transitioned` follows
+
+|`note-save-password`, `note-save-password-done`
+|Local users (the status says `loginProvider: local`, `stepUp: password`): the first save of N2 answers
+`403 STEP_UP_REQUIRED` without an address, every later one `SAVED`
+
+|`note-submit-password`, `note-submit-password-done`
+|The same for the submit of N2
+
+|`note-submit-password-declared`
+|As above; N2 reads with a transition that declares `"stepUp": true`, so the password dialog opens before the submit,
+which answers `TRANSITIONED`
+
+|`note-save-wrong-password`, `note-submit-wrong-password`
+|A save, or the submit of N2 (which declares the confirmation), answers `401 INVALID_CREDENTIALS`
+
+|`note-save-too-many-logins`, `note-submit-too-many-logins`
+|A save, or the submit of N2, answers `503 TOO_MANY_LOGINS` with `Retry-After: 60`
+
+|`note-search-refused`
+|`GET /api/v1/search` answers `403 FORBIDDEN`
+|===
+
+*The second category* is _Meeting minutes_ (`meeting-minutes`, document type `minutes`, repository `meeting-minutes`,
+rights `read` and `edit` of `workshop`; transition `meeting-minutes.submit`; tag `minutes/<id>/v<n>`; released once, so a
+released document is frozen). Its documents answer on the scenario level (the list `GET /api/v1/documents/meeting-minutes`, the reads, the
+revisions, the schema, `PUT` draft, `save` and the submit of M1; no create), but only these states of `workshop` list the category in
+`GET /api/v1/categories` and put its documents in the search:
+
+[cols="2,3"]
+|===
+|State |Behaviour
+
+|`category-two`
+|Two generic categories, `test-note` and `meeting-minutes` (the ids M1 `01JZ9B6K8N0Q2S4V6X8Z0B2D4F`, "Architecture review of
+19 November", draft; M2 `01JZ9C9M1P3R5T7W9Y1A3C5E7G`, "Security board, third quarter", released once and frozen)
+
+|`category-switched-off`
+|`meeting-minutes` is listed with `"enabled": false` (and `test-note` stays on): its documents, revisions, schema and the
+search stay readable; every write of it (draft, save, submit, create) answers `403 FORBIDDEN`
+
+|`category-only-switched-off`
+|The same, with `meeting-minutes` as the only category listed: the rail has no entry, the addresses of its documents read
 |===
 
 The Due list of `workshop` keeps its five items and adds a review of N4 (`/categories/test-note/<N4>/release`, due

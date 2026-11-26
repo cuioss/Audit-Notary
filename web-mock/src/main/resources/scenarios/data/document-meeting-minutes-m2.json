@@ -1,0 +1,78 @@
+{
+  "repository": "meeting-minutes",
+  "id": "01JZ9C9M1P3R5T7W9Y1A3C5E7G",
+  "category": "meeting-minutes",
+  "kind": "minutes",
+  "title": "Security board, third quarter",
+  "state": "released",
+  "version": 1,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "d2b4f60",
+      "savedAt": "2026-10-09T08:30:00Z",
+      "savedBy": {
+        "pseudonym": "p-9e33a1",
+        "name": "Sam Okafor",
+        "role": "Developer"
+      },
+      "value": {
+        "title": "Security board, third quarter",
+        "held": "2026-10-08",
+        "attendees": [
+          "p-9e33a1",
+          "p-61c0d4"
+        ],
+        "summary": "The board accepted the reduced scope of the penetration test and asked for a report in January."
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-10-15T11:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G/v1"
+    },
+    {
+      "at": "2026-10-14T09:00:00Z",
+      "by": {
+        "pseudonym": "p-9e33a1",
+        "name": "Sam Okafor"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-10-09T08:30:00Z",
+      "by": {
+        "pseudonym": "p-9e33a1",
+        "name": "Sam Okafor"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 4
+    },
+    {
+      "at": "2026-10-08T17:10:00Z",
+      "by": {
+        "pseudonym": "p-9e33a1",
+        "name": "Sam Okafor"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G/v1",
+    "at": "2026-10-15T11:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "transitions": [],
+  "releaseRequest": null
+}

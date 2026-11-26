@@ -1,0 +1,24 @@
+{
+  "categories": [
+    {
+      "id": "test-note",
+      "generic": true,
+      "kinds": [
+        {
+          "id": "note",
+          "repository": "test-notes"
+        }
+      ]
+    },
+    {
+      "id": "meeting-minutes",
+      "generic": true,
+      "kinds": [
+        {
+          "id": "minutes",
+          "repository": "meeting-minutes"
+        }
+      ]
+    }
+  ]
+}

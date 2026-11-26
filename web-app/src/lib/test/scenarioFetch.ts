@@ -299,6 +299,9 @@ const SHELL_REQUESTS = new Set([
   'GET /api/v1/catalogs/role',
 ]);
 
+/** A request about one document, as the mock's `DOCUMENT_REQUEST`. */
+const DOCUMENT_REQUEST = /^\/api\/v1\/(?:documents|drafts|releases)\/([^/]+)\/[^/]+(?:\/|$)/;
+
 /** The requests that need no session. */
 const PUBLIC_REQUESTS = new Set(['GET /api/v1/status', 'GET /api/v1/messages']);
 
@@ -474,9 +477,16 @@ export function scenarioFetch(reference: string): ScenarioFetch {
         rights: scenario.rights as HandlerContext['rights'],
       });
     }
-    return route
-      ? answer(route)
-      : answer({ status: 404, body: { outcome: 'MOCK_NO_ROUTE', method, path: url.pathname } });
+    if (route) return answer(route);
+    // As the mock's `unrouted`: a document, draft or release of a repository the rights name, but no route, is not there.
+    const document = DOCUMENT_REQUEST.exec(url.pathname);
+    if (
+      document &&
+      (scenario.rights as { repository: string }[]).some((r) => r.repository === document[1])
+    ) {
+      return answer({ status: 404, body: { outcome: 'NOT_FOUND' } });
+    }
+    return answer({ status: 404, body: { outcome: 'MOCK_NO_ROUTE', method, path: url.pathname } });
   };
 
   return { fetch: fetchImpl as typeof fetch, state: () => state, goto: enter };

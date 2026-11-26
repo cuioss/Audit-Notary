@@ -1,0 +1,31 @@
+{
+  "repository": "meeting-minutes",
+  "id": "01JZ9B6K8N0Q2S4V6X8Z0B2D4F",
+  "revisions": [
+    {
+      "ref": "c1d2e3f",
+      "commit": "c1d2e3f",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-25T16:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "b0a9c8d",
+      "commit": "b0a9c8d",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-25T15:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

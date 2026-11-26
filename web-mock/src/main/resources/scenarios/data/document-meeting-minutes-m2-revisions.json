@@ -1,0 +1,55 @@
+{
+  "repository": "meeting-minutes",
+  "id": "01JZ9C9M1P3R5T7W9Y1A3C5E7G",
+  "revisions": [
+    {
+      "ref": "v1",
+      "commit": "d4e5f60",
+      "kind": "release",
+      "tag": "minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G/v1",
+      "version": 1,
+      "at": "2026-10-15T11:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "f3a4b5c",
+      "commit": "f3a4b5c",
+      "kind": "submit",
+      "tag": null,
+      "version": 1,
+      "at": "2026-10-14T09:00:00Z",
+      "by": {
+        "pseudonym": "p-9e33a1",
+        "name": "Sam Okafor"
+      }
+    },
+    {
+      "ref": "e6d7c8b",
+      "commit": "e6d7c8b",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-10-09T08:30:00Z",
+      "by": {
+        "pseudonym": "p-9e33a1",
+        "name": "Sam Okafor"
+      }
+    },
+    {
+      "ref": "9c8b7a6",
+      "commit": "9c8b7a6",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-10-08T17:10:00Z",
+      "by": {
+        "pseudonym": "p-9e33a1",
+        "name": "Sam Okafor"
+      }
+    }
+  ],
+  "truncated": false
+}

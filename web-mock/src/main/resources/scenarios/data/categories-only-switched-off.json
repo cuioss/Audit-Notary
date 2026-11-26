@@ -1,0 +1,15 @@
+{
+  "categories": [
+    {
+      "id": "meeting-minutes",
+      "generic": true,
+      "enabled": false,
+      "kinds": [
+        {
+          "id": "minutes",
+          "repository": "meeting-minutes"
+        }
+      ]
+    }
+  ]
+}

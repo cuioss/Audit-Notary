@@ -47,6 +47,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Pattern;
 
 /**
  * The engine of the web mock: answers the requests of the web app from the active scenario and emulates what the
@@ -114,6 +115,9 @@ public final class MockEngine implements AutoCloseable {
     private static final String SCENARIO_FIELD = "scenario";
     private static final String EVENTS_PATH = API + "events";
     private static final int ORDERED_DEPTH_LIMIT = 64;
+    /** A request about one document: {@code /api/v1/(documents|drafts|releases)/{repository}/{id}[/...]}. */
+    private static final Pattern DOCUMENT_REQUEST = Pattern
+            .compile("^/api/v1/(?:documents|drafts|releases)/([^/]+)/[^/]+(?:/|$)");
     private static final int SEARCH_MIN = 2;
     private static final int SEARCH_MAX = 200;
     private static final int SEARCH_LIMIT = 20;
@@ -288,7 +292,21 @@ public final class MockEngine implements AutoCloseable {
         }
         return scenario.route(state, request.method(), request.path(), query).map(route -> route.handler() == null
                 ? answer(route.status(), route.body()) : handled(route.handler(), route, request))
-                .orElseGet(() -> noRoute(request));
+                .orElseGet(() -> unrouted(request));
+    }
+
+    /**
+     * The answer to a request no route or link answers: {@code 404 NOT_FOUND} for a document, draft or release of a
+     * repository the scenario's rights name (an id the scenario does not know does not exist there,
+     * doc/specification/rest-api.adoc), otherwise {@code 404 MOCK_NO_ROUTE}.
+     */
+    private MockResponse unrouted(MockRequest request) {
+        var matcher = DOCUMENT_REQUEST.matcher(request.path());
+        if (matcher.lookingAt() && scenario.rights().stream()
+                .anyMatch(right -> right.repository().equals(matcher.group(1)))) {
+            return json(404, object().put(OUTCOME, "NOT_FOUND"));
+        }
+        return noRoute(request);
     }
 
     /** The answer a built-in handler computes; the switch is exhaustive over {@link Handler}. */
