@@ -1,0 +1,22 @@
+{
+  "asOf": {
+    "requested": "2025-06-01",
+    "date": "2025-06-01",
+    "tag": null,
+    "commit": null,
+    "at": null
+  },
+  "tags": [
+    {
+      "tag": "management-review-2026-06",
+      "commit": "b81d4e6",
+      "at": "2026-06-18T13:05:00Z"
+    },
+    {
+      "tag": "audit-2026-03",
+      "commit": "3f9a1c2",
+      "at": "2026-02-27T16:20:00Z"
+    }
+  ],
+  "risks": []
+}
