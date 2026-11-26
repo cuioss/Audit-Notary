@@ -13,6 +13,7 @@
   import { dayParts, daysFrom, formatDate, formatRelativeDay } from '../format';
   import { currentLocale, t } from '../i18n';
   import { parseHref } from '../routes';
+  import { session } from '../stores/app';
   import { now } from '../stores/clock';
   import DashboardPage from '../templates/DashboardPage.svelte';
 
@@ -21,6 +22,10 @@
    * grouped into overdue, today, this week and later, one day after the other with the day in the gutter, as a
    * register's daybook is kept. An overdue entry carries a box, because it needs the person; every other entry says
    * its day quietly. The grouping follows the clock, so "today" becomes "overdue" without a reload.
+   *
+   * A release request (UC-DOC-8) shows who asked and the comment on its entry, the requester's `release` item and the
+   * approvers' `review` item alike, so the comment is read before the document is opened. The list is read again when
+   * the event stream names a request or a document that moved along its workflow.
    */
   let items = $state<DueItem[] | null>(null);
   let failure = $state<string | null>(null);
@@ -37,14 +42,19 @@
   const GROUPS = ['overdue', 'today', 'week', 'later'] as const;
   type Group = (typeof GROUPS)[number];
 
+  /** The number of the latest reading; the answer of an older one is dropped. */
+  let latest = 0;
+
   async function load() {
+    const read = ++latest;
     failure = null;
     try {
       const list = await apiClient.getDue();
+      if (read !== latest) return;
       // An address the app has no view for is not offered.
       items = list.items.filter((item) => parseHref(item.address) !== null);
     } catch (error) {
-      failure = errorMessageKey(error);
+      if (read === latest) failure = errorMessageKey(error);
     }
   }
 
@@ -81,9 +91,33 @@
     }).length ?? 0,
   );
 
+  /** Reads the list again after an event, without the loading state or a failure that would replace the list. */
+  async function refresh() {
+    const read = ++latest;
+    try {
+      const list = await apiClient.getDue();
+      if (read !== latest) return;
+      items = list.items.filter((item) => parseHref(item.address) !== null);
+      failure = null;
+    } catch (error) {
+      // The list on the page stays: it was true when it was read. Only a page that has none says why.
+      if (read === latest && items === null) failure = errorMessageKey(error);
+    }
+  }
+
   onMount(() => {
     void load();
+    return apiClient.subscribeEvents((event) => {
+      if (event === 'release-requested' || event === 'document-transitioned') void refresh();
+    });
   });
+
+  /** @returns who asked for the release, in the words of the person looking: "You" for their own request */
+  function askedBy(item: DueItem): string {
+    return item.requestedBy?.pseudonym && item.requestedBy.pseudonym === $session?.user.pseudonym
+      ? $t('due.request.own')
+      : $t('due.request.by', { name: item.requestedBy?.name ?? '' });
+  }
 </script>
 
 <DashboardPage title={$t('due.title')} intro={$t('due.intro')} testId="due-view">
@@ -148,6 +182,12 @@
                               lens: $t(`lens.${item.lens}`),
                             })}
                           </span>
+                          {#if item.requestedBy && item.comment !== undefined}
+                            <span class="entry__request" data-testid="due-request">
+                              <span class="entry__asked">{askedBy(item)}</span>
+                              <span class="entry__comment">{item.comment}</span>
+                            </span>
+                          {/if}
                         </span>
                         <span class="entry__when">
                           {#if days < 0}
@@ -299,6 +339,28 @@
   .entry__relative {
     font-size: var(--text-sm);
     color: var(--color-text-muted);
+  }
+
+  .entry__request {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-block-start: var(--space-1);
+    max-inline-size: var(--measure);
+  }
+
+  .entry__asked {
+    font-size: var(--text-xs);
+    line-height: var(--line-height-xs);
+    color: var(--color-text-secondary);
+  }
+
+  .entry__comment {
+    padding-inline-start: var(--space-3);
+    border-inline-start: 3px solid var(--color-border-strong);
+    font-family: var(--font-serif);
+    font-size: var(--text-sm);
+    overflow-wrap: anywhere;
   }
 
   .entry__when {

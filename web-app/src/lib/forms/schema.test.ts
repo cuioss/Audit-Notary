@@ -7,6 +7,7 @@ import {
   fieldNode,
   fieldPointers,
   getAt,
+  isScalarKind,
   itemNode,
   jsonEqual,
   messageKey,
@@ -281,5 +282,25 @@ describe('pointers and values', () => {
     const scalar = fieldPointers(sections, { scope: { tags: ['a', 'b'] } });
     expect(scalar).toContain('/scope/tags/1');
     expect(scalar).toContain('/scope');
+  });
+});
+
+describe('isScalarKind', () => {
+  it('tells the kinds that hold one value from the structures and the plain data', () => {
+    const scalars: FieldKind[] = [
+      'catalog',
+      'person',
+      'asciidoc',
+      'docref',
+      'date-time',
+      'date',
+      'select',
+      'toggle',
+      'text',
+      'number',
+    ];
+    const others: FieldKind[] = ['section', 'table', 'plain'];
+    expect(scalars.every((kind) => isScalarKind(kind))).toBe(true);
+    expect(others.some((kind) => isScalarKind(kind))).toBe(false);
   });
 });

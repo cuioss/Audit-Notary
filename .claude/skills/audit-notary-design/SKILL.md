@@ -21,7 +21,9 @@ Read the concept first, then the component you are about to change.
    one, and add one only with its test in `components.test.ts` or a test file beside it. `web-app/src/lib/views/documents/`
    is the generic documents lens (`DocumentSheet`, `TransitionBar`, `ConflictPanel`, `RevisionPicker`,
    `NewDocumentSheet`, `DocumentListColumn`); a lens that edits a document uses the document controller
-   (`web-app/src/lib/documents/`) and builds its sheet the same way.
+   (`web-app/src/lib/documents/`) and builds its sheet the same way. A lens that releases a document uses
+   `ReleaseFlow` (`documents/ReleaseFlow.svelte`), which every category shares; it hands in its words, its stage (the
+   seal), its record and the way a value is drawn, and never builds the release page again.
 3. For a chart, use the five series colours in model order (`--color-series-1` … `-5`); they are validated for
    colour-vision and normal-vision separation against both sheet colours (`#ffffff`, `#161d2e`). A new chart colour
    needs the same validation before it lands: with the validator of the `dataviz` skill where your agent has that
@@ -46,7 +48,9 @@ Read the concept first, then the component you are about to change.
 
 - Signature ink (`--color-brand`) is the one accent: the primary act, the selection, the focus ring, links.
 - Seal gold (`--color-seal`) is for seals only: the released seal, the sealed state label, a release line in the
-  history. It is never a status colour and never a decoration.
+  history. It is never a status colour and never a decoration. There are two seals and no third: `MaturitySeal` (the
+  rosette of a SAMM assessment) and `ReleaseSeal` (the ring around the version, for every document without a rosette).
+  `ReleaseSeal` appears only after the release; before it the release view shows the facts and the changes.
 - Attention, danger, success and running keep one meaning each, and colour never speaks alone: every state has its
   word, every figure its text.
 - The rail is dark in both themes. On the rail use `--color-rail-*` and `--focus-ring-rail`.
@@ -77,10 +81,19 @@ Read the concept first, then the component you are about to change.
 - A step of a workflow acts on the saved document: with unsaved changes the sheet says so and offers "Save for everyone,
   then <step>"; a step is never sent over changes only the person has. The step that is the release reads "Release".
 - Destructive acts live behind a confirmation.
+- The release view reads the act "Release" and nothing else; that the person confirms their identity once more is a
+  line in the margin. A refusal of the release is told by `ReleaseFlow` once for every category (changed since the
+  review, released meanwhile, mandatory fields missing, the Git server); a lens adds no notice of its own.
+- In the release view a list or a row that is new or gone is read row by row and field by field, as the form reads
+  it (a person by the name, never the pseudonym); the record folds once the release is made; and the margin promises no
+  release (the seal, the identity line) where the act is disabled.
+- The search of the command palette offers an address only after the canonical-address check (`checkReturn`); the
+  server's text is data, drawn as text.
 
 **Motion**
 
-- Only in answer to an act, plus the one orchestrated moment: the seal pressed on a release (`--duration-seal`).
+- Only in answer to an act, plus the one orchestrated moment: the seal pressed on a release (`--duration-seal`), the
+  same press for `MaturitySeal` and `ReleaseSeal`.
 - Everything collapses to 0 ms under reduced motion.
 
 **The mascot**

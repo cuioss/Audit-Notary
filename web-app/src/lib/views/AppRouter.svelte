@@ -11,6 +11,7 @@
   import NotFoundView from './NotFoundView.svelte';
   import SettingsView from './SettingsView.svelte';
   import WelcomeView from './WelcomeView.svelte';
+  import DocumentReleaseView from './documents/DocumentReleaseView.svelte';
   import DocumentsView from './documents/DocumentsView.svelte';
   import SammReleaseView from './samm/SammReleaseView.svelte';
   import SammView from './samm/SammView.svelte';
@@ -58,7 +59,11 @@
   {/key}
 {:else if lensOf(route) === 'samm' && address}
   <SammView params={address.params} />
-{:else if lensOf(route) === 'categories' && route !== 'categories.release' && address}
+{:else if route === 'categories.release' && address}
+  {#key `${address.params.category}/${address.params.document}`}
+    <DocumentReleaseView params={address.params} />
+  {/key}
+{:else if lensOf(route) === 'categories' && address}
   <DocumentsView {route} params={address.params} query={address.query} {onnavigate} />
 {:else}
   {#key route}

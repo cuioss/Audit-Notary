@@ -88,6 +88,96 @@ for (const theme of ['light', 'dark']) {
   }
 }
 
+/**
+ * The release of a note (UC-DOC-7) and the search of the documents (UC-DOC-1), each state reached on the page after the
+ * theme is chosen. The Due list of `workshop` holds the release requests (UC-DOC-8), so its row above audits them too.
+ */
+const RELEASE_STATES = [
+  [
+    'the review of a first release',
+    'workshop',
+    `${noteAddress(NOTES.N4)}/release`,
+    'release-record',
+    async () => {},
+  ],
+  [
+    'the review against the last release, with the request',
+    'workshop',
+    `${noteAddress(NOTES.N5)}/release`,
+    'release-request',
+    async () => {},
+  ],
+  [
+    'the seal of a release',
+    'workshop#note-release-request',
+    `${noteAddress(NOTES.N5)}/release`,
+    'release-seal',
+    async (page) => {
+      await page.getByTestId('release-act').click();
+      await expect(page.getByTestId('release-done')).toBeVisible();
+    },
+  ],
+  [
+    'a refused release',
+    'workshop#note-release-incomplete',
+    `${noteAddress(NOTES.N4)}/release`,
+    'release-record',
+    async (page) => {
+      await page.getByTestId('release-act').click();
+      await expect(page.getByTestId('release-view').getByTestId('notice').first()).toBeVisible();
+    },
+  ],
+  [
+    'the confirmation of the release',
+    'workshop#note-release-password',
+    `${noteAddress(NOTES.N4)}/release`,
+    'release-password',
+    async (page) => {
+      await page.getByTestId('release-act').click();
+    },
+  ],
+  [
+    'a release that cannot be taken',
+    'read-only',
+    `${noteAddress(NOTES.N4)}/release`,
+    'release-act',
+    async () => {},
+  ],
+];
+
+for (const theme of ['light', 'dark']) {
+  for (const [name, scenario, address, view, prepare] of RELEASE_STATES) {
+    test(`release: ${name} of ${scenario} at ${address} in the ${theme} theme`, async ({
+      page,
+      request,
+    }) => {
+      await useScenario(request, scenario);
+      await login(page, address);
+      await useTheme(page, theme);
+      await expect(page.getByTestId('release-view')).toBeVisible();
+      await prepare(page);
+      await expect(page.getByTestId(view)).toBeVisible();
+      await expectNoSeriousViolations(page, `release: ${name} (${scenario}, ${theme})`);
+    });
+  }
+
+  test(`the command palette with results of workshop in the ${theme} theme`, async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await login(page, '/');
+    await useTheme(page, theme);
+    await page.getByTestId('search-open').click();
+    await page.getByTestId('search-input').fill('Q4');
+    await expect(page.getByTestId('search-documents')).toBeVisible();
+    await expectNoSeriousViolations(page, `command palette with results (${theme})`);
+    await page.getByTestId('search-input').fill('zzzz');
+    await expect(page.getByTestId('search-status')).toContainText('No document matches.');
+    await expectNoSeriousViolations(page, `command palette without a match (${theme})`);
+  });
+}
+
 /** The pages outside the shell: no login, no shell (UC-ACC-1, UC-ACC-2). */
 const OUTSIDE_VIEWS = [
   ['local', '/login', 'login-view'],

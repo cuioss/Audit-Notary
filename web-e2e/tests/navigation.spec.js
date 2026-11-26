@@ -18,12 +18,12 @@ const ADDRESSES = [
   ['/isms/risks/r-012', 'lens-view', 'ISMS', 'ISMS'],
   ['/isms/documents/policy-access', 'lens-view', 'ISMS', 'ISMS'],
   // The generic documents lens (rest-api.adoc, The Generic Documents Lens). `/categories` is no entry here: with one
-  // category the lens opens it in place of this address (the test below). The release is the next stage's.
+  // category the lens opens it in place of this address (the test below).
   ['/categories/test-note', 'documents-view', 'Documents', 'Documents'],
   ['/categories/test-note/new?kind=note', 'documents-view', 'Documents', 'Documents'],
   [`/categories/test-note/${NOTE}`, 'documents-view', 'Documents', 'Documents'],
   [`/categories/test-note/${NOTE}?at=v1`, 'documents-view', 'Documents', 'Documents'],
-  [`/categories/test-note/${NOTE}/release`, 'lens-view', 'Release', 'Release'],
+  [`/categories/test-note/${NOTE}/release`, 'release-view', 'Documents', 'Release'],
   ['/catalogs/team/payments', 'lens-view', 'Catalogs', 'Catalogs'],
   ['/reports/trends', 'lens-view', 'Reports', 'Reports'],
   ['/settings', 'settings-view', 'Settings', 'Settings'],

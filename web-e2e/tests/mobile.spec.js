@@ -192,4 +192,48 @@ test.describe('at 390 px', () => {
     await expectNoSideways(page);
     await expectNoSeriousViolations(page, 'document read only (phone)');
   });
+
+  test('the release of a note fits, its act is reachable, and the seal fits', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await page.goto(
+      `/api/v1/auth/login?return=${encodeURIComponent(`${noteAddress(NOTES.N5)}/release`)}`,
+    );
+    await expect(page.getByTestId('release-view')).toBeVisible();
+    // The act stays in reach above the record, as the save state of a sheet does.
+    await expect(page.getByTestId('release-act')).toBeInViewport();
+    await expect(page.getByTestId('release-request')).toBeVisible();
+    await page.getByTestId('record-actions').scrollIntoViewIfNeeded();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'release review (phone)');
+    await page.getByTestId('release-act').click();
+    await expect(page.getByTestId('release-seal')).toBeVisible();
+    await expect(page.getByTestId('release-open')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'release done (phone)');
+  });
+
+  test('the palette with results fits, and a hit is reachable', async ({ page, request }) => {
+    await useScenario(request, 'workshop');
+    await page.goto('/api/v1/auth/login?return=%2F');
+    await expect(page.getByTestId('due-view')).toBeVisible();
+    await page.getByTestId('search-open').click();
+    await page.getByTestId('search-input').fill('Q4');
+    await expect(page.getByTestId('search-documents')).toBeVisible();
+    await expect(page.getByTestId(`search-document-${NOTES.N3}`)).toBeVisible();
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'palette with results (phone)');
+  });
+
+  test('the release requests in Due fit', async ({ page, request }) => {
+    await useScenario(request, 'workshop');
+    await page.goto('/api/v1/auth/login?return=%2F');
+    await expect(page.getByTestId('due-list')).toBeVisible();
+    await expect(page.getByTestId('due-request').first()).toBeVisible();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'due with release requests (phone)');
+  });
 });
