@@ -223,6 +223,50 @@ describe('the directory and the catalogs', () => {
   });
 });
 
+describe('the SAMM completion', () => {
+  it.each([
+    ['/samm/new', 'samm.new', {}],
+    ['/samm/payments/new', 'samm.assessment.new', { scope: 'payments' }],
+    ['/samm/payments', 'samm.scope', { scope: 'payments' }],
+    ['/samm/payments/2026-q4', 'samm.assessment', { scope: 'payments', assessment: '2026-q4' }],
+    [
+      '/samm/payments/2026-q4/release',
+      'samm.release',
+      { scope: 'payments', assessment: '2026-q4' },
+    ],
+    [
+      '/samm/payments/2026-q4/new',
+      'samm.practice',
+      { scope: 'payments', assessment: '2026-q4', practice: 'new' },
+    ],
+  ])('reads %s as %s and writes it back', (path, route, params) => {
+    expect(parseAddress(path)).toEqual({ route, params });
+    expect(formatAddress({ route, params })).toBe(path);
+    expect(checkReturn(path)).toBe(path);
+  });
+
+  it('keeps both new pages in the lens SAMM and reads them before the scope and the assessment', () => {
+    expect(lensOf('samm.new')).toBe('samm');
+    expect(lensOf('samm.assessment.new')).toBe('samm');
+    expect(routeTitleKey('samm.new')).toBe('lens.samm');
+    expect(ROUTES.indexOf('samm.new')).toBeLessThan(ROUTES.indexOf('samm.scope'));
+    expect(ROUTES.indexOf('samm.assessment.new')).toBeLessThan(ROUTES.indexOf('samm.assessment'));
+  });
+
+  it('reserves new as a scope and as an assessment: it is never read as an id', () => {
+    expect(parseAddress('/samm/new')?.route).toBe('samm.new');
+    expect(parseAddress('/samm/payments/new')?.route).toBe('samm.assessment.new');
+    expect(parseAddress('/samm/new/2026-q4')?.params.scope).toBe('new');
+    expect(parseAddress('/samm/new/')?.route).toBe('samm.new');
+  });
+
+  it('admits no query on the new pages', () => {
+    expect(parseAddress('/samm/new', '?at=v1')).toEqual({ route: 'samm.new', params: {} });
+    expect(checkReturn('/samm/new?at=v1')).toBe('/');
+    expect(checkReturn('/samm/payments/new?kind=x')).toBe('/');
+  });
+});
+
 const N1 = '01JZ8Q4Y5N6V7X8B9C0D1E2F3G';
 
 describe('the generic documents lens', () => {

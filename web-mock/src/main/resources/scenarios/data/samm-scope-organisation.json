@@ -1,5 +1,6 @@
 {
   "id": "organisation",
+  "document": "organisation",
   "title": "Organisation",
   "subject": {
     "kind": "organisation",
@@ -51,6 +52,26 @@
     },
     "om": {
       "target": 2
+    }
+  },
+  "parts": {
+    "data": {
+      "blob": "be10f7e",
+      "savedAt": "2026-04-20T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "targets": {
+      "blob": "8990985",
+      "savedAt": "2026-04-20T10:05:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
     }
   },
   "assessments": [

@@ -326,6 +326,15 @@
       }
     }
   },
+  "evidence": {
+    "sb": [
+      {
+        "question": "sb-b-1",
+        "title": "Pipeline of the payment service",
+        "url": "https://ci.example/payments/pipeline"
+      }
+    ]
+  },
   "parts": {
     "sm": {
       "blob": "be42b67",

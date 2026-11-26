@@ -405,11 +405,243 @@
         "outcome": "CONFIRMED",
         "confirmedAt": "2026-11-26"
       }
+    },
+    "GET /api/v1/samm/scopes": {
+      "status": 200,
+      "body": {
+        "scopes": []
+      }
+    },
+    "GET /api/v1/samm/models": {
+      "status": 200,
+      "body": {
+        "models": [
+          {
+            "version": "v2.2.0",
+            "source": "https://github.com/owaspsamm/core/tree/v2.2.0/model",
+            "checksum": "sha256:1b9d4e0c7a52f8316d0e94ab5c27f3d8e61a09b4c2d57e8f130a64b9c8d71e2f",
+            "pinnedAt": "2026-02-03",
+            "default": true
+          }
+        ]
+      }
+    },
+    "GET /api/v1/samm/models/v2.2.0": {
+      "status": 200,
+      "body_file": "samm-model-v2.2.0.json"
     }
   },
   "states": {
     "ready": {
-      "description": "Nothing is there yet."
+      "description": "Nothing is there yet.",
+      "links": {
+        "create-scope": {
+          "method": "POST",
+          "path": "/api/v1/samm/scopes",
+          "next": "scope-created",
+          "status": 201,
+          "body": {
+            "outcome": "CREATED",
+            "id": "mobile",
+            "document": "mobile",
+            "address": "/samm/mobile",
+            "at": "2026-11-26T09:30:00Z",
+            "parts": {
+              "data": {
+                "blob": "c41e07d",
+                "savedAt": "2026-11-26T09:30:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example",
+                  "role": "Security Champion"
+                }
+              },
+              "targets": {
+                "blob": "9a02f5b",
+                "savedAt": "2026-11-26T09:30:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example",
+                  "role": "Security Champion"
+                }
+              }
+            }
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "scope-created": {
+      "description": "The scope Mobile Apps was created: the list and the scope read show it without an assessment, its trend is empty, a save of its targets answers SAVED, and starting an assessment moves on.",
+      "routes": {
+        "GET /api/v1/samm/scopes": {
+          "body_file": "samm-scopes-empty-created.json"
+        },
+        "GET /api/v1/samm/scopes/mobile": {
+          "body_file": "samm-scope-mobile.json"
+        },
+        "GET /api/v1/samm/mobile/trend": {
+          "body": {
+            "scope": "mobile",
+            "modelVersion": null,
+            "omitted": 0,
+            "points": []
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/mobile/save": {
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T09:45:00Z",
+            "parts": {
+              "targets": {
+                "blob": "e72b9d1",
+                "savedAt": "2026-11-26T09:45:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example",
+                  "role": "Security Champion"
+                }
+              }
+            }
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        }
+      },
+      "links": {
+        "create-assessment": {
+          "method": "POST",
+          "path": "/api/v1/samm/mobile/assessments",
+          "next": "assessment-created",
+          "status": 201,
+          "body": {
+            "outcome": "CREATED",
+            "id": "2026-q4",
+            "document": "mobile-2026-q4",
+            "scope": "mobile",
+            "address": "/samm/mobile/2026-q4",
+            "state": "draft",
+            "at": "2026-11-26T09:40:00Z",
+            "parts": {}
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-created",
+          "data": {
+            "repository": "samm-assessments",
+            "id": "mobile",
+            "kind": "scope"
+          }
+        }
+      ]
+    },
+    "assessment-created": {
+      "description": "The assessment Mobile Apps 2026 Q4 was created (draft, empty, Sam Firstuser the only assessor): the list and the scope read show it as the open one, a second create is refused with ASSESSMENT_OPEN.",
+      "routes": {
+        "GET /api/v1/samm/scopes": {
+          "body_file": "samm-scopes-empty-assessment.json"
+        },
+        "GET /api/v1/samm/scopes/mobile": {
+          "body_file": "samm-scope-mobile-assessment.json"
+        },
+        "GET /api/v1/samm/mobile/trend": {
+          "body": {
+            "scope": "mobile",
+            "modelVersion": null,
+            "omitted": 0,
+            "points": []
+          }
+        },
+        "GET /api/v1/documents/samm-assessments/mobile-2026-q4": {
+          "body_file": "samm-assessment-mobile-2026-q4.json"
+        },
+        "PUT /api/v1/drafts/samm-assessments/mobile-2026-q4": {
+          "body": {
+            "outcome": "DRAFT_SAVED"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/mobile-2026-q4/save": {
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T09:50:00Z",
+            "parts": {}
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/mobile/save": {
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T09:45:00Z",
+            "parts": {
+              "targets": {
+                "blob": "e72b9d1",
+                "savedAt": "2026-11-26T09:45:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example",
+                  "role": "Security Champion"
+                }
+              }
+            }
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/samm/mobile/assessments": {
+          "status": 409,
+          "body": {
+            "outcome": "ASSESSMENT_OPEN",
+            "assessment": "2026-q4",
+            "state": "draft"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-created",
+          "data": {
+            "repository": "samm-assessments",
+            "id": "mobile-2026-q4",
+            "kind": "assessment"
+          }
+        }
+      ]
+    },
+    "no-model": {
+      "description": "The installation pins no model version: the list of the models is empty, so the web app offers no new scope.",
+      "routes": {
+        "GET /api/v1/samm/models": {
+          "status": 200,
+          "body": {
+            "models": []
+          }
+        }
+      }
     }
   }
 }

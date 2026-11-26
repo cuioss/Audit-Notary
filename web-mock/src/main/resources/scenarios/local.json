@@ -167,6 +167,31 @@
     "GET /api/v1/samm/models/v2.2.0": {
       "body_file": "samm-model-v2.2.0.json"
     },
+    "GET /api/v1/samm/models": {
+      "status": 200,
+      "body_file": "samm-models.json"
+    },
+    "GET /api/v1/samm/payments/trend": {
+      "status": 200,
+      "body_file": "samm-trend-payments.json"
+    },
+    "GET /api/v1/samm/identity/trend": {
+      "status": 200,
+      "body": {
+        "scope": "identity",
+        "modelVersion": null,
+        "omitted": 0,
+        "points": []
+      }
+    },
+    "GET /api/v1/samm/shop/trend": {
+      "status": 200,
+      "body_file": "samm-trend-shop.json"
+    },
+    "GET /api/v1/samm/organisation/trend": {
+      "status": 200,
+      "body_file": "samm-trend-organisation.json"
+    },
     "GET /api/v1/samm/scopes": {
       "body_file": "samm-scopes.json"
     },

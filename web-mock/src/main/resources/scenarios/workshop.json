@@ -100,6 +100,31 @@
     "GET /api/v1/samm/models/v2.2.0": {
       "body_file": "samm-model-v2.2.0.json"
     },
+    "GET /api/v1/samm/models": {
+      "status": 200,
+      "body_file": "samm-models.json"
+    },
+    "GET /api/v1/samm/payments/trend": {
+      "status": 200,
+      "body_file": "samm-trend-payments.json"
+    },
+    "GET /api/v1/samm/identity/trend": {
+      "status": 200,
+      "body": {
+        "scope": "identity",
+        "modelVersion": null,
+        "omitted": 0,
+        "points": []
+      }
+    },
+    "GET /api/v1/samm/shop/trend": {
+      "status": 200,
+      "body_file": "samm-trend-shop.json"
+    },
+    "GET /api/v1/samm/organisation/trend": {
+      "status": 200,
+      "body_file": "samm-trend-organisation.json"
+    },
     "GET /api/v1/samm/scopes": {
       "body_file": "samm-scopes.json"
     },
@@ -992,6 +1017,236 @@
         "outcome": "CONFIRMED",
         "confirmedAt": "2026-11-26"
       }
+    },
+    "GET /api/v1/samm/models/v2.1.0": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      }
+    },
+    "POST /api/v1/samm/payments/assessments": {
+      "status": 409,
+      "body": {
+        "outcome": "ASSESSMENT_OPEN",
+        "assessment": "2026-q4",
+        "state": "draft"
+      },
+      "requires": {
+        "repository": "samm-assessments",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/samm/identity/assessments": {
+      "status": 409,
+      "body": {
+        "outcome": "ASSESSMENT_OPEN",
+        "assessment": "2026-q4",
+        "state": "in-review"
+      },
+      "requires": {
+        "repository": "samm-assessments",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/payments/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "targets": {
+            "blob": "a41f09c",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        }
+      },
+      "requires": {
+        "repository": "samm-assessments",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/identity/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "targets": {
+            "blob": "e19d4a7",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        }
+      },
+      "requires": {
+        "repository": "samm-assessments",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/shop/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "targets": {
+            "blob": "73c2b0f",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        }
+      },
+      "requires": {
+        "repository": "samm-assessments",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/organisation/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "targets": {
+            "blob": "0f6e8d2",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        }
+      },
+      "requires": {
+        "repository": "samm-assessments",
+        "action": "edit"
+      }
+    },
+    "PUT /api/v1/drafts/samm-assessments/payments-2026-q2": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "assessments/payments-2026-q2/v1"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/payments-2026-q2/save": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "assessments/payments-2026-q2/v1"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/payments-2026-q2/transitions/samm.submit": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "assessments/payments-2026-q2/v1"
+      }
+    },
+    "POST /api/v1/releases/samm-assessments/payments-2026-q2": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "assessments/payments-2026-q2/v1"
+      }
+    },
+    "PUT /api/v1/drafts/samm-assessments/payments-2025-q4": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "assessments/payments-2025-q4/v1"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/payments-2025-q4/save": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "assessments/payments-2025-q4/v1"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/payments-2025-q4/transitions/samm.submit": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "assessments/payments-2025-q4/v1"
+      }
+    },
+    "POST /api/v1/releases/samm-assessments/payments-2025-q4": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "assessments/payments-2025-q4/v1"
+      }
+    },
+    "PUT /api/v1/drafts/samm-assessments/shop-2026-q3": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "assessments/shop-2026-q3/v1"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/shop-2026-q3/save": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "assessments/shop-2026-q3/v1"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/shop-2026-q3/transitions/samm.submit": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "assessments/shop-2026-q3/v1"
+      }
+    },
+    "POST /api/v1/releases/samm-assessments/shop-2026-q3": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "assessments/shop-2026-q3/v1"
+      }
+    },
+    "PUT /api/v1/drafts/samm-assessments/organisation-2026-h1": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "assessments/organisation-2026-h1/v1"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/organisation-2026-h1/save": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "assessments/organisation-2026-h1/v1"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/organisation-2026-h1/transitions/samm.submit": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "assessments/organisation-2026-h1/v1"
+      }
+    },
+    "POST /api/v1/releases/samm-assessments/organisation-2026-h1": {
+      "status": 409,
+      "body": {
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "assessments/organisation-2026-h1/v1"
+      }
     }
   },
   "states": {
@@ -1033,6 +1288,108 @@
             "state": "in-review",
             "version": 1,
             "at": "2026-11-26T09:50:00Z"
+          }
+        },
+        "create-scope": {
+          "method": "POST",
+          "path": "/api/v1/samm/scopes",
+          "next": "scope-created",
+          "status": 201,
+          "body": {
+            "outcome": "CREATED",
+            "id": "mobile",
+            "document": "mobile",
+            "address": "/samm/mobile",
+            "at": "2026-11-26T09:30:00Z",
+            "parts": {
+              "data": {
+                "blob": "c41e07d",
+                "savedAt": "2026-11-26T09:30:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example",
+                  "role": "Security Champion"
+                }
+              },
+              "targets": {
+                "blob": "9a02f5b",
+                "savedAt": "2026-11-26T09:30:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example",
+                  "role": "Security Champion"
+                }
+              }
+            }
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "create-shop-assessment": {
+          "method": "POST",
+          "path": "/api/v1/samm/shop/assessments",
+          "next": "shop-assessment-created",
+          "status": 201,
+          "body": {
+            "outcome": "CREATED",
+            "id": "2026-q4",
+            "document": "shop-2026-q4",
+            "scope": "shop",
+            "address": "/samm/shop/2026-q4",
+            "state": "draft",
+            "at": "2026-11-26T09:35:00Z",
+            "parts": {}
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "create-organisation-assessment": {
+          "method": "POST",
+          "path": "/api/v1/samm/organisation/assessments",
+          "next": "organisation-assessment-created",
+          "status": 201,
+          "body": {
+            "outcome": "CREATED",
+            "id": "2026-h2",
+            "document": "organisation-2026-h2",
+            "scope": "organisation",
+            "address": "/samm/organisation/2026-h2",
+            "state": "draft",
+            "at": "2026-11-26T09:36:00Z",
+            "parts": {}
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "save-payments-targets": {
+          "method": "POST",
+          "path": "/api/v1/documents/samm-assessments/payments/save",
+          "next": "targets-saved",
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T09:45:00Z",
+            "parts": {
+              "targets": {
+                "blob": "a41f09c",
+                "savedAt": "2026-11-26T09:45:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example",
+                  "role": "Security Champion"
+                }
+              }
+            }
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
           }
         }
       }
@@ -2535,6 +2892,629 @@
           "status": 503,
           "body": {
             "outcome": "GIT_UNAVAILABLE"
+          }
+        }
+      }
+    },
+    "scope-created": {
+      "description": "The scope Mobile Apps was created: the list and the scope read show it without an assessment, its trend is empty, a save of its targets answers SAVED, and the event document-created tells an open list.",
+      "routes": {
+        "GET /api/v1/samm/scopes": {
+          "body_file": "samm-scopes-scope-created.json"
+        },
+        "GET /api/v1/samm/scopes/mobile": {
+          "body_file": "samm-scope-mobile.json"
+        },
+        "GET /api/v1/samm/mobile/trend": {
+          "body": {
+            "scope": "mobile",
+            "modelVersion": null,
+            "omitted": 0,
+            "points": []
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/mobile/save": {
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T09:45:00Z",
+            "parts": {
+              "targets": {
+                "blob": "e72b9d1",
+                "savedAt": "2026-11-26T09:45:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example",
+                  "role": "Security Champion"
+                }
+              }
+            }
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-created",
+          "data": {
+            "repository": "samm-assessments",
+            "id": "mobile",
+            "kind": "scope"
+          }
+        }
+      ]
+    },
+    "scope-invalid": {
+      "description": "Creating a scope is refused: the title is missing, the subject is in no catalog, a target is not a step of the model and a due date is no date.",
+      "routes": {
+        "POST /api/v1/samm/scopes": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/title",
+                "code": "REQUIRED"
+              },
+              {
+                "pointer": "/subject",
+                "code": "REFERENCE_NOT_FOUND"
+              },
+              {
+                "pointer": "/targets/ta/target",
+                "code": "ENUM"
+              },
+              {
+                "pointer": "/targets/rt/due",
+                "code": "PATTERN"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "targets-saved": {
+      "description": "The targets of Payments were saved (ta 3, rt 2, om removed): the scope read shows them with the new blob, and the event document-saved tells an open scope sheet.",
+      "routes": {
+        "GET /api/v1/samm/scopes/payments": {
+          "body_file": "samm-scope-payments-targets-saved.json"
+        }
+      },
+      "events": [
+        {
+          "after_ms": 300,
+          "event": "document-saved",
+          "data": {
+            "repository": "samm-assessments",
+            "id": "payments",
+            "part": "targets",
+            "fields": [
+              "/ta",
+              "/rt",
+              "/om"
+            ],
+            "by": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example"
+            }
+          }
+        }
+      ]
+    },
+    "targets-invalid": {
+      "description": "Saving the targets of Payments is refused: a target is not a step of the model and a due date is no date.",
+      "routes": {
+        "POST /api/v1/documents/samm-assessments/payments/save": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "part": "targets",
+                "pointer": "/ta/target",
+                "code": "ENUM"
+              },
+              {
+                "part": "targets",
+                "pointer": "/rt/due",
+                "code": "PATTERN"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "targets-conflict": {
+      "description": "Jordan Weber saved the target of the practice ta first: the next save of the targets answers CONFLICT with both entries; the decided value then goes through.",
+      "links": {
+        "save-payments-targets": {
+          "method": "POST",
+          "path": "/api/v1/documents/samm-assessments/payments/save",
+          "next": "targets-conflict-resolved",
+          "status": 409,
+          "body": {
+            "outcome": "CONFLICT",
+            "conflicts": [
+              {
+                "part": "targets",
+                "blob": "c05e92a",
+                "fields": [
+                  {
+                    "pointer": "/ta",
+                    "own": {
+                      "target": 3,
+                      "due": "2027-03-31"
+                    },
+                    "other": {
+                      "target": 2
+                    },
+                    "by": {
+                      "pseudonym": "p-2b7f10",
+                      "name": "Jordan Weber",
+                      "role": "Team Lead"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "targets-conflict-resolved": {
+      "description": "The conflict of the targets was decided: the next save is accepted and the scope shows the targets.",
+      "links": {
+        "save-payments-targets": {
+          "method": "POST",
+          "path": "/api/v1/documents/samm-assessments/payments/save",
+          "next": "targets-saved",
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T09:45:00Z",
+            "parts": {
+              "targets": {
+                "blob": "a41f09c",
+                "savedAt": "2026-11-26T09:45:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example",
+                  "role": "Security Champion"
+                }
+              }
+            }
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "shop-assessment-created": {
+      "description": "The assessment Web shop 2026 Q4 was created (draft, empty): the list and the scope read show it as the open one, the read of it is empty, a second create is refused with ASSESSMENT_OPEN, and the event document-created tells an open list.",
+      "routes": {
+        "GET /api/v1/samm/scopes": {
+          "body_file": "samm-scopes-shop-assessment-created.json"
+        },
+        "GET /api/v1/samm/scopes/shop": {
+          "body_file": "samm-scope-shop-assessment-created.json"
+        },
+        "GET /api/v1/documents/samm-assessments/shop-2026-q4": {
+          "body_file": "samm-assessment-shop-2026-q4.json"
+        },
+        "PUT /api/v1/drafts/samm-assessments/shop-2026-q4": {
+          "body": {
+            "outcome": "DRAFT_SAVED"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/shop-2026-q4/save": {
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T09:50:00Z",
+            "parts": {}
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/samm/shop/assessments": {
+          "status": 409,
+          "body": {
+            "outcome": "ASSESSMENT_OPEN",
+            "assessment": "2026-q4",
+            "state": "draft"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-created",
+          "data": {
+            "repository": "samm-assessments",
+            "id": "shop-2026-q4",
+            "kind": "assessment"
+          }
+        }
+      ]
+    },
+    "organisation-assessment-created": {
+      "description": "The assessment Organisation 2026 H2 was created (draft, empty): the list and the scope read show it as the open one, the read of it is empty, a second create is refused with ASSESSMENT_OPEN, and the event document-created tells an open list.",
+      "routes": {
+        "GET /api/v1/samm/scopes": {
+          "body_file": "samm-scopes-organisation-assessment-created.json"
+        },
+        "GET /api/v1/samm/scopes/organisation": {
+          "body_file": "samm-scope-organisation-assessment-created.json"
+        },
+        "GET /api/v1/documents/samm-assessments/organisation-2026-h2": {
+          "body_file": "samm-assessment-organisation-2026-h2.json"
+        },
+        "PUT /api/v1/drafts/samm-assessments/organisation-2026-h2": {
+          "body": {
+            "outcome": "DRAFT_SAVED"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/organisation-2026-h2/save": {
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T09:50:00Z",
+            "parts": {}
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/samm/organisation/assessments": {
+          "status": 409,
+          "body": {
+            "outcome": "ASSESSMENT_OPEN",
+            "assessment": "2026-h2",
+            "state": "draft"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-created",
+          "data": {
+            "repository": "samm-assessments",
+            "id": "organisation-2026-h2",
+            "kind": "assessment"
+          }
+        }
+      ]
+    },
+    "assessment-invalid": {
+      "description": "Creating an assessment of Web shop or Organisation is refused: the date is no date, the model version is not pinned and the second assessor is unknown.",
+      "routes": {
+        "POST /api/v1/samm/shop/assessments": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/date",
+                "code": "PATTERN"
+              },
+              {
+                "pointer": "/modelVersion",
+                "code": "ENUM"
+              },
+              {
+                "pointer": "/assessors/1",
+                "code": "PSEUDONYM_UNKNOWN"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/samm/organisation/assessments": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/date",
+                "code": "PATTERN"
+              },
+              {
+                "pointer": "/modelVersion",
+                "code": "ENUM"
+              },
+              {
+                "pointer": "/assessors/1",
+                "code": "PSEUDONYM_UNKNOWN"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "assessment-released-meanwhile": {
+      "description": "Noor Haddad released Payments 2026 Q4 while it was open: a save, a draft, a submit and a release answer DOCUMENT_RELEASED, the assessment, the scope, the list and the trend read as released, and the event document-transitioned tells an open sheet.",
+      "routes": {
+        "POST /api/v1/documents/samm-assessments/payments-2026-q4/save": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "assessments/payments-2026-q4/v1"
+          }
+        },
+        "PUT /api/v1/drafts/samm-assessments/payments-2026-q4": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "assessments/payments-2026-q4/v1"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/payments-2026-q4/transitions/samm.submit": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "assessments/payments-2026-q4/v1"
+          }
+        },
+        "POST /api/v1/releases/samm-assessments/payments-2026-q4": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "assessments/payments-2026-q4/v1"
+          }
+        },
+        "GET /api/v1/documents/samm-assessments/payments-2026-q4": {
+          "body_file": "samm-assessment-payments-2026-q4-released.json"
+        },
+        "GET /api/v1/samm/scopes/payments": {
+          "body_file": "samm-scope-payments-released.json"
+        },
+        "GET /api/v1/samm/scopes": {
+          "body_file": "samm-scopes-release-released.json"
+        },
+        "GET /api/v1/samm/payments/trend": {
+          "body_file": "samm-trend-payments-released.json"
+        }
+      },
+      "events": [
+        {
+          "after_ms": 300,
+          "event": "document-transitioned",
+          "data": {
+            "repository": "samm-assessments",
+            "id": "payments-2026-q4",
+            "state": "released",
+            "version": 1,
+            "by": {
+              "pseudonym": "p-7d2e58",
+              "name": "Noor Haddad"
+            }
+          }
+        }
+      ]
+    },
+    "evidence-invalid": {
+      "description": "Saving a practice of Payments 2026 Q4 is refused, as is its draft: a link is no https address, another has no title, and a comment is too long.",
+      "routes": {
+        "POST /api/v1/documents/samm-assessments/payments-2026-q4/save": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "part": "sb",
+                "pointer": "/evidence/sb/1/url",
+                "code": "PATTERN"
+              },
+              {
+                "part": "sb",
+                "pointer": "/evidence/sb/0/title",
+                "code": "REQUIRED"
+              },
+              {
+                "part": "sb",
+                "pointer": "/answers/sb/sb-b-1/comment",
+                "code": "MAX_LENGTH"
+              }
+            ]
+          }
+        },
+        "PUT /api/v1/drafts/samm-assessments/payments-2026-q4": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "part": "sb",
+                "pointer": "/evidence/sb/1/url",
+                "code": "PATTERN"
+              },
+              {
+                "part": "sb",
+                "pointer": "/evidence/sb/0/title",
+                "code": "REQUIRED"
+              },
+              {
+                "part": "sb",
+                "pointer": "/answers/sb/sb-b-1/comment",
+                "code": "MAX_LENGTH"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "model-versions-differ": {
+      "description": "The comparison of Payments answers MODEL_VERSIONS_DIFFER for 2026-q2 (v2.1.0) and 2026-q4 (v2.2.0); the data of the two assessments still say v2.2.0.",
+      "routes": {
+        "GET /api/v1/samm/payments/compare": {
+          "status": 422,
+          "body": {
+            "outcome": "MODEL_VERSIONS_DIFFER",
+            "from": {
+              "assessment": "2026-q2",
+              "modelVersion": "v2.1.0"
+            },
+            "to": {
+              "assessment": "2026-q4",
+              "modelVersion": "v2.2.0"
+            }
+          }
+        }
+      }
+    },
+    "models-none": {
+      "description": "The installation pins no model version: the list of the models is empty, so the web app offers no new scope and no new assessment.",
+      "routes": {
+        "GET /api/v1/samm/models": {
+          "status": 200,
+          "body": {
+            "models": []
+          }
+        }
+      }
+    },
+    "samm-git-unavailable": {
+      "description": "The Git server of the SAMM assessments cannot be reached: the status is degraded and the creates and the save of the targets answer GIT_UNAVAILABLE; the draft and every read still work.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": true,
+            "loginProvider": "oidc",
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "DOWN"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              },
+              {
+                "alias": "test-notes",
+                "fetch": "UP"
+              }
+            ]
+          }
+        },
+        "POST /api/v1/samm/scopes": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/samm/shop/assessments": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/samm/organisation/assessments": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/identity/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/shop/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/organisation/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/payments/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
           }
         }
       }

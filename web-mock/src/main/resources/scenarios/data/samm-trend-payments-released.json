@@ -1,0 +1,100 @@
+{
+  "scope": "payments",
+  "modelVersion": "v2.2.0",
+  "omitted": 0,
+  "points": [
+    {
+      "assessment": "2025-q4",
+      "document": "payments-2025-q4",
+      "title": "Payments 2025 Q4",
+      "date": "2025-12-08",
+      "overall": 0.9583333333333334,
+      "functions": {
+        "governance": 0.9583333333333334,
+        "design": 1.0,
+        "implementation": 1.25,
+        "verification": 0.8333333333333334,
+        "operations": 0.75
+      },
+      "practices": {
+        "sm": 1.125,
+        "pc": 0.625,
+        "eg": 1.125,
+        "ta": 0.75,
+        "sr": 0.875,
+        "sa": 1.375,
+        "sb": 1.375,
+        "sd": 1.625,
+        "dm": 0.75,
+        "aa": 0.5,
+        "rt": 0.75,
+        "st": 1.25,
+        "im": 0.625,
+        "em": 1.0,
+        "om": 0.625
+      }
+    },
+    {
+      "assessment": "2026-q2",
+      "document": "payments-2026-q2",
+      "title": "Payments 2026 Q2",
+      "date": "2026-06-16",
+      "overall": 1.3583333333333332,
+      "functions": {
+        "governance": 1.4166666666666667,
+        "design": 1.6666666666666667,
+        "implementation": 1.5416666666666667,
+        "verification": 0.9583333333333334,
+        "operations": 1.2083333333333333
+      },
+      "practices": {
+        "sm": 1.25,
+        "pc": 1.125,
+        "eg": 1.875,
+        "ta": 1.25,
+        "sr": 1.875,
+        "sa": 1.875,
+        "sb": 2.125,
+        "sd": 1.5,
+        "dm": 1.0,
+        "aa": 0.75,
+        "rt": 0.875,
+        "st": 1.25,
+        "im": 1.0,
+        "em": 1.75,
+        "om": 0.875
+      }
+    },
+    {
+      "assessment": "2026-q4",
+      "document": "payments-2026-q4",
+      "title": "Payments 2026 Q4",
+      "date": "2026-11-24",
+      "overall": 1.65,
+      "functions": {
+        "governance": 1.8333333333333333,
+        "design": 1.75,
+        "implementation": 1.9583333333333333,
+        "verification": 1.4583333333333333,
+        "operations": 1.25
+      },
+      "practices": {
+        "sm": 1.5,
+        "pc": 1.75,
+        "eg": 2.25,
+        "ta": 1.375,
+        "sr": 2.125,
+        "sa": 1.75,
+        "sb": 2.25,
+        "sd": 2.25,
+        "dm": 1.375,
+        "aa": 1.375,
+        "rt": 1.125,
+        "st": 1.875,
+        "im": 1.625,
+        "em": 1.375,
+        "om": 0.75
+      }
+    }
+  ]
+}

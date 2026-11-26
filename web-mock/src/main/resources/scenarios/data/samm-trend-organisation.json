@@ -1,0 +1,38 @@
+{
+  "scope": "organisation",
+  "modelVersion": "v2.2.0",
+  "omitted": 0,
+  "points": [
+    {
+      "assessment": "2026-h1",
+      "document": "organisation-2026-h1",
+      "title": "Organisation 2026 H1",
+      "date": "2026-05-04",
+      "overall": 1.2083333333333335,
+      "functions": {
+        "governance": 1.0416666666666667,
+        "design": 1.375,
+        "implementation": 1.5,
+        "verification": 1.0833333333333333,
+        "operations": 1.0416666666666667
+      },
+      "practices": {
+        "sm": 1.125,
+        "pc": 0.875,
+        "eg": 1.125,
+        "ta": 1.375,
+        "sr": 1.25,
+        "sa": 1.5,
+        "sb": 2.125,
+        "sd": 1.25,
+        "dm": 1.125,
+        "aa": 0.875,
+        "rt": 1.0,
+        "st": 1.375,
+        "im": 1.0,
+        "em": 1.25,
+        "om": 0.875
+      }
+    }
+  ]
+}

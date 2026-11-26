@@ -1,0 +1,18 @@
+{
+  "models": [
+    {
+      "version": "v2.2.0",
+      "source": "https://github.com/owaspsamm/core/tree/v2.2.0/model",
+      "checksum": "sha256:1b9d4e0c7a52f8316d0e94ab5c27f3d8e61a09b4c2d57e8f130a64b9c8d71e2f",
+      "pinnedAt": "2026-02-03",
+      "default": true
+    },
+    {
+      "version": "v2.1.0",
+      "source": "https://github.com/owaspsamm/core/tree/v2.1.0/model",
+      "checksum": "sha256:6e30a97d12c4b5f808e1d7a3490c6b2f5d81e3a07c94b6d2185f0e7a3c49d86b",
+      "pinnedAt": "2025-03-17",
+      "default": false
+    }
+  ]
+}

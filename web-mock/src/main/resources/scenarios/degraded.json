@@ -157,6 +157,31 @@
     "GET /api/v1/samm/models/v2.2.0": {
       "body_file": "samm-model-v2.2.0.json"
     },
+    "GET /api/v1/samm/models": {
+      "status": 200,
+      "body_file": "samm-models.json"
+    },
+    "GET /api/v1/samm/payments/trend": {
+      "status": 200,
+      "body_file": "samm-trend-payments.json"
+    },
+    "GET /api/v1/samm/identity/trend": {
+      "status": 200,
+      "body": {
+        "scope": "identity",
+        "modelVersion": null,
+        "omitted": 0,
+        "points": []
+      }
+    },
+    "GET /api/v1/samm/shop/trend": {
+      "status": 200,
+      "body_file": "samm-trend-shop.json"
+    },
+    "GET /api/v1/samm/organisation/trend": {
+      "status": 200,
+      "body_file": "samm-trend-organisation.json"
+    },
     "GET /api/v1/samm/scopes": {
       "body_file": "samm-scopes.json"
     },
@@ -210,6 +235,96 @@
     "GET /api/v1/categories": {
       "status": 200,
       "body_file": "categories-none.json"
+    },
+    "POST /api/v1/samm/scopes": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "id": "mobile",
+        "document": "mobile",
+        "address": "/samm/mobile",
+        "at": "2026-11-26T09:30:00Z",
+        "parts": {
+          "data": {
+            "blob": "c41e07d",
+            "savedAt": "2026-11-26T09:30:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          },
+          "targets": {
+            "blob": "9a02f5b",
+            "savedAt": "2026-11-26T09:30:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        }
+      },
+      "requires": {
+        "repository": "samm-assessments",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/samm/shop/assessments": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "id": "2026-q4",
+        "document": "shop-2026-q4",
+        "scope": "shop",
+        "address": "/samm/shop/2026-q4",
+        "state": "draft",
+        "at": "2026-11-26T09:35:00Z",
+        "parts": {}
+      },
+      "requires": {
+        "repository": "samm-assessments",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/samm/organisation/assessments": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "id": "2026-h2",
+        "document": "organisation-2026-h2",
+        "scope": "organisation",
+        "address": "/samm/organisation/2026-h2",
+        "state": "draft",
+        "at": "2026-11-26T09:36:00Z",
+        "parts": {}
+      },
+      "requires": {
+        "repository": "samm-assessments",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/documents/samm-assessments/payments/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "targets": {
+            "blob": "a41f09c",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        }
+      },
+      "requires": {
+        "repository": "samm-assessments",
+        "action": "edit"
+      }
     }
   },
   "states": {
@@ -256,6 +371,46 @@
           "status": 503,
           "body": {
             "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/samm/scopes": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/samm/shop/assessments": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/samm/organisation/assessments": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/samm-assessments/payments/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "edit"
           }
         }
       }

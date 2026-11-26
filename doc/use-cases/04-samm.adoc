@@ -41,6 +41,8 @@ xref:../specification/category-samm.adoc#AUN-SAMM-6[AUN-SAMM-6] (targets),
 xref:../specification/category-samm.adoc#AUN-SAMM-1[AUN-SAMM-1] (layout).
 Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *SAMM*, scope ›
 assessment › practice).
+Decided provisionally for the web app: the page `/samm/new` creates a scope with its targets, the targets are edited in the
+sheet of the scope and saved like a document, and a scope's title and subject cannot change (xref:../specification/rest-api.adoc#_decided_samm[REST API Register, Open Questions]).
 
 [#UC-SAMM-2]
 == UC-SAMM-2: Start an Assessment
@@ -71,7 +73,8 @@ Open points:: the schemas of the document types `scope` and `assessment`
 Requirements:: xref:../specification/category-samm.adoc#AUN-SAMM-1[AUN-SAMM-1] (layout, model version),
 xref:../specification/category-samm.adoc#AUN-SAMM-2[AUN-SAMM-2] (scope reference),
 xref:../specification/data-protection.adoc#AUN-DP-5[AUN-DP-5] (assessors as pseudonyms).
-Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App].
+Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App]; decided provisionally: the page
+`/samm/<scope>/new`, at most one open assessment per scope, an empty start (xref:../specification/rest-api.adoc#_decided_samm[REST API Register, Open Questions]).
 
 [#UC-SAMM-3]
 == UC-SAMM-3: Fill In an Assessment in a Workshop
@@ -114,7 +117,9 @@ xref:../specification/category-samm.adoc#AUN-SAMM-7[AUN-SAMM-7] (evidence as lin
 xref:../specification/testing.adoc#AUN-NFR-3[AUN-NFR-3] (fifteen concurrent assessors).
 Changes:: <<change-evidence-per-practice>>.
 Design:: xref:../concepts/category-samm.adoc#_workshop_mode_save_often[SAMM, Workshop Mode: Save Often],
-xref:../concepts/web-app.adoc#_drafts_saving_and_conflicts[Web App, Drafts, Saving and Conflicts].
+xref:../concepts/web-app.adoc#_drafts_saving_and_conflicts[Web App, Drafts, Saving and Conflicts]; decided provisionally:
+the comment is an AsciiDoc fragment and the evidence a list of titled `https` links per practice, saved with the answers of
+the practice (xref:../specification/rest-api.adoc#_decided_samm[REST API Register, Open Questions]).
 
 [#UC-SAMM-4]
 == UC-SAMM-4: Submit and Release an Assessment
@@ -143,7 +148,8 @@ Variations::
 Outcome:: the assessment is released under the tag `assessments/<ulid>/v1`, and its scores are computed.
 Requirements:: xref:../specification/category-samm.adoc#AUN-SAMM-4[AUN-SAMM-4] (release once, then frozen),
 xref:../specification/category-samm.adoc#AUN-SAMM-3[AUN-SAMM-3] (`samm.submit`).
-Design:: xref:../specification/web-app.adoc#AUN-WEB-6[AUN-WEB-6].
+Design:: xref:../specification/web-app.adoc#AUN-WEB-6[AUN-WEB-6]; decided provisionally: every write to a released assessment
+answers `DOCUMENT_RELEASED`, and the frozen sheet offers *Start a new assessment*, the link to `/samm/<scope>/new` (xref:../specification/rest-api.adoc#_decided_samm[REST API Register, Open Questions]).
 
 [#UC-SAMM-5]
 == UC-SAMM-5: See Scores, Compare and Follow the Trend
@@ -169,7 +175,9 @@ Open points:: what the *Reports* lens shows besides SAMM trends; the comparison 
 xref:../concepts/category-samm.adoc#_open_questions[SAMM, Open Questions]).
 Requirements:: xref:../specification/category-samm.adoc#AUN-SAMM-5[AUN-SAMM-5] (scores, comparison); the trend: none
 yet.
-Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Reports*).
+Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Reports*); decided
+provisionally: the trend of a scope is `GET /api/v1/samm/{scope}/trend` (one model version, the others counted as omitted)
+and `MODEL_VERSIONS_DIFFER` is `422` (xref:../specification/rest-api.adoc#_decided_samm[REST API Register, Open Questions]).
 
 [#UC-SAMM-6]
 == UC-SAMM-6: Turn Gaps into Risks
@@ -238,6 +246,8 @@ Each change is the fix of a gap these use cases need; it is written into the spe
 
 [[change-evidence-per-practice]]AUN-SAMM-1, evidence per practice:: Gap: `evidence.yaml` is one file for all practices
 of an assessment, so two assessors adding evidence to different practices at once conflict, against
-xref:../specification/category-samm.adoc#AUN-SAMM-3[AUN-SAMM-3]. Fix: the declared split
-`evidence/<practice-id>.yaml`, one per practice, beside `answers/<practice-id>.yaml`; the concept's layout
-(xref:../concepts/category-samm.adoc#_repository_layout[SAMM, Repository Layout]) follows.
+xref:../specification/category-samm.adoc#AUN-SAMM-3[AUN-SAMM-3]. Fix: no separate evidence file; the declared split
+`answers/<practice-id>.yaml`, one per practice, holds the answers, the comments and the evidence links of the practice, so
+the blob of a practice covers all three and a save of the practice is one write (decided provisionally,
+xref:../specification/rest-api.adoc#_decided_samm[REST API Register, Open Questions]); `evidence.yaml` is dropped and the
+concept's layout (xref:../concepts/category-samm.adoc#_repository_layout[SAMM, Repository Layout]) follows.

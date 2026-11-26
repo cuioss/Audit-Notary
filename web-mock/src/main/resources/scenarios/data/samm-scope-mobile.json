@@ -1,0 +1,44 @@
+{
+  "id": "mobile",
+  "document": "mobile",
+  "title": "Mobile Apps",
+  "subject": {
+    "kind": "team",
+    "id": "mobile",
+    "name": "Mobile Apps"
+  },
+  "modelVersion": "v2.2.0",
+  "targets": {
+    "sm": {
+      "target": 2
+    },
+    "ta": {
+      "target": 2.5,
+      "due": "2027-03-31"
+    },
+    "sb": {
+      "target": 1.5
+    }
+  },
+  "parts": {
+    "data": {
+      "blob": "c41e07d",
+      "savedAt": "2026-11-26T09:30:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      }
+    },
+    "targets": {
+      "blob": "9a02f5b",
+      "savedAt": "2026-11-26T09:30:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      }
+    }
+  },
+  "assessments": []
+}

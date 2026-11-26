@@ -1,0 +1,20 @@
+{
+  "scopes": [
+    {
+      "id": "mobile",
+      "title": "Mobile Apps",
+      "subject": {
+        "kind": "team",
+        "id": "mobile",
+        "name": "Mobile Apps"
+      },
+      "latest": null,
+      "open": {
+        "assessment": "2026-q4",
+        "title": "Mobile Apps 2026 Q4",
+        "state": "draft"
+      },
+      "assessments": 1
+    }
+  ]
+}

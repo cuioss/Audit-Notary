@@ -125,3 +125,25 @@ The scope view shows the gaps of the latest released assessment by default. "Cre
 == AUN-SAMM-7: Evidence as Links
 
 * Evidence must be stored as absolute HTTPS URLs with a title; file upload of evidence must not be offered.
+
+[#_open_questions]
+== Open Questions
+
+Decided provisionally with the SAMM completion (UC-SAMM-1 to UC-SAMM-5), recorded with the requests and bodies in
+xref:rest-api.adoc#_decided_samm[REST API Register, Open Questions]; the owner may change each one:
+
+. *Scope* (AUN-SAMM-2): the subject is written as `team:<id>`, `service:<id>` or `organisation`; the title and the subject
+  cannot change after the create; a subject may have several scopes.
+. *Targets* (AUN-SAMM-6): 0 to 3 in steps of 0.5, an optional due date, a practice without an entry has no target; the
+  roadmap is saved as the part `targets` of the scope with the generic save.
+. *Assessment* (AUN-SAMM-1): at most one assessment of a scope is `draft` or `in-review`; it starts empty, and the user who
+  creates it is always its first assessor.
+. *Release* (AUN-SAMM-4): every write to a released assessment, the draft included, answers `DOCUMENT_RELEASED` with the
+  tag; a change is a new assessment.
+. *Comparison* (AUN-SAMM-5): `MODEL_VERSIONS_DIFFER` is `422`; an assessment in any state may be compared, an open one
+  as saved. The trend is `GET /api/v1/samm/{scope}/trend`, with the released assessments of one model version.
+. *Evidence* (AUN-SAMM-7): one list per practice, kept with the answers of the practice (the layout change
+  `change-evidence-per-practice` of the use cases), with the optional question it belongs to; at most 50 links; a link is
+  an absolute `https` address of at most 2,048 characters, the title 1 to 200 characters.
+. *The comment of an answer* is an AsciiDoc fragment of at most 8,000 characters.
+

@@ -88,7 +88,16 @@ also answer the document lifecycle for the repository `test-notes` (list, read, 
 save, submit, release; the search is the built-in `search-documents` handler), `read-only` refusing every write, and
 `workshop` carries the `note-*` states (the flow of one document from submit to release and edit, every outcome of
 the writes and of the release, the release of a request and the confirmation by password of a save and a submit) and the
-`category-*` states (a second generic category and a switched-off one); a request about a document that no route names
+`category-*` states (a second generic category and a switched-off one); the SAMM completion: `workshop`, `read-only`,
+`release`, `degraded`, `local` and `empty` answer the pinned models (`GET /api/v1/samm/models`) and the trend of every
+scope; `workshop` creates a scope and an assessment of `shop` or `organisation` with fixed ids (the second create of an
+open scope answers `ASSESSMENT_OPEN`), saves the targets of a scope (with the states `targets-saved`, `targets-invalid`
+and `targets-conflict`), answers `DOCUMENT_RELEASED` to every write of a released assessment, and carries the states
+`scope-invalid`, `assessment-invalid`, `assessment-released-meanwhile`, `evidence-invalid`, `model-versions-differ`,
+`models-none` and `samm-git-unavailable`; `read-only` answers the creates and the targets save `403 FORBIDDEN` (no right
+`edit`), `release` answers `DOCUMENT_RELEASED` to the release of a document released meanwhile (`released-meanwhile`),
+`degraded` answers them `503 GIT_UNAVAILABLE`, and `empty` has no scope and one pinned model and runs the first-user chain
+`scope-created` and `assessment-created`; a request about a document that no route names
 answers `404 NOT_FOUND` for a repository of the scenario's rights
 
 |Control

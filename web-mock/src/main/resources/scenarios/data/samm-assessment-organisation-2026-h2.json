@@ -1,0 +1,32 @@
+{
+  "id": "organisation-2026-h2",
+  "repository": "samm-assessments",
+  "scope": "organisation",
+  "slug": "2026-h2",
+  "title": "Organisation 2026 H2",
+  "date": "2026-11-26",
+  "modelVersion": "v2.2.0",
+  "state": "draft",
+  "assessors": [
+    {
+      "pseudonym": "p-4c1a9e",
+      "name": "Alex Example",
+      "role": "Security Champion"
+    }
+  ],
+  "answers": {},
+  "evidence": {},
+  "parts": {},
+  "history": [
+    {
+      "at": "2026-11-26T09:36:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null
+}

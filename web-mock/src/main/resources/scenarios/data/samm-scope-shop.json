@@ -1,5 +1,6 @@
 {
   "id": "shop",
+  "document": "shop",
   "title": "Web shop",
   "subject": {
     "kind": "service",
@@ -52,6 +53,26 @@
     },
     "om": {
       "target": 2
+    }
+  },
+  "parts": {
+    "data": {
+      "blob": "2b0abda",
+      "savedAt": "2026-09-08T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "targets": {
+      "blob": "46bbed3",
+      "savedAt": "2026-09-08T10:05:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
     }
   },
   "assessments": [

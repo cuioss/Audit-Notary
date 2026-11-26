@@ -61,8 +61,11 @@ Without the scripts: `java -cp … de.cuioss.notary.audit.mock.cli.WebMockCli --
 
 |`workshop` (default)
 |`ready`, `saved-by-other`, `conflict`, `forbidden`, `session-replaced`, `session-ended`, `preview-hostile`,
-`preview-unavailable`, `confirmation-due`, `confirmation-done`, `entry-invalid`, `entry-git-unavailable`, and the
-`note-*` and `category-*` states of _Document Lifecycle_
+`preview-unavailable`, `confirmation-due`, `confirmation-done`, `entry-invalid`, `entry-git-unavailable`, the
+`note-*` and `category-*` states of _Document Lifecycle_ and the SAMM states of _SAMM Completion_ (`scope-created`,
+`scope-invalid`, `targets-saved`, `targets-invalid`, `targets-conflict`, `targets-conflict-resolved`,
+`shop-assessment-created`, `organisation-assessment-created`, `assessment-invalid`, `assessment-released-meanwhile`,
+`evidence-invalid`, `model-versions-differ`, `models-none`, `samm-git-unavailable`)
 |An assessor in a populated installation: Due list with every kind, catalogs, and the SAMM lens — four scopes, the
 open workshop *Payments 2026 Q4* (draft, eleven practices answered) and released assessments to compare with; a draft
 and a save for everyone succeed. `saved-by-other` pushes a `document-saved` event and serves the assessment with
@@ -79,7 +82,9 @@ release request). The five catalogs, their schemas and entries and the person di
 hold `administer-catalogs`, so every catalog and directory write answers `403 FORBIDDEN`; the own entry is read and saved
 (_Directory and Catalogs_). `confirmation-due`: the session says `directoryConfirmationDue: true` and the own entry is
 older than the interval, confirming it or saving it moves to `confirmation-done`; `entry-invalid` refuses saving the own
-entry with `422`, `entry-git-unavailable` answers saving and confirming `503 GIT_UNAVAILABLE`
+entry with `422`, `entry-git-unavailable` answers saving and confirming `503 GIT_UNAVAILABLE`. The SAMM lens answers the
+pinned models, the trend of every scope, the create of a scope and of an assessment, the save of the targets of a scope,
+the evidence of an assessment and the refusal of every write to a released one (_SAMM Completion_)
 
 |`first-login`
 |`form`, `invalid-team`, `registered`, `registered-bound`, `candidates`, `candidates-chosen`, `candidates-not-bindable`, `candidates-refused`
@@ -97,19 +102,24 @@ preview states included) and the reads of the document lifecycle (list, notes, r
 holds the SAMM assessments too); the writes of the own entry (`PUT /api/v1/directory/me`, `POST …/confirmation`) answer
 `FORBIDDEN`, and so does every write on `test-notes` (draft, save, submit, release, create). It reads the five catalogs
 and the person directory as `workshop` does (_Directory and Catalogs_); every catalog and directory write answers
-`403 FORBIDDEN` (`requires`, no right `administer-catalogs`)
+`403 FORBIDDEN` (`requires`, no right `administer-catalogs`). It reads the pinned models and the four trends of the SAMM
+lens; creating a scope, creating an assessment and saving the targets answer `403 FORBIDDEN` (`requires`, no right `edit`
+on `samm-assessments`)
 
 |`degraded`
 |`unreachable`, `recovered`
-|The fetch of `samm-assessments` fails: status `degraded`, a save answers `GIT_UNAVAILABLE` (a draft is still kept);
-`recovered` pushes the `status` event with the healthy status
+|The fetch of `samm-assessments` fails: status `degraded`, a save answers `GIT_UNAVAILABLE` (a draft is still kept), and
+so do creating a scope, creating an assessment and saving the targets; the models and the trends stay readable;
+`recovered` pushes the `status` event with the healthy status, and the creates and the save answer as in `workshop`
 
 |`empty`
-|`ready`
+|`ready`, `scope-created`, `assessment-created`, `no-model`
 |A fresh installation: nothing due; `GET /api/v1/categories` lists no category, so the rail has no *Documents* entry
 (as in `degraded`, `release`, `local` and `login-trouble`). The user holds `administer-catalogs`: the lists of `service`,
 `system` and `external` and the person list are empty, every entry read answers `404`, and the catalog and directory
-writes answer as in `catalog-admin` `ready` (_Directory and Catalogs_)
+writes answer as in `catalog-admin` `ready` (_Directory and Catalogs_). No scope exists and one model is pinned; creating
+the scope *Mobile Apps* (`scope-created`) and then its first assessment (`assessment-created`) is the flow of a first
+user, `no-model` pins none (_SAMM Completion_)
 
 |`no-rights`
 |`ready`
@@ -128,20 +138,23 @@ One more profile is not primary, because it serves one flow rather than a kind o
 |Profile |States |Represents
 
 |`release`
-|`review`, `stepped-up`, `password`, `wrong-password`, `changed`, `too-many-logins`, `released`
+|`review`, `stepped-up`, `password`, `wrong-password`, `changed`, `too-many-logins`, `released`, `released-meanwhile`
 |An approver (right `approve`) releases *Payments 2026 Q4*, which is in review with every practice answered
 (AUN-WEB-6). `review`: the release answers `STEP_UP_REQUIRED` with a step-up address and moves to `stepped-up`, where
 it answers `RELEASED`; `password`: the status names the step-up by password (local users) and the release, sent with
 the password, answers `RELEASED`; `wrong-password` answers `401 INVALID_CREDENTIALS`; both name `loginProvider: local` in the status, while the login
 stays the one of the identity provider; `changed` answers `CHANGED_SINCE_REVIEW`; `too-many-logins` answers the release
 `503 TOO_MANY_LOGINS` with `Retry-After: 60`, writes nothing and keeps the state (`POST /mock/goto/review` leaves it);
-`released` serves the frozen assessment with its tag `assessments/payments-2026-q4/v1`
+`released` serves the frozen assessment with its tag `assessments/payments-2026-q4/v1` (its trend holds the third point);
+`released-meanwhile` answers the release, a draft, a save and a submit `409 DOCUMENT_RELEASED` with that tag and serves the released reads (assessment,
+scope, list, trend). The models and the four trends are read in every state
 
 |`local`
 |`ready`
 |The login provider is `local`: `GET /api/v1/auth/login` answers `302` to the web app's page `/login?return=<address>`
 and `POST /j_security_check` with the user `alex` and the password `local-password` signs in (`Origin` required); the
-status names `loginProvider: local` and `stepUp: off`. The data and the user are those of `workshop`
+status names `loginProvider: local` and `stepUp: off`. The data and the user are those of `workshop`; of the SAMM
+completion it answers the models and the four trends only
 
 |`catalog-admin`
 |`ready`, `service-created`, `service-retired`, `catalog-invalid`, `catalog-id-taken`, `catalog-rejected`,
@@ -307,6 +320,23 @@ under CC BY-SA 4.0, not under the licence of this repository: see `samm-model-v2
 
 |`samm-compare-payments*.json`, `samm-diff-payments-2026-q4.json`
 |The comparison with *Payments 2026 Q2* and the diff of the release
+
+|`samm-models.json`, `samm-trend-<scope>.json`, `samm-trend-payments-released.json`
+|The pinned models and the trend of `payments` (also with the released *Payments 2026 Q4* as the third point), `shop` and
+`organisation` (_SAMM Completion_); the trend of `identity` and `mobile` is inline
+
+|`samm-scope-mobile*.json`, `samm-scopes-scope-created.json`, `samm-scopes-empty-*.json`,
+`samm-assessment-mobile-2026-q4.json`
+|The created scope *Mobile Apps* (`workshop`, `empty`), the lists of the states `scope-created` and `assessment-created` and
+the empty assessment of `empty`
+
+|`samm-scope-payments-targets-saved.json`
+|`payments` with the targets of the state `targets-saved`
+
+|`samm-scope-<scope>-assessment-created.json`, `samm-scopes-<scope>-assessment-created.json`,
+`samm-assessment-shop-2026-q4.json`, `samm-assessment-organisation-2026-h2.json`
+|The scope read, the list and the empty assessment of the states `shop-assessment-created` and
+`organisation-assessment-created`
 
 |`categories-test-note.json`, `categories-none.json`, `documents-test-notes*.json`, `document-test-note-n<k>*.json`,
 `documents-index.json`, `due-workshop-lifecycle.json`
@@ -587,6 +617,132 @@ the import preview stay `200`
 `first-login`, an entry with `confirmedAt` and `confirmationDue` in the other profiles (Alex `p-4c1a9e`, Noor `p-7d2e58`,
 Kim `p-71d0c3`, Sam `p-0a11ce`). `PUT` answers `200 SAVED` with `confirmedAt` 2026-11-26, `POST …/confirmation` answers `200
 CONFIRMED`; both are in the requests a session without a right still makes.
+
+== SAMM Completion
+
+The requests of UC-SAMM-1 to UC-SAMM-5 (`doc/specification/rest-api.adoc`, _SAMM Requests_; everything PROVISIONAL unless
+the register says otherwise). The creates answer fixed ids and the data files hold what a state shows afterwards: the mock
+stores nothing, and the e2e flows type the same values.
+
+*The fixed ids.*
+
+[cols="1,3"]
+|===
+|What |Value
+
+|Created scope
+|`mobile` (id and document), address `/samm/mobile`, "Mobile Apps", subject `team:mobile` (read as `{"kind": "team", "id":
+"mobile", "name": "Mobile Apps"}`), model `v2.2.0`, targets `sm` 2, `ta` 2.5 due 2027-03-31, `sb` 1.5; created at
+`2026-11-26T09:30:00Z` by Alex Example; blobs `c41e07d` (data) and `9a02f5b` (targets)
+
+|Created assessment of `shop`
+|`2026-q4`, document `shop-2026-q4`, "Web shop 2026 Q4", date 2026-11-26, `v2.2.0`, `draft`; assessors Alex Example and
+Jordan Weber; at `2026-11-26T09:35:00Z`
+
+|Created assessment of `organisation`
+|`2026-h2`, document `organisation-2026-h2`, "Organisation 2026 H2", assessor Alex Example only; at `2026-11-26T09:36:00Z`
+
+|Created assessment of `mobile` (`empty`)
+|`2026-q4`, document `mobile-2026-q4`, "Mobile Apps 2026 Q4", assessor Sam Firstuser (`p-0a11ce`); at `2026-11-26T09:40:00Z`
+
+|Targets saved on `payments`
+|`ta` becomes `{"target": 3, "due": "2027-03-31"}`, `rt` `{"target": 2, "due": "2027-09-30"}`, `om` is removed; the new blob
+is `a41f09c`, saved at `2026-11-26T09:45:00Z` by Alex Example; the conflict names the blob `c05e92a` and the field `/ta`
+(Jordan Weber saved `{"target": 2}`)
+
+|Pinned models
+|`v2.2.0` (default, pinned 2026-02-03) and `v2.1.0` (pinned 2025-03-17). The checksums are fixtures (the value of the
+contract's example), not those of a file
+|===
+
+*The routes of `workshop`.* The links of `ready` are `POST /api/v1/samm/scopes` (to `scope-created`), `POST
+/api/v1/samm/shop/assessments` (to `shop-assessment-created`), `POST /api/v1/samm/organisation/assessments` (to
+`organisation-assessment-created`) and `POST /api/v1/documents/samm-assessments/payments/save` (to `targets-saved`). The
+scenario level answers `GET /api/v1/samm/models`, `GET /api/v1/samm/models/v2.1.0` (`404 NOT_FOUND`: a listed older
+version has no model file), the four trends, `POST /api/v1/samm/payments/assessments` and `.../identity/assessments`
+(`409 ASSESSMENT_OPEN` with `2026-q4` and `draft` or `in-review`), the same save of `payments` (a repeated one) and of the
+other three scopes (`200 SAVED`, a fixed blob, no state change) and, for each of the four released assessments
+`payments-2026-q2`, `payments-2025-q4`, `shop-2026-q3` and `organisation-2026-h1`, the draft, the save, the submit and the
+release: `409 DOCUMENT_RELEASED` with the tag `assessments/<id>/v1` (16 routes). Every write has `requires` `edit` on
+`samm-assessments`, except the frozen ones, which answer the same to everyone.
+
+[cols="1,3"]
+|===
+|State |What changes
+
+|`scope-created`
+|The list and `GET .../scopes/mobile` show the scope, `GET /api/v1/samm/mobile/trend` is empty, the save of the targets of
+`mobile` answers `200 SAVED`; the event `document-created` (`kind` `scope`) is pushed after 200 ms
+
+|`scope-invalid`
+|`POST /api/v1/samm/scopes` answers `422 VALIDATION`: `/title` `REQUIRED`, `/subject` `REFERENCE_NOT_FOUND`,
+`/targets/ta/target` `ENUM`, `/targets/rt/due` `PATTERN`
+
+|`targets-saved`
+|`GET .../scopes/payments` shows the saved targets and the new blob; the event `document-saved` (`part` `targets`, `fields`
+`/ta`, `/rt`, `/om`, `by` Alex Example) is pushed after 300 ms
+
+|`targets-invalid`
+|The save of `payments` answers `422 VALIDATION` with `part` `targets`: `/ta/target` `ENUM`, `/rt/due` `PATTERN`
+
+|`targets-conflict`, `targets-conflict-resolved`
+|The first save of `payments` answers `409 CONFLICT` (blob `c05e92a`, field `/ta`, both entries, by Jordan Weber) and moves
+on; the next one answers `200 SAVED` and moves to `targets-saved`
+
+|`shop-assessment-created`, `organisation-assessment-created`
+|The list and the scope read show the open draft (the list: `open` and `assessments` 2), the read of the document is empty
+(`answers`, `evidence`, `parts` empty, one `create` line in the history), the draft answers `DRAFT_SAVED`, the save `200
+SAVED` with `parts: {}`, a second create `409 ASSESSMENT_OPEN`; the event `document-created` (`kind` `assessment`) is
+pushed
+
+|`assessment-invalid`
+|The creates of `shop` and `organisation` answer `422`: `/date` `PATTERN`, `/modelVersion` `ENUM`, `/assessors/1`
+`PSEUDONYM_UNKNOWN`
+
+|`assessment-released-meanwhile`
+|The save, the draft, the submit and the release of `payments-2026-q4` answer `409 DOCUMENT_RELEASED` with the tag; the assessment, the scope, the
+list and the trend read as released (the third point); the event `document-transitioned` (Noor Haddad, version 1) is
+pushed after 300 ms
+
+|`evidence-invalid`
+|The save and the draft of `payments-2026-q4` answer `422` with `part` `sb`: `/evidence/sb/1/url` `PATTERN`,
+`/evidence/sb/0/title` `REQUIRED`, `/answers/sb/sb-b-1/comment` `MAX_LENGTH`
+
+|`model-versions-differ`
+|`GET /api/v1/samm/payments/compare` answers `422 MODEL_VERSIONS_DIFFER` with `2026-q2` on `v2.1.0` and `2026-q4` on
+`v2.2.0`
+
+|`models-none`
+|`GET /api/v1/samm/models` answers `{"models": []}`
+
+|`samm-git-unavailable`
+|The status is `degraded` with `samm-assessments` `DOWN`; the creates and every save of the targets (`payments`, `identity`, `shop`, `organisation`) answer `503
+GIT_UNAVAILABLE`; the draft and every read stay `200`
+|===
+
+*`empty`.* `GET /api/v1/samm/scopes` answers no scope, `GET /api/v1/samm/models` the one default model; the link `POST
+/api/v1/samm/scopes` of `ready` creates `mobile` (`scope-created`); there, the link `POST /api/v1/samm/mobile/assessments`
+creates `mobile-2026-q4` (`assessment-created`), whose second create answers `409 ASSESSMENT_OPEN`. The person list stays
+empty: the creator is always the first assessor.
+
+*The evidence and the comment.* Every assessment read has `evidence` after `answers`. The four files of *Payments 2026 Q4*
+carry two links of `sb` (the first with the question `sb-b-1`, the second for the practice as a whole), one of `ta`
+(`ta-b-2`) and, for `sb-b-1`, the AsciiDoc comment of the register (bold text and a bulleted list); *Payments 2026 Q2*
+carries the pipeline link of `sb`; every other assessment has `"evidence": {}`. Every `url` starts with `https://`, every
+`question` is `null` or a question of the practice.
+
+*The trend.* `points` are the released assessments of the model version, oldest first; `omitted` is 0 everywhere (every
+assessment of the data is `v2.2.0`). The scores are those of AUN-SAMM-5, computed from the answers by the generator, not
+rounded: the overall of a point is the overall of the scope read, the five functions average to it. `payments` has the
+points `2025-q4` and `2026-q2` (`released` adds `2026-q4`, 1.65), `shop` and `organisation` one each, `identity` and
+`mobile` none (`modelVersion: null`).
+
+*Limits.* The created scope and the created assessments are fixed: the request body is not read or echoed, so a flow that
+types another title still gets `mobile`. `v2.1.0` is listed but has no model file, and `model-versions-differ` answers by
+state while the data of both assessments still say `v2.2.0`. The creates of `payments` and `identity` are refused by
+their path (`ASSESSMENT_OPEN`), not because the data holds an open assessment; a scope other than the four and `mobile`
+has no route. The scope read of `mobile` is the same in `empty`, where its first save is by Alex Example, while the
+assessment names Sam Firstuser. After a create the state allows no second create of a scope.
 
 == Query-Keyed Routes
 

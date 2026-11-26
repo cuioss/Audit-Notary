@@ -105,6 +105,21 @@ that practice file; the form shows the differing questions with both values, and
 . Deferred: a comparison across SAMM model versions (mapping practices by id and marking changed questions).
 . Deferred: the pattern _private until submitted_ for single assessors, beside _save often_.
 
+Decided provisionally with the SAMM completion (UC-SAMM-1 to UC-SAMM-5), recorded with the bodies in
+xref:../specification/rest-api.adoc#_decided_samm[REST API Register, Open Questions]; the owner may change each one:
+
+. The scope and the assessment are created by requests of their own; the server assigns their address segment. The title
+  and the subject of a scope are fixed after the create, its targets are saved like a document (part `targets`, no
+  workflow, never frozen).
+. A target is 0 to 3 in steps of 0.5 with an optional due date; a practice without a target has no gap.
+. At most one assessment of a scope is open at a time; a new assessment starts empty, its creator is always an assessor,
+  and it may be started from a released one, which stays frozen.
+. Evidence is kept per practice with the answers (`evidence` in the read, one list per practice, at most 50 absolute
+  `https` links with a title); the comment of an answer is an AsciiDoc fragment of at most 8,000 characters.
+. The comparison of two assessments of different model versions is refused with `MODEL_VERSIONS_DIFFER` (`422`); the
+  trend of a scope reads the released assessments of one model version and counts the others as omitted.
+. The pinned model versions are listed by `GET /api/v1/samm/models`; pinning stays configuration.
+
 == Related
 
 * https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/storage-engine.adoc[Storage Engine] — drafts, saving, release, index
