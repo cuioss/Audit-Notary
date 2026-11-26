@@ -1,0 +1,67 @@
+{
+  "references": [
+    {
+      "ref": "samm-assessments:assessment/payments-2026-q4",
+      "found": true,
+      "title": "Payments 2026 Q4",
+      "address": "/samm/payments/2026-q4",
+      "retired": false
+    },
+    {
+      "ref": "samm-assessments:assessment/payments-2026-q4#sm",
+      "found": true,
+      "title": "Payments 2026 Q4",
+      "address": "/samm/payments/2026-q4/sm",
+      "retired": false
+    },
+    {
+      "ref": "isms-register:risk/R-042",
+      "found": true,
+      "title": "Unpatched build agents",
+      "address": "/isms/risks/r-042",
+      "retired": false
+    },
+    {
+      "ref": "test-notes:note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G",
+      "found": true,
+      "title": "Key rotation, decision of 24 November",
+      "address": null,
+      "retired": false
+    },
+    {
+      "ref": "isms-register:risk/R-999",
+      "found": false,
+      "title": null,
+      "address": null,
+      "retired": false
+    },
+    {
+      "ref": "service:payment-api",
+      "found": true,
+      "title": "Payment API",
+      "address": "/catalogs/service/payment-api",
+      "retired": false
+    },
+    {
+      "ref": "service:ledger",
+      "found": true,
+      "title": "Ledger",
+      "address": "/catalogs/service/ledger",
+      "retired": true
+    },
+    {
+      "ref": "team:payments",
+      "found": true,
+      "title": "Payments",
+      "address": "/catalogs/team/payments",
+      "retired": false
+    },
+    {
+      "ref": "service:unknown-service",
+      "found": false,
+      "title": null,
+      "address": null,
+      "retired": false
+    }
+  ]
+}

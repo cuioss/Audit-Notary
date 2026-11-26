@@ -21,8 +21,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -635,6 +637,332 @@ class ProfilesTest {
                         () -> assertEquals(401, session.statusCode()),
                         () -> assertEquals("UNAUTHENTICATED", json(session).path("outcome").asText()),
                         () -> assertEquals("/api/v1/auth/login", json(session).path("login").asText()));
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("the form kit routes of workshop and read-only")
+    class FormKit {
+
+        private static final String RENDER = "/api/v1/render/asciidoc";
+
+        @ParameterizedTest
+        @ValueSource(strings = {"workshop", "read-only"})
+        @DisplayName("serve the three fixture schemas with the x- markers of the vocabulary")
+        void shouldServeTheSchemas(String profile) {
+            try (var client = MockClient.start(profile).login()) {
+                var note = json(client.get("/api/v1/categories/test-note/schema"));
+                var sections = json(client.get("/api/v1/categories/form-sections/schema"));
+                var validation = json(client.get("/api/v1/categories/form-validation/schema"));
+                var noteSchema = note.path("kinds").get(0).path("schema");
+                var properties = noteSchema.path("properties");
+                assertAll(
+                        () -> assertEquals("test-note", note.path("category").asText()),
+                        () -> assertEquals("note", note.path("kinds").get(0).path("id").asText()),
+                        () -> assertEquals("test-notes", note.path("kinds").get(0).path("repository").asText()),
+                        () -> assertEquals("https://json-schema.org/draft/2020-12/schema",
+                                noteSchema.path("$schema").asText()),
+                        () -> assertEquals("service", properties.path("service").path("x-catalog").asText()),
+                        () -> assertEquals("gdr-link", properties.path("service").path("format").asText()),
+                        () -> assertEquals("gdr-link", properties.path("related").path("format").asText()),
+                        () -> assertTrue(properties.path("owner").path("x-person").asBoolean()),
+                        () -> assertTrue(properties.path("body").path("x-asciidoc").asBoolean()),
+                        () -> assertTrue(properties.path("summary").path("x-free-text").asBoolean()),
+                        () -> assertEquals("sections", sections.path("kinds").get(0).path("id").asText()),
+                        () -> assertEquals("form-sections", sections.path("category").asText()),
+                        () -> assertEquals("validation", validation.path("kinds").get(0).path("id").asText()),
+                        () -> assertEquals("test-notes", validation.path("kinds").get(0).path("repository").asText()),
+                        () -> assertEquals("https://json-schema.org/draft/2020-12/schema",
+                                validation.path("kinds").get(0).path("schema").path("$schema").asText()));
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"workshop", "read-only"})
+        @DisplayName("refuse an unknown category with 404 NOT_FOUND")
+        void shouldRefuseAnUnknownCategory(String profile) {
+            try (var client = MockClient.start(profile).login()) {
+                var response = client.get("/api/v1/categories/unknown-category/schema");
+                assertAll(
+                        () -> assertEquals(404, response.statusCode()),
+                        () -> assertEquals("NOT_FOUND", json(response).path("outcome").asText()));
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"workshop", "read-only"})
+        @DisplayName("hold a retired entry in the service catalog and none in the team catalog")
+        void shouldServeTheServiceCatalog(String profile) {
+            try (var client = MockClient.start(profile).login()) {
+                var service = json(client.get("/api/v1/catalogs/service")).path("entries");
+                var team = json(client.get("/api/v1/catalogs/team")).path("entries");
+                List<String> retired = new ArrayList<>();
+                service.forEach(entry -> {
+                    if (entry.path("retired").asBoolean()) {
+                        retired.add(entry.path("id").asText());
+                    }
+                });
+                assertAll(
+                        () -> assertEquals(5, service.size()),
+                        () -> assertEquals(List.of("ledger"), retired),
+                        () -> team.forEach(entry -> assertFalse(entry.has("retired"))));
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"workshop", "read-only"})
+        @DisplayName("list five persons with one unbound entry, not truncated")
+        void shouldListThePersons(String profile) {
+            try (var client = MockClient.start(profile).login()) {
+                var persons = json(client.get("/api/v1/directory/persons"));
+                List<String> unbound = new ArrayList<>();
+                persons.path("persons").forEach(person -> {
+                    if ("unbound".equals(person.path("state").asText())) {
+                        unbound.add(person.path("pseudonym").asText());
+                    }
+                });
+                assertAll(
+                        () -> assertEquals(5, persons.path("persons").size()),
+                        () -> assertEquals(List.of("p-7d52e8"), unbound),
+                        () -> assertFalse(persons.path("truncated").asBoolean()));
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"workshop", "read-only"})
+        @DisplayName("answer a person as bound, unbound and former, and an unknown pseudonym as NOT_FOUND")
+        void shouldServeAPerson(String profile) {
+            try (var client = MockClient.start(profile).login()) {
+                var bound = json(client.get("/api/v1/directory/persons/p-4c1a9e"));
+                var unbound = json(client.get("/api/v1/directory/persons/p-7d52e8"));
+                var former = json(client.get("/api/v1/directory/persons/p-0f8a42"));
+                var unknown = client.get("/api/v1/directory/persons/p-3b9d00");
+                assertAll(
+                        () -> assertEquals("bound", bound.path("state").asText()),
+                        () -> assertTrue(bound.path("erasedOn").isNull()),
+                        () -> assertEquals("unbound", unbound.path("state").asText()),
+                        () -> assertEquals("former", former.path("state").asText()),
+                        () -> assertTrue(former.path("name").isNull()),
+                        () -> assertEquals("team:payments", former.path("memberships").get(0).path("team").asText()),
+                        () -> assertEquals("2026-09-30", former.path("erasedOn").asText()),
+                        () -> assertEquals(404, unknown.statusCode()),
+                        () -> assertEquals("NOT_FOUND", json(unknown).path("outcome").asText()));
+                for (String pseudonym : List.of("p-2b7f10", "p-61c0d4", "p-9e33a1")) {
+                    assertEquals(pseudonym, json(client.get("/api/v1/directory/persons/" + pseudonym))
+                            .path("pseudonym").asText());
+                }
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"workshop", "read-only"})
+        @DisplayName("resolve references: found, retired, without address and not found, whatever the query")
+        void shouldResolveReferences(String profile) {
+            try (var client = MockClient.start(profile).login()) {
+                var answer = json(client.get("/api/v1/references/resolve?ref=a:b/c&ref=x:y/z")).path("references");
+                Map<String, JsonNode> byRef = new HashMap<>();
+                answer.forEach(entry -> byRef.put(entry.path("ref").asText(), entry));
+                assertAll(
+                        () -> assertTrue(byRef.get("samm-assessments:assessment/payments-2026-q4").path("found")
+                                .asBoolean()),
+                        () -> assertEquals("/samm/payments/2026-q4/sm",
+                                byRef.get("samm-assessments:assessment/payments-2026-q4#sm").path("address").asText()),
+                        () -> assertTrue(byRef.get("service:ledger").path("retired").asBoolean()),
+                        () -> assertTrue(byRef.get("test-notes:note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G").path("found")
+                                .asBoolean()),
+                        () -> assertTrue(byRef.get("test-notes:note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G").path("address")
+                                .isNull()),
+                        () -> assertFalse(byRef.get("isms-register:risk/R-999").path("found").asBoolean()),
+                        () -> assertFalse(byRef.get("service:unknown-service").path("found").asBoolean()));
+            }
+        }
+
+        @Test
+        @DisplayName("workshop grants read and edit on test-notes, read-only grants read; the status lists it")
+        void shouldGrantTestNotes() {
+            for (var entry : Map.of("workshop", List.of("read", "edit"), "read-only", List.of("read")).entrySet()) {
+                try (var client = MockClient.start(entry.getKey()).login()) {
+                    List<String> actions = new ArrayList<>();
+                    json(client.get("/api/v1/session")).path("rights").forEach(right -> {
+                        if ("test-notes".equals(right.path("repository").asText())) {
+                            right.path("actions").forEach(action -> actions.add(action.asText()));
+                        }
+                    });
+                    List<String> aliases = new ArrayList<>();
+                    json(client.get("/api/v1/status")).path("repositories")
+                            .forEach(repository -> aliases.add(repository.path("alias").asText() + ":"
+                                    + repository.path("fetch").asText()));
+                    assertAll(entry.getKey(),
+                            () -> assertEquals(entry.getValue(), actions),
+                            () -> assertTrue(aliases.contains("test-notes:UP")));
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("stay out of the other profiles: degraded, empty and release answer no route")
+        void shouldNotExtendTheOtherProfiles() {
+            for (String profile : List.of("degraded", "empty", "release")) {
+                try (var client = MockClient.start(profile).login()) {
+                    assertAll(profile,
+                            () -> assertEquals("MOCK_NO_ROUTE", json(client.get("/api/v1/categories/test-note/schema"))
+                                    .path("outcome").asText()),
+                            () -> assertEquals("MOCK_NO_ROUTE", json(client.get("/api/v1/directory/persons"))
+                                    .path("outcome").asText()));
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("no-rights refuses every form kit request with FORBIDDEN")
+        void shouldRefuseWithoutRights() {
+            try (var client = MockClient.start("no-rights").login()) {
+                for (String path : List.of("/api/v1/categories/test-note/schema", "/api/v1/catalogs/service",
+                        "/api/v1/directory/persons", "/api/v1/directory/persons/p-4c1a9e",
+                        "/api/v1/references/resolve")) {
+                    assertEquals(403, client.get(path).statusCode(), path);
+                }
+                var render = client.change("POST", RENDER, "{\"source\":\"x\"}");
+                assertAll(
+                        () -> assertEquals(403, render.statusCode()),
+                        () -> assertEquals("FORBIDDEN", json(render).path("outcome").asText()));
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"workshop", "read-only"})
+        @DisplayName("render the example source: heading, strong and code")
+        void shouldRenderTheExample(String profile) {
+            try (var client = MockClient.start(profile).login()) {
+                var response = client.change("POST", RENDER,
+                        "{\"source\":\"== Decision\\n\\nWe *agree* to rotate the keys, see `ops/keys`.\"}");
+                assertAll(
+                        () -> assertEquals(200, response.statusCode()),
+                        () -> assertEquals("<h2>Decision</h2><div><p>We <strong>agree</strong> to rotate the keys, "
+                                + "see <code>ops/keys</code>.</p></div>", json(response).path("html").asText()));
+            }
+        }
+
+        @Test
+        @DisplayName("render an empty source as an empty html")
+        void shouldRenderAnEmptySource() {
+            try (var client = MockClient.start("workshop").login()) {
+                var response = client.change("POST", RENDER, "{\"source\":\"\"}");
+                assertAll(
+                        () -> assertEquals(200, response.statusCode()),
+                        () -> assertEquals("", json(response).path("html").asText()));
+            }
+        }
+
+        @Test
+        @DisplayName("escape the source: a script comes out as text")
+        void shouldEscapeTheSource() {
+            try (var client = MockClient.start("workshop").login()) {
+                var response = client.change("POST", RENDER, "{\"source\":\"<script>alert('x')</script>\"}");
+                assertEquals("<div><p>&lt;script&gt;alert(&#39;x&#39;)&lt;/script&gt;</p></div>",
+                        json(response).path("html").asText());
+            }
+        }
+
+        @Test
+        @DisplayName("refuse a missing source with 422 REQUIRED and a source that is no string with 422 TYPE")
+        void shouldRefuseABadBody() {
+            try (var client = MockClient.start("workshop").login()) {
+                var missing = client.change("POST", RENDER, "{}");
+                var noBody = client.change("POST", RENDER, null);
+                var array = client.change("POST", RENDER, "[\"x\"]");
+                var number = client.change("POST", RENDER, "{\"source\":5}");
+                assertAll(
+                        () -> assertEquals(422, missing.statusCode()),
+                        () -> assertEquals("VALIDATION", json(missing).path("outcome").asText()),
+                        () -> assertEquals("/source", json(missing).path("errors").get(0).path("pointer").asText()),
+                        () -> assertEquals("REQUIRED", json(missing).path("errors").get(0).path("code").asText()),
+                        () -> assertEquals(422, noBody.statusCode()),
+                        () -> assertEquals("REQUIRED", json(noBody).path("errors").get(0).path("code").asText()),
+                        () -> assertEquals("REQUIRED", json(array).path("errors").get(0).path("code").asText()),
+                        () -> assertEquals(422, number.statusCode()),
+                        () -> assertEquals("TYPE", json(number).path("errors").get(0).path("code").asText()),
+                        () -> assertEquals("/source", json(number).path("errors").get(0).path("pointer").asText()));
+            }
+        }
+
+        @Test
+        @DisplayName("render 65,536 bytes of UTF-8 and refuse 65,537 with 413 TOO_LARGE and the limit")
+        void shouldLimitTheSource() {
+            try (var client = MockClient.start("workshop").login()) {
+                var atLimit = client.change("POST", RENDER, "{\"source\":\"" + "a".repeat(65_536) + "\"}");
+                var over = client.change("POST", RENDER, "{\"source\":\"" + "a".repeat(65_537) + "\"}");
+                // 32,769 characters of two bytes each: 65,538 bytes although fewer than 65,536 characters
+                var multibyte = client.change("POST", RENDER, "{\"source\":\"" + "ä".repeat(32_769) + "\"}");
+                assertAll(
+                        () -> assertEquals(200, atLimit.statusCode()),
+                        () -> assertEquals(413, over.statusCode()),
+                        () -> assertEquals("TOO_LARGE", json(over).path("outcome").asText()),
+                        () -> assertEquals(65_536, json(over).path("limit").asInt()),
+                        () -> assertEquals(413, multibyte.statusCode()));
+            }
+        }
+
+        @Test
+        @DisplayName("require the anti-CSRF header like every other POST")
+        void shouldRequireTheCsrfHeader() {
+            try (var client = MockClient.start("workshop").login()) {
+                var response = client.send("POST", RENDER, "{\"source\":\"x\"}", Map.of());
+                assertAll(
+                        () -> assertEquals(403, response.statusCode()),
+                        () -> assertEquals("CSRF_REJECTED", json(response).path("outcome").asText()));
+            }
+        }
+
+        @Test
+        @DisplayName("preview-hostile answers the hostile html whatever the source")
+        void shouldAnswerHostile() {
+            try (var client = MockClient.start("workshop#preview-hostile").login()) {
+                var response = client.change("POST", RENDER, "{\"source\":\"plain\"}");
+                var html = json(response).path("html").asText();
+                assertAll(
+                        () -> assertEquals(200, response.statusCode()),
+                        () -> assertTrue(html.contains("<script>")),
+                        () -> assertTrue(html.contains("onclick")),
+                        () -> assertTrue(html.contains("javascript:")),
+                        () -> assertTrue(html.contains("<iframe")));
+            }
+        }
+
+        @Test
+        @DisplayName("preview-unavailable answers 503 RENDER_UNAVAILABLE")
+        void shouldAnswerUnavailable() {
+            try (var client = MockClient.start("workshop").login()) {
+                client.send("POST", "/mock/goto/preview-unavailable", null, Map.of());
+                var response = client.change("POST", RENDER, "{\"source\":\"plain\"}");
+                assertAll(
+                        () -> assertEquals(503, response.statusCode()),
+                        () -> assertEquals("RENDER_UNAVAILABLE", json(response).path("outcome").asText()));
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"workshop", "read-only"})
+        @DisplayName("both preview states exist and the start state stays ready")
+        void shouldKnowThePreviewStates(String profile) {
+            var scenario = REGISTRY.resolve(profile).orElseThrow().scenario();
+            assertAll(
+                    () -> assertEquals("ready", scenario.start()),
+                    () -> assertTrue(scenario.states().containsKey("preview-hostile")),
+                    () -> assertTrue(scenario.states().containsKey("preview-unavailable")),
+                    () -> assertFalse(scenario.state("preview-hostile").orElseThrow().description().isBlank()));
+        }
+
+        @Test
+        @DisplayName("lists a render in the acts like any request, without being a save")
+        void shouldRecordTheRenderAsAnAct() {
+            try (var client = MockClient.start("workshop").login()) {
+                client.change("POST", RENDER, "{\"source\":\"x\"}");
+                var acts = json(client.get("/mock/acts"));
+                assertAll(
+                        () -> assertEquals(1, acts.size()),
+                        () -> assertEquals(RENDER, acts.get(0).path("path").asText()));
             }
         }
     }

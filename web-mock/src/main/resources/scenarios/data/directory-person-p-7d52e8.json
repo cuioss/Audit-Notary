@@ -1,0 +1,12 @@
+{
+  "pseudonym": "p-7d52e8",
+  "name": "Mira Haas",
+  "state": "unbound",
+  "memberships": [
+    {
+      "team": "team:mobile",
+      "role": "role:developer"
+    }
+  ],
+  "erasedOn": null
+}

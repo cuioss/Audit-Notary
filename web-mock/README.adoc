@@ -60,7 +60,8 @@ Without the scripts: `java -cp … de.cuioss.notary.audit.mock.cli.WebMockCli --
 |Profile |States |Represents
 
 |`workshop` (default)
-|`ready`, `saved-by-other`, `conflict`, `forbidden`, `session-replaced`, `session-ended`
+|`ready`, `saved-by-other`, `conflict`, `forbidden`, `session-replaced`, `session-ended`, `preview-hostile`,
+`preview-unavailable`
 |An assessor in a populated installation: Due list with every kind, catalogs, and the SAMM lens — four scopes, the
 open workshop *Payments 2026 Q4* (draft, eleven practices answered) and released assessments to compare with; a draft
 and a save for everyone succeed. `saved-by-other` pushes a `document-saved` event and serves the assessment with
@@ -68,7 +69,9 @@ another assessor's two answers in *Strategy and Metrics*; `conflict` answers a s
 `forbidden` refuses the Due list; `session-replaced` closes the open event streams and gives every session a new
 anti-CSRF token (another login in the same browser replaced the session); `session-ended` closes the streams and drops
 every session, so the next request answers `UNAUTHENTICATED` (a back-channel logout; an addition to the profile list of
-the plan, because UC-ACC-6 needs it)
+the plan, because UC-ACC-6 needs it); `preview-hostile` makes the renderer answer HTML that the web app's allow-list must cut down;
+`preview-unavailable` makes it answer `503 RENDER_UNAVAILABLE`. The profile also answers the requests of the form kit
+(_Fixture Categories_) for the repository `test-notes` (right `read` and `edit`)
 
 |`first-login`
 |`form`, `invalid-team`, `registered`
@@ -77,8 +80,9 @@ the plan, because UC-ACC-6 needs it)
 (`invalid-team`)
 
 |`read-only`
-|`ready`
-|The right `read` only, with the SAMM data of `workshop`; an edit answers `FORBIDDEN`
+|`ready`, `preview-hostile`, `preview-unavailable`
+|The right `read` only (also on `test-notes`), with the SAMM data and the form kit requests of `workshop` (the two
+preview states included); an edit answers `FORBIDDEN`
 
 |`degraded`
 |`unreachable`, `recovered`
@@ -239,6 +243,8 @@ No login; the Vite dev server forwards `/mock` for loopback clients only.
   `src/main/resources/scenarios/data/` (`"body_file": "samm-scopes.json"`). Large or shared answers live there once
   instead of inline in every profile. The file name matches `[a-z0-9][a-z0-9.-]*.json`; a name that resolves to no
   file, a file that is no JSON, or `body` and `body_file` together fail the load.
+* A route (not a link) may instead name a built-in engine answer, `"handler": "render-asciidoc"`; it then carries no
+  `body`, `body_file` or `status`, and an unknown handler name fails the load (see _Fixture Categories_).
 
 === Data Files
 
@@ -260,6 +266,11 @@ under CC BY-SA 4.0, not under the licence of this repository: see `samm-model-v2
 
 |`samm-compare-payments*.json`, `samm-diff-payments-2026-q4.json`
 |The comparison with *Payments 2026 Q2* and the diff of the release
+
+|`categories-*-schema.json`, `catalogs-service.json`, `directory-person*.json`, `references-resolve.json`,
+`render-asciidoc-hostile.json`
+|The form kit fixtures (_Fixture Categories_), generated once and consistent with each other (the persons, catalogs and references
+of the schemas and the samples of the unit tests)
 |===
 
 The answers are generated once from the model and are consistent with each other: the comparison holds the scores the
@@ -267,6 +278,65 @@ answers give (`web-app` checks this in `scores.test.ts`).
 * Checked on load: format version `1`; the login provider `oidc` or `local`, users with `local` only; name, user name and start present; every `next` names a state; methods `GET`,
   `POST`, `PUT`, `DELETE`; paths below `/api/v1/` without query; status 100 to 599; actions `read`, `edit`,
   `approve`, `administer-catalogs`; no negative delay. A violation names file, location and rule.
+
+== Fixture Categories
+
+The form kit (`doc/specification/web-app.adoc`, AUN-WEB-4) needs schemas, catalogs, persons and references that the
+delivered categories do not cover. `workshop` and `read-only` answer them for the repository alias `test-notes` (the
+rights `read`, `edit` in `workshop`, `read` in `read-only`; the status lists it as `UP`). Everything is PROVISIONAL, as
+the requests are in `doc/specification/rest-api.adoc`, _Form Kit Requests_.
+
+[cols="1,3"]
+|===
+|Route |Answer (data file below `scenarios/data/`)
+
+|`GET /api/v1/categories/<category>/schema`
+|`test-note` (kind `note`, a realistic note with every field kind), `form-sections` (kind `sections`: sections, lists
+as one-column tables, a `$ref`, plain data) and `form-validation` (kind `validation`: every constraint once):
+`categories-<category>-schema.json`. `unknown-category` answers `404 NOT_FOUND`; any other category `404 MOCK_NO_ROUTE`
+
+|`GET /api/v1/catalogs/service`
+|`catalogs-service.json`: five entries, `ledger` is `"retired": true` (`team` and `role` have no `retired` member)
+
+|`GET /api/v1/directory/persons`
+|`directory-persons.json`: five persons, `p-7d52e8` is `unbound`, `truncated: false`; the mock ignores `?q=`, the client
+filters
+
+|`GET /api/v1/directory/persons/<pseudonym>`
+|`directory-person-<pseudonym>.json`: `p-4c1a9e`, `p-2b7f10`, `p-61c0d4`, `p-9e33a1` bound, `p-7d52e8` unbound,
+`p-0f8a42` former (`name: null`, `erasedOn` set); `p-3b9d00` answers `404 NOT_FOUND`
+
+|`GET /api/v1/references/resolve`
+|`references-resolve.json` whatever the `ref` query: found with an address, found without an address
+(`test-notes:note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G`), found and retired (`service:ledger`), not found
+(`isms-register:risk/R-999`, `service:unknown-service`); the client picks its entries by `ref`
+
+|`POST /api/v1/render/asciidoc`
+|The built-in handler `render-asciidoc`, below
+|===
+
+*The labels of the fixture categories* are the keys `category.<category>.<kind>.field.<path>` (with `.help` and
+`.option.<value>`) of the class path resources `scenarios/messages/messages_en.properties` and
+`messages_de.properties`. `GET /api/v1/messages` merges them on top of the catalogue of the web app (UTF-8); a key that
+also exists there stops the start with a message naming the key and the file. The web unit tests read the same files.
+
+*The handler `render-asciidoc`* is named by a route (`"handler": "render-asciidoc"`; a route has either a handler or a
+`body`/`body_file`/`status`, and the loader accepts only known names). It is a mock, not Asciidoctor, and answers in
+this order:
+
+. `422 VALIDATION` with the pointer `/source` and the code `REQUIRED` when the body is no JSON object with a `source`,
+or `TYPE` when `source` is no string;
+. `413 {"outcome": "TOO_LARGE", "limit": 65536}` when `source` is longer than 65,536 bytes of UTF-8;
+. otherwise `200 {"html": …}`: the whole source is HTML-escaped first; blocks are separated by blank lines; a block of
+star lines (`* `) is a `<ul>` with one `<li>` per line, a block of one line starting with `== ` to `====== ` is
+`<h2>` to `<h6>`, every other block is `<div><p>` with its lines joined by `<br>`; inside a block `*x*`, `_x_` and
+`` `x` `` become `<strong>`, `<em>` and `<code>` (non-greedy, not nested). An empty source gives an empty `html`.
+
+The anti-CSRF header is required as for every POST. A render is listed in `GET /mock/acts` like any state-changing
+request, with its source (the mock logs no body); it is no save, so tests that assert the acts of an edit filter by
+path. The states `preview-hostile` (`render-asciidoc-hostile.json`: script, handlers, `javascript:` and `data:` links,
+`style`, `iframe`, `form`, `svg`, an `img`, a table) and `preview-unavailable` (`503 {"outcome": "RENDER_UNAVAILABLE"}`)
+replace the handler. A source over the limit needs no state: it answers `413` by itself.
 
 == Use by the Web App and the End-to-End Suite
 

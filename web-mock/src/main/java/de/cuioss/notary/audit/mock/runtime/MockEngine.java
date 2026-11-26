@@ -53,7 +53,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * requests (status, messages, login, callback); the session check; the anti-CSRF and {@code Origin} check of
  * state-changing requests; the first-login restriction; the refusal of a session without a right outside the shell;
  * the built-in session, logout and event stream; the links of the current state; the routes of the state, then of
- * the scenario; otherwise {@code 404 MOCK_NO_ROUTE}.
+ * the scenario (a route may name a built-in handler instead of a body, {@link Route#HANDLERS}); otherwise
+ * {@code 404 MOCK_NO_ROUTE}.
  */
 public final class MockEngine implements AutoCloseable {
 
@@ -270,8 +271,37 @@ public final class MockEngine implements AutoCloseable {
             }
             return answer(taken.status(), taken.body());
         }
-        return scenario.route(state, key).map(route -> answer(route.status(), route.body()))
+        return scenario.route(state, key).map(route -> route.handler() == null
+                ? answer(route.status(), route.body()) : handled(route.handler(), request))
                 .orElseGet(() -> noRoute(request));
+    }
+
+    /** The answer a built-in handler computes; the loader admits only the names of {@link Route#HANDLERS}. */
+    private MockResponse handled(String handler, MockRequest request) {
+        if (Route.RENDER_ASCIIDOC.equals(handler)) {
+            return renderAsciiDoc(request);
+        }
+        throw new IllegalStateException("No handler named " + handler);
+    }
+
+    /**
+     * {@code POST /api/v1/render/asciidoc}: the deterministic preview of {@link AsciiDocPreview}. The source is not
+     * logged; the refusals are those of doc/specification/rest-api.adoc, <em>Form Kit Requests</em>.
+     */
+    private MockResponse renderAsciiDoc(MockRequest request) {
+        var body = parseBody(request);
+        var source = body.path("source");
+        if (!body.isObject() || source.isMissingNode()) {
+            return invalid("/source", "REQUIRED");
+        }
+        if (!source.isTextual()) {
+            return invalid("/source", "TYPE");
+        }
+        String text = source.asText();
+        if (text.getBytes(StandardCharsets.UTF_8).length > AsciiDocPreview.LIMIT_BYTES) {
+            return json(413, object().put(OUTCOME, "TOO_LARGE").put("limit", AsciiDocPreview.LIMIT_BYTES));
+        }
+        return json(200, object().put("html", AsciiDocPreview.render(text)));
     }
 
     private ObjectNode sessionBody(MockSession session) {
@@ -647,9 +677,18 @@ public final class MockEngine implements AutoCloseable {
     }
 
     private MockResponse validation(String pointer, String code) {
+        return refusal(400, pointer, code);
+    }
+
+    /** A refusal of a form kit request: {@code 422 VALIDATION}. */
+    private MockResponse invalid(String pointer, String code) {
+        return refusal(422, pointer, code);
+    }
+
+    private MockResponse refusal(int status, String pointer, String code) {
         ObjectNode body = object().put(OUTCOME, "VALIDATION");
         body.putArray("errors").addObject().put("pointer", pointer).put("code", code);
-        return json(400, body);
+        return json(status, body);
     }
 
     private MockResponse json(int status, JsonNode body) {

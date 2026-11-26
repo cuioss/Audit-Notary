@@ -152,6 +152,64 @@ class ScenarioLoaderTest {
                 () -> assertEquals("v2.2.0", link.body().path("version").asText()));
     }
 
+    @Test
+    @DisplayName("reads a route that names a built-in handler")
+    void shouldReadAHandlerRoute() {
+        // Arrange
+        var root = valid();
+        ((ObjectNode) root.path("routes")).set("POST /api/v1/render/asciidoc",
+                MAPPER.createObjectNode().put("handler", "render-asciidoc"));
+        // Act
+        var route = loader.read("sample.json", root).routes().get("POST /api/v1/render/asciidoc");
+        // Assert
+        assertAll(
+                () -> assertEquals("render-asciidoc", route.handler()),
+                () -> assertNull(loader.read("sample.json", valid()).routes().get("GET /api/v1/status").handler()));
+    }
+
+    @Nested
+    @DisplayName("refuses a handler")
+    class HandlerRefusals {
+
+        private String rejectionWith(Consumer<ObjectNode> route) {
+            return rejectionOf(root -> {
+                var node = MAPPER.createObjectNode().put("handler", "render-asciidoc");
+                route.accept(node);
+                ((ObjectNode) root.path("routes")).set("POST /api/v1/render/asciidoc", node);
+            });
+        }
+
+        @Test
+        @DisplayName("that no engine implements")
+        void shouldRefuseAnUnknownHandler() {
+            var message = rejectionWith(node -> node.put("handler", "render-markdown"));
+            assertAll(
+                    () -> assertTrue(message.contains("POST /api/v1/render/asciidoc.handler"), message),
+                    () -> assertTrue(message.contains("render-markdown"), message),
+                    () -> assertTrue(message.contains("render-asciidoc"), message));
+        }
+
+        @Test
+        @DisplayName("that is no string")
+        void shouldRefuseANonTextHandler() {
+            assertTrue(rejectionWith(node -> node.put("handler", 5)).contains("handler"));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"body", "body_file", "status"})
+        @DisplayName("next to a body, a data file or a status")
+        void shouldRefuseAHandlerWithAnswerMembers(String member) {
+            var message = rejectionWith(node -> {
+                if ("status".equals(member)) {
+                    node.put(member, 200);
+                } else {
+                    node.put(member, "model.json");
+                }
+            });
+            assertTrue(message.contains("has no " + member), message);
+        }
+    }
+
     @Nested
     @DisplayName("refuses a body_file")
     class BodyFileRefusals {

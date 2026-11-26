@@ -1,0 +1,183 @@
+{
+  "category": "form-sections",
+  "kinds": [
+    {
+      "id": "sections",
+      "repository": "test-notes",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "$defs": {
+          "contact": {
+            "type": "object",
+            "properties": {
+              "person": {
+                "type": "string",
+                "x-person": true
+              },
+              "channel": {
+                "type": "string",
+                "enum": [
+                  "mail",
+                  "chat",
+                  "phone"
+                ]
+              }
+            }
+          }
+        },
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "origin": {
+            "type": "string",
+            "readOnly": true
+          },
+          "scope": {
+            "type": "object",
+            "properties": {
+              "teams": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "format": "gdr-link",
+                  "x-catalog": "team"
+                }
+              },
+              "services": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "gdr-link",
+                  "x-catalog": "service"
+                }
+              },
+              "reviewers": {
+                "type": "array",
+                "maxItems": 5,
+                "items": {
+                  "type": "string",
+                  "x-person": true
+                }
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 30
+                }
+              },
+              "levels": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high"
+                  ]
+                }
+              },
+              "references": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "gdr-link"
+                }
+              }
+            }
+          },
+          "metrics": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000
+              },
+              "ratio": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "window": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "until": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          },
+          "primary": {
+            "$ref": "#/$defs/contact"
+          },
+          "notes": {
+            "type": "string",
+            "x-asciidoc": true,
+            "x-free-text": true
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "maxLength": 40
+                },
+                "weight": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5
+                },
+                "attachments": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "variant": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "matrix": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
