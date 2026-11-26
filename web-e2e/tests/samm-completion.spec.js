@@ -616,6 +616,34 @@ test.describe('the targets of a scope', () => {
     await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'read-only');
   });
 
+  test('fit beside the list column on a tablet: nothing scrolls sideways and the trend keeps its labels inside', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await page.setViewportSize({ width: 1024, height: 800 });
+    await loginToSamm(page, SCOPE);
+    await expect(page.getByTestId('targets-sm-target')).toBeVisible();
+    await expect(page.getByRole('img', { name: /Overall score of the released/ })).toBeVisible();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+    // The assessments of the scope: the score of a row ends inside the sheet.
+    const sheet = await page.getByTestId('scope-sheet').boundingBox();
+    for (const score of await page.locator('.entry__score').all()) {
+      const box = await score.boundingBox();
+      if (box) expect(box.x + box.width).toBeLessThanOrEqual(sheet.x + sheet.width);
+    }
+    // The first and the last axis label stay inside the figure.
+    const chart = await page.locator('.trend__chart').boundingBox();
+    for (const label of await page.locator('.trend__axis').all()) {
+      const box = await label.boundingBox();
+      expect(box.x).toBeGreaterThanOrEqual(chart.x - 1);
+      expect(box.x + box.width).toBeLessThanOrEqual(chart.x + chart.width + 1);
+    }
+  });
+
   test('read in German with the comma and the labels of the language', async ({
     page,
     request,
@@ -1342,6 +1370,10 @@ test.describe('the trend of a scope', () => {
     await useScenario(request, 'workshop#scope-created');
     const created = await (await page.request.get(trendPath('mobile'))).json();
     expect(created.points).toEqual([]);
+    await loginToSamm(page, '/samm/mobile');
+    await expect(page.getByTestId('assessments-none')).toHaveText(
+      'No assessment has been started for this scope yet.',
+    );
   });
 
   test('is read by a person who may only read, and in the degraded installation', async ({

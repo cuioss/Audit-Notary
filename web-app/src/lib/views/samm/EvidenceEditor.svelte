@@ -300,6 +300,16 @@
     gap: var(--space-4);
   }
 
+  /* Phone: an address in a row is a target of 44 px, however many lines it takes. */
+  @media (max-width: 599px) {
+    .evidence :global(a.link) {
+      display: inline-flex;
+      align-items: center;
+      min-block-size: 44px;
+      overflow-wrap: anywhere;
+    }
+  }
+
   .acts {
     display: flex;
     flex-wrap: wrap;

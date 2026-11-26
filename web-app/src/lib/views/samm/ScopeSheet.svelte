@@ -237,12 +237,6 @@
       testId="scope"
     />
 
-    {#if controller.failure}
-      <div class="notice" data-testid="targets-failure">
-        <Notice tone="danger" title={$t(controller.failure)} live />
-      </div>
-    {/if}
-
     {#if released.length > 1}
       <section class="section">
         <h2 class="section__title">{$t('samm.scope.trend')}</h2>
@@ -268,6 +262,11 @@
 
     <section class="section">
       <h2 class="section__title">{$t('samm.scope.assessments')}</h2>
+      {#if scope.assessments.length === 0}
+        <p class="section__lede" data-testid="assessments-none">
+          {$t('samm.scope.assessments-none')}
+        </p>
+      {/if}
       <ol class="entries">
         {#each scope.assessments as entry (entry.id)}
           <li class="entry">
@@ -289,6 +288,13 @@
         {/each}
       </ol>
     </section>
+
+    <!-- The refusal stands at the targets it is about, not above the trend: the rows it marks are below. -->
+    {#if controller.failure}
+      <div class="notice" data-testid="targets-failure">
+        <Notice tone="danger" title={$t(controller.failure)} live />
+      </div>
+    {/if}
 
     {#if model}
       <section class="section" aria-labelledby="targets-title">
@@ -416,7 +422,7 @@
   }
 
   .notice {
-    margin-block-end: var(--space-4);
+    margin-block: var(--space-8) var(--space-4);
   }
 
   .section__lede {
@@ -427,6 +433,7 @@
 
   .entries {
     list-style: none;
+    container-type: inline-size;
   }
 
   .entry {
@@ -517,9 +524,10 @@
     color: var(--color-text-muted);
   }
 
-  @media (max-width: 767px) {
+  /* The sheet's own width decides, not the screen's: beside the list column the sheet is narrow on a tablet. */
+  @container (max-width: 40rem) {
     .entry {
-      grid-template-columns: 1fr auto;
+      grid-template-columns: minmax(0, 1fr) auto;
     }
   }
 </style>

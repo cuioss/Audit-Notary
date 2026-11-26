@@ -84,4 +84,11 @@
   .segmented__option:has(input:focus-visible) {
     box-shadow: var(--focus-ring);
   }
+
+  /* Phone: the target is the whole option, 44 px high. */
+  @media (max-width: 599px) {
+    .segmented__option {
+      min-block-size: 44px;
+    }
+  }
 </style>

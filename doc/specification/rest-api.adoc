@@ -2596,6 +2596,11 @@ of the register that a screen needs and the register leaves open:
 . *The act that starts an assessment stands at three places:* the head of the scope sheet (disabled with the reason while
   one is open, no model is pinned or the user lacks `edit`), the status of a frozen practice sheet and the head of a
   released assessment, both only for a user who holds `edit`.
+. *A step-up that the save of the targets asks for cannot complete yet.* The step-up of Token Sheriff leaves the page and
+  returns to it, and a scope sheet has no draft (21) and no session storage that would carry the changed targets across
+  that round trip. The page therefore stays, keeps the targets and says so (`samm.targets.step-up-stays`); the save
+  succeeds only where the installation asks for no confirmation. It completes once a draft or a session storage is chosen
+  for the roadmap.
 
 For the owner: whether the scope and the assessment should be created through the generic `POST
 /api/v1/documents/samm-assessments` with a schema of the two kinds served to the form kit (2, 18); whether the title and
@@ -2604,8 +2609,10 @@ whether the targets of a scope must be complete (6); whether the creator of an a
 whether more than one assessment of a scope may be open at once (8); whether a new assessment should offer to start from
 the answers of the last released one (9); whether the evidence shares the file of its practice with the answers (10); the limits of the evidence and the comment (10, 11); the status `422` of
 `MODEL_VERSIONS_DIFFER` (14); whether the trend may mix model versions with a marker instead of leaving the others out
-(15); and whether the web app should pin a model version (16). With the screens (20 to 26): whether a new assessment
+(15); and whether the web app should pin a model version (16). With the screens (20 to 27): whether a new assessment
 should take its model version from the newest assessment (20); whether the roadmap of a scope should keep a draft, so that
 unsaved targets survive leaving the page (21); whether a due day may stand without a target (22); whether the trend should
 draw a single released assessment (23); and whether the evidence of a hand-edited repository that holds a non-`https` address
-should be drawn as text (24).
+should be drawn as text (24); and which draft or session storage the roadmap should use, because a step-up requested on the
+save of the targets cannot complete until one is chosen (27; found in the design review: the scope sheet has no draft, so
+the page stays and shows `samm.targets.step-up-stays`).

@@ -188,6 +188,15 @@ describe('ScopeSheet', () => {
     render(ScopeSheet, { scope });
     expect(await screen.findByRole('heading', { name: 'Targets' })).toBeInTheDocument();
     expect(screen.queryByText('Overall score over time')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('assessments-none')).not.toBeInTheDocument();
+  });
+
+  it('says so under its heading when no assessment was started yet', async () => {
+    const { scope } = await fixture('workshop');
+    render(ScopeSheet, { scope: { ...scope, assessments: [] } });
+    expect(await screen.findByTestId('assessments-none')).toHaveTextContent(
+      'No assessment has been started for this scope yet.',
+    );
   });
 });
 

@@ -303,6 +303,7 @@
                 variant="ghost"
                 icon="act.close"
                 onclick={() => (assessors = assessors.filter((_, position) => position !== row))}
+                aria-label={$t('samm.new.assessment.assessor-remove-row', { number: row + 2 })}
                 data-testid="assessor-{row}-remove"
               >
                 {$t('samm.new.assessment.assessor-remove')}
@@ -415,11 +416,16 @@
     color: var(--color-text-muted);
   }
 
+  /* The act stands under the person it removes: beside a field with a label above and an error below it has no line to keep. */
   .row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-    gap: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+
+  .row > :global(:first-child) {
+    align-self: stretch;
   }
 
   .margin {

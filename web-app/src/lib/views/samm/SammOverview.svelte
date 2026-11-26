@@ -189,5 +189,10 @@
     .register__score {
       inline-size: auto;
     }
+
+    /* A link of a stacked row has the 44 px of a target in its padding, not in a box. */
+    .register :global(.link) {
+      padding-block: var(--space-3);
+    }
   }
 </style>

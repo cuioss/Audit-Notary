@@ -768,6 +768,39 @@ test.describe('at 390 px', () => {
     await expectNoSeriousViolations(page, 'frozen assessment (phone)');
   });
 
+  test('the links of the overview, the address of an evidence link and the view switch are targets of the phone size', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToSamm(page, '/samm');
+    await expect(page.getByTestId('samm-overview')).toBeVisible();
+    for (const link of await page.getByTestId('samm-overview').locator('a.link').all()) {
+      await expectTarget(link);
+    }
+    await page.goto(assessmentAddress(RELEASED.scope, RELEASED.assessment, 'sb'));
+    await expectTarget(page.getByTestId('evidence-editor-table').getByRole('link').first());
+    await page.goto(assessmentAddress(RELEASED.scope, RELEASED.assessment));
+    await expect(page.getByTestId('assessment-sheet')).toBeVisible();
+    await expectTarget(page.locator('label', { hasText: 'Table' }));
+    await expectNoSideways(page);
+  });
+
+  test('the form of a new assessment keeps the removal of an assessor under the person it removes', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToSamm(page, newAssessmentAddress('shop'));
+    await page.getByTestId('assessor-add').click();
+    const select = await page.getByTestId('assessor-0-person').boundingBox();
+    const remove = page.getByTestId('assessor-0-remove');
+    await expectTarget(remove);
+    expect((await remove.boundingBox()).y).toBeGreaterThanOrEqual(select.y + select.height);
+    await expect(remove).toHaveAccessibleName('Remove assessor 2');
+    await expectNoSideways(page);
+  });
+
   test('the refused comparison and the trend with the left-out versions fit', async ({
     page,
     request,

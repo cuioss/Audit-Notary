@@ -180,12 +180,16 @@ Check each item before you hand a change over.
 - [ ] A change the person did not cause (a save by someone else, a new object) is announced politely; focus moves to
       a new object's heading.
 - [ ] A chart has a legend for two series or more, direct labels where few, and the same figures as a table.
+      A chart is drawn at the width it has on the page (`bind:clientWidth`), never scaled down as a whole, so its text keeps
+      its size on a phone; the first and the last axis label stay inside the figure.
 - [ ] Forced colours: the component still shows its state (`@media (forced-colors: active)`).
 - [ ] Phone (390 px): nothing scrolls sideways, targets are 44 px (a link in a stacked row or in a head gets its
       padding, not a box), the status of a sheet stays above the record.
 - [ ] Notices of a page of sections stand in the width of the sections; a name of a table row is never broken between its
       words, an id or a reference (`Chip`) is never broken in the middle; the mascot is gone while a refusal or an error
       shows; a radio group's target is its label (44 px on a phone), not the 13 px glyph.
+- [ ] A section whose list is empty says so under its heading (no heading over nothing); the act that removes a row names
+      the row in its accessible name and stands under the field it removes, not beside it.
 - [ ] A sentence is said once on a screen: a read-only sheet says so in its status and not again in a notice, and the
       reason of a disabled act is not the sentence of the status beside it.
 - [ ] German: no clipped or overlapping text with the longer words.

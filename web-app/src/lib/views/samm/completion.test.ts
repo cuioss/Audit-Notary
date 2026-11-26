@@ -343,6 +343,8 @@ describe('NewAssessmentSheet', () => {
     await fireEvent.click(screen.getByTestId('assessor-add'));
     await fireEvent.click(screen.getByTestId('assessor-add'));
     expect(screen.getByTestId('assessor-1')).toBeInTheDocument();
+    // The act names the person it removes: two rows both reading "Remove" cannot be told apart by name.
+    expect(screen.getByTestId('assessor-1-remove')).toHaveAccessibleName('Remove assessor 3');
     await fireEvent.click(screen.getByTestId('assessor-1-remove'));
     expect(screen.queryByTestId('assessor-1')).not.toBeInTheDocument();
     await fireEvent.click(screen.getByTestId('create-assessment'));

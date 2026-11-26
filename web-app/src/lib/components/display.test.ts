@@ -387,6 +387,18 @@ describe('TrendLine', () => {
     expect(container.querySelector('table')?.parentElement).toHaveClass('sr-only');
   });
 
+  it('keeps the first and the last axis label inside the figure', () => {
+    const { container } = render(TrendLine, { points, max: 3, label: 'Overall score' });
+    const axis = [...container.querySelectorAll('.trend__axis')];
+    expect(axis.map((text) => text.getAttribute('text-anchor'))).toEqual([
+      'start',
+      'middle',
+      'end',
+    ]);
+    expect(axis[0].getAttribute('x')).toBe('0');
+    expect(axis[2].getAttribute('x')).toBe('560');
+  });
+
   it('marks a point under the pointer; its value stands without it', async () => {
     const { container } = render(TrendLine, { points, max: 3, label: 'Overall score' });
     const first = container.querySelectorAll('.trend__point')[0];
