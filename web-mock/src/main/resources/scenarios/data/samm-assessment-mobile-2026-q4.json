@@ -1,0 +1,32 @@
+{
+  "id": "mobile-2026-q4",
+  "repository": "samm-assessments",
+  "scope": "mobile",
+  "slug": "2026-q4",
+  "title": "Mobile Apps 2026 Q4",
+  "date": "2026-11-26",
+  "modelVersion": "v2.2.0",
+  "state": "draft",
+  "assessors": [
+    {
+      "pseudonym": "p-0a11ce",
+      "name": "Sam Firstuser",
+      "role": "Chief Information Security Officer"
+    }
+  ],
+  "answers": {},
+  "evidence": {},
+  "parts": {},
+  "history": [
+    {
+      "at": "2026-11-26T09:40:00Z",
+      "by": {
+        "pseudonym": "p-0a11ce",
+        "name": "Sam Firstuser",
+        "role": "Chief Information Security Officer"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null
+}

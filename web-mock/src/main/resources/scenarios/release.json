@@ -122,6 +122,31 @@
     "GET /api/v1/samm/models/v2.2.0": {
       "body_file": "samm-model-v2.2.0.json"
     },
+    "GET /api/v1/samm/models": {
+      "status": 200,
+      "body_file": "samm-models.json"
+    },
+    "GET /api/v1/samm/payments/trend": {
+      "status": 200,
+      "body_file": "samm-trend-payments.json"
+    },
+    "GET /api/v1/samm/identity/trend": {
+      "status": 200,
+      "body": {
+        "scope": "identity",
+        "modelVersion": null,
+        "omitted": 0,
+        "points": []
+      }
+    },
+    "GET /api/v1/samm/shop/trend": {
+      "status": 200,
+      "body_file": "samm-trend-shop.json"
+    },
+    "GET /api/v1/samm/organisation/trend": {
+      "status": 200,
+      "body_file": "samm-trend-organisation.json"
+    },
     "GET /api/v1/samm/scopes": {
       "body_file": "samm-scopes-release-review.json"
     },
@@ -326,6 +351,33 @@
         },
         "GET /api/v1/samm/scopes": {
           "body_file": "samm-scopes-release-released.json"
+        },
+        "GET /api/v1/samm/payments/trend": {
+          "body_file": "samm-trend-payments-released.json"
+        }
+      }
+    },
+    "released-meanwhile": {
+      "description": "Somebody released Payments 2026 Q4 while it was in review: the release answers DOCUMENT_RELEASED with the tag, and the assessment, the scope, the list and the trend read as released.",
+      "routes": {
+        "POST /api/v1/releases/samm-assessments/payments-2026-q4": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "assessments/payments-2026-q4/v1"
+          }
+        },
+        "GET /api/v1/samm/scopes/payments": {
+          "body_file": "samm-scope-payments-released.json"
+        },
+        "GET /api/v1/documents/samm-assessments/payments-2026-q4": {
+          "body_file": "samm-assessment-payments-2026-q4-released.json"
+        },
+        "GET /api/v1/samm/scopes": {
+          "body_file": "samm-scopes-release-released.json"
+        },
+        "GET /api/v1/samm/payments/trend": {
+          "body_file": "samm-trend-payments-released.json"
         }
       }
     }

@@ -1,0 +1,16 @@
+{
+  "scopes": [
+    {
+      "id": "mobile",
+      "title": "Mobile Apps",
+      "subject": {
+        "kind": "team",
+        "id": "mobile",
+        "name": "Mobile Apps"
+      },
+      "latest": null,
+      "open": null,
+      "assessments": 0
+    }
+  ]
+}

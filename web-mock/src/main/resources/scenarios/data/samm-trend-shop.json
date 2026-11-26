@@ -1,0 +1,38 @@
+{
+  "scope": "shop",
+  "modelVersion": "v2.2.0",
+  "omitted": 0,
+  "points": [
+    {
+      "assessment": "2026-q3",
+      "document": "shop-2026-q3",
+      "title": "Web shop 2026 Q3",
+      "date": "2026-09-22",
+      "overall": 1.2333333333333334,
+      "functions": {
+        "governance": 1.25,
+        "design": 1.4166666666666667,
+        "implementation": 1.5833333333333333,
+        "verification": 1.0416666666666667,
+        "operations": 0.875
+      },
+      "practices": {
+        "sm": 1.25,
+        "pc": 1.0,
+        "eg": 1.5,
+        "ta": 1.0,
+        "sr": 1.625,
+        "sa": 1.625,
+        "sb": 2.125,
+        "sd": 1.75,
+        "dm": 0.875,
+        "aa": 0.625,
+        "rt": 0.875,
+        "st": 1.625,
+        "im": 0.875,
+        "em": 1.125,
+        "om": 0.625
+      }
+    }
+  ]
+}

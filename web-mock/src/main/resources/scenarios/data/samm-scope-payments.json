@@ -1,5 +1,6 @@
 {
   "id": "payments",
+  "document": "payments",
   "title": "Payments",
   "subject": {
     "kind": "team",
@@ -54,6 +55,26 @@
     },
     "om": {
       "target": 1.5
+    }
+  },
+  "parts": {
+    "data": {
+      "blob": "7ffbe14",
+      "savedAt": "2025-11-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "targets": {
+      "blob": "6c5fc54",
+      "savedAt": "2025-11-24T10:05:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
     }
   },
   "assessments": [

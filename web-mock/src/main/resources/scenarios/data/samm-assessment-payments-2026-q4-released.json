@@ -163,7 +163,7 @@
       },
       "sb-b-1": {
         "answer": 1,
-        "comment": "Dependency scanning runs in every pipeline; the SBOM is not yet published."
+        "comment": "Dependency scanning runs in *every* pipeline.\n\n* Scanner: the template of the platform team\n* The SBOM is not yet published."
       },
       "sb-b-2": {
         "answer": 1
@@ -332,6 +332,27 @@
         "answer": 0
       }
     }
+  },
+  "evidence": {
+    "sb": [
+      {
+        "question": "sb-b-1",
+        "title": "Pipeline of the payment service",
+        "url": "https://ci.example/payments/pipeline"
+      },
+      {
+        "question": null,
+        "title": "Dependency policy",
+        "url": "https://wiki.example/payments/dependency-policy"
+      }
+    ],
+    "ta": [
+      {
+        "question": "ta-b-2",
+        "title": "Threat models of the checkout flow",
+        "url": "https://wiki.example/payments/threat-models"
+      }
+    ]
   },
   "parts": {
     "sm": {

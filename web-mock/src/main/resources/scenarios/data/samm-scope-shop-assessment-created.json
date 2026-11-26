@@ -1,0 +1,110 @@
+{
+  "id": "shop",
+  "document": "shop",
+  "title": "Web shop",
+  "subject": {
+    "kind": "service",
+    "id": "shop",
+    "name": "Web shop"
+  },
+  "modelVersion": "v2.2.0",
+  "targets": {
+    "sm": {
+      "target": 2
+    },
+    "pc": {
+      "target": 2
+    },
+    "eg": {
+      "target": 2
+    },
+    "ta": {
+      "target": 2
+    },
+    "sr": {
+      "target": 2
+    },
+    "sa": {
+      "target": 2
+    },
+    "sb": {
+      "target": 2.5
+    },
+    "sd": {
+      "target": 2.5
+    },
+    "dm": {
+      "target": 2
+    },
+    "aa": {
+      "target": 2
+    },
+    "rt": {
+      "target": 2
+    },
+    "st": {
+      "target": 2
+    },
+    "im": {
+      "target": 2
+    },
+    "em": {
+      "target": 2
+    },
+    "om": {
+      "target": 2
+    }
+  },
+  "parts": {
+    "data": {
+      "blob": "2b0abda",
+      "savedAt": "2026-09-08T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "targets": {
+      "blob": "46bbed3",
+      "savedAt": "2026-09-08T10:05:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    }
+  },
+  "assessments": [
+    {
+      "id": "2026-q4",
+      "document": "shop-2026-q4",
+      "title": "Web shop 2026 Q4",
+      "date": "2026-11-26",
+      "state": "draft",
+      "modelVersion": "v2.2.0",
+      "overall": null,
+      "answered": 0,
+      "release": null
+    },
+    {
+      "id": "2026-q3",
+      "document": "shop-2026-q3",
+      "title": "Web shop 2026 Q3",
+      "date": "2026-09-22",
+      "state": "released",
+      "modelVersion": "v2.2.0",
+      "overall": 1.2333333333333334,
+      "answered": 90,
+      "release": {
+        "tag": "assessments/shop-2026-q3/v1",
+        "at": "2026-09-24T10:00:00Z",
+        "by": {
+          "pseudonym": "p-7d2e58",
+          "name": "Noor Haddad",
+          "role": "Chief Information Security Officer"
+        }
+      }
+    }
+  ]
+}

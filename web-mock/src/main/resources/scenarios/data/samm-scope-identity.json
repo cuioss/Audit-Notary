@@ -1,5 +1,6 @@
 {
   "id": "identity",
+  "document": "identity",
   "title": "Identity Platform",
   "subject": {
     "kind": "team",
@@ -52,6 +53,26 @@
     },
     "om": {
       "target": 2
+    }
+  },
+  "parts": {
+    "data": {
+      "blob": "73ce0c2",
+      "savedAt": "2026-11-04T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
+    },
+    "targets": {
+      "blob": "ec1039c",
+      "savedAt": "2026-11-04T10:05:00Z",
+      "savedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad",
+        "role": "Chief Information Security Officer"
+      }
     }
   },
   "assessments": [
