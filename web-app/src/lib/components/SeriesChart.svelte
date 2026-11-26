@@ -64,7 +64,7 @@
   const y = (value: number) => PAD.top + (1 - value / top) * (H - PAD.top - PAD.bottom);
 
   let yTicks = $derived(Array.from({ length: Math.floor(top) + 1 }, (_, index) => index));
-  let shown = $derived(thinTicks(ticks, x));
+  let shown = $derived(thinTicks(ticks, x, W));
 
   const anchorOf = (position: number, text: string) => {
     const half = (text.length * 6.2) / 2;
@@ -80,12 +80,14 @@
   let ends = $derived.by(() => {
     const last = series.map((line) => line.points.at(-1) ?? null);
     const wanted = last.flatMap((point) => (point ? [{ x: x(point.x), y: y(point.value) }] : []));
-    const placed = placeLabels(wanted, 13, 44);
+    const placed = placeLabels(wanted, 13, 44, H - PAD.bottom + 6);
     let next = 0;
     return last.map((point) => {
       if (!point) return null;
       const at = placed[next++];
-      return { x: x(point.x), y: at, text: point.text };
+      const end = y(point.value);
+      // A label that was moved off the end of its line is tied to it by a leader.
+      return { x: x(point.x), y: at, end, moved: Math.abs(at - end) > 1.5, text: point.text };
     });
   });
 
@@ -149,6 +151,14 @@
             {@render mark(line.slot, x(point.x), y(point.value))}
           {/each}
         </g>
+        {#if ends[index]?.moved}
+          <path
+            class="chart__leader"
+            d="M{(ends[index]?.x ?? 0) + 7} {ends[index]?.end} L{(ends[index]?.x ?? 0) + 10} {ends[
+              index
+            ]?.y}"
+          />
+        {/if}
         {#if ends[index]}
           <text
             class="chart__value"
@@ -247,6 +257,12 @@
     stroke-width: 3;
   }
 
+  .chart__leader {
+    fill: none;
+    stroke: var(--series);
+    stroke-width: 1.5;
+  }
+
   .chart__value {
     fill: var(--color-text-primary);
     font-family: var(--font-serif);
@@ -260,6 +276,10 @@
 
   @media (forced-colors: active) {
     .chart__line {
+      stroke: CanvasText;
+    }
+
+    .chart__leader {
       stroke: CanvasText;
     }
 

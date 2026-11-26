@@ -10,6 +10,7 @@
   import { currentLocale, t } from '../../i18n';
   import {
     intervalMonths,
+    linkTarget,
     sortModels,
     statusTone,
     THREAT_SORTS,
@@ -100,7 +101,11 @@
           {@const months = intervalMonths(model.reviewInterval)}
           <tr data-testid="threat-row-{model.service.id}-{model.model}">
             <th scope="row">
-              <Link href={model.address}>{model.service.name}</Link>
+              {#if linkTarget(model.address)}
+                <Link href={model.address}>{model.service.name}</Link>
+              {:else}
+                {model.service.name}
+              {/if}
               <span class="meta">{$t('reports.threat.model', { model: model.model })}</span>
               <span class="meta">
                 {model.version === null
@@ -180,7 +185,13 @@
       >
         {#each evaluation.withoutModel as entry (entry.service.id)}
           <tr data-testid="threat-without-{entry.service.id}">
-            <th scope="row"><Link href={entry.address}>{entry.service.name}</Link></th>
+            <th scope="row">
+              {#if linkTarget(entry.address)}
+                <Link href={entry.address}>{entry.service.name}</Link>
+              {:else}
+                {entry.service.name}
+              {/if}
+            </th>
             <td data-label={$t('reports.threat.without.col.owner')}>{entry.owner.name}</td>
             <td data-label={$t('reports.threat.without.col.need')}>
               {$t(`reports.need.${entry.protectionNeed}`)}

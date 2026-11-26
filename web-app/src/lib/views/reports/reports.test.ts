@@ -289,6 +289,20 @@ describe('SammCompareView', () => {
     );
   });
 
+  it('puts the earlier assessment first however the two were picked', async () => {
+    await useProfile('workshop');
+    render(SammCompareView, { query: { scope: 'payments' }, onnavigate: navigate });
+    const from = (await screen.findByTestId('compare-from')) as HTMLSelectElement;
+    const to = screen.getByTestId('compare-to') as HTMLSelectElement;
+    await vi.waitFor(() => expect(from.options.length).toBeGreaterThan(1));
+    await fireEvent.change(from, { target: { value: '2026-q2' } });
+    await fireEvent.change(to, { target: { value: '2025-q4' } });
+    expect(screen.getByTestId('compare-show')).toHaveAttribute(
+      'href',
+      '/reports/samm-compare?scope=payments&from=2025-q4&to=2026-q2',
+    );
+  });
+
   it('draws a dumbbell for the overall score and each business function, and a table', async () => {
     await useProfile('workshop');
     render(SammCompareView, { query: PAIR, onnavigate: navigate });

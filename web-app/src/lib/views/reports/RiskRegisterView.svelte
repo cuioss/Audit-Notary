@@ -19,6 +19,7 @@
     asOfErrorKey,
     isAsOfText,
     isDateText,
+    linkTarget,
     ratingTone,
     RISK_REGISTER_ADDRESS,
     riskRegisterAddress,
@@ -280,7 +281,13 @@
               <th scope="row">
                 <span class="name">
                   <Chip value={risk.id} />
-                  <Link href={risk.address} data-testid="risk-link-{risk.entry}">{risk.title}</Link>
+                  {#if linkTarget(risk.address)}
+                    <Link href={risk.address} data-testid="risk-link-{risk.entry}"
+                      >{risk.title}</Link
+                    >
+                  {:else}
+                    <span data-testid="risk-link-{risk.entry}">{risk.title}</span>
+                  {/if}
                 </span>
               </th>
               <td data-label={$t('reports.risk.col.rating')}>
@@ -320,8 +327,10 @@
                 {/if}
               </td>
               <td data-label={$t('reports.risk.col.origin')}>
-                {#if risk.reference}
+                {#if risk.reference && linkTarget(risk.reference.address)}
                   <Link href={risk.reference.address}>{risk.reference.title}</Link>
+                {:else if risk.reference}
+                  {risk.reference.title}
                 {:else}
                   {$t('reports.none')}
                 {/if}

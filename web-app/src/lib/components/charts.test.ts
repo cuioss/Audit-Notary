@@ -78,6 +78,37 @@ describe('SeriesChart', () => {
     expect(container.querySelectorAll('.chart__line')).toHaveLength(0);
   });
 
+  it('ties a label that was moved off its line end to it, and no other', () => {
+    const { container } = render(SeriesChart, {
+      series: [line('a', 1, [[0, 1.5]]), line('b', 2, [[0, 1.5]]), line('c', 3, [[0, 0.2]])],
+      ticks: [{ x: 0, label: 'Only' }],
+      domain: [0, 0],
+      max: 3,
+      label: 'Chart',
+      legendLabel: 'Series',
+    });
+    // The first label stays where its line ends; the second is moved down and carries a leader.
+    expect(container.querySelector('[data-series="a"] .chart__leader')).toBeNull();
+    expect(container.querySelector('[data-series="b"] .chart__leader')).not.toBeNull();
+    expect(container.querySelector('[data-series="c"] .chart__leader')).toBeNull();
+  });
+
+  it('keeps the labels of lines that end at the bottom inside the figure', () => {
+    const { container } = render(SeriesChart, {
+      series: [1, 2, 3, 4, 5].map((slot) => line(`s${slot}`, slot, [[0, 0]])),
+      ticks: [{ x: 0, label: 'Only' }],
+      domain: [0, 0],
+      max: 3,
+      label: 'Chart',
+      legendLabel: 'Series',
+    });
+    const ys = [...container.querySelectorAll('.chart__value')].map((node) =>
+      Number(node.getAttribute('y')),
+    );
+    expect(Math.max(...ys)).toBeLessThanOrEqual(192);
+    expect(new Set(ys).size).toBe(5);
+  });
+
   it('gives each of the five slots its own shape beside the colour', () => {
     const { container } = render(SeriesChart, {
       series: [1, 2, 3, 4, 5].map((slot) => line(`s${slot}`, slot, [[0, slot - 0.5]])),

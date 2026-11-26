@@ -263,7 +263,8 @@ act that writes; its controls only choose what is read (a scope, two assessments
 scopes of the trend (the series 1 to 5 in the order of the scope list) or the five business functions of one scope (the
 series 1 to 5 in model order). A series is a slot of the validated series colours and, beside the colour, a marker of its
 own shape (circle, square, diamond, triangle, cross), so that no line depends on a colour alone. The end of every line
-carries its value as a direct label; labels that would touch are moved apart. A legend names every series, and the page
+carries its value as a direct label; labels that would touch are moved apart (down, and up again where the last would leave the figure), and a label that
+no longer stands at the end of its line is tied to it by a short leader in the line's colour. A legend names every series, and the page
 repeats every figure as a table under the chart. A sixth scope has no line: the table has it, and a line says so.
 `Dumbbell` shows the same measure at two moments: a ring at the earlier score, a filled dot at the later one, a bar between
 them, and the two scores and the change in words beside it. The ring and the dot differ in form, not only in place. A

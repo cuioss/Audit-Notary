@@ -132,6 +132,11 @@
           };
         } else if (isApiError(error) && error.outcome === 'NOT_FOUND') {
           missing = true;
+        } else if (
+          isApiError(error) &&
+          (error.outcome === 'FORBIDDEN' || error.outcome === 'GIT_UNAVAILABLE')
+        ) {
+          compareFailure = errorMessageKey(error);
         } else {
           compareFailure = 'reports.compare.failed';
         }
@@ -190,6 +195,14 @@
         ? $t('reports.compare.pick.same')
         : null,
   );
+
+  /** The address of the pair the pickers hold, the earlier assessment first, whichever way round it was picked. */
+  let showAddress = $derived.by(() => {
+    const first = assessments.find((entry) => entry.id === fromPick);
+    const second = assessments.find((entry) => entry.id === toPick);
+    const swap = first !== undefined && second !== undefined && first.date > second.date;
+    return compareAddress(query.scope, swap ? toPick : fromPick, swap ? fromPick : toPick);
+  });
 
   const fmt = (value: number) => formatScore(value, $currentLocale);
   const rowOf = (
@@ -304,11 +317,7 @@
                 {$t('reports.compare.show')}
               </Button>
             {:else}
-              <Link
-                href={compareAddress(query.scope, fromPick, toPick)}
-                look="primary"
-                data-testid="compare-show"
-              >
+              <Link href={showAddress} look="primary" data-testid="compare-show">
                 {$t('reports.compare.show')}
               </Link>
             {/if}

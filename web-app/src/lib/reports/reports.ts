@@ -9,7 +9,7 @@ import type {
   ThreatStatus,
 } from '../api/types';
 import type { StatusTone } from '../components/StatusLabel.svelte';
-import { formatAddress } from '../routes';
+import { checkReturn, formatAddress } from '../routes';
 
 /** The dashboard of the lens. */
 export const REPORTS_ADDRESS = '/reports';
@@ -64,6 +64,17 @@ export function riskRegisterAddress(asOf?: string): string {
     params: {},
     ...(asOf ? { query: { 'as-of': asOf } } : {}),
   });
+}
+
+/**
+ * The address a report row links to is the server's text: it is drawn as a link only when it is an address of the app
+ * (the canonical-address check of the command palette and the login return), otherwise the row shows the name alone.
+ *
+ * @param address the `address` of a row as served
+ * @returns the address when the app has it, `null` otherwise
+ */
+export function linkTarget(address: string | null | undefined): string | null {
+  return address && checkReturn(address) === address ? address : null;
 }
 
 /** The value pattern of the query `as-of` (`canonical-addresses.json`). */

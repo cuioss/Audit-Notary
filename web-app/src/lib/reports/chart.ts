@@ -53,13 +53,24 @@ const LABEL_GAP = 12;
  *
  * @param ticks the labels, in axis order
  * @param position the pixel position of a label's centre
+ * @param width the width of the figure; a label that would leave it is measured where the drawing puts it, at the edge
  * @returns the labels that stay, in axis order
  */
-export function thinTicks(ticks: AxisTick[], position: (x: number) => number): AxisTick[] {
+export function thinTicks(
+  ticks: AxisTick[],
+  position: (x: number) => number,
+  width = Number.POSITIVE_INFINITY,
+): AxisTick[] {
   if (ticks.length <= 2) return ticks;
   const half = (tick: AxisTick) => (tick.label.length * CHAR_WIDTH) / 2;
+  /** The centre of a label as drawn: a label that would leave the figure stands at the edge instead. */
+  const centre = (tick: AxisTick) => {
+    const at = position(tick.x);
+    const reach = half(tick);
+    return at - reach < 0 ? reach : at + reach > width ? width - reach : at;
+  };
   const clash = (a: AxisTick, b: AxisTick) =>
-    Math.abs(position(a.x) - position(b.x)) < half(a) + half(b) + LABEL_GAP;
+    Math.abs(centre(a) - centre(b)) < half(a) + half(b) + LABEL_GAP;
   const kept = new Set<number>([0, ticks.length - 1]);
   // The ends clash with each other on a figure too narrow for both: the last one gives way.
   if (clash(ticks[0], ticks[ticks.length - 1])) kept.delete(ticks.length - 1);
@@ -70,14 +81,21 @@ export function thinTicks(ticks: AxisTick[], position: (x: number) => number): A
 }
 
 /**
- * Moves direct labels down until no two that stand close together overlap.
+ * Moves direct labels down until no two that stand close together overlap, then back up where the last of them would
+ * leave the room it has.
  *
  * @param labels the wanted pixel positions
  * @param gap the least vertical distance of two labels, in pixels
  * @param reach the horizontal distance within which two labels can overlap
+ * @param lowest the lowest pixel `y` a label may stand at; labels pushed past it are moved up instead
  * @returns the pixel `y` of each label, in the order given
  */
-export function placeLabels(labels: { x: number; y: number }[], gap = 13, reach = 40): number[] {
+export function placeLabels(
+  labels: { x: number; y: number }[],
+  gap = 13,
+  reach = 40,
+  lowest = Number.POSITIVE_INFINITY,
+): number[] {
   const order = labels.map((_, index) => index).sort((a, b) => labels[a].y - labels[b].y);
   const placed = new Map<number, number>();
   for (const index of order) {
@@ -88,6 +106,17 @@ export function placeLabels(labels: { x: number; y: number }[], gap = 13, reach 
       if (Math.abs(labels[other].x - labels[index].x) < reach && y - at < gap) y = at + gap;
     }
     placed.set(index, y);
+  }
+  if (lowest !== Number.POSITIVE_INFINITY) {
+    const settled = new Map<number, number>();
+    for (const index of [...order].reverse()) {
+      let y = Math.min(placed.get(index) as number, lowest);
+      for (const [other, at] of settled) {
+        if (Math.abs(labels[other].x - labels[index].x) < reach && at - y < gap) y = at - gap;
+      }
+      settled.set(index, y);
+    }
+    return labels.map((_, index) => settled.get(index) as number);
   }
   return labels.map((_, index) => placed.get(index) as number);
 }

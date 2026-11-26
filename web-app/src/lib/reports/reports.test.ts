@@ -7,6 +7,7 @@ import {
   intervalMonths,
   isAsOfText,
   isDateText,
+  linkTarget,
   needRank,
   ratingTone,
   riskRegisterAddress,
@@ -155,6 +156,18 @@ describe('the arithmetic of the charts', () => {
     expect(thinTicks(ticks, (x) => x * 5)).toEqual([ticks[0]]);
   });
 
+  it('measures a label that would leave the figure where it is drawn, at the edge', () => {
+    // Centres 80 px apart clear each other (labels of 62 px and a gap of 12), unless the edge pushes the last inwards.
+    const ticks = [
+      { x: 0, label: 'abcdefghij' },
+      { x: 1, label: 'abcdefghij' },
+      { x: 2, label: 'abcdefghij' },
+    ];
+    const position = (x: number) => 40 + x * 80;
+    expect(thinTicks(ticks, position)).toHaveLength(3);
+    expect(thinTicks(ticks, position, 210).map((tick) => tick.x)).toEqual([0, 2]);
+  });
+
   it('leaves one or two labels alone', () => {
     const ticks = [{ x: 0, label: 'a' }];
     expect(thinTicks(ticks, () => 0)).toBe(ticks);
@@ -174,11 +187,50 @@ describe('the arithmetic of the charts', () => {
     expect(placed[3]).toBe(120);
   });
 
+  it('moves a cascade that would leave the room up instead of down', () => {
+    const placed = placeLabels(
+      [
+        { x: 100, y: 180 },
+        { x: 100, y: 182 },
+        { x: 100, y: 184 },
+        { x: 100, y: 186 },
+      ],
+      13,
+      40,
+      192,
+    );
+    expect(placed).toEqual([153, 166, 179, 192]);
+  });
+
   it('keeps the order of the labels it was given', () => {
     const placed = placeLabels([
       { x: 0, y: 90 },
       { x: 0, y: 10 },
     ]);
     expect(placed).toEqual([90, 10]);
+  });
+});
+
+describe('linkTarget', () => {
+  it('keeps the addresses of the app, with the revision of an entry', () => {
+    expect(linkTarget('/isms/risks/r-004?at=v1')).toBe('/isms/risks/r-004?at=v1');
+    expect(linkTarget('/reports/risk-register?as-of=2026-03-01')).toBe(
+      '/reports/risk-register?as-of=2026-03-01',
+    );
+  });
+
+  it('refuses what is not an address of the app', () => {
+    for (const bad of [
+      'javascript:alert(1)',
+      'https://example.org/isms/risks/r-004',
+      '//example.org/isms/risks/r-004',
+      '/isms/risks/r-004?at=<script>',
+      '/isms/risks/r-004?next=https://example.org',
+      '',
+      null,
+      undefined,
+    ]) {
+      expect(linkTarget(bad)).toBeNull();
+    }
   });
 });
