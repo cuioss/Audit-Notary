@@ -70,8 +70,18 @@ xref:../adr/0003-UI_tests_run_against_a_scenario_mock_server.adoc[ADR-0003]
 |`workshop` (default: populated lenses), `first-login` (no directory entry), `read-only` (right `read` only),
 `degraded` (Git server unreachable), `empty` (a fresh installation), `no-rights` (logged in, no right mapped);
 besides them, profiles for one flow: `release` (an approver releases with step-up, by password, or refused for too many
-pending logins), `local` (the login of local users on the web app's own page) and `login-trouble` (the login cannot
-start or complete); `workshop` also carries the states `session-replaced` and `session-ended`; `workshop` and
+pending logins), `local` (the login of local users on the web app's own page), `login-trouble` (the login cannot
+start or complete) and `catalog-admin` (the right `administer-catalogs`: every catalog and directory write works, with
+states for each refusal, the Backstage import, the prefill and the erasure); the directory and the catalogs: `workshop`,
+`read-only`, `catalog-admin` and `empty` answer the five catalogs (`team`, `role`, `service`, `system`, `external`)
+with their schemas and entries, the effective protection needs of a service (with one cycle) and the person directory;
+`read-only` refuses every catalog and directory write with `403 FORBIDDEN` (no right `administer-catalogs`);
+`workshop` refuses the administrative writes (the catalog writes, the Backstage import, `POST /api/v1/directory/persons`
+and `POST /api/v1/directory/erasures`) the same way and accepts the own-entry save and confirmation, which no right
+guards and which can answer a validation or Git-unavailable outcome; `workshop` carries the states `confirmation-due` and `confirmation-done` (the session flag
+`directoryConfirmationDue`), `entry-invalid` and `entry-git-unavailable`, `empty` lists no entry and no person and holds
+the right, and `first-login` answers `entry: null`, then the saved entry in `registered` (a new entry) or `registered-bound` (a bound candidate), and the binding states `candidates`, `candidates-chosen`,
+`candidates-not-bindable` and `candidates-refused`; `workshop` also carries the states `session-replaced` and `session-ended`; `workshop` and
 `read-only` answer the requests of the form kit for the fixture categories and carry the states `preview-hostile` and
 `preview-unavailable` (the built-in `render-asciidoc` handler answers every other preview); `workshop` and `read-only`
 also answer the document lifecycle for the repository `test-notes` (list, read, revisions, diff, search, create, draft,

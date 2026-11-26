@@ -271,6 +271,8 @@ Outcome:: the user has a person entry under a pseudonym, which every commit of t
 Open points:: confirming and undoing a binding (the library's
 https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/directory-and-catalogs.adoc#_open_questions[Directory
 and Catalogs, Open Questions]).
+Decided provisionally for the web app: the candidates come back as `409 BINDING_CANDIDATES` and a pseudonym that is no
+candidate as `409 NOT_BINDABLE` (xref:../specification/rest-api.adoc#_decided_directory[REST API Register, Open Questions]).
 Requirements:: xref:../specification/directory.adoc#AUN-DIR-2[AUN-DIR-2] (first login, binding, allow-list),
 xref:../specification/directory.adoc#AUN-DIR-1[AUN-DIR-1] (the provider), xref:../specification/directory.adoc#AUN-DIR-8[AUN-DIR-8]
 (prefilled entries); library:
@@ -309,6 +311,9 @@ Outcome:: the entry is current and its confirmation date is recent.
 Requirements:: xref:../specification/directory.adoc#AUN-DIR-3[AUN-DIR-3] (changing and confirming the entry).
 Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Settings*); the
 check at login hooks into Token Sheriff's session layer like the first-login gate (xref:#UC-ACC-4[UC-ACC-4]).
+Decided provisionally: the own entry is the page `/settings/profile`; when the confirmation is due, the session view
+carries `directoryConfirmationDue` and the shell shows a notice with a link to the page, which asks "Is this still
+right?"; it is no gate (xref:../specification/rest-api.adoc#_decided_directory[REST API Register, Open Questions]).
 
 [#UC-ACC-6]
 == UC-ACC-6: The Session Ends Without Me

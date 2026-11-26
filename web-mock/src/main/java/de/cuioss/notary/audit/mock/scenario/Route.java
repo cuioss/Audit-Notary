@@ -19,8 +19,9 @@ import org.jspecify.annotations.Nullable;
  * @param status  the HTTP status of a static answer
  * @param body    the JSON body of a static answer
  * @param handler the built-in handler that computes the answer, or {@code null} for a static answer
+ * @param requires the right the user must hold for the route to answer, or {@code null}; otherwise {@code 403 FORBIDDEN}
  */
-public record Route(int status, JsonNode body, @Nullable Handler handler) {
+public record Route(int status, JsonNode body, @Nullable Handler handler, @Nullable Requirement requires) {
 
     /**
      * A static answer.
@@ -29,6 +30,6 @@ public record Route(int status, JsonNode body, @Nullable Handler handler) {
      * @param body   the JSON body
      */
     public Route(int status, JsonNode body) {
-        this(status, body, null);
+        this(status, body, null, null);
     }
 }

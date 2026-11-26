@@ -24,6 +24,7 @@ import java.util.Optional;
  * @param id                 the state id
  * @param description        what the state represents
  * @param firstLoginRequired the override of the scenario's first-login flag; {@code null} keeps the scenario value
+ * @param directoryConfirmationDue the override of the scenario's reconfirmation flag; {@code null} keeps the scenario value
  * @param routes             the static answers of the state by {@code "METHOD /path"}; they win over the scenario's
  * @param links              the transitions by name, in file order
  * @param events             the events pushed when the state is entered
@@ -33,7 +34,7 @@ import java.util.Optional;
  * @param sessionEnded       whether entering the state ends every session and closes the event streams
  */
 public record ScenarioState(String id, String description, @Nullable Boolean firstLoginRequired,
-Map<String, Route> routes, Map<String, Link> links, List<ScenarioEvent> events,
+@Nullable Boolean directoryConfirmationDue, Map<String, Route> routes, Map<String, Link> links, List<ScenarioEvent> events,
 @Nullable AutoTransition auto, boolean sessionReplaced, boolean sessionEnded) {
 
     /**
@@ -42,6 +43,7 @@ Map<String, Route> routes, Map<String, Link> links, List<ScenarioEvent> events,
      * @param id                 the state id
      * @param description        the description
      * @param firstLoginRequired the first-login override, possibly {@code null}
+     * @param directoryConfirmationDue the override of the reconfirmation flag, possibly {@code null}
      * @param routes             the routes
      * @param links              the links
      * @param events             the events
@@ -67,7 +69,8 @@ Map<String, Route> routes, Map<String, Link> links, List<ScenarioEvent> events,
     }
 
     /**
-     * The link a request takes: of the links that match, the one with the most listed query parameters, the first of
+     * The link a request takes: of the links that match, the most specific one ({@link RouteKey#compareSpecificity}: an
+     * exact path before a templated one, then more literal segments, then more listed query parameters), the first of
      * them in the order of the state.
      *
      * @param method the request method
@@ -77,6 +80,6 @@ Map<String, Route> routes, Map<String, Link> links, List<ScenarioEvent> events,
      */
     public Optional<Link> linkFor(String method, String path, Map<String, String> query) {
         return links.values().stream().filter(link -> link.matches(method, path, query))
-                .reduce((best, link) -> link.query().size() > best.query().size() ? link : best);
+                .reduce((best, link) -> link.key().compareSpecificity(best.key()) < 0 ? link : best);
     }
 }

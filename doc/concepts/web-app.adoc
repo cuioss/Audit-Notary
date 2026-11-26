@@ -238,6 +238,18 @@ one:
   carries no reviewed revision, so a release answers `CHANGED_SINCE_REVIEW` by the state of the document.
 . The search of the top bar finds documents of every category by title and id, from the index, whatever the state of
   the Git server.
+
+Decided provisionally with the directory and the catalogs (UC-ACC-4, UC-ACC-5, UC-CAT-1 to UC-CAT-5), recorded with the
+bodies in xref:../specification/rest-api.adoc#_decided_directory[REST API Register, Open Questions]; the owner may change each one:
+
+. The lens *Catalogs* shows catalog › entry as a `TriagePage`, its entries as generated forms in a sheet; the right
+  *administer catalogs* decides whether it is read-only. The administration of the directory, the Backstage import
+  (a `WizardPage`) and the prefilled persons with the erasure, has the addresses `/directory/import` and
+  `/directory/persons` and belongs to the same lens.
+. The own directory entry is `/settings/profile`. When it is due for its confirmation, a notice with a link to it stands
+  on every view; the page asks "Is this still right?". The notice is no gate.
+. The first-login form shows binding candidates, and the user binds to one or creates a new entry.
+. A catalog entry that someone else saved is read again when its event arrives, as a document is.
 . The release view is one flow for every category (`ReleaseFlow`); the SAMM release and the release of the generic
   lens hand it their words, seal and values. The generic release shows the diff grouped by property, the values as the
   form reads them, and no seal before the release (`ReleaseSeal` after it). A released document skips the diff, and the

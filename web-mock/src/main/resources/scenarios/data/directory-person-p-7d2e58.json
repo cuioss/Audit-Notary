@@ -1,0 +1,12 @@
+{
+  "pseudonym": "p-7d2e58",
+  "name": "Noor Haddad",
+  "state": "bound",
+  "memberships": [
+    {
+      "team": "team:security-office",
+      "role": "role:ciso"
+    }
+  ],
+  "erasedOn": null
+}

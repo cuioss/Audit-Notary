@@ -1,0 +1,145 @@
+{
+  "catalog": "role",
+  "entries": [
+    {
+      "id": "developer",
+      "name": "Developer",
+      "retired": false,
+      "value": {
+        "id": "developer",
+        "name": "Developer",
+        "description": "Builds and changes the software of a team."
+      },
+      "effective": null,
+      "at": "2026-02-11T13:00:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "product-owner",
+      "name": "Product Owner",
+      "retired": false,
+      "value": {
+        "id": "product-owner",
+        "name": "Product Owner",
+        "description": "Decides what a team builds next."
+      },
+      "effective": null,
+      "at": "2026-02-11T13:00:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "security-champion",
+      "name": "Security Champion",
+      "retired": false,
+      "value": {
+        "id": "security-champion",
+        "name": "Security Champion",
+        "description": "Speaks for security inside a development team."
+      },
+      "effective": null,
+      "at": "2026-02-11T13:00:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ciso",
+      "name": "Chief Information Security Officer",
+      "retired": false,
+      "value": {
+        "id": "ciso",
+        "name": "Chief Information Security Officer",
+        "description": "Is accountable for information security of the organisation."
+      },
+      "effective": null,
+      "at": "2026-02-11T13:00:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "service-owner",
+      "name": "Service Owner",
+      "retired": false,
+      "value": {
+        "id": "service-owner",
+        "name": "Service Owner",
+        "description": "Is accountable for one service and its protection needs."
+      },
+      "effective": null,
+      "at": "2026-02-11T13:00:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "release-manager",
+      "name": "Release Manager",
+      "retired": true,
+      "value": {
+        "id": "release-manager",
+        "name": "Release Manager",
+        "description": "Coordinated releases before teams released on their own."
+      },
+      "effective": null,
+      "at": "2026-06-15T09:00:00Z",
+      "history": [
+        {
+          "kind": "retire",
+          "at": "2026-06-15T09:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        },
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    }
+  ]
+}

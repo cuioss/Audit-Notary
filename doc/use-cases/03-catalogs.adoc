@@ -51,7 +51,9 @@ Outcome:: the catalog holds the entry, or marks it retired; documents pick from 
 Requirements:: xref:../specification/directory.adoc#AUN-DIR-4[AUN-DIR-4] (catalogs, the right, retiring),
 xref:../specification/mcp-server.adoc#AUN-MCP-6[AUN-MCP-6] (`read_catalog`); library:
 https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-directory.adoc[`git-directory`].
-Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Catalogs*).
+Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Catalogs*); decided
+provisionally: `/catalogs/<catalog>`, `…/new` and `…/<id>`, create and change as two requests, retiring after a confirmation,
+read-only without the right (xref:../specification/rest-api.adoc#_decided_directory[REST API Register, Open Questions]).
 
 [#UC-CAT-2]
 == UC-CAT-2: Maintain a Service and Its Protection Needs
@@ -90,7 +92,9 @@ derives them; whether a change of protection needs needs a confirmation by the i
 services are also imported from a CMDB (xref:../concepts/service-catalog.adoc#_open_questions[Service Catalog, Open
 Questions]).
 Requirements:: xref:../specification/directory.adoc#AUN-DIR-5[AUN-DIR-5] (fields, effective protection needs, cycles).
-Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Catalogs*).
+Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Catalogs*); decided
+provisionally: the entry read carries the effective protection needs, the dependencies and the cycle, a retired service
+and an external party do not count, a cycle is a notice (xref:../specification/rest-api.adoc#_decided_directory[REST API Register, Open Questions]).
 
 [#UC-CAT-3]
 == UC-CAT-3: Import from Backstage
@@ -125,7 +129,8 @@ Variations::
 * *Repeated*: an import again updates, never duplicates; the fields Backstage does not know are kept.
 Outcome:: the catalogs reflect Backstage, with the protection needs, data classes and owning roles kept.
 Requirements:: xref:../specification/directory.adoc#AUN-DIR-6[AUN-DIR-6] (the import and its mapping).
-Design:: none yet.
+Design:: decided provisionally: the wizard at `/directory/import` (choose, preview, import, result), with a preview
+request that writes nothing and a result with a reason for everything left out (xref:../specification/rest-api.adoc#_decided_directory[REST API Register, Open Questions]).
 
 [#UC-CAT-4]
 == UC-CAT-4: Prefill Person Entries
@@ -156,7 +161,8 @@ Variations::
 Outcome:: unbound person entries exist and can be referred to before the persons log in.
 Requirements:: xref:../specification/directory.adoc#AUN-DIR-8[AUN-DIR-8] (prefilled entries); library:
 https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-directory.adoc#GDR-DIR-7[GDR-DIR-7].
-Design:: none yet.
+Design:: decided provisionally: the page `/directory/persons` with a table of the persons and the entry of several people at once
+(xref:../specification/rest-api.adoc#_decided_directory[REST API Register, Open Questions]).
 
 [#UC-CAT-5]
 == UC-CAT-5: Erase a Person
@@ -190,4 +196,5 @@ understandable.
 Requirements:: xref:../specification/data-protection.adoc#AUN-DP-3[AUN-DP-3] (erasure),
 xref:../specification/directory.adoc#AUN-DIR-7[AUN-DIR-7] (former members); library:
 https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-directory.adoc#GDR-DIR-6[GDR-DIR-6].
-Design:: none yet.
+Design:: decided provisionally: the table of `/directory/persons`, a confirmation that says the erasure cannot be undone,
+and the outcome `MANAGED_BY_SOURCE` shown as a notice (xref:../specification/rest-api.adoc#_decided_directory[REST API Register, Open Questions]).

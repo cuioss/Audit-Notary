@@ -1,0 +1,38 @@
+{
+  "entries": [
+    {
+      "id": "payment-api",
+      "name": "Payment API"
+    },
+    {
+      "id": "customer-portal",
+      "name": "Customer Portal",
+      "retired": true
+    },
+    {
+      "id": "identity-provider",
+      "name": "Identity Provider"
+    },
+    {
+      "id": "customer-db",
+      "name": "Customer database"
+    },
+    {
+      "id": "reporting",
+      "name": "Reporting Service"
+    },
+    {
+      "id": "report-scheduler",
+      "name": "Report scheduler"
+    },
+    {
+      "id": "ledger",
+      "name": "Ledger",
+      "retired": true
+    },
+    {
+      "id": "notification-service",
+      "name": "Notification service"
+    }
+  ]
+}

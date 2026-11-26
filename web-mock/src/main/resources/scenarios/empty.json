@@ -135,6 +135,276 @@
     "GET /api/v1/categories": {
       "status": 200,
       "body_file": "categories-none.json"
+    },
+    "GET /api/v1/catalogs/service": {
+      "status": 200,
+      "body": {
+        "entries": []
+      }
+    },
+    "GET /api/v1/catalogs/system": {
+      "status": 200,
+      "body": {
+        "entries": []
+      }
+    },
+    "GET /api/v1/catalogs/external": {
+      "status": 200,
+      "body": {
+        "entries": []
+      }
+    },
+    "GET /api/v1/catalogs/team/schema": {
+      "status": 200,
+      "body_file": "catalog-schema-team.json"
+    },
+    "GET /api/v1/catalogs/team/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-team-empty.json"
+    },
+    "GET /api/v1/catalogs/role/schema": {
+      "status": 200,
+      "body_file": "catalog-schema-role.json"
+    },
+    "GET /api/v1/catalogs/role/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-role-empty.json"
+    },
+    "GET /api/v1/catalogs/service/schema": {
+      "status": 200,
+      "body_file": "catalog-schema-service.json"
+    },
+    "GET /api/v1/catalogs/service/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-service-empty.json"
+    },
+    "GET /api/v1/catalogs/system/schema": {
+      "status": 200,
+      "body_file": "catalog-schema-system.json"
+    },
+    "GET /api/v1/catalogs/system/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-system-empty.json"
+    },
+    "GET /api/v1/catalogs/external/schema": {
+      "status": 200,
+      "body_file": "catalog-schema-external.json"
+    },
+    "GET /api/v1/catalogs/external/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-external-empty.json"
+    },
+    "POST /api/v1/catalogs/team": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "catalog": "team",
+        "id": "platform",
+        "address": "/catalogs/team/platform",
+        "at": "2026-11-26T09:30:00Z"
+      },
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "PUT /api/v1/catalogs/team/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-team-empty.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/team/{id}/retirement": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-team-empty.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/role": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "catalog": "role",
+        "id": "auditor",
+        "address": "/catalogs/role/auditor",
+        "at": "2026-11-26T09:30:00Z"
+      },
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "PUT /api/v1/catalogs/role/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-role-empty.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/role/{id}/retirement": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-role-empty.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/service": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "catalog": "service",
+        "id": "notification-gateway",
+        "address": "/catalogs/service/notification-gateway",
+        "at": "2026-11-26T09:30:00Z"
+      },
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "PUT /api/v1/catalogs/service/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-service-empty.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/service/{id}/retirement": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-service-empty.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/system": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "catalog": "system",
+        "id": "mobile-apps",
+        "address": "/catalogs/system/mobile-apps",
+        "at": "2026-11-26T09:30:00Z"
+      },
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "PUT /api/v1/catalogs/system/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-system-empty.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/system/{id}/retirement": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-system-empty.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/external": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "catalog": "external",
+        "id": "audit-firm",
+        "address": "/catalogs/external/audit-firm",
+        "at": "2026-11-26T09:30:00Z"
+      },
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "PUT /api/v1/catalogs/external/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-external-empty.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/external/{id}/retirement": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-external-empty.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/import/backstage/preview": {
+      "status": 200,
+      "body_file": "catalog-import-preview.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/import/backstage": {
+      "status": 200,
+      "body_file": "catalog-import-result.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/directory/persons": {
+      "status": 201,
+      "body_file": "directory-persons-created.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/directory/erasures": {
+      "status": 200,
+      "body": {
+        "outcome": "ERASED",
+        "pseudonym": "p-2b7f10",
+        "erasedOn": "2026-11-26"
+      },
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "GET /api/v1/directory/persons": {
+      "status": 200,
+      "body": {
+        "persons": [],
+        "truncated": false
+      }
+    },
+    "GET /api/v1/directory/me": {
+      "status": 200,
+      "body_file": "directory-me-sam.json"
+    },
+    "PUT /api/v1/directory/me": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "pseudonym": "p-0a11ce",
+        "confirmedAt": "2026-11-26"
+      }
+    },
+    "POST /api/v1/directory/me/confirmation": {
+      "status": 200,
+      "body": {
+        "outcome": "CONFIRMED",
+        "confirmedAt": "2026-11-26"
+      }
     }
   },
   "states": {

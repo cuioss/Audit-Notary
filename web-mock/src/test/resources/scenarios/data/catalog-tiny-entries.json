@@ -1,0 +1,23 @@
+{
+  "catalog": "service",
+  "entries": [
+    {
+      "id": "alpha",
+      "name": "Alpha",
+      "retired": false,
+      "value": {"id": "alpha", "name": "Alpha"},
+      "effective": null,
+      "at": "2026-01-01T00:00:00Z",
+      "history": [{"kind": "create", "at": "2026-01-01T00:00:00Z", "by": {"pseudonym": "p-1", "name": "Alex"}}]
+    },
+    {
+      "id": "beta",
+      "name": "Beta",
+      "retired": true,
+      "value": {"id": "beta", "name": "Beta"},
+      "effective": {"cycle": null},
+      "at": "2026-02-01T00:00:00Z",
+      "history": []
+    }
+  ]
+}

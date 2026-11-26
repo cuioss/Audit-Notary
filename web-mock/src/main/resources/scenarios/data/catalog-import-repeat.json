@@ -1,0 +1,26 @@
+{
+  "outcome": "IMPORTED",
+  "created": [],
+  "updated": [],
+  "unchanged": 11,
+  "leftOut": [
+    {
+      "entity": "component:default/billing-batch",
+      "field": "spec.lifecycle",
+      "reason": "LIFECYCLE_UNMAPPED",
+      "detail": "experimental"
+    },
+    {
+      "entity": "component:default/search-index",
+      "field": null,
+      "reason": "DEFAULTS_MISSING",
+      "detail": "owner.role, protection-needs"
+    },
+    {
+      "entity": "component:ops/legacy-export",
+      "field": null,
+      "reason": "NAMESPACE_NOT_DEFAULT",
+      "detail": "ops"
+    }
+  ]
+}

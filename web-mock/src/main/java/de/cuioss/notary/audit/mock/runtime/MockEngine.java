@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.cuioss.notary.audit.mock.WebMockLogMessages;
 import de.cuioss.notary.audit.mock.scenario.Handler;
 import de.cuioss.notary.audit.mock.scenario.Link;
+import de.cuioss.notary.audit.mock.scenario.Requirement;
 import de.cuioss.notary.audit.mock.scenario.Route;
 import de.cuioss.notary.audit.mock.scenario.Scenario;
 import de.cuioss.notary.audit.mock.scenario.ScenarioReference;
@@ -100,11 +101,22 @@ public final class MockEngine implements AutoCloseable {
     private static final String LOCATION = "Location";
 
     /**
-     * The most bytes of a request body the adapter buffers. A source of the AsciiDoc preview (at most 65,536 bytes
-     * of UTF-8) escaped in JSON needs at most six times that (six bytes for a control character), so the cap is far
-     * above any body the mock answers.
+     * The most bytes of the descriptor documents a Backstage import takes together, 2 MiB
+     * (doc/specification/rest-api.adoc, <em>Directory and Catalog Requests</em>); it is the {@code limit} of the
+     * {@code 413 TOO_LARGE} of the import requests.
      */
-    public static final int MAX_BODY_BYTES = 1_048_576;
+    public static final int IMPORT_LIMIT_BYTES = 2_097_152;
+
+    /** The path of the Backstage import; the path of its preview is this one and {@code /preview}. */
+    private static final String IMPORT_PATH = API + "catalogs/import/backstage";
+
+    /**
+     * The most bytes of a request body the adapter buffers. The largest text the mock answers is the import (at most
+     * {@link #IMPORT_LIMIT_BYTES} of descriptors); escaped in JSON it needs at most six times that (six bytes for a
+     * control character), so the cap is far above any body the mock answers and covers the AsciiDoc source (at most
+     * 65,536 bytes) as well.
+     */
+    public static final int MAX_BODY_BYTES = 6 * IMPORT_LIMIT_BYTES;
 
     private static final String SET_COOKIE = "Set-Cookie";
     private static final String FORM = "application/x-www-form-urlencoded";
@@ -118,6 +130,9 @@ public final class MockEngine implements AutoCloseable {
     /** A request about one document: {@code /api/v1/(documents|drafts|releases)/{repository}/{id}[/...]}. */
     private static final Pattern DOCUMENT_REQUEST = Pattern
             .compile("^/api/v1/(?:documents|drafts|releases)/([^/]+)/[^/]+(?:/|$)");
+    /** When the catalog entry handler says an entry was saved, and when retired (the mock's "now" is 2026-11-26). */
+    private static final String CATALOG_SAVED_AT = "2026-11-26T09:30:00Z";
+    private static final String CATALOG_RETIRED_AT = "2026-11-26T09:35:00Z";
     private static final int SEARCH_MIN = 2;
     private static final int SEARCH_MAX = 200;
     private static final int SEARCH_LIMIT = 20;
@@ -131,8 +146,8 @@ public final class MockEngine implements AutoCloseable {
     /** The requests a session without a right still makes: the shell and the first login. */
     private static final Set<String> SHELL = Set.of("GET /api/v1/status", "GET /api/v1/messages",
             "GET /api/v1/session", "GET /api/v1/due", "GET " + EVENTS_PATH, "POST /api/v1/auth/logout",
-            "GET /api/v1/directory/me", "PUT /api/v1/directory/me", "GET /api/v1/catalogs/team",
-            "GET /api/v1/catalogs/role", LOGIN_ROUTE, CALLBACK_ROUTE);
+            "GET /api/v1/directory/me", "PUT /api/v1/directory/me", "POST /api/v1/directory/me/confirmation",
+            "GET /api/v1/catalogs/team", "GET /api/v1/catalogs/role", LOGIN_ROUTE, CALLBACK_ROUTE);
 
     private final ObjectMapper mapper;
     private final ScenarioRegistry registry;
@@ -285,14 +300,31 @@ public final class MockEngine implements AutoCloseable {
         Optional<Link> link = state.linkFor(request.method(), request.path(), query);
         if (link.isPresent()) {
             var taken = link.get();
+            if (!permitted(taken.requires())) {
+                return forbidden();
+            }
             if (!taken.next().equals(state.id())) {
                 enter(scenario.state(taken.next()).orElseThrow(), 0);
             }
             return answer(taken.status(), taken.body());
         }
-        return scenario.route(state, request.method(), request.path(), query).map(route -> route.handler() == null
-                ? answer(route.status(), route.body()) : handled(route.handler(), route, request))
-                .orElseGet(() -> unrouted(request));
+        return scenario.match(state, request.method(), request.path(), query).map(match -> {
+            var route = match.route();
+            if (!permitted(route.requires())) {
+                return forbidden();
+            }
+            return route.handler() == null ? answer(route.status(), route.body())
+                    : handled(route.handler(), route, request, match.captures());
+        }).orElseGet(() -> unrouted(request));
+    }
+
+    private MockResponse forbidden() {
+        return json(403, object().put(OUTCOME, "FORBIDDEN"));
+    }
+
+    /** Whether the rights of the scenario hold what a route or a link requires; no requirement is always held. */
+    private boolean permitted(@Nullable Requirement requires) {
+        return requires == null || requires.heldBy(scenario.rights());
     }
 
     /**
@@ -310,10 +342,49 @@ public final class MockEngine implements AutoCloseable {
     }
 
     /** The answer a built-in handler computes; the switch is exhaustive over {@link Handler}. */
-    private MockResponse handled(Handler handler, Route route, MockRequest request) {
+    private MockResponse handled(Handler handler, Route route, MockRequest request, Map<String, String> captures) {
         return switch (handler) {
             case RENDER_ASCIIDOC -> renderAsciiDoc(request);
             case SEARCH_DOCUMENTS -> searchDocuments(request, route.body());
+            case CATALOG_ENTRY -> catalogEntry(request, route.body(), captures.getOrDefault("id", ""));
+        };
+    }
+
+    /**
+     * The entry requests of one catalog over its data file (doc/specification/rest-api.adoc, <em>The Entries</em>):
+     * {@code GET} reads the entry as the file holds it, {@code PUT} answers {@code SAVED} (a retired entry
+     * {@code 409 RETIRED}), {@code POST .../retirement} answers {@code RETIRED}; an unknown id is
+     * {@code 404 NOT_FOUND}. The mock stores nothing: a state decides what the next read shows.
+     */
+    private MockResponse catalogEntry(MockRequest request, JsonNode data, String id) {
+        String catalog = data.path("catalog").asText();
+        JsonNode found = null;
+        for (var entry : data.path("entries")) {
+            if (id.equals(entry.path("id").asText())) {
+                found = entry;
+                break;
+            }
+        }
+        if (found == null) {
+            return json(404, object().put(OUTCOME, "NOT_FOUND"));
+        }
+        boolean retirement = request.path().endsWith("/retirement");
+        return switch (request.method()) {
+            case GET -> {
+                ObjectNode body = object().put("catalog", catalog).put("id", id).put("name", found.path("name").asText())
+                        .put("retired", found.path("retired").asBoolean(false));
+                body.set("value", found.path("value"));
+                body.set("effective", found.path("effective"));
+                body.put("at", found.path("at").asText());
+                body.set("history", found.path("history"));
+                yield json(200, body);
+            }
+            case "PUT" -> found.path("retired").asBoolean(false) ? json(409, object().put(OUTCOME, "RETIRED"))
+                    : json(200, object().put(OUTCOME, "SAVED").put("catalog", catalog).put("id", id)
+                    .put("at", CATALOG_SAVED_AT));
+            case POST -> retirement ? json(200, object().put(OUTCOME, "RETIRED").put("catalog", catalog).put("id", id)
+                    .put("at", CATALOG_RETIRED_AT)) : noRoute(request);
+            default -> noRoute(request);
         };
     }
 
@@ -393,6 +464,7 @@ public final class MockEngine implements AutoCloseable {
         });
         body.put("csrfToken", session.csrfToken());
         body.put("firstLoginRequired", firstLogin);
+        body.put("directoryConfirmationDue", scenario.directoryConfirmationDue(state));
         return body;
     }
 
@@ -415,7 +487,7 @@ public final class MockEngine implements AutoCloseable {
         try {
             var route = scenario.route(state, request.method(), request.path(), request.queryParameters());
             if (route.isPresent()) {
-                return navigation(request, route.get());
+                return permitted(route.get().requires()) ? navigation(request, route.get()) : forbidden();
             }
             String target = addresses.checkReturn(request.queryParameter("return").orElse(null));
             if (scenario.login().isLocal()) {
@@ -441,7 +513,7 @@ public final class MockEngine implements AutoCloseable {
         lock.lock();
         try {
             return scenario.route(state, request.method(), request.path(), request.queryParameters())
-                    .map(route -> navigation(request, route));
+                    .map(route -> permitted(route.requires()) ? navigation(request, route) : forbidden());
         } finally {
             lock.unlock();
         }
@@ -622,6 +694,7 @@ public final class MockEngine implements AutoCloseable {
         ObjectNode body = object().put(SCENARIO_FIELD, scenario.name()).put("state", state.id())
                 .put("description", state.description())
                 .put("first_login_required", scenario.firstLoginRequired(state))
+                .put("directory_confirmation_due", scenario.directoryConfirmationDue(state))
                 .put("timing", timing.name().toLowerCase(Locale.ROOT));
         var links = body.putArray("links");
         state.links().values().forEach(link -> links.addObject().put("name", link.name())
@@ -742,14 +815,18 @@ public final class MockEngine implements AutoCloseable {
     }
 
     /**
-     * The answer to a body above {@link #MAX_BODY_BYTES}: {@code 413 TOO_LARGE} with the limit of the only request
-     * that takes a large text, the AsciiDoc source (doc/specification/rest-api.adoc, <em>Form Kit Requests</em>). The
-     * adapter answers it before it buffers the rest of the body.
+     * The answer to a body above {@link #MAX_BODY_BYTES}: {@code 413 TOO_LARGE} with the limit of the request the path
+     * names: {@link #IMPORT_LIMIT_BYTES} for the Backstage import and its preview, otherwise the limit of the AsciiDoc
+     * source (doc/specification/rest-api.adoc, <em>Form Kit Requests</em>). The adapter answers it before it buffers
+     * the rest of the body.
      *
+     * @param path the path of the request
      * @return the refusal
      */
-    public MockResponse bodyTooLarge() {
-        return json(413, object().put(OUTCOME, "TOO_LARGE").put("limit", AsciiDocPreview.LIMIT_BYTES));
+    public MockResponse bodyTooLarge(String path) {
+        boolean importRequest = path.equals(IMPORT_PATH) || path.equals(IMPORT_PATH + "/preview");
+        return json(413, object().put(OUTCOME, "TOO_LARGE")
+                .put("limit", importRequest ? IMPORT_LIMIT_BYTES : AsciiDocPreview.LIMIT_BYTES));
     }
 
     private MockResponse noRoute(MockRequest request) {

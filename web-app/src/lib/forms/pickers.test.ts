@@ -23,7 +23,10 @@ describe('CatalogPicker (AUN-WEB-4, The Pickers)', () => {
       'Payment API',
       'Customer Portal',
       'Identity Provider',
+      'Customer database',
       'Reporting Service',
+      'Report scheduler',
+      'Notification service',
     ]);
     await fireEvent.change(service, { target: { value: 'service:payment-api' } });
     expect(last(onchange)).toEqual({ service: 'service:payment-api' });

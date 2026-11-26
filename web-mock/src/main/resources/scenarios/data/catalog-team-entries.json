@@ -1,0 +1,124 @@
+{
+  "catalog": "team",
+  "entries": [
+    {
+      "id": "payments",
+      "name": "Payments",
+      "retired": false,
+      "value": {
+        "id": "payments",
+        "name": "Payments",
+        "description": "Builds and runs everything around paying for an order."
+      },
+      "effective": null,
+      "at": "2026-02-11T13:00:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "identity",
+      "name": "Identity Platform",
+      "retired": false,
+      "value": {
+        "id": "identity",
+        "name": "Identity Platform",
+        "description": "Owns sign-in, accounts and the customer data behind them."
+      },
+      "effective": null,
+      "at": "2026-02-11T13:00:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mobile",
+      "name": "Mobile Apps",
+      "retired": false,
+      "value": {
+        "id": "mobile",
+        "name": "Mobile Apps",
+        "description": "Builds the apps for phones and the services only they use."
+      },
+      "effective": null,
+      "at": "2026-02-11T13:00:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "security-office",
+      "name": "Security Office",
+      "retired": false,
+      "value": {
+        "id": "security-office",
+        "name": "Security Office",
+        "description": "Steers information security and keeps the evidence."
+      },
+      "effective": null,
+      "at": "2026-02-11T13:00:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "legacy-billing",
+      "name": "Legacy Billing",
+      "retired": true,
+      "value": {
+        "id": "legacy-billing",
+        "name": "Legacy Billing",
+        "description": "The former team of the old billing system, now part of Payments.",
+        "parent": "team:payments"
+      },
+      "effective": null,
+      "at": "2026-07-01T09:00:00Z",
+      "history": [
+        {
+          "kind": "retire",
+          "at": "2026-07-01T09:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        },
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    }
+  ]
+}

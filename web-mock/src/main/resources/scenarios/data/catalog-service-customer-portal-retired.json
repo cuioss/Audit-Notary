@@ -1,0 +1,123 @@
+{
+  "catalog": "service",
+  "id": "customer-portal",
+  "name": "Customer Portal",
+  "retired": true,
+  "value": {
+    "id": "customer-portal",
+    "name": "Customer Portal",
+    "description": "The place where customers see their orders and their account.",
+    "system": "system:webshop",
+    "lifecycle": "active",
+    "owner": {
+      "team": "team:mobile",
+      "role": "role:service-owner"
+    },
+    "repositories": [
+      "https://git.example/mobile/customer-portal"
+    ],
+    "dependsOn": [
+      "service:payment-api",
+      "service:identity-provider"
+    ],
+    "protection-needs": {
+      "confidentiality": "normal",
+      "integrity": "normal",
+      "availability": "high"
+    },
+    "data-classes": [
+      "personal"
+    ]
+  },
+  "effective": {
+    "protectionNeeds": {
+      "confidentiality": "very-high",
+      "integrity": "very-high",
+      "availability": "high"
+    },
+    "decidedBy": {
+      "confidentiality": "service:identity-provider",
+      "integrity": "service:identity-provider",
+      "availability": "service:customer-portal"
+    },
+    "dependencies": [
+      {
+        "ref": "service:identity-provider",
+        "name": "Identity Provider",
+        "depth": 1,
+        "via": "service:customer-portal",
+        "retired": false,
+        "counts": true,
+        "protectionNeeds": {
+          "confidentiality": "very-high",
+          "integrity": "very-high",
+          "availability": "high"
+        }
+      },
+      {
+        "ref": "service:payment-api",
+        "name": "Payment API",
+        "depth": 1,
+        "via": "service:customer-portal",
+        "retired": false,
+        "counts": true,
+        "protectionNeeds": {
+          "confidentiality": "high",
+          "integrity": "high",
+          "availability": "high"
+        }
+      },
+      {
+        "ref": "external:cloud-hosting",
+        "name": "Cloud hosting",
+        "depth": 2,
+        "via": "service:identity-provider",
+        "retired": false,
+        "counts": false,
+        "protectionNeeds": null
+      },
+      {
+        "ref": "external:psp-provider",
+        "name": "Payment service provider",
+        "depth": 2,
+        "via": "service:payment-api",
+        "retired": false,
+        "counts": false,
+        "protectionNeeds": null
+      },
+      {
+        "ref": "service:customer-db",
+        "name": "Customer database",
+        "depth": 2,
+        "via": "service:payment-api",
+        "retired": false,
+        "counts": true,
+        "protectionNeeds": {
+          "confidentiality": "very-high",
+          "integrity": "high",
+          "availability": "normal"
+        }
+      }
+    ],
+    "cycle": null
+  },
+  "at": "2026-11-26T09:35:00Z",
+  "history": [
+    {
+      "kind": "retire",
+      "at": "2026-11-26T09:35:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "kind": "create",
+      "at": "2026-02-12T08:15:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    }
+  ]
+}

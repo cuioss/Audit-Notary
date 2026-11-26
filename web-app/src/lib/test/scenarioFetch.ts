@@ -22,8 +22,10 @@ interface RouteDefinition {
   body?: unknown;
   /** A data file below `scenarios/data/` whose JSON is the body, as the mock's `body_file`. */
   body_file?: string;
-  /** The data file a handler reads (the search index), as the mock's `data_file`. */
+  /** The data file a handler reads (the search index, the entries of a catalog), as the mock's `data_file`. */
   data_file?: string;
+  /** The right the user must hold for the route or link to answer, as the mock's `requires`: else `403 FORBIDDEN`. */
+  requires?: { repository: string; action: string };
 }
 
 /** The most bytes of source the preview handler renders, as the mock's. */
@@ -40,6 +42,8 @@ interface LinkDefinition extends RouteDefinition {
 
 interface StateDefinition {
   first_login_required?: boolean;
+  /** The override of the scenario's `directory_confirmation_due`, as the mock's. */
+  directory_confirmation_due?: boolean;
   /** On entering: the session gets a new anti-CSRF token (a new login in the same browser replaced it). */
   session_replaced?: boolean;
   /** On entering: every session is dropped; the next request answers `UNAUTHENTICATED`. */
@@ -61,6 +65,8 @@ export interface ScenarioFile {
   user: { pseudonym: string | null; name: string };
   rights: unknown[];
   first_login_required: boolean;
+  /** Whether the session says the own directory entry is to be confirmed again (default `false`). */
+  directory_confirmation_due?: boolean;
   start: string;
   routes: Record<string, RouteDefinition>;
   states: Record<string, StateDefinition>;
@@ -189,11 +195,16 @@ function renderAnswer(bodyText: string): Response {
   return answer({ body: { html: renderAsciiDocLikeTheMock(source) } });
 }
 
-/** What a built-in handler sees of a request: its body text, its URL, the data file of its route and the rights. */
+/**
+ * What a built-in handler sees of a request: its method, its body text, its URL, the data file of its route, the path
+ * segments the template of the route key stood for and the rights.
+ */
 interface HandlerContext {
+  method: string;
   bodyText: string;
   url: URL;
   data: unknown;
+  captures: Record<string, string>;
   rights: { repository: string; actions: string[] }[];
 }
 
@@ -246,6 +257,55 @@ function searchAnswer(context: HandlerContext): Response {
   });
 }
 
+/** When the mock says an entry was saved, and when retired (its "now" is 2026-11-26). */
+const CATALOG_SAVED_AT = '2026-11-26T09:30:00Z';
+const CATALOG_RETIRED_AT = '2026-11-26T09:35:00Z';
+
+/**
+ * The answer of the entry requests of one catalog by the rules of the mock's `catalog-entry` handler (rest-api.adoc, The
+ * Entries): `GET` reads the entry as the data file holds it, `PUT` answers `SAVED` (a retired entry `409 RETIRED`),
+ * `POST .../retirement` answers `RETIRED`; an unknown id is `404 NOT_FOUND`.
+ *
+ * @param context the request
+ * @returns the answer
+ */
+function catalogEntryAnswer(context: HandlerContext): Response {
+  const data = context.data as { catalog: string; entries: Record<string, unknown>[] };
+  const id = context.captures.id ?? '';
+  const found = data.entries.find((entry) => entry.id === id);
+  if (found === undefined) return answer({ status: 404, body: { outcome: 'NOT_FOUND' } });
+  if (context.method === 'GET') {
+    return answer({
+      body: {
+        catalog: data.catalog,
+        id,
+        name: found.name,
+        retired: found.retired ?? false,
+        value: found.value,
+        effective: found.effective,
+        at: found.at,
+        history: found.history,
+      },
+    });
+  }
+  if (context.method === 'PUT') {
+    return found.retired === true
+      ? answer({ status: 409, body: { outcome: 'RETIRED' } })
+      : answer({
+          body: { outcome: 'SAVED', catalog: data.catalog, id, at: CATALOG_SAVED_AT },
+        });
+  }
+  if (context.method === 'POST' && context.url.pathname.endsWith('/retirement')) {
+    return answer({
+      body: { outcome: 'RETIRED', catalog: data.catalog, id, at: CATALOG_RETIRED_AT },
+    });
+  }
+  return answer({
+    status: 404,
+    body: { outcome: 'MOCK_NO_ROUTE', method: context.method, path: context.url.pathname },
+  });
+}
+
 /**
  * The built-in handlers of the mock's engine, each name with its own answer. The names are those of the `web-mock`
  * `Handler` enum; `scenarioFetch.test.ts` fails when the two differ.
@@ -253,6 +313,7 @@ function searchAnswer(context: HandlerContext): Response {
 export const HANDLERS: ReadonlyMap<string, (context: HandlerContext) => Response> = new Map([
   ['render-asciidoc', (context: HandlerContext) => renderAnswer(context.bodyText)],
   ['search-documents', searchAnswer],
+  ['catalog-entry', catalogEntryAnswer],
 ]);
 
 /**
@@ -295,6 +356,7 @@ const SHELL_REQUESTS = new Set([
   'POST /api/v1/auth/logout',
   'GET /api/v1/directory/me',
   'PUT /api/v1/directory/me',
+  'POST /api/v1/directory/me/confirmation',
   'GET /api/v1/catalogs/team',
   'GET /api/v1/catalogs/role',
 ]);
@@ -305,9 +367,12 @@ const DOCUMENT_REQUEST = /^\/api\/v1\/(?:documents|drafts|releases)\/([^/]+)\/[^
 /** The requests that need no session. */
 const PUBLIC_REQUESTS = new Set(['GET /api/v1/status', 'GET /api/v1/messages']);
 
+/** The name pattern of a `{name}` segment of a key, the same as the mock's. */
+const TEMPLATE_SEGMENT = /^\{([a-z][a-z0-9]*)\}$/;
+
 /**
  * The key of a route or link with its parts: `METHOD /path` or `METHOD /path?name=value[&name=value]` (the mock's
- * `RouteKey`).
+ * `RouteKey`); the path may hold `{name}` segments that stand for one non-empty segment each.
  *
  * @param key a route key
  * @returns method, path and the required query
@@ -324,35 +389,102 @@ function parseKey(key: string): { method: string; path: string; query: URLSearch
 }
 
 /**
+ * Matches a path against the path of a key, as the mock's `RouteKey.capture`: an exact path is equal; a template has as
+ * many segments as the request and each `{name}` takes one non-empty segment.
+ *
+ * @param pattern the path of the key
+ * @param actual the path of the request
+ * @returns the captured segments by name, or `undefined` when the path does not match
+ */
+function matchPath(pattern: string, actual: string): Record<string, string> | undefined {
+  if (!pattern.includes('{')) return pattern === actual ? {} : undefined;
+  const own = pattern.split('/');
+  const given = actual.split('/');
+  if (own.length !== given.length) return undefined;
+  const captured: Record<string, string> = {};
+  for (let i = 0; i < own.length; i += 1) {
+    const name = TEMPLATE_SEGMENT.exec(own[i])?.[1];
+    if (name !== undefined) {
+      if (given[i] === '') return undefined;
+      captured[name] = given[i];
+    } else if (own[i] !== given[i]) {
+      return undefined;
+    }
+  }
+  return captured;
+}
+
+/** What `mostSpecific` found: the entry and the path segments the template of its key stood for. */
+interface Found<T> {
+  entry: T;
+  captures: Record<string, string>;
+}
+
+/**
  * The most specific match of a request among keyed entries, by the rule of the mock: the key must have the request's
- * method and path and every listed query name with exactly the listed value (further parameters do not hinder it); a key
- * without query matches any query; of several matches the one with the most listed parameters wins. Equal matches of
- * routes are told apart by their key text (`ties: 'text'`, so that the answer never depends on the order of a map);
- * equal links keep the first in the order of the state (`ties: 'order'`), as `ScenarioState.linkFor` does.
+ * method and path (a `{name}` segment matches any one segment) and every listed query name with exactly the listed value
+ * (further parameters do not hinder it); a key without query matches any query. Of several matches an exact path wins
+ * over a templated one, then the key with more literal segments, then the one with more listed parameters. Equal
+ * matches of routes are told apart by their key text (`ties: 'text'`, so that the answer never depends on the order of a
+ * map); equal links keep the first in the order of the state (`ties: 'order'`), as `ScenarioState.linkFor` does.
  *
  * @param entries the entries as key and value, in their order
  * @param method the request method
  * @param url the request URL
  * @param ties how equal matches are told apart
- * @returns the entry, or `undefined`
+ * @returns the entry with its captures, or `undefined`
  */
 function mostSpecific<T>(
   entries: ReadonlyArray<readonly [string, T]>,
   method: string,
   url: URL,
   ties: 'text' | 'order',
-): T | undefined {
-  let best: { size: number; key: string; entry: T } | undefined;
+): Found<T> | undefined {
+  let best: { rank: [number, number, number]; key: string; found: Found<T> } | undefined;
   for (const [key, entry] of entries) {
     const parsed = parseKey(key);
-    if (parsed.method !== method || parsed.path !== url.pathname) continue;
+    if (parsed.method !== method) continue;
+    const captures = matchPath(parsed.path, url.pathname);
+    if (captures === undefined) continue;
     if (![...parsed.query].every(([name, value]) => url.searchParams.get(name) === value)) continue;
-    const size = [...parsed.query].length;
-    if (!best || size > best.size || (ties === 'text' && size === best.size && key < best.key)) {
-      best = { size, key, entry };
+    const literal = parsed.path
+      .split('/')
+      .filter((segment) => segment !== '' && !TEMPLATE_SEGMENT.test(segment));
+    const rank: [number, number, number] = [
+      parsed.path.includes('{') ? 1 : 0,
+      -literal.length,
+      -[...parsed.query].length,
+    ];
+    const order = best ? compareRank(rank, best.rank) : -1;
+    if (order < 0 || (ties === 'text' && order === 0 && best !== undefined && key < best.key)) {
+      best = { rank, key, found: { entry, captures } };
     }
   }
-  return best?.entry;
+  return best?.found;
+}
+
+/**
+ * @param a a rank: templated (0 or 1), minus the literal segments, minus the listed parameters
+ * @param b another rank
+ * @returns a negative number when `a` is the more specific
+ */
+function compareRank(a: [number, number, number], b: [number, number, number]): number {
+  return a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+}
+
+/**
+ * @param requires what a route or link demands, or `undefined`
+ * @param rights the rights of the scenario
+ * @returns whether they hold it; no requirement is always held (the mock's `Requirement.heldBy`)
+ */
+function holds(
+  requires: RouteDefinition['requires'],
+  rights: { repository: string; actions: string[] }[],
+): boolean {
+  return (
+    requires === undefined ||
+    rights.some((r) => r.repository === requires.repository && r.actions.includes(requires.action))
+  );
 }
 
 /** What `scenarioFetch` returns. */
@@ -431,6 +563,8 @@ export function scenarioFetch(reference: string): ScenarioFetch {
     if (key === 'GET /api/v1/messages') {
       return answer({ body: mockMessages(url.searchParams.get('lang') === 'de' ? 'de' : 'en') });
     }
+    const rights = scenario.rights as { repository: string; actions: string[] }[];
+    const forbidden = (): Response => answer({ status: 403, body: { outcome: 'FORBIDDEN' } });
     const link = mostSpecific(
       Object.values(current.links ?? {}).map((candidate) => [
         `${candidate.method} ${candidate.path}`,
@@ -439,8 +573,9 @@ export function scenarioFetch(reference: string): ScenarioFetch {
       method,
       url,
       'order',
-    );
+    )?.entry;
     if (link) {
+      if (!holds(link.requires, rights)) return forbidden();
       const response = answer(link);
       enter(link.next);
       return response;
@@ -453,12 +588,16 @@ export function scenarioFetch(reference: string): ScenarioFetch {
           rights: scenario.rights,
           csrfToken: generation === 0 ? 'scenario-token' : `scenario-token-${generation}`,
           firstLoginRequired: firstLogin,
+          directoryConfirmationDue:
+            current.directory_confirmation_due ?? scenario.directory_confirmation_due ?? false,
         },
       });
     }
-    const route =
+    const found =
       mostSpecific(Object.entries(current.routes ?? {}), method, url, 'text') ??
       mostSpecific(Object.entries(scenario.routes), method, url, 'text');
+    const route = found?.entry;
+    if (route !== undefined && !holds(route.requires, rights)) return forbidden();
     if (route?.handler !== undefined) {
       const handle = HANDLERS.get(route.handler);
       if (handle === undefined) throw new Error(`unknown handler: ${route.handler}`);
@@ -471,19 +610,18 @@ export function scenarioFetch(reference: string): ScenarioFetch {
       const data =
         route.data_file === undefined ? undefined : bodyOf({ body_file: route.data_file });
       return handle({
+        method,
         bodyText: text,
         url,
         data,
-        rights: scenario.rights as HandlerContext['rights'],
+        captures: found?.captures ?? {},
+        rights,
       });
     }
     if (route) return answer(route);
     // As the mock's `unrouted`: a document, draft or release of a repository the rights name, but no route, is not there.
     const document = DOCUMENT_REQUEST.exec(url.pathname);
-    if (
-      document &&
-      (scenario.rights as { repository: string }[]).some((r) => r.repository === document[1])
-    ) {
+    if (document && rights.some((r) => r.repository === document[1])) {
       return answer({ status: 404, body: { outcome: 'NOT_FOUND' } });
     }
     return answer({ status: 404, body: { outcome: 'MOCK_NO_ROUTE', method, path: url.pathname } });

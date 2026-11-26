@@ -28,7 +28,14 @@ public enum Handler {
      * {@code GET /api/v1/search}: the search of documents over the {@code data_file} of the route, restricted to the
      * repositories the scenario's rights grant {@code read} on.
      */
-    SEARCH_DOCUMENTS("search-documents", true);
+    SEARCH_DOCUMENTS("search-documents", true),
+
+    /**
+     * The entry requests of one catalog over the {@code data_file} of the route, which holds
+     * {@code {"catalog", "entries": [...]}}: {@code GET} reads an entry, {@code PUT} saves it, {@code POST} of
+     * {@code .../retirement} retires it. The route key is a template with the segment {@code {id}}.
+     */
+    CATALOG_ENTRY("catalog-entry", true);
 
     private final String id;
     private final boolean dataFile;

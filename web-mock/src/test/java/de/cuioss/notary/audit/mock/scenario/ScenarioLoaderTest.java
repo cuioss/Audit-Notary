@@ -38,6 +38,7 @@ class ScenarioLoaderTest {
             "model.json", "{\"version\": \"v2.2.0\"}",
             "broken.json", "{nope",
             "blank.json", "  ",
+            "catalog.json", "{\"catalog\": \"service\", \"entries\": []}",
             "trailing.json", "{\"a\": 1} junk");
     private final ScenarioLoader loader = new ScenarioLoader(MAPPER, name -> Optional.ofNullable(DATA.get(name)));
 
@@ -159,10 +160,11 @@ class ScenarioLoaderTest {
             var root = valid();
             var route = MAPPER.createObjectNode().put("handler", handler.id());
             if (handler.usesDataFile()) {
-                route.put("data_file", "model.json");
+                route.put("data_file", handler == Handler.CATALOG_ENTRY ? "catalog.json" : "model.json");
             }
-            ((ObjectNode) root.path("routes")).set("POST /api/v1/handler", route);
-            assertEquals(handler, loader.read("sample.json", root).routes().get("POST /api/v1/handler").handler());
+            String key = "POST /api/v1/handler" + (handler == Handler.CATALOG_ENTRY ? "/{id}" : "");
+            ((ObjectNode) root.path("routes")).set(key, route);
+            assertEquals(handler, loader.read("sample.json", root).routes().get(key).handler());
             assertEquals(Optional.of(handler), Handler.byId(handler.id()));
         }
         assertEquals(Optional.empty(), Handler.byId("render-markdown"));
@@ -201,6 +203,150 @@ class ScenarioLoaderTest {
                 () -> assertTrue(scenario.state("a").orElseThrow().linkFor("PUT", "/api/v1/directory/me",
                         Map.of("x", " a", "y", "1")).isPresent()),
                 () -> assertTrue(scenario.state("a").orElseThrow().linkFor("PUT", "/api/v1/directory/me").isEmpty()));
+    }
+
+    @Nested
+    @DisplayName("reads and refuses a path template")
+    class PathTemplates {
+
+        private String rejectionOfKey(String key) {
+            return rejectionOf(root -> ((ObjectNode) root.path("routes")).putObject(key).put("status", 200));
+        }
+
+        @Test
+        @DisplayName("reads a route key and a link with a {name} segment")
+        void shouldReadATemplate() {
+            var root = valid();
+            ((ObjectNode) root.path("routes")).putObject("PUT /api/v1/catalogs/service/{id}").put("status", 200);
+            ((ObjectNode) root.path("states").path("a").path("links").path("go")).put("path", "/api/v1/things/{kind2}/x");
+            var scenario = loader.read("sample.json", root);
+            assertAll(
+                    () -> assertTrue(scenario.routes().containsKey("PUT /api/v1/catalogs/service/{id}")),
+                    () -> assertTrue(scenario.state("a").orElseThrow().linkFor("PUT", "/api/v1/things/abc/x").isPresent()),
+                    () -> assertTrue(scenario.state("a").orElseThrow().linkFor("PUT", "/api/v1/things//x").isEmpty()));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"GET /api/v1/a/{}", "GET /api/v1/a/{id}/{id}", "GET /api/v1/a/x{id}", "GET /api/v1/a/{id}x",
+                "GET /api/v1/a/{Id}", "GET /api/v1/a/{1id}", "GET /api/v1/a/{i-d}", "GET /api/v1/a/{id", "GET /api/v1/a/id}",
+                "GET /api/v1/a/{{id}}"})
+        @DisplayName("refuses an empty name, a name twice, a brace inside a segment and a name outside [a-z][a-z0-9]*")
+        void shouldRefuseABadTemplate(String key) {
+            String message = rejectionOfKey(key);
+            assertAll(
+                    () -> assertTrue(message.contains("sample.json"), message),
+                    () -> assertTrue(message.contains("routes." + key), message),
+                    () -> assertTrue(message.contains("{name}") || message.contains("once"), message));
+        }
+
+        @Test
+        @DisplayName("names the rule for a name used twice")
+        void shouldNameTheRuleForADuplicate() {
+            assertTrue(rejectionOfKey("GET /api/v1/a/{id}/b/{id}").contains("only once"));
+        }
+
+        @Test
+        @DisplayName("refuses a bad template in a link as well, naming the link")
+        void shouldRefuseABadLinkTemplate() {
+            String message = rejectionOf(root -> ((ObjectNode) root.path("states").path("a").path("links").path("go"))
+                    .put("path", "/api/v1/a/{}"));
+            assertTrue(message.contains("states.a.links.go.path"), message);
+        }
+    }
+
+    @Nested
+    @DisplayName("reads and refuses requires and the confirmation flag")
+    class RequiresAndFlags {
+
+        @Test
+        @DisplayName("reads requires of a route, a handler route and a link")
+        void shouldReadRequires() {
+            var root = valid();
+            var requires = MAPPER.createObjectNode().put("repository", "directory").put("action", "administer-catalogs");
+            ((ObjectNode) root.path("routes")).putObject("POST /api/v1/catalogs/service").put("status", 201)
+                    .set("requires", requires);
+            ((ObjectNode) root.path("routes")).putObject("PUT /api/v1/catalogs/service/{id}")
+                    .put("handler", "catalog-entry").put("data_file", "catalog.json").set("requires", requires);
+            ((ObjectNode) root.path("states").path("a").path("links").path("go")).set("requires", requires);
+            var scenario = loader.read("sample.json", root);
+            var expected = new Requirement("directory", "administer-catalogs");
+            assertAll(
+                    () -> assertEquals(expected, scenario.routes().get("POST /api/v1/catalogs/service").requires()),
+                    () -> assertEquals(expected, scenario.routes().get("PUT /api/v1/catalogs/service/{id}").requires()),
+                    () -> assertEquals(expected, scenario.state("a").orElseThrow().links().get("go").requires()),
+                    () -> assertNull(scenario.routes().get("GET /api/v1/status").requires()));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"{\"repository\": \"\", \"action\": \"read\"}", "{\"repository\": \"directory\"}",
+                "{\"repository\": \"directory\", \"action\": 5}", "\"directory\"", "[]"})
+        @DisplayName("refuses a requires that is no object of two non-empty strings, naming the location")
+        void shouldRefuseABadRequires(String requires) {
+            String message = rejectionOf(root -> {
+                try {
+                    ((ObjectNode) root.path("routes").path("GET /api/v1/status")).set("requires", MAPPER.readTree(requires));
+                } catch (JsonProcessingException e) {
+                    throw new IllegalStateException(e);
+                }
+            });
+            assertTrue(message.contains("routes.GET /api/v1/status.requires"), message);
+        }
+
+        @Test
+        @DisplayName("refuses a requires of a link that is bad, naming the link")
+        void shouldRefuseABadLinkRequires() {
+            String message = rejectionOf(root -> ((ObjectNode) root.path("states").path("a").path("links").path("go"))
+                    .putObject("requires").put("repository", "directory"));
+            assertTrue(message.contains("states.a.links.go.requires"), message);
+        }
+
+        @Test
+        @DisplayName("reads directory_confirmation_due of the scenario and of a state, and refuses a non-boolean")
+        void shouldReadTheConfirmationFlag() {
+            var root = valid();
+            root.put("directory_confirmation_due", true);
+            ((ObjectNode) root.path("states").path("b")).put("directory_confirmation_due", false);
+            var scenario = loader.read("sample.json", root);
+            var a = scenario.state("a").orElseThrow();
+            var b = scenario.state("b").orElseThrow();
+            assertAll(
+                    () -> assertTrue(scenario.directoryConfirmationDue(a)),
+                    () -> assertFalse(scenario.directoryConfirmationDue(b)),
+                    () -> assertNull(a.directoryConfirmationDue()),
+                    () -> assertFalse(loader.read("sample.json", valid()).directoryConfirmationDue(a)),
+                    () -> assertTrue(rejectionOf(r -> r.put("directory_confirmation_due", "yes"))
+                            .contains("directory_confirmation_due")),
+                    () -> assertTrue(rejectionOf(r -> ((ObjectNode) r.path("states").path("a"))
+                            .put("directory_confirmation_due", 1)).contains("states.a.directory_confirmation_due")));
+        }
+    }
+
+    @Nested
+    @DisplayName("reads and refuses the handler catalog-entry")
+    class CatalogEntryHandler {
+
+        @Test
+        @DisplayName("needs a route key with the segment {id}")
+        void shouldNeedTheIdSegment() {
+            String message = rejectionOf(root -> ((ObjectNode) root.path("routes")).putObject("GET /api/v1/catalogs/service")
+                    .put("handler", "catalog-entry").put("data_file", "catalog.json"));
+            assertTrue(message.contains("{id}"), message);
+        }
+
+        @Test
+        @DisplayName("needs a data file with catalog and entries")
+        void shouldNeedACatalogDataFile() {
+            String message = rejectionOf(root -> ((ObjectNode) root.path("routes")).putObject("GET /api/v1/catalogs/service/{id}")
+                    .put("handler", "catalog-entry").put("data_file", "model.json"));
+            assertTrue(message.contains("routes.GET /api/v1/catalogs/service/{id}.data_file"), message);
+        }
+
+        @Test
+        @DisplayName("needs a data_file at all")
+        void shouldNeedADataFile() {
+            assertTrue(rejectionOf(root -> ((ObjectNode) root.path("routes")).putObject("GET /api/v1/catalogs/service/{id}")
+                    .put("handler", "catalog-entry")).contains("data_file"));
+        }
     }
 
     @Nested

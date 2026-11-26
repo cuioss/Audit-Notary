@@ -1,0 +1,898 @@
+{
+  "format_version": 1,
+  "name": "catalog-admin",
+  "description": "The administrator of the catalogs and the directory: the right administer-catalogs on the directory; every catalog, the Backstage import, the person directory and the erasure work.",
+  "user": {
+    "pseudonym": "p-7d2e58",
+    "name": "Noor Haddad",
+    "groups": [
+      "security-office"
+    ]
+  },
+  "rights": [
+    {
+      "repository": "directory",
+      "actions": [
+        "read",
+        "edit",
+        "approve",
+        "administer-catalogs"
+      ]
+    },
+    {
+      "repository": "samm-assessments",
+      "actions": [
+        "read"
+      ]
+    }
+  ],
+  "first_login_required": false,
+  "start": "ready",
+  "routes": {
+    "GET /api/v1/status": {
+      "status": 200,
+      "body": {
+        "version": "0.1.0-SNAPSHOT",
+        "degraded": false,
+        "loginProvider": "oidc",
+        "repositories": [
+          {
+            "alias": "samm-assessments",
+            "fetch": "UP"
+          },
+          {
+            "alias": "threat-models",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-register",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-incidents-2026",
+            "fetch": "UP"
+          },
+          {
+            "alias": "directory",
+            "fetch": "UP"
+          },
+          {
+            "alias": "test-notes",
+            "fetch": "UP"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/due": {
+      "status": 200,
+      "body": {
+        "items": []
+      }
+    },
+    "GET /api/v1/categories": {
+      "status": 200,
+      "body_file": "categories-none.json"
+    },
+    "GET /api/v1/catalogs/team": {
+      "status": 200,
+      "body_file": "catalogs-team.json"
+    },
+    "GET /api/v1/catalogs/team/schema": {
+      "status": 200,
+      "body_file": "catalog-schema-team.json"
+    },
+    "GET /api/v1/catalogs/team/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-team-entries.json"
+    },
+    "GET /api/v1/catalogs/role": {
+      "status": 200,
+      "body_file": "catalogs-role.json"
+    },
+    "GET /api/v1/catalogs/role/schema": {
+      "status": 200,
+      "body_file": "catalog-schema-role.json"
+    },
+    "GET /api/v1/catalogs/role/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-role-entries.json"
+    },
+    "GET /api/v1/catalogs/service": {
+      "status": 200,
+      "body_file": "catalogs-service.json"
+    },
+    "GET /api/v1/catalogs/service/schema": {
+      "status": 200,
+      "body_file": "catalog-schema-service.json"
+    },
+    "GET /api/v1/catalogs/service/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-service-entries.json"
+    },
+    "GET /api/v1/catalogs/system": {
+      "status": 200,
+      "body_file": "catalogs-system.json"
+    },
+    "GET /api/v1/catalogs/system/schema": {
+      "status": 200,
+      "body_file": "catalog-schema-system.json"
+    },
+    "GET /api/v1/catalogs/system/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-system-entries.json"
+    },
+    "GET /api/v1/catalogs/external": {
+      "status": 200,
+      "body_file": "catalogs-external.json"
+    },
+    "GET /api/v1/catalogs/external/schema": {
+      "status": 200,
+      "body_file": "catalog-schema-external.json"
+    },
+    "GET /api/v1/catalogs/external/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-external-entries.json"
+    },
+    "POST /api/v1/catalogs/team": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "catalog": "team",
+        "id": "platform",
+        "address": "/catalogs/team/platform",
+        "at": "2026-11-26T09:30:00Z"
+      },
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "PUT /api/v1/catalogs/team/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-team-entries.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/team/{id}/retirement": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-team-entries.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/role": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "catalog": "role",
+        "id": "auditor",
+        "address": "/catalogs/role/auditor",
+        "at": "2026-11-26T09:30:00Z"
+      },
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "PUT /api/v1/catalogs/role/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-role-entries.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/role/{id}/retirement": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-role-entries.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/service": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "catalog": "service",
+        "id": "notification-gateway",
+        "address": "/catalogs/service/notification-gateway",
+        "at": "2026-11-26T09:30:00Z"
+      },
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "PUT /api/v1/catalogs/service/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-service-entries.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/service/{id}/retirement": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-service-entries.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/system": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "catalog": "system",
+        "id": "mobile-apps",
+        "address": "/catalogs/system/mobile-apps",
+        "at": "2026-11-26T09:30:00Z"
+      },
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "PUT /api/v1/catalogs/system/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-system-entries.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/system/{id}/retirement": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-system-entries.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/external": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "catalog": "external",
+        "id": "audit-firm",
+        "address": "/catalogs/external/audit-firm",
+        "at": "2026-11-26T09:30:00Z"
+      },
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "PUT /api/v1/catalogs/external/{id}": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-external-entries.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/external/{id}/retirement": {
+      "handler": "catalog-entry",
+      "data_file": "catalog-external-entries.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/import/backstage/preview": {
+      "status": 200,
+      "body_file": "catalog-import-preview.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/catalogs/import/backstage": {
+      "status": 200,
+      "body_file": "catalog-import-result.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/directory/persons": {
+      "status": 201,
+      "body_file": "directory-persons-created.json",
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "POST /api/v1/directory/erasures": {
+      "status": 200,
+      "body": {
+        "outcome": "ERASED",
+        "pseudonym": "p-2b7f10",
+        "erasedOn": "2026-11-26"
+      },
+      "requires": {
+        "repository": "directory",
+        "action": "administer-catalogs"
+      }
+    },
+    "GET /api/v1/directory/persons": {
+      "status": 200,
+      "body_file": "directory-persons-admin.json"
+    },
+    "GET /api/v1/directory/persons/p-4c1a9e": {
+      "status": 200,
+      "body_file": "directory-person-p-4c1a9e.json"
+    },
+    "GET /api/v1/directory/persons/p-2b7f10": {
+      "status": 200,
+      "body_file": "directory-person-p-2b7f10.json"
+    },
+    "GET /api/v1/directory/persons/p-61c0d4": {
+      "status": 200,
+      "body_file": "directory-person-p-61c0d4.json"
+    },
+    "GET /api/v1/directory/persons/p-9e33a1": {
+      "status": 200,
+      "body_file": "directory-person-p-9e33a1.json"
+    },
+    "GET /api/v1/directory/persons/p-7d52e8": {
+      "status": 200,
+      "body_file": "directory-person-p-7d52e8.json"
+    },
+    "GET /api/v1/directory/persons/p-0f8a42": {
+      "status": 200,
+      "body_file": "directory-person-p-0f8a42.json"
+    },
+    "GET /api/v1/directory/persons/p-7d2e58": {
+      "status": 200,
+      "body_file": "directory-person-p-7d2e58.json"
+    },
+    "GET /api/v1/directory/persons/p-b3f1c7": {
+      "status": 200,
+      "body_file": "directory-person-p-b3f1c7.json"
+    },
+    "GET /api/v1/directory/persons/p-e08a52": {
+      "status": 200,
+      "body_file": "directory-person-p-e08a52.json"
+    },
+    "GET /api/v1/directory/persons/p-5c2d19": {
+      "status": 200,
+      "body_file": "directory-person-p-5c2d19.json"
+    },
+    "GET /api/v1/directory/persons/p-a7e341": {
+      "status": 200,
+      "body_file": "directory-person-p-a7e341.json"
+    },
+    "GET /api/v1/directory/persons/p-3b9d00": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      }
+    },
+    "GET /api/v1/directory/me": {
+      "status": 200,
+      "body_file": "directory-me-noor.json"
+    },
+    "PUT /api/v1/directory/me": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "pseudonym": "p-7d2e58",
+        "confirmedAt": "2026-11-26"
+      }
+    },
+    "POST /api/v1/directory/me/confirmation": {
+      "status": 200,
+      "body": {
+        "outcome": "CONFIRMED",
+        "confirmedAt": "2026-11-26"
+      }
+    }
+  },
+  "states": {
+    "ready": {
+      "description": "The administrator reads and changes the catalogs: creating a service, retiring the Customer Portal, prefilling persons and erasing one move to the state that shows the result.",
+      "links": {
+        "create-service": {
+          "method": "POST",
+          "path": "/api/v1/catalogs/service",
+          "next": "service-created",
+          "status": 201,
+          "body": {
+            "outcome": "CREATED",
+            "catalog": "service",
+            "id": "notification-gateway",
+            "address": "/catalogs/service/notification-gateway",
+            "at": "2026-11-26T09:30:00Z"
+          },
+          "requires": {
+            "repository": "directory",
+            "action": "administer-catalogs"
+          }
+        },
+        "retire-customer-portal": {
+          "method": "POST",
+          "path": "/api/v1/catalogs/service/customer-portal/retirement",
+          "next": "service-retired",
+          "status": 200,
+          "body": {
+            "outcome": "RETIRED",
+            "catalog": "service",
+            "id": "customer-portal",
+            "at": "2026-11-26T09:35:00Z"
+          },
+          "requires": {
+            "repository": "directory",
+            "action": "administer-catalogs"
+          }
+        },
+        "prefill-persons": {
+          "method": "POST",
+          "path": "/api/v1/directory/persons",
+          "next": "persons-added",
+          "status": 201,
+          "body_file": "directory-persons-created.json",
+          "requires": {
+            "repository": "directory",
+            "action": "administer-catalogs"
+          }
+        },
+        "erase-person": {
+          "method": "POST",
+          "path": "/api/v1/directory/erasures",
+          "next": "person-erased",
+          "status": 200,
+          "body": {
+            "outcome": "ERASED",
+            "pseudonym": "p-2b7f10",
+            "erasedOn": "2026-11-26"
+          },
+          "requires": {
+            "repository": "directory",
+            "action": "administer-catalogs"
+          }
+        }
+      }
+    },
+    "service-created": {
+      "description": "The service Notification gateway was created: the list of the services shows it and the event catalog-changed tells an open list.",
+      "routes": {
+        "GET /api/v1/catalogs/service": {
+          "status": 200,
+          "body_file": "catalogs-service-created.json"
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "catalog-changed",
+          "data": {
+            "catalog": "service",
+            "id": "notification-gateway",
+            "by": {
+              "pseudonym": "p-7d2e58",
+              "name": "Noor Haddad"
+            }
+          }
+        }
+      ]
+    },
+    "service-retired": {
+      "description": "The service Customer Portal was retired: the list and the entry show it retired, a change of it is refused with RETIRED, and the event catalog-changed tells an open list.",
+      "routes": {
+        "GET /api/v1/catalogs/service": {
+          "status": 200,
+          "body_file": "catalogs-service-retired.json"
+        },
+        "GET /api/v1/catalogs/service/customer-portal": {
+          "status": 200,
+          "body_file": "catalog-service-customer-portal-retired.json"
+        },
+        "PUT /api/v1/catalogs/service/customer-portal": {
+          "status": 409,
+          "body": {
+            "outcome": "RETIRED"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "catalog-changed",
+          "data": {
+            "catalog": "service",
+            "id": "customer-portal",
+            "by": {
+              "pseudonym": "p-7d2e58",
+              "name": "Noor Haddad"
+            }
+          }
+        }
+      ]
+    },
+    "catalog-invalid": {
+      "description": "Creating a service and changing the Payment API are refused: team, dependency and name are invalid.",
+      "routes": {
+        "POST /api/v1/catalogs/service": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/owner/team",
+                "code": "REFERENCE_NOT_FOUND"
+              },
+              {
+                "pointer": "/dependsOn/1",
+                "code": "REFERENCE_NOT_FOUND"
+              },
+              {
+                "pointer": "/name",
+                "code": "REQUIRED"
+              }
+            ]
+          }
+        },
+        "PUT /api/v1/catalogs/service/payment-api": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/owner/team",
+                "code": "REFERENCE_NOT_FOUND"
+              },
+              {
+                "pointer": "/dependsOn/1",
+                "code": "REFERENCE_NOT_FOUND"
+              },
+              {
+                "pointer": "/name",
+                "code": "REQUIRED"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "catalog-id-taken": {
+      "description": "Creating a service is refused: the id exists already.",
+      "routes": {
+        "POST /api/v1/catalogs/service": {
+          "status": 409,
+          "body": {
+            "outcome": "ID_TAKEN"
+          }
+        }
+      }
+    },
+    "catalog-rejected": {
+      "description": "The Git server rejects the commit: creating a service, changing the Payment API and retiring the Customer Portal answer REJECTED.",
+      "routes": {
+        "POST /api/v1/catalogs/service": {
+          "status": 502,
+          "body": {
+            "outcome": "REJECTED"
+          }
+        },
+        "PUT /api/v1/catalogs/service/payment-api": {
+          "status": 502,
+          "body": {
+            "outcome": "REJECTED"
+          }
+        },
+        "POST /api/v1/catalogs/service/customer-portal/retirement": {
+          "status": 502,
+          "body": {
+            "outcome": "REJECTED"
+          }
+        }
+      }
+    },
+    "catalog-changed-elsewhere": {
+      "description": "Jordan Weber saved the Payment API meanwhile: the entry read shows the new description and the event catalog-changed tells an open sheet.",
+      "routes": {
+        "GET /api/v1/catalogs/service/payment-api": {
+          "status": 200,
+          "body_file": "catalog-service-payment-api-changed.json"
+        }
+      },
+      "events": [
+        {
+          "after_ms": 300,
+          "event": "catalog-changed",
+          "data": {
+            "catalog": "service",
+            "id": "payment-api",
+            "by": {
+              "pseudonym": "p-2b7f10",
+              "name": "Jordan Weber"
+            }
+          }
+        }
+      ]
+    },
+    "import-invalid": {
+      "description": "The preview and the import refuse a descriptor: its content is not valid.",
+      "routes": {
+        "POST /api/v1/catalogs/import/backstage/preview": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/documents/0/content",
+                "code": "FORMAT"
+              }
+            ]
+          }
+        },
+        "POST /api/v1/catalogs/import/backstage": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/documents/0/content",
+                "code": "FORMAT"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "import-too-large": {
+      "description": "The preview and the import refuse the request: it is above 2 MiB.",
+      "routes": {
+        "POST /api/v1/catalogs/import/backstage/preview": {
+          "status": 413,
+          "body": {
+            "outcome": "TOO_LARGE",
+            "limit": 2097152
+          }
+        },
+        "POST /api/v1/catalogs/import/backstage": {
+          "status": 413,
+          "body": {
+            "outcome": "TOO_LARGE",
+            "limit": 2097152
+          }
+        }
+      }
+    },
+    "import-nothing-new": {
+      "description": "A repeated import: nothing is created or updated, eleven entries are unchanged, three items are left out.",
+      "routes": {
+        "POST /api/v1/catalogs/import/backstage/preview": {
+          "status": 200,
+          "body_file": "catalog-import-repeat-preview.json"
+        },
+        "POST /api/v1/catalogs/import/backstage": {
+          "status": 200,
+          "body_file": "catalog-import-repeat.json"
+        }
+      }
+    },
+    "persons-invalid": {
+      "description": "Prefilling persons is refused: the team of the second person is in no catalog.",
+      "routes": {
+        "POST /api/v1/directory/persons": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/persons/1/memberships/0/team",
+                "code": "REFERENCE_NOT_FOUND"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "persons-added": {
+      "description": "Nadia Kovac and Omar Haddad were prefilled: the table lists them as unbound.",
+      "routes": {
+        "GET /api/v1/directory/persons": {
+          "status": 200,
+          "body_file": "directory-persons-admin-added.json"
+        }
+      }
+    },
+    "person-erased": {
+      "description": "Jordan Weber was erased: the table no longer lists the person and the read shows a former person without a name.",
+      "routes": {
+        "GET /api/v1/directory/persons": {
+          "status": 200,
+          "body_file": "directory-persons-admin-erased.json"
+        },
+        "GET /api/v1/directory/persons/p-2b7f10": {
+          "status": 200,
+          "body_file": "directory-person-p-2b7f10-former.json"
+        }
+      }
+    },
+    "erase-managed-by-source": {
+      "description": "The person directory is managed by the organisation's own source: prefilling and erasing are answered MANAGED_BY_SOURCE and nothing is changed.",
+      "routes": {
+        "POST /api/v1/directory/erasures": {
+          "status": 409,
+          "body": {
+            "outcome": "MANAGED_BY_SOURCE",
+            "type": "managed-by-source"
+          }
+        },
+        "POST /api/v1/directory/persons": {
+          "status": 409,
+          "body": {
+            "outcome": "MANAGED_BY_SOURCE",
+            "type": "managed-by-source"
+          }
+        }
+      }
+    },
+    "git-unavailable": {
+      "description": "The Git server of the directory cannot be reached: every write answers GIT_UNAVAILABLE; the reads, the lists and the import preview still work.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": true,
+            "loginProvider": "oidc",
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "DOWN"
+              },
+              {
+                "alias": "test-notes",
+                "fetch": "UP"
+              }
+            ]
+          }
+        },
+        "POST /api/v1/catalogs/team": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "PUT /api/v1/catalogs/team/{id}": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/catalogs/team/{id}/retirement": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/catalogs/role": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "PUT /api/v1/catalogs/role/{id}": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/catalogs/role/{id}/retirement": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/catalogs/service": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "PUT /api/v1/catalogs/service/{id}": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/catalogs/service/{id}/retirement": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/catalogs/system": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "PUT /api/v1/catalogs/system/{id}": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/catalogs/system/{id}/retirement": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/catalogs/external": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "PUT /api/v1/catalogs/external/{id}": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/catalogs/external/{id}/retirement": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/catalogs/import/backstage": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/directory/persons": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/directory/erasures": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/directory/me/confirmation": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "PUT /api/v1/directory/me": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        }
+      }
+    }
+  }
+}

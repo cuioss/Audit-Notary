@@ -1,0 +1,79 @@
+{
+  "catalog": "system",
+  "entries": [
+    {
+      "id": "webshop",
+      "name": "Web shop",
+      "retired": false,
+      "value": {
+        "id": "webshop",
+        "name": "Web shop",
+        "description": "Everything a customer touches when buying from the shop."
+      },
+      "effective": null,
+      "at": "2026-02-11T13:00:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "core-platform",
+      "name": "Core platform",
+      "retired": false,
+      "value": {
+        "id": "core-platform",
+        "name": "Core platform",
+        "description": "The shared services every other system builds on."
+      },
+      "effective": null,
+      "at": "2026-02-11T13:00:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "legacy-erp",
+      "name": "Legacy ERP",
+      "retired": true,
+      "value": {
+        "id": "legacy-erp",
+        "name": "Legacy ERP",
+        "description": "The old business system that is being switched off."
+      },
+      "effective": null,
+      "at": "2026-08-31T16:30:00Z",
+      "history": [
+        {
+          "kind": "retire",
+          "at": "2026-08-31T16:30:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        },
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    }
+  ]
+}

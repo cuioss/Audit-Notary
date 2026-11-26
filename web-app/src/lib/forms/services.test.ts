@@ -17,8 +17,11 @@ describe('the reading services of a form', () => {
       'payment-api',
       'customer-portal',
       'identity-provider',
+      'customer-db',
       'reporting',
+      'report-scheduler',
       'ledger',
+      'notification-service',
     ]);
     expect(entries.filter((entry) => entry.retired).map((entry) => entry.id)).toEqual(['ledger']);
   });

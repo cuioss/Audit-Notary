@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "psp-provider",
+      "name": "Payment service provider"
+    },
+    {
+      "id": "cloud-hosting",
+      "name": "Cloud hosting"
+    },
+    {
+      "id": "kyc-vendor",
+      "name": "Identity verification supplier"
+    },
+    {
+      "id": "old-sms-gateway",
+      "name": "SMS gateway (old)",
+      "retired": true
+    }
+  ]
+}

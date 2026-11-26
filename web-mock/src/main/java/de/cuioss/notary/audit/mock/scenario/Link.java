@@ -11,6 +11,7 @@
 package de.cuioss.notary.audit.mock.scenario;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -27,9 +28,10 @@ import java.util.Map;
  * @param next   the id of the state the request moves to; the own state to stay
  * @param status the HTTP status of the answer
  * @param body   the JSON body of the answer
+ * @param requires the right the user must hold for the link to answer and move on, or {@code null}
  */
 public record Link(String name, String method, String path, Map<String, String> query, String next, int status,
-JsonNode body) {
+JsonNode body, @Nullable Requirement requires) {
 
     /**
      * Copies the query in its order.
@@ -41,6 +43,7 @@ JsonNode body) {
      * @param next   the state the link leads to
      * @param status the HTTP status
      * @param body   the JSON body
+     * @param requires the right the user must hold for the link to answer and move on, or {@code null}
      */
     public Link {
         query = Collections.unmodifiableMap(new LinkedHashMap<>(query));
