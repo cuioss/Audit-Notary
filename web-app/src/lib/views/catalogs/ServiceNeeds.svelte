@@ -29,13 +29,16 @@
   let { entry, effective, stored }: Props = $props();
 
   let own = $derived({ ref: `service:${entry.id}`, name: entry.name });
+  /** The names of the dependencies by reference, built once per reading, not searched for every row. */
+  let names = $derived(new Map(effective.dependencies.map((item) => [item.ref, item.name])));
 
   /**
    * @param ref a reference
    * @returns the words for a reference: this service, or the name of the entry it names
    */
   function who(ref: string): string {
-    return ref === own.ref ? $t('catalogs.needs.itself') : nameOfRef(ref, own, effective);
+    if (ref === own.ref) return $t('catalogs.needs.itself');
+    return names.get(ref) ?? nameOfRef(ref, own, effective);
   }
 
   /**

@@ -108,6 +108,17 @@ export const MAX_QUERY_LENGTH = 256;
 /** The route ids of every canonical address; the addresses outside the shell are not among them. */
 export const ROUTES: readonly string[] = ADDRESSES.map((address) => address.route);
 
+/**
+ * @param segment the first segment of an address path, such as `catalogs`
+ * @returns the route ids of the canonical addresses whose path starts with that segment, in file order; the pages of
+ * the same lens under another segment (`/directory/...`) are not among them
+ */
+export function routesUnder(segment: string): readonly string[] {
+  return ADDRESSES.filter(
+    ({ pattern }) => pattern === `/${segment}` || pattern.startsWith(`/${segment}/`),
+  ).map((address) => address.route);
+}
+
 /** The route ids of the addresses shown without the shell: `login`, `signed-out`, `login-problem`. */
 export const OUTSIDE_ROUTES: readonly string[] = OUTSIDE.map((address) => address.route);
 

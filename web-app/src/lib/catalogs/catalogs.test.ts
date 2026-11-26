@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { CatalogHistoryLine, EffectiveNeeds, Session } from '../api/types';
+import { CATALOGS, type CatalogHistoryLine, type EffectiveNeeds, type Session } from '../api/types';
 import {
   canAdminister,
   catalogHistory,
@@ -23,7 +23,7 @@ function session(...rights: { repository: string; actions: string[] }[]): Sessio
 
 describe('the catalogs', () => {
   it('knows the five catalogs and no other', () => {
-    for (const id of ['team', 'role', 'service', 'system', 'external']) {
+    for (const id of CATALOGS) {
       expect(isCatalog(id), id).toBe(true);
     }
     expect(isCatalog('schema')).toBe(false);

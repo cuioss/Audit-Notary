@@ -15,6 +15,7 @@ import {
   parseAddress,
   parseHref,
   routeTitleKey,
+  routesUnder,
 } from './routes';
 
 describe('parseAddress', () => {
@@ -201,6 +202,17 @@ describe('the directory and the catalogs', () => {
     expect(lensOf('catalogs.persons')).toBe('catalogs');
     expect(lensOf('catalogs.new')).toBe('catalogs');
     expect(lensOf('settings.profile')).toBe('settings');
+  });
+
+  it('reads the routes under /catalogs from the canonical addresses, without the directory pages', () => {
+    expect(routesUnder('catalogs')).toEqual([
+      'catalogs',
+      'catalogs.catalog',
+      'catalogs.new',
+      'catalogs.entry',
+    ]);
+    expect(routesUnder('directory')).toEqual(['catalogs.import', 'catalogs.persons']);
+    expect(routesUnder('catalog')).toEqual([]);
   });
 
   it('never reads an address of /directory as a catalog address', () => {

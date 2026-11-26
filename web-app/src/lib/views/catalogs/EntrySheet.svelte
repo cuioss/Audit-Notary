@@ -92,7 +92,9 @@
   let proceed: (() => void) | null = null;
   let confirmRetire = $state(false);
 
-  let retired = $derived(entry?.retired === true);
+  /** Whether this page retired the entry: it reads only from then on, before the entry is read again. */
+  let retiredHere = $state(false);
+  let retired = $derived(entry?.retired === true || retiredHere);
   let canEdit = $derived(canAdminister && !retired);
   let dirty = $derived(isNew ? Object.keys(value).length > 0 : !jsonEqual(value, baseline));
   let kind = $derived(catalogKind($messagesStore, catalog));
@@ -101,8 +103,24 @@
   let effective = $derived(entry?.effective ?? null);
   let own = $derived({ ref: `${catalog}:${id}`, name });
 
+  /** The entry as the server held it when a change by someone else arrived while the person had changes of their own. */
+  let held: CatalogEntryRead | null = null;
+
+  /**
+   * Takes an entry as read as what the server holds: the baseline and the form show it.
+   *
+   * @param read the entry as read
+   */
+  function adopt(read: CatalogEntryRead) {
+    baseline = copy(read.value);
+    value = copy(read.value);
+    staleBy = null;
+    // A retired entry reads only: what the server refused to save has no place on it.
+    if (read.retired) errors = null;
+  }
+
   // The entry read again: a change by someone else replaces what the person has not touched and warns them of what
-  // they have; the person's own save returns the same entry and changes nothing.
+  // they have, until they have none; the person's own save returns the same entry and changes nothing.
   let seen = untrack(() => entry?.at ?? null);
   $effect(() => {
     const read = entry;
@@ -113,13 +131,28 @@
       const mine = by !== undefined && by.pseudonym === get(session)?.user.pseudonym;
       // A retired entry reads only: what the person typed has no place to go, so the entry as read replaces it.
       if (dirty && !read.retired) {
+        held = read;
         if (!mine && by) staleBy = by.name;
         return;
       }
-      staleBy = null;
-      baseline = copy(read.value);
-      value = copy(read.value);
+      held = null;
+      adopt(read);
       if (!mine && by) announcement = $t('catalogs.saved-by-other', { name: by.name });
+    });
+  });
+
+  // The person has no changes any more, by a save or by taking them back: the entry that arrived meanwhile shows.
+  $effect(() => {
+    if (dirty || isNew) return;
+    untrack(() => {
+      if (held === null) return;
+      const read = held;
+      held = null;
+      adopt(read);
+      const by = read.history[0]?.by;
+      if (by && by.pseudonym !== get(session)?.user.pseudonym) {
+        announcement = $t('catalogs.saved-by-other', { name: by.name });
+      }
     });
   });
 
@@ -196,11 +229,16 @@
 
   async function retire() {
     confirmRetire = false;
-    if (retiring || saving || isNew) return;
+    if (retiring || saving || isNew || !canEdit) return;
     retiring = true;
     failure = null;
     try {
       await apiClient.retireCatalogEntry(catalog, id);
+      // The entry is retired from here on, whenever it is read again.
+      retiredHere = true;
+      held = null;
+      staleBy = null;
+      errors = null;
       // What was typed and not saved is dropped with the retirement: a retired entry reads only.
       value = copy(baseline);
       announcement = $t('catalogs.retire.done', { name });
@@ -228,8 +266,9 @@
   let cycle = $derived(
     effective?.cycle?.map((ref) => nameOfRef(ref, own, effective)).join(', ') ?? null,
   );
+  // The stored needs come from the entry that supplies the effective ones, never from the form or its baseline.
   let stored = $derived(
-    ((baseline['protection-needs'] as Partial<ProtectionNeeds> | undefined) ??
+    ((entry?.value['protection-needs'] as Partial<ProtectionNeeds> | undefined) ??
       {}) as Partial<ProtectionNeeds>,
   );
 </script>

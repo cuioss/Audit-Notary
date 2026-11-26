@@ -79,10 +79,16 @@
     const known = all.find((entry) => entry.value === held);
     return [{ value: held, label: known?.label ?? held, group: known?.group }, ...offered];
   });
-  /** Whether the held entry has a mark to show (retired, or no entry of that name): nothing is shown for a plain one. */
+  /**
+   * Whether the held entry has a mark to show (retired, or no entry of that name): nothing is shown for a plain one. A
+   * reference that is malformed, or that names a catalog the field does not name, names no entry of the field and is
+   * marked. One whose catalog is named but could not be read is not: its existence is unknown, the note says so.
+   */
   let marked = $derived.by(() => {
-    const parts = held === '' ? null : parseCatalogRef(held);
-    if (parts === null || entries.current.state !== 'found') return false;
+    if (held === '') return false;
+    const parts = parseCatalogRef(held);
+    if (parts === null || !catalogs.includes(parts.catalog)) return true;
+    if (entries.current.state !== 'found') return false;
     const part = entries.current.value.read.find(
       (candidate) => candidate.catalog === parts.catalog,
     );

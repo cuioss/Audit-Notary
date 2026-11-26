@@ -8,6 +8,7 @@ import {
   entryAddress,
   fillNewService,
   newEntryAddress,
+  requiredDimensions,
   retirePath,
 } from './helpers/catalogs.js';
 import { field, sentTo, useLanguage } from './helpers/documents.js';
@@ -26,6 +27,14 @@ const ID_TAKEN = 'An entry with this id exists already';
 const REJECTED = 'The Git server refused the change.';
 const GIT_UNAVAILABLE = 'The Git server cannot be reached.';
 const NO_RIGHT = 'Changing the catalogs needs the right to administer them.';
+/** The retired entry of every catalog in the fixtures of the mock. */
+const RETIRED_ENTRY = {
+  team: 'legacy-billing',
+  role: 'release-manager',
+  service: 'ledger',
+  system: 'legacy-erp',
+  external: 'old-sms-gateway',
+};
 
 // Room for the catalogs, the entries and the sheet side by side (the sheet asks for 780 px); the narrower window has
 // its own test, and the phone layout is in mobile.spec.js.
@@ -47,7 +56,13 @@ test.describe('the catalogs and their entries (UC-CAT-1)', () => {
     await expect(page).toHaveURL(catalogAddress('team'));
     await expect(page.getByTestId('view-title')).toHaveText('Catalogs');
     const catalogs = page.getByTestId('catalog-list');
-    for (const catalog of CATALOGS) {
+    // The lens is the authority on the catalogs and their order; the helper's list must say the same.
+    await expect(catalogs.getByRole('link')).toHaveCount(CATALOGS.length);
+    for (const [index, catalog] of CATALOGS.entries()) {
+      await expect(catalogs.getByRole('link').nth(index)).toHaveAttribute(
+        'href',
+        catalogAddress(catalog),
+      );
       await expect(catalogs.getByTestId(`catalog-${catalog}`)).toBeVisible();
     }
     await expect(catalogs.getByTestId('catalog-team')).toHaveAttribute('aria-current', 'page');
@@ -294,6 +309,11 @@ test.describe('read without the right (UC-CAT-1)', () => {
     await page.getByTestId('retire-confirm').click();
     await expect(page.getByTestId('failure-notice')).toContainText(FORBIDDEN);
     await expect(page.getByTestId('retired-notice')).toHaveCount(0);
+    await expect(page.getByTestId('retire-entry')).toBeVisible();
+    // The confirmation reached the server, which refused it; the save is not sent again.
+    await expect
+      .poll(async () => sentTo(await acts(request), retirePath('service', 'payment-api'), 'POST'))
+      .toHaveLength(1);
     expect(sentTo(await acts(request), changePath('service', 'payment-api'), 'PUT')).toHaveLength(
       1,
     );
@@ -392,10 +412,13 @@ test.describe('create an entry (UC-CAT-1, UC-CAT-2)', () => {
       'Security Office',
     ]);
     await expect(team).not.toContainText('Legacy Billing');
-    await expect(field(page, '/owner/role').getByRole('combobox')).not.toContainText(
-      'Release Manager',
-    );
-    await expect(field(page, '/system').getByRole('combobox')).not.toContainText('Legacy ERP');
+    // Each picker reads its catalog on its own: a retired entry is absent only once an offered one is there.
+    const role = field(page, '/owner/role').getByRole('combobox');
+    await expect(role.locator('option')).toContainText(['Choose…', 'Developer', 'Service Owner']);
+    await expect(role).not.toContainText('Release Manager');
+    const system = field(page, '/system').getByRole('combobox');
+    await expect(system.locator('option')).toContainText(['Choose…', 'Web shop', 'Core platform']);
+    await expect(system).not.toContainText('Legacy ERP');
   });
 
   test('a field that is not valid is marked at the field, and what was typed stays', async ({
@@ -509,14 +532,14 @@ test.describe('create an entry (UC-CAT-1, UC-CAT-2)', () => {
     await field(page, '/lifecycle').getByRole('combobox').selectOption({ label: 'Aktiv' });
     await field(page, '/owner/team').getByRole('combobox').selectOption({ label: 'Payments' });
     await field(page, '/owner/role').getByRole('combobox').selectOption({ index: 1 });
-    for (const dimension of ['confidentiality', 'integrity', 'availability']) {
+    for (const dimension of await requiredDimensions(page)) {
       await field(page, `/protection-needs/${dimension}`)
         .getByRole('combobox')
         .selectOption({ label: 'Normal' });
     }
     await page.getByTestId('save-entry').click();
     await expect(page.getByTestId('failure-notice')).toContainText(
-      'Ein Eintrag mit dieser Kennung gibt es schon, vielleicht einen stillgelegten.',
+      'Einen Eintrag mit dieser Kennung gibt es schon, vielleicht einen stillgelegten.',
     );
     await gotoState(request, 'git-unavailable');
     await page.getByTestId('save-entry').click();
@@ -780,12 +803,10 @@ test.describe('retire an entry (UC-CAT-1)', () => {
     await expect(page.getByTestId('retire-block')).toHaveCount(0);
     await expect(page.getByTestId('entry-form').getByRole('textbox')).toHaveCount(0);
     await expect(page.getByTestId('entry-history')).toContainText('Retired the entry');
-    for (const [catalog, id] of [
-      ['team', 'legacy-billing'],
-      ['role', 'release-manager'],
-      ['system', 'legacy-erp'],
-      ['external', 'old-sms-gateway'],
-    ]) {
+    // Every catalog of the lens has a retired entry in the fixtures, and each reads only.
+    for (const catalog of CATALOGS) {
+      const id = RETIRED_ENTRY[catalog];
+      expect(id, `a retired fixture entry of the catalog ${catalog}`).toBeDefined();
       await page.goto(entryAddress(catalog, id));
       await expect(page.getByTestId('retired-notice')).toBeVisible();
       await expect(page.getByTestId('save-entry')).toHaveCount(0);
@@ -989,6 +1010,17 @@ test.describe('a service and its protection needs (UC-CAT-2)', () => {
     await expect(page.getByTestId('service-needs')).toContainText(
       'Read from the saved entry and its dependencies.',
     );
+    // Once the entry is saved and read again, stored and effective needs come from that one read.
+    const reread = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'GET' &&
+        new URL(response.url()).pathname === changePath('service', 'payment-api'),
+    );
+    await page.getByTestId('save-entry').click();
+    await reread;
+    const row = page.getByTestId('needs-confidentiality').getByRole('cell');
+    await expect(row.nth(0)).toHaveText('High');
+    await expect(row.nth(1)).toHaveText('Very high');
   });
 
   test('the sheet in German names the dimensions, the levels and the reasons', async ({

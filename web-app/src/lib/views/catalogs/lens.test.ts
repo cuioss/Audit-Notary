@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, within } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import { get } from 'svelte/store';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { CATALOGS } from '../../api/types';
 import { breadcrumb } from '../../stores/breadcrumb';
 import { resetKit, useProfile } from '../documents/testkit';
 import CatalogsView, { resetFirstVisit } from './CatalogsView.svelte';
@@ -23,7 +24,9 @@ describe('the catalogs', () => {
     await useProfile('catalog-admin');
     const onnavigate = vi.fn();
     render(CatalogsView, { route: 'catalogs', params: {}, onnavigate });
-    expect(onnavigate).toHaveBeenCalledWith('/catalogs/team', { replace: true });
+    expect(onnavigate).toHaveBeenCalledWith(`/catalogs/${CATALOGS[0]}`, {
+      replace: true,
+    });
   });
 
   it('lists the five catalogs in their order once the lens was visited, without a request', async () => {
@@ -38,13 +41,7 @@ describe('the catalogs', () => {
       within(list)
         .getAllByRole('link')
         .map((link) => link.getAttribute('href')),
-    ).toEqual([
-      '/catalogs/team',
-      '/catalogs/role',
-      '/catalogs/service',
-      '/catalogs/system',
-      '/catalogs/external',
-    ]);
+    ).toEqual(CATALOGS.map((catalog) => `/catalogs/${catalog}`));
     expect(screen.getByTestId('catalog-service')).toHaveTextContent('Services');
     expect(screen.getByTestId('catalog-external')).toHaveTextContent('External parties');
     expect(kit.requests.slice(before)).toEqual([]);
@@ -154,5 +151,20 @@ describe('the entries of a catalog', () => {
     });
     render(CatalogsView, { ...CATALOG('team'), onnavigate: vi.fn() });
     expect(await screen.findByText(/The Git server cannot be reached/)).toBeInTheDocument();
+  });
+
+  it('drops the failure of a list when the catalogs are shown, which makes no request that could clear it', async () => {
+    await useProfile('catalog-admin', 'en', {
+      'GET /api/v1/catalogs/team': new Response(JSON.stringify({ outcome: 'GIT_UNAVAILABLE' }), {
+        status: 503,
+      }),
+    });
+    const view = render(CatalogsView, { ...CATALOG('team'), onnavigate: vi.fn() });
+    expect(await screen.findByText(/The Git server cannot be reached/)).toBeInTheDocument();
+    await view.rerender({ route: 'catalogs', params: {}, onnavigate: vi.fn() });
+    expect(await screen.findByTestId('catalog-list')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByText(/The Git server cannot be reached/)).not.toBeInTheDocument(),
+    );
   });
 });

@@ -5,7 +5,10 @@ import { expect } from '@playwright/test';
  * Catalogs): the addresses, the paths of the requests and the shared steps.
  */
 
-/** The five catalogs, in the order of the first column. */
+/**
+ * The five catalogs, in the order of the first column. The lens is the authority: the first test of `catalogs.spec.js`
+ * compares this list with the links the lens renders, so a catalog added or moved there fails that test.
+ */
 export const CATALOGS = ['team', 'role', 'service', 'system', 'external'];
 
 /** @returns the canonical address of a catalog */
@@ -52,6 +55,21 @@ export async function loginToCatalogs(page, address) {
 }
 
 /**
+ * The protection dimensions the service schema requires, read from the schema the form is generated from.
+ *
+ * @param page the page, signed in
+ * @returns the names of the required dimensions
+ */
+export async function requiredDimensions(page) {
+  const answer = await page.request.get('/api/v1/catalogs/service/schema');
+  expect(answer.ok()).toBe(true);
+  const { schema } = await answer.json();
+  const dimensions = schema.properties['protection-needs'].required;
+  expect(dimensions.length).toBeGreaterThan(0);
+  return dimensions;
+}
+
+/**
  * Fills the mandatory fields of a new service.
  *
  * @param page the page
@@ -64,7 +82,7 @@ export async function fillNewService(page, field, { id, name }) {
   await field(page, '/lifecycle').getByRole('combobox').selectOption({ label: 'Active' });
   await field(page, '/owner/team').getByRole('combobox').selectOption({ label: 'Payments' });
   await field(page, '/owner/role').getByRole('combobox').selectOption({ label: 'Service Owner' });
-  for (const dimension of ['confidentiality', 'integrity', 'availability']) {
+  for (const dimension of await requiredDimensions(page)) {
     await field(page, `/protection-needs/${dimension}`)
       .getByRole('combobox')
       .selectOption({ label: 'Normal' });

@@ -54,7 +54,10 @@
   let entries = $state<{ catalog: string; list: CatalogEntry[] } | null>(null);
   let loadedSchema = $state<CatalogSchema | null>(null);
   let entry = $state<CatalogEntryRead | null>(null);
-  let missing = $state(false);
+  /** The server knows no such entry: it may be created by someone else, so a later read clears it. */
+  let missingEntry = $state(false);
+  /** The server knows no schema for the catalog. */
+  let missingSchema = $state(false);
 
   /** The loads of the view; each keeps its own failure, so one that succeeds never hides another that failed. */
   type Load = 'entries' | 'schema' | 'entry';
@@ -75,7 +78,7 @@
   let catalog = $derived(params.catalog && isCatalog(params.catalog) ? params.catalog : null);
   /** The address names a catalog the application does not have. */
   let unknownCatalog = $derived(!!params.catalog && catalog === null);
-  let notFound = $derived(unknownCatalog || missing);
+  let notFound = $derived(unknownCatalog || missingEntry || missingSchema);
   let administer = $derived(canAdminister($session));
   /** The entries of the catalog of the address: those read for another catalog are no entries here. */
   let ofCatalog = $derived(entries?.catalog === catalog ? entries.list : null);
@@ -118,7 +121,15 @@
   // The list of the catalog of the address; another catalog drops the list of the last at once.
   $effect(() => {
     const current = catalog;
-    if (!current) return;
+    if (!current) {
+      // No catalog is open: a read still under way is dropped, and the failure of the last list does not show over the
+      // list of the catalogs, which makes no request that could clear it.
+      untrack(() => {
+        latestEntries += 1;
+        succeed('entries');
+      });
+      return;
+    }
     untrack(() => {
       void readEntries(current);
     });
@@ -127,6 +138,7 @@
   // The schema of the catalog, for the form of an entry or of a new one.
   $effect(() => {
     const current = catalog;
+    untrack(() => (missingSchema = false));
     if (!current || !wantsEntry) {
       // The failure of the schema belongs to the address that needed it: the list does not show it.
       untrack(() => succeed('schema'));
@@ -143,7 +155,7 @@
       })
       .catch((error) => {
         if (!live) return;
-        if (isApiError(error) && error.outcome === 'NOT_FOUND') missing = true;
+        if (isApiError(error) && error.outcome === 'NOT_FOUND') missingSchema = true;
         else fail('schema', error);
       });
     return () => {
@@ -160,10 +172,12 @@
       const loaded = await apiClient.getCatalogEntry(current, id);
       if (read !== latestRead) return;
       entry = loaded;
+      // An entry that was missing and is created by someone else is there now.
+      missingEntry = false;
       succeed('entry');
     } catch (error) {
       if (read !== latestRead) return;
-      if (isApiError(error) && error.outcome === 'NOT_FOUND') missing = true;
+      if (isApiError(error) && error.outcome === 'NOT_FOUND') missingEntry = true;
       else fail('entry', error);
     }
   }
@@ -175,7 +189,7 @@
     untrack(() => {
       latestRead += 1;
       entry = null;
-      missing = false;
+      missingEntry = false;
     });
     if (route !== 'catalogs.entry' || !id || !current) {
       // The failure of a read belongs to the entry asked: it does not stay over the list or the new entry.

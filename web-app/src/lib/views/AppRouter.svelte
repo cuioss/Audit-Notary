@@ -1,6 +1,6 @@
 <script lang="ts">
   import { hasNoRights } from '../access/access';
-  import { lensOf, parseAddress, routeTitleKey } from '../routes';
+  import { lensOf, parseAddress, routesUnder, routeTitleKey } from '../routes';
   import { session } from '../stores/app';
   import LoginProblemView from './access/LoginProblemView.svelte';
   import LoginView from './access/LoginView.svelte';
@@ -31,8 +31,11 @@
 
   let { pathname, search = '', onnavigate }: Props = $props();
 
-  /** The routes of the catalogs lens this view draws; the directory pages of the lens follow with their own views. */
-  const CATALOG_ROUTES = ['catalogs', 'catalogs.catalog', 'catalogs.new', 'catalogs.entry'];
+  /**
+   * The routes of the catalogs lens this view draws: the addresses under `/catalogs`, read from the canonical addresses;
+   * the directory pages of the lens (`/directory/...`) follow with their own views.
+   */
+  const CATALOG_ROUTES = routesUnder('catalogs');
 
   let address = $derived(parseAddress(pathname, search));
   let route = $derived(address?.route ?? null);

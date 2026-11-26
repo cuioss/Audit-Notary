@@ -94,6 +94,31 @@ describe('reading an entry', () => {
     expect(await screen.findByTestId('not-found-view')).toBeInTheDocument();
   });
 
+  it('shows the entry once someone else created it, after the not-found view for it', async () => {
+    const kit = await useProfile('catalog-admin');
+    const real = (globalThis as { fetch: typeof fetch }).fetch;
+    let created = false;
+    vi.stubGlobal('fetch', (input: RequestInfo | URL, init?: RequestInit) =>
+      !created && String(input).endsWith('/catalogs/service/notification-gateway')
+        ? Promise.resolve(new Response(JSON.stringify({ outcome: 'NOT_FOUND' }), { status: 404 }))
+        : real(input, init),
+    );
+    try {
+      render(CatalogsView, {
+        route: 'catalogs.entry',
+        params: { catalog: 'service', id: 'notification-gateway' },
+        onnavigate: vi.fn(),
+      });
+      expect(await screen.findByTestId('not-found-view')).toBeInTheDocument();
+      created = true;
+      kit.emit('catalog-changed', { catalog: 'service', id: 'notification-gateway' });
+      expect(await screen.findByTestId('entry-form')).toBeInTheDocument();
+      expect(screen.queryByTestId('not-found-view')).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('reads a retired entry, says so and offers neither a change nor a retirement', async () => {
     await openEntry('service', 'ledger');
     expect(screen.getByTestId('entry-state')).toHaveTextContent('Retired');
@@ -145,6 +170,38 @@ describe('the sheet of a service', () => {
     const availability = within(screen.getByTestId('needs-availability'));
     expect(availability.getByText('This service')).toBeInTheDocument();
     expect(availability.queryByRole('link')).toBeNull();
+  });
+
+  it('reads the stored needs from the entry that supplies the effective ones, not from the form', async () => {
+    const kit = await openEntry('service', 'payment-api');
+    const stored = () =>
+      within(screen.getByTestId('needs-availability')).getAllByRole('cell')[0].textContent;
+    expect(stored()).toBe('High');
+    // The answer of the entry read after the save is held back: the table keeps the entry it was read from.
+    const real = (globalThis as { fetch: typeof fetch }).fetch;
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    let saved = false;
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      const request = String(input);
+      if (init?.method === 'PUT') saved = true;
+      else if (saved && request.endsWith('/catalogs/service/payment-api')) await gate;
+      return real(input, init);
+    });
+    try {
+      await fireEvent.change(screen.getByLabelText(/^Availability/), {
+        target: { value: 'very-high' },
+      });
+      await fireEvent.click(save());
+      await waitFor(() =>
+        expect(kit.requests).toContain('PUT /api/v1/catalogs/service/payment-api'),
+      );
+      await waitFor(() => expect(save()).toHaveAttribute('aria-disabled', 'true'));
+      expect(stored()).toBe('High');
+    } finally {
+      release();
+      vi.unstubAllGlobals();
+    }
   });
 
   it('lists the dependencies as a chain with the way they were reached and whether they count', async () => {
@@ -388,7 +445,7 @@ describe('retiring an entry', () => {
     const dialog = await screen.findByRole('dialog');
     expect(dialog).toHaveTextContent('Retire Customer Portal?');
     expect(dialog).toHaveTextContent('keep their reference and show it as retired');
-    expect(sent(kit, 'POST /api/v1/catalogs/service/customer-portal/retirement')).toEqual([]);
+    expect(kit.requests.filter((request) => request.includes('retirement'))).toEqual([]);
     await fireEvent.click(screen.getByTestId('retire-confirm'));
     await waitFor(() =>
       expect(kit.requests).toContain('POST /api/v1/catalogs/service/customer-portal/retirement'),
@@ -405,13 +462,17 @@ describe('retiring an entry', () => {
 
   it('warns that changes not saved are dropped', async () => {
     await openEntry('service', 'customer-portal');
-    await fireEvent.input(name(), { target: { value: 'Portal' } });
+    await fireEvent.input(name(), { target: { value: 'Portal Gate' } });
     await fireEvent.click(screen.getByTestId('retire-entry'));
     expect(await screen.findByTestId('retire-dirty')).toHaveTextContent(
       'Changes you have not saved',
     );
     await fireEvent.click(screen.getByTestId('retire-confirm'));
-    await waitFor(() => expect(name()).toHaveValue('Customer Portal'));
+    // The entry reads only from here on, with the name it had.
+    await waitFor(() =>
+      expect(screen.getByTestId('entry-form')).toHaveTextContent('Customer Portal'),
+    );
+    expect(screen.getByTestId('entry-form')).not.toHaveTextContent('Portal Gate');
   });
 
   it('shows the entry retired once it is read again', async () => {
@@ -421,6 +482,43 @@ describe('retiring an entry', () => {
     await fireEvent.click(await screen.findByTestId('retire-confirm'));
     expect(await screen.findByTestId('retired-notice')).toBeInTheDocument();
     expect(screen.queryByTestId('save-entry')).toBeNull();
+  });
+
+  it('reads as retired as soon as the retirement succeeded, before the entry is read again', async () => {
+    const kit = await openEntry('service', 'customer-portal');
+    const real = (globalThis as { fetch: typeof fetch }).fetch;
+    let retired = false;
+    vi.stubGlobal('fetch', (input: RequestInfo | URL, init?: RequestInit) => {
+      if (init?.method === 'POST') retired = true;
+      return retired && String(input).endsWith('/catalogs/service/customer-portal')
+        ? Promise.resolve(
+            new Response(JSON.stringify({ outcome: 'GIT_UNAVAILABLE' }), { status: 503 }),
+          )
+        : real(input, init);
+    });
+    try {
+      await fireEvent.click(screen.getByTestId('retire-entry'));
+      await fireEvent.click(await screen.findByTestId('retire-confirm'));
+      expect(await screen.findByTestId('retired-notice')).toBeInTheDocument();
+      expect(screen.queryByTestId('retire-entry')).toBeNull();
+      expect(screen.queryByTestId('save-entry')).toBeNull();
+      expect(
+        kit.requests.filter((request) => request.includes('customer-portal/retirement')),
+      ).toHaveLength(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('sends no retirement when the entry was retired by someone else while the question was open', async () => {
+    const kit = await openEntry('service', 'customer-portal');
+    await fireEvent.click(screen.getByTestId('retire-entry'));
+    const confirm = await screen.findByTestId('retire-confirm');
+    kit.scenario.goto('service-retired');
+    kit.emit('catalog-changed', { catalog: 'service', id: 'customer-portal' });
+    expect(await screen.findByTestId('retired-notice')).toBeInTheDocument();
+    await fireEvent.click(confirm);
+    expect(kit.requests.filter((request) => request.includes('retirement'))).toEqual([]);
   });
 
   it('says what went wrong when the Git server refuses the retirement', async () => {
@@ -474,6 +572,67 @@ describe('an entry that someone else saved', () => {
       expect(screen.getByTestId('entry-form')).toHaveTextContent('Customer Portal'),
     );
     expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'read-only');
+  });
+
+  it('shows what someone else saved once the person takes their own changes back', async () => {
+    const kit = await openEntry('service', 'payment-api');
+    const description = 'Takes payments for the web shop and talks to the payment provider.';
+    await fireEvent.input(name(), { target: { value: 'Payments API' } });
+    kit.scenario.goto('catalog-changed-elsewhere');
+    kit.emit('catalog-changed', { catalog: 'service', id: 'payment-api' });
+    await screen.findByTestId('stale-notice');
+    expect(screen.getByLabelText(/^Description/)).toHaveValue(description);
+    await fireEvent.input(name(), { target: { value: 'Payment API' } });
+    await waitFor(() => expect(screen.getByLabelText(/^Description/)).not.toHaveValue(description));
+    expect(screen.queryByTestId('stale-notice')).toBeNull();
+    expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'clean');
+  });
+
+  it('shows what someone else saved while the own save was under way, once the save is done', async () => {
+    const kit = await openEntry('service', 'payment-api');
+    const description = 'Takes payments for the web shop and talks to the payment provider.';
+    const real = (globalThis as { fetch: typeof fetch }).fetch;
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (init?.method === 'PUT') await gate;
+      return real(input, init);
+    });
+    try {
+      await fireEvent.input(name(), { target: { value: 'Payments API' } });
+      await fireEvent.click(save());
+      kit.scenario.goto('catalog-changed-elsewhere');
+      kit.emit('catalog-changed', { catalog: 'service', id: 'payment-api' });
+      await screen.findByTestId('stale-notice');
+      release();
+      await waitFor(() =>
+        expect(screen.getByLabelText(/^Description/)).not.toHaveValue(description),
+      );
+      expect(screen.queryByTestId('stale-notice')).toBeNull();
+    } finally {
+      release();
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('drops the marks of a refused save when the entry was retired meanwhile', async () => {
+    const kit = await openEntry('service', 'customer-portal', 'catalog-admin', {
+      'PUT /api/v1/catalogs/service/customer-portal': new Response(
+        JSON.stringify({ outcome: 'VALIDATION', errors: [{ pointer: '/name', code: 'REQUIRED' }] }),
+        { status: 422 },
+      ),
+    });
+    await fireEvent.input(name(), { target: { value: '' } });
+    await fireEvent.click(save());
+    await waitFor(() =>
+      expect(screen.getByTestId('entry-form')).toHaveTextContent('Fill in this field'),
+    );
+    kit.scenario.goto('service-retired');
+    kit.emit('catalog-changed', { catalog: 'service', id: 'customer-portal' });
+    expect(await screen.findByTestId('retired-notice')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByTestId('entry-form')).not.toHaveTextContent('Fill in this field'),
+    );
   });
 
   it('reads nothing for an entry of another id', async () => {

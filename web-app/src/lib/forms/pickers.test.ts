@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../api/errors';
 import { field, last, open } from './formHarness';
@@ -63,6 +63,16 @@ describe('CatalogPicker (AUN-WEB-4, The Pickers)', () => {
     const service = field('Service') as HTMLSelectElement;
     expect(service.selectedOptions[0].textContent).toBe('service:unknown-service');
     await within(service.closest('.field') as HTMLElement).findByText('Not found');
+  });
+
+  it('marks a held reference that is malformed or names another catalog as not found', async () => {
+    for (const held of ['no-colon', 'team:payments']) {
+      await open('test-note', { service: held });
+      const service = field('Service') as HTMLSelectElement;
+      expect(service.selectedOptions[0].textContent).toBe(held);
+      await within(service.closest('.field') as HTMLElement).findByText('Not found');
+      cleanup();
+    }
   });
 
   it('says that a list that could not be read could not be read, and keeps the held value', async () => {
