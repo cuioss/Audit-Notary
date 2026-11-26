@@ -267,6 +267,170 @@ describe('the SAMM completion', () => {
   });
 });
 
+describe('the Reports lens', () => {
+  it.each([
+    ['/reports', '', 'reports', {}],
+    ['/reports/samm-trend', '', 'reports.samm-trend', {}],
+    ['/reports/samm-trend', '?scope=payments', 'reports.samm-trend', { scope: 'payments' }],
+    ['/reports/samm-compare', '', 'reports.samm-compare', {}],
+    [
+      '/reports/samm-compare',
+      '?scope=payments&from=2026-q2&to=2026-q4',
+      'reports.samm-compare',
+      { scope: 'payments', from: '2026-q2', to: '2026-q4' },
+    ],
+    ['/reports/threat-evaluation', '', 'reports.threat-evaluation', {}],
+    ['/reports/risk-register', '', 'reports.risk-register', {}],
+    [
+      '/reports/risk-register',
+      '?as-of=2026-03-01',
+      'reports.risk-register',
+      { 'as-of': '2026-03-01' },
+    ],
+    [
+      '/reports/risk-register',
+      '?as-of=risks%2FR-012%2Fv2',
+      'reports.risk-register',
+      { 'as-of': 'risks/R-012/v2' },
+    ],
+    ['/reports/trends', '', 'reports.report', {}],
+  ])('reads %s%s as %s', (path, search, route, query) => {
+    const address = parseAddress(path, search);
+    expect(address?.route).toBe(route);
+    if (route === 'reports.report') {
+      expect(address?.params).toEqual({ report: 'trends' });
+    } else if (Object.keys(query).length > 0) {
+      expect(address?.query).toEqual(query);
+    } else {
+      expect(address).not.toHaveProperty('query');
+    }
+  });
+
+  it('keeps every report in the lens Reports, before the generic report address', () => {
+    for (const route of [
+      'reports.samm-trend',
+      'reports.samm-compare',
+      'reports.threat-evaluation',
+      'reports.risk-register',
+    ]) {
+      expect(lensOf(route)).toBe('reports');
+      expect(routeTitleKey(route)).toBe('lens.reports');
+      expect(ROUTES.indexOf(route)).toBeLessThan(ROUTES.indexOf('reports.report'));
+    }
+    expect(routesUnder('reports')).toEqual([
+      'reports',
+      'reports.samm-trend',
+      'reports.samm-compare',
+      'reports.threat-evaluation',
+      'reports.risk-register',
+      'reports.report',
+    ]);
+  });
+
+  it('writes the admitted names in the order of the file, each encoded', () => {
+    expect(
+      formatAddress({
+        route: 'reports.samm-compare',
+        params: {},
+        query: { to: '2026-q4', scope: 'payments', from: '2026-q2' },
+      }),
+    ).toBe('/reports/samm-compare?scope=payments&from=2026-q2&to=2026-q4');
+    expect(
+      formatAddress({ route: 'reports.samm-compare', params: {}, query: { scope: 'payments' } }),
+    ).toBe('/reports/samm-compare?scope=payments');
+    expect(
+      formatAddress({
+        route: 'reports.risk-register',
+        params: {},
+        query: { 'as-of': '2026-03-01' },
+      }),
+    ).toBe('/reports/risk-register?as-of=2026-03-01');
+    expect(
+      formatAddress({
+        route: 'reports.risk-register',
+        params: {},
+        query: { 'as-of': 'risks/R-012/v2' },
+      }),
+    ).toBe('/reports/risk-register?as-of=risks%2FR-012%2Fv2');
+    expect(formatAddress({ route: 'reports.threat-evaluation', params: {} })).toBe(
+      '/reports/threat-evaluation',
+    );
+    expect(() =>
+      formatAddress({ route: 'reports.risk-register', params: {}, query: { 'as-of': '../x' } }),
+    ).toThrow('query value refused');
+  });
+
+  it('ignores a name the report does not admit and refuses a value that breaks its pattern', () => {
+    expect(parseAddress('/reports/samm-trend', '?from=a')).toEqual({
+      route: 'reports.samm-trend',
+      params: {},
+    });
+    expect(
+      parseAddress('/reports/risk-register', '?scope=payments&as-of=2026-03-01')?.query,
+    ).toEqual({
+      'as-of': '2026-03-01',
+    });
+    expect(parseAddress('/reports/threat-evaluation', '?scope=payments')).toEqual({
+      route: 'reports.threat-evaluation',
+      params: {},
+    });
+    expect(parseAddress('/reports/samm-compare', '?scope=Payments')).toBeNull();
+    expect(parseAddress('/reports/samm-compare', '?from=a&from=b')).toBeNull();
+    expect(parseAddress('/reports/risk-register', '?as-of=')).toBeNull();
+    expect(parseAddress('/reports/risk-register', '?as-of=%2Fetc')).toBeNull();
+    expect(parseAddress('/reports/risk-register', `?as-of=${'a'.repeat(129)}`)).toBeNull();
+  });
+
+  it.each([
+    '/reports',
+    '/reports/samm-trend',
+    '/reports/samm-trend?scope=payments',
+    '/reports/samm-compare?scope=payments&from=2026-q2&to=2026-q4',
+    '/reports/samm-compare?scope=payments',
+    '/reports/threat-evaluation',
+    '/reports/risk-register',
+    '/reports/risk-register?as-of=2026-03-01',
+    '/reports/risk-register?as-of=audit-2026-03',
+    '/reports/risk-register?as-of=risks%2FR-012%2Fv2',
+    '/reports/risk-register?as-of=risks/R-012/v2',
+  ])('lets %s pass as a return', (address) => {
+    expect(checkReturn(address)).toBe(address);
+  });
+
+  it.each([
+    '/reports/samm-trend?as-of=2026-03-01',
+    '/reports/samm-trend?from=a',
+    '/reports/samm-compare?as-of=2026-03-01',
+    '/reports/samm-compare?scope=payments&scope=shop',
+    '/reports/samm-compare?scope=Payments',
+    '/reports/threat-evaluation?scope=payments',
+    '/reports/risk-register?scope=payments',
+    '/reports/risk-register?as-of=',
+    '/reports/risk-register?as-of=%2Fetc',
+    '/reports/risk-register?as-of=a&as-of=b',
+    '/reports/risk-register?as-of=2026-03-01#x',
+    '/reports?as-of=2026-03-01',
+  ])('replaces %s by the start page', (candidate) => {
+    expect(checkReturn(candidate)).toBe('/');
+  });
+
+  it('reads a risk of the register as it was, with the version of its release', () => {
+    expect(parseAddress('/isms/risks/r-012', '?at=v2')).toEqual({
+      route: 'isms.risk',
+      params: { entry: 'r-012' },
+      query: { at: 'v2' },
+    });
+    expect(
+      formatAddress({ route: 'isms.risk', params: { entry: 'r-012' }, query: { at: 'v2' } }),
+    ).toBe('/isms/risks/r-012?at=v2');
+    expect(checkReturn('/isms/risks/r-012?at=v2')).toBe('/isms/risks/r-012?at=v2');
+    expect(checkReturn('/isms/risks/r-012?at=zzz')).toBe('/');
+    expect(checkReturn('/isms/risks/r-012?as-of=2026-03-01')).toBe('/');
+    expect(checkReturn('/isms/risks/r-012/release?at=v2')).toBe('/');
+    expect(checkReturn('/isms/risks/r-012')).toBe('/isms/risks/r-012');
+  });
+});
+
 const N1 = '01JZ8Q4Y5N6V7X8B9C0D1E2F3G';
 
 describe('the generic documents lens', () => {
