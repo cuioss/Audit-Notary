@@ -7,20 +7,8 @@
  */
 import canonical from '../main/resources/META-INF/audit-notary/canonical-addresses.json';
 
-/** A lens of the navigation rail (AUN-WEB-3). */
-export type Lens =
-  | 'due'
-  | 'samm'
-  | 'threat-models'
-  | 'incidents'
-  | 'isms'
-  | 'categories'
-  | 'catalogs'
-  | 'reports'
-  | 'settings';
-
-/** The lenses in rail order. */
-export const LENSES: readonly Lens[] = [
+/** The lenses in rail order; the {@link Lens} type derives from it. */
+export const LENSES = [
   'due',
   'samm',
   'threat-models',
@@ -30,7 +18,10 @@ export const LENSES: readonly Lens[] = [
   'catalogs',
   'reports',
   'settings',
-];
+] as const;
+
+/** A lens of the navigation rail (AUN-WEB-3). */
+export type Lens = (typeof LENSES)[number];
 
 /**
  * An address: the route id of `canonical-addresses.json`, the values of its placeholders and, when the address
