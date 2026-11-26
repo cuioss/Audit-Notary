@@ -82,11 +82,11 @@ older than the interval, confirming it or saving it moves to `confirmation-done`
 entry with `422`, `entry-git-unavailable` answers saving and confirming `503 GIT_UNAVAILABLE`
 
 |`first-login`
-|`form`, `invalid-team`, `registered`, `candidates`, `candidates-chosen`, `candidates-not-bindable`, `candidates-refused`
+|`form`, `invalid-team`, `registered`, `registered-bound`, `candidates`, `candidates-chosen`, `candidates-not-bindable`, `candidates-refused`
 |A user without directory entry (`GET /api/v1/directory/me` answers `"entry": null`): everything outside the first-login
-allow-list answers `FIRST_LOGIN_REQUIRED`; `PUT /api/v1/directory/me` saves the entry (`registered`) or is refused with
+allow-list answers `FIRST_LOGIN_REQUIRED`; `PUT /api/v1/directory/me` saves the entry (`registered`: the new entry `p-9b7e21`, which `GET /api/v1/directory/me` then returns) or is refused with
 `REFERENCE_NOT_FOUND` (`invalid-team`). `candidates`: the first save answers `409 BINDING_CANDIDATES` with Robin Newcomer
-(`p-3d7a15`) and Rowan Newman (`p-8e2b40`), the second one binds `p-3d7a15` (`registered`); `candidates-not-bindable`:
+(`p-3d7a15`) and Rowan Newman (`p-8e2b40`), the second one binds `p-3d7a15` (`registered-bound`, whose `GET /api/v1/directory/me` returns that entry); `candidates-not-bindable`:
 the same first answer, then `409 NOT_BINDABLE`, then `200` (the mock does not read the `binding` member, the sequence of
 the requests decides)
 
@@ -359,6 +359,15 @@ answers give (`web-app` checks this in `scores.test.ts`).
   `POST`, `PUT`, `DELETE`; paths below `/api/v1/`, each optionally with a query of names and values that are not empty, no `#`, no name twice; status 100 to 599; actions `read`, `edit`,
   `approve`, `administer-catalogs`; no negative delay. A violation names file, location and rule.
 
+== Fixtures and Drift Tests
+
+The scenario files and their data files are static fixtures, and the format has no way to derive one list from another
+(no generator, no `derive_from`). Where a fixture mirrors another source (the catalog lists and the entries behind them,
+the service states and their baseline, the retired snapshot and the dependency graph, the outage refusals and the write
+routes, the reserved ids and the routes, the handler ids and `Handler`), a test reads both and fails on drift
+(`DirectoryAndCatalogsTest`, `scenarioFetch.test.ts`). That is the accepted guard (decided provisionally; the
+alternative is a scenario-format change that derives the lists when a scenario is loaded).
+
 == Fixture Categories
 
 The form kit (`doc/specification/web-app.adoc`, AUN-WEB-4) needs schemas, catalogs, persons and references that the
@@ -417,9 +426,10 @@ The anti-CSRF header is required as for every POST. A render is listed in `GET /
 request, with its source (the mock logs no body); it is no save, so tests that assert the acts of an edit filter by
 path. The states `preview-hostile` (`render-asciidoc-hostile.json`: script, handlers, `javascript:` and `data:` links,
 `style`, `iframe`, `form`, `svg`, an `img`, a table) and `preview-unavailable` (`503 {"outcome": "RENDER_UNAVAILABLE"}`)
-replace the handler. A source over the limit needs no state: it answers `413` by itself. The HTTP adapter reads a request body at most up to 1 MiB (`MockEngine.MAX_BODY_BYTES`, far above
-any source within the limit); a larger body is answered with the same `413` before it is buffered, whatever the
-request.
+replace the handler. A source over the limit needs no state: it answers `413` by itself. The HTTP adapter reads a request body at most up to 12 MiB (`MockEngine.MAX_BODY_BYTES`: six times the
+2 MiB of a Backstage import, the worst case of JSON escaping, and far above any source within the limit); a larger body is
+answered with `413` before it is buffered, whatever the request. The `limit` is the one of the request: 2097152 for the
+import and its preview, 65536 for every other path. A valid import of up to 2 MiB therefore reaches its route.
 
 == Path Templates and requires
 

@@ -93,7 +93,7 @@ public final class MockHttpServer implements AutoCloseable {
         String path = exchange.getRequestURI().getPath();
         try (exchange) {
             var request = toRequest(exchange);
-            var response = request == null ? engine.bodyTooLarge() : engine.handle(request);
+            var response = request == null ? engine.bodyTooLarge(path) : engine.handle(request);
             if (response.eventStream()) {
                 stream(exchange);
             } else {

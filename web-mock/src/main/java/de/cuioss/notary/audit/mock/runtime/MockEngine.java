@@ -101,11 +101,22 @@ public final class MockEngine implements AutoCloseable {
     private static final String LOCATION = "Location";
 
     /**
-     * The most bytes of a request body the adapter buffers. A source of the AsciiDoc preview (at most 65,536 bytes
-     * of UTF-8) escaped in JSON needs at most six times that (six bytes for a control character), so the cap is far
-     * above any body the mock answers.
+     * The most bytes of the descriptor documents a Backstage import takes together, 2 MiB
+     * (doc/specification/rest-api.adoc, <em>Directory and Catalog Requests</em>); it is the {@code limit} of the
+     * {@code 413 TOO_LARGE} of the import requests.
      */
-    public static final int MAX_BODY_BYTES = 1_048_576;
+    public static final int IMPORT_LIMIT_BYTES = 2_097_152;
+
+    /** The path of the Backstage import; the path of its preview is this one and {@code /preview}. */
+    private static final String IMPORT_PATH = API + "catalogs/import/backstage";
+
+    /**
+     * The most bytes of a request body the adapter buffers. The largest text the mock answers is the import (at most
+     * {@link #IMPORT_LIMIT_BYTES} of descriptors); escaped in JSON it needs at most six times that (six bytes for a
+     * control character), so the cap is far above any body the mock answers and covers the AsciiDoc source (at most
+     * 65,536 bytes) as well.
+     */
+    public static final int MAX_BODY_BYTES = 6 * IMPORT_LIMIT_BYTES;
 
     private static final String SET_COOKIE = "Set-Cookie";
     private static final String FORM = "application/x-www-form-urlencoded";
@@ -804,14 +815,18 @@ public final class MockEngine implements AutoCloseable {
     }
 
     /**
-     * The answer to a body above {@link #MAX_BODY_BYTES}: {@code 413 TOO_LARGE} with the limit of the only request
-     * that takes a large text, the AsciiDoc source (doc/specification/rest-api.adoc, <em>Form Kit Requests</em>). The
-     * adapter answers it before it buffers the rest of the body.
+     * The answer to a body above {@link #MAX_BODY_BYTES}: {@code 413 TOO_LARGE} with the limit of the request the path
+     * names: {@link #IMPORT_LIMIT_BYTES} for the Backstage import and its preview, otherwise the limit of the AsciiDoc
+     * source (doc/specification/rest-api.adoc, <em>Form Kit Requests</em>). The adapter answers it before it buffers
+     * the rest of the body.
      *
+     * @param path the path of the request
      * @return the refusal
      */
-    public MockResponse bodyTooLarge() {
-        return json(413, object().put(OUTCOME, "TOO_LARGE").put("limit", AsciiDocPreview.LIMIT_BYTES));
+    public MockResponse bodyTooLarge(String path) {
+        boolean importRequest = path.equals(IMPORT_PATH) || path.equals(IMPORT_PATH + "/preview");
+        return json(413, object().put(OUTCOME, "TOO_LARGE")
+                .put("limit", importRequest ? IMPORT_LIMIT_BYTES : AsciiDocPreview.LIMIT_BYTES));
     }
 
     private MockResponse noRoute(MockRequest request) {

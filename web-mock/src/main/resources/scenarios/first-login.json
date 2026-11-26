@@ -146,7 +146,7 @@
       }
     },
     "registered": {
-      "description": "The entry is saved; the user works like any other.",
+      "description": "The entry is saved as a new one (p-9b7e21); the user works like any other.",
       "first_login_required": false,
       "routes": {
         "GET /api/v1/due": {
@@ -161,6 +161,70 @@
                 "due": "2026-11-27"
               }
             ]
+          }
+        },
+        "GET /api/v1/directory/me": {
+          "status": 200,
+          "body": {
+            "name": "Robin Newcomer",
+            "teams": [
+              "payments"
+            ],
+            "informationText": "Audit Notary stores your name, team and role in the person directory of your organisation so that documents can name who worked on them. Documents carry only a pseudonym; the directory maps it to your entry. Controller: the security office of your organisation. Legal basis: Art. 6(1)(b) and (f) GDPR. You can change your entry at any time in Settings; erasure is done by the catalog administrators. (Information under Art. 13 GDPR.)",
+            "entry": {
+              "pseudonym": "p-9b7e21",
+              "name": "Robin Newcomer",
+              "memberships": [
+                {
+                  "team": "team:payments",
+                  "role": "role:developer"
+                }
+              ],
+              "confirmedAt": "2026-11-26",
+              "confirmationDue": false
+            }
+          }
+        }
+      }
+    },
+    "registered-bound": {
+      "description": "The saved entry is the bound candidate (p-3d7a15); the user works like any other.",
+      "first_login_required": false,
+      "routes": {
+        "GET /api/v1/due": {
+          "status": 200,
+          "body": {
+            "items": [
+              {
+                "kind": "review",
+                "lens": "samm",
+                "title": "Payments 2026 Q4: Strategy and Metrics",
+                "address": "/samm/payments/2026-q4/sm",
+                "due": "2026-11-27"
+              }
+            ]
+          }
+        },
+        "GET /api/v1/directory/me": {
+          "status": 200,
+          "body": {
+            "name": "Robin Newcomer",
+            "teams": [
+              "payments"
+            ],
+            "informationText": "Audit Notary stores your name, team and role in the person directory of your organisation so that documents can name who worked on them. Documents carry only a pseudonym; the directory maps it to your entry. Controller: the security office of your organisation. Legal basis: Art. 6(1)(b) and (f) GDPR. You can change your entry at any time in Settings; erasure is done by the catalog administrators. (Information under Art. 13 GDPR.)",
+            "entry": {
+              "pseudonym": "p-3d7a15",
+              "name": "Robin Newcomer",
+              "memberships": [
+                {
+                  "team": "team:payments",
+                  "role": "role:developer"
+                }
+              ],
+              "confirmedAt": "2026-11-26",
+              "confirmationDue": false
+            }
           }
         }
       }
@@ -207,7 +271,7 @@
         "save-entry": {
           "method": "PUT",
           "path": "/api/v1/directory/me",
-          "next": "registered",
+          "next": "registered-bound",
           "status": 200,
           "body": {
             "outcome": "SAVED",

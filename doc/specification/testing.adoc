@@ -80,7 +80,7 @@ with their schemas and entries, the effective protection needs of a service (wit
 and `POST /api/v1/directory/erasures`) the same way and accepts the own-entry save and confirmation, which no right
 guards and which can answer a validation or Git-unavailable outcome; `workshop` carries the states `confirmation-due` and `confirmation-done` (the session flag
 `directoryConfirmationDue`), `entry-invalid` and `entry-git-unavailable`, `empty` lists no entry and no person and holds
-the right, and `first-login` answers `entry: null` and the binding states `candidates`, `candidates-chosen`,
+the right, and `first-login` answers `entry: null`, then the saved entry in `registered` (a new entry) or `registered-bound` (a bound candidate), and the binding states `candidates`, `candidates-chosen`,
 `candidates-not-bindable` and `candidates-refused`; `workshop` also carries the states `session-replaced` and `session-ended`; `workshop` and
 `read-only` answer the requests of the form kit for the fixture categories and carry the states `preview-hostile` and
 `preview-unavailable` (the built-in `render-asciidoc` handler answers every other preview); `workshop` and `read-only`

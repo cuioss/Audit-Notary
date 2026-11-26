@@ -1316,6 +1316,7 @@ class DirectoryAndCatalogsTest {
                 var candidates = json(first).path("candidates");
                 var second = client.change("PUT", DIRECTORY + "me", "{\"binding\":\"p-3d7a15\"}");
                 var session = get(client, "/api/v1/session");
+                var me = get(client, DIRECTORY + "me");
                 assertAll(
                         () -> assertEquals(409, first.statusCode()),
                         () -> assertEquals("BINDING_CANDIDATES", json(first).path("outcome").asText()),
@@ -1329,13 +1330,14 @@ class DirectoryAndCatalogsTest {
                         () -> assertEquals(200, second.statusCode()),
                         () -> assertEquals("SAVED", json(second).path("outcome").asText()),
                         () -> assertEquals("p-3d7a15", json(second).path("pseudonym").asText()),
-                        () -> assertEquals("registered", stateOf(client)),
-                        () -> assertFalse(session.path("firstLoginRequired").asBoolean(true)));
+                        () -> assertEquals("registered-bound", stateOf(client)),
+                        () -> assertFalse(session.path("firstLoginRequired").asBoolean(true)),
+                        () -> assertEquals("p-3d7a15", me.path("entry").path("pseudonym").asText()));
             }
         }
 
         @Test
-        @DisplayName("candidates-not-bindable: 409 with the candidates, then 409 NOT_BINDABLE, then 200 and registered")
+        @DisplayName("candidates-not-bindable: 409 with the candidates, then 409 NOT_BINDABLE, then 200 and registered-bound")
         void shouldRefuseTheChoice() {
             try (var client = start("first-login#candidates-not-bindable")) {
                 var first = client.change("PUT", DIRECTORY + "me", "{}");
@@ -1350,17 +1352,17 @@ class DirectoryAndCatalogsTest {
                         () -> assertEquals("candidates-chosen", stateAfterRefusal),
                         () -> assertEquals(200, third.statusCode()),
                         () -> assertEquals("p-3d7a15", json(third).path("pseudonym").asText()),
-                        () -> assertEquals("registered", stateOf(client)));
+                        () -> assertEquals("registered-bound", stateOf(client)));
             }
         }
 
         @Test
-        @DisplayName("keeps the form, invalid-team and registered, and describes the four new states")
+        @DisplayName("keeps the form, invalid-team and registered, and describes the five new states")
         void shouldKeepTheOldStates() {
             var scenario = REGISTRY.resolve("first-login").orElseThrow().scenario();
             assertAll(
                     () -> assertEquals("form", scenario.start()),
-                    () -> assertEquals(List.of("form", "invalid-team", "registered", "candidates", "candidates-chosen",
+                    () -> assertEquals(List.of("form", "invalid-team", "registered", "registered-bound", "candidates", "candidates-chosen",
                             "candidates-not-bindable", "candidates-refused"), new ArrayList<>(scenario.states().keySet())),
                     () -> scenario.states().values().forEach(state -> assertFalse(state.description().isBlank(), state.id())));
             try (var client = start("first-login")) {
@@ -1368,7 +1370,8 @@ class DirectoryAndCatalogsTest {
                 assertAll(
                         () -> assertEquals(200, response.statusCode()),
                         () -> assertEquals("p-9b7e21", json(response).path("pseudonym").asText()),
-                        () -> assertEquals("registered", stateOf(client)));
+                        () -> assertEquals("registered", stateOf(client)),
+                        () -> assertEquals("p-9b7e21", get(client, DIRECTORY + "me").path("entry").path("pseudonym").asText()));
             }
         }
 

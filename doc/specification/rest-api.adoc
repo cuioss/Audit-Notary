@@ -2022,6 +2022,13 @@ is blocked; the owner may change each one. The bodies and addresses are in <<_di
   beside *New*.
 . *The mock answers the writes with fixed ids* (the created entry, the created persons), because it does not read the
   bodies; the e2e flows type the same values.
+. *The fixtures of the mock stay static* and are guarded by tests that fail on drift between a fixture and the source it
+  mirrors (web-mock `README.adoc`, _Fixtures and Drift Tests_); the alternative is a scenario-format change that derives
+  the lists when a scenario is loaded.
+. *The first-login mock has two registered states:* `registered` (a new entry, pseudonym `p-9b7e21`) and
+  `registered-bound` (the bound candidate, `p-3d7a15`); each answers `GET /api/v1/directory/me` with its entry.
+. *The mock reads an import of up to 2 MiB* of descriptors (its transport cap is six times that, for JSON escaping); a
+  body above the cap answers `413` with the `limit` of its request, 2097152 for the import and 65536 otherwise.
 
 For the owner: whether `POST` for creation and a `PUT` that only changes is right (4); whether a retired entry may be
 reactivated (5); whether `x-catalog` may name several catalogs (7); whether a retired service counts for the effective

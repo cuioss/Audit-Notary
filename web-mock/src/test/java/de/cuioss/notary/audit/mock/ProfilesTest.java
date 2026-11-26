@@ -972,6 +972,24 @@ class ProfilesTest {
         }
 
         @Test
+        @DisplayName("let an import of 1.5 MiB reach its route and refuse a body above the cap with the limit of the import")
+        void shouldTakeALargeImport() {
+            try (var client = MockClient.start("catalog-admin").login()) {
+                var content = "a".repeat(1_572_864);
+                var valid = client.change("POST", "/api/v1/catalogs/import/backstage/preview",
+                        "{\"documents\":[{\"name\":\"catalog-info.yaml\",\"content\":\"" + content + "\"}]}");
+                var over = client.change("POST", "/api/v1/catalogs/import/backstage",
+                        "{\"documents\":[{\"content\":\"" + "a".repeat(MockEngine.MAX_BODY_BYTES) + "\"}]}");
+                assertAll(
+                        () -> assertEquals(200, valid.statusCode()),
+                        () -> assertEquals(413, over.statusCode()),
+                        () -> assertEquals("TOO_LARGE", json(over).path("outcome").asText()),
+                        () -> assertEquals(MockEngine.IMPORT_LIMIT_BYTES, json(over).path("limit").asInt()),
+                        () -> assertEquals(2_097_152, json(over).path("limit").asInt()));
+            }
+        }
+
+        @Test
         @DisplayName("require the anti-CSRF header like every other POST")
         void shouldRequireTheCsrfHeader() {
             try (var client = MockClient.start("workshop").login()) {
