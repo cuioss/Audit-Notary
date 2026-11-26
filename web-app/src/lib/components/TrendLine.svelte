@@ -85,14 +85,17 @@
       </g>
     {/each}
   </svg>
-  <table class="sr-only">
-    <caption>{label}</caption>
-    <tbody>
-      {#each points as point, index (index)}
-        <tr><th scope="row">{point.label}</th><td>{point.text}</td></tr>
-      {/each}
-    </tbody>
-  </table>
+  <!-- The wrapper clips the table: a table that is itself positioned ignores `width: 1px` and widens the page. -->
+  <div class="sr-only">
+    <table>
+      <caption>{label}</caption>
+      <tbody>
+        {#each points as point, index (index)}
+          <tr><th scope="row">{point.label}</th><td>{point.text}</td></tr>
+        {/each}
+      </tbody>
+    </table>
+  </div>
 </figure>
 
 <style>

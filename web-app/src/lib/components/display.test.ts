@@ -383,6 +383,8 @@ describe('TrendLine', () => {
     ).toEqual(['1.00', '1.50', '2.00']);
     expect(container.querySelector('table caption')).toHaveTextContent('Overall score');
     expect(container.querySelectorAll('tbody tr')).toHaveLength(3);
+    // The table is clipped by a wrapper: a positioned table ignores `width: 1px` and widens the page on a phone.
+    expect(container.querySelector('table')?.parentElement).toHaveClass('sr-only');
   });
 
   it('marks a point under the pointer; its value stands without it', async () => {

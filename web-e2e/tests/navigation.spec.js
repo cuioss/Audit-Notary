@@ -12,6 +12,9 @@ const ADDRESSES = [
   ['/', 'due-view', 'Due', 'Due'],
   ['/samm', 'samm-view', 'SAMM', 'SAMM'],
   ['/samm/payments/2026-q4/sm', 'samm-view', 'SAMM', 'SAMM'],
+  // The forms of the SAMM completion: `new` is reserved in the place of a scope and of an assessment.
+  ['/samm/new', 'samm-view', 'SAMM', 'SAMM'],
+  ['/samm/shop/new', 'samm-view', 'SAMM', 'SAMM'],
   ['/samm/payments/2026-q4/release', 'release-view', 'SAMM', 'Release'],
   ['/threat-models/payment-gateway/checkout-flow', 'lens-view', 'Threat models', 'Threat models'],
   ['/incidents/2026/inc-0007', 'lens-view', 'Incidents', 'Incidents'],

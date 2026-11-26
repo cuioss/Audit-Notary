@@ -258,6 +258,25 @@ describe('SammView', () => {
     await vi.waitFor(() => expect(scope).toHaveBeenCalledTimes(2));
   });
 
+  it('reads the scope again with the assessment when a save found it released meanwhile', async () => {
+    const { goto } = await (async () => {
+      await useProfile('workshop');
+      return {
+        goto: (state: string) => vi.stubGlobal('fetch', scenarioFetch(`workshop#${state}`).fetch),
+      };
+    })();
+    const scope = vi.spyOn(apiClient, 'getSammScope');
+    render(SammView, { params: { scope: 'payments', assessment: '2026-q4', practice: 'sm' } });
+    expect(await screen.findByTestId('practice-sheet')).toBeInTheDocument();
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
+    // Another person released the assessment: the save is refused, and the scope's open assessment is gone with it.
+    goto('assessment-released-meanwhile');
+    const reads = scope.mock.calls.length;
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    await vi.waitFor(() => expect(scope.mock.calls.length).toBeGreaterThan(reads));
+    expect(await screen.findByTestId('start-new-assessment')).toBeInTheDocument();
+  });
+
   it('says when the pinned models cannot be read', async () => {
     await useProfile('workshop');
     vi.spyOn(apiClient, 'getSammModels').mockRejectedValue(new ApiError('NETWORK', 0));

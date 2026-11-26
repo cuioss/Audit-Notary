@@ -377,7 +377,8 @@
           if (assessment) void reloadAssessment(assessment.id);
         }}
         onrefresh={() => {
-          if (assessment) void reloadAssessment(assessment.id);
+          // A refusal that names a release (`DOCUMENT_RELEASED`) changed the scope's open assessment too.
+          void reloadAfterChange();
         }}
       />
     {/if}

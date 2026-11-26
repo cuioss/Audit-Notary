@@ -19,6 +19,17 @@ import {
   fillNewService,
   newEntryAddress,
 } from './helpers/catalogs.js';
+import {
+  NEW_SCOPE_ADDRESS,
+  OPEN,
+  RELEASED,
+  assessmentAddress,
+  choose,
+  fillNewAssessment,
+  newAssessmentAddress,
+  patchRead,
+  trendPath,
+} from './helpers/samm.js';
 
 /**
  * AUN-WEB-2: axe-core on every view in both themes; no violation of impact serious or critical.
@@ -584,6 +595,223 @@ for (const theme of ['light', 'dark']) {
       await prepare(page);
       await expect(page.getByTestId(shown).first()).toBeVisible();
       await expectNoSeriousViolations(page, `directory: ${name} (${scenario}, ${theme})`);
+    });
+  }
+}
+
+/**
+ * The SAMM completion (UC-SAMM-1 to UC-SAMM-5), each state reached on the page after the theme is chosen: the forms of a
+ * new scope and a new assessment with their refusals and notices, the targets with their conflict and refusal, the
+ * evidence links with the editor, the question before a removal and a refusal, the frozen practice, the refused comparison and
+ * the trend with the model versions it leaves out. `shown` is the test id that proves the state is on the page.
+ */
+const SAMM_COMPLETION_STATES = [
+  [
+    'a new scope',
+    'workshop',
+    NEW_SCOPE_ADDRESS,
+    'new-scope-sheet',
+    'new-scope-targets-editor',
+    async () => {},
+  ],
+  [
+    'a new scope that was refused',
+    'workshop#scope-invalid',
+    NEW_SCOPE_ADDRESS,
+    'new-scope-sheet',
+    'notice',
+    async (page) => {
+      await page.getByTestId('new-scope-title').fill('Bad');
+      await choose(page, 'new-scope-subject', 'Payments');
+      await choose(page, 'new-scope-targets-editor-ta-target', '2.5');
+      await page.getByTestId('create-scope').click();
+    },
+  ],
+  [
+    'a new scope without the right',
+    'read-only',
+    NEW_SCOPE_ADDRESS,
+    'new-scope-no-right',
+    'new-scope-no-right',
+    async () => {},
+  ],
+  [
+    'a new scope without a pinned model',
+    'workshop#models-none',
+    NEW_SCOPE_ADDRESS,
+    'new-scope-no-model',
+    'new-scope-no-model',
+    async () => {},
+  ],
+  [
+    'a new assessment',
+    'workshop',
+    newAssessmentAddress('shop'),
+    'new-assessment-sheet',
+    'assessor-self',
+    async (page) => {
+      await page.getByTestId('assessor-add').click();
+    },
+  ],
+  [
+    'a new assessment while one is open',
+    'workshop',
+    newAssessmentAddress('payments'),
+    'new-assessment-sheet',
+    'open-notice',
+    async () => {},
+  ],
+  [
+    'a new assessment that was refused',
+    'workshop#assessment-invalid',
+    newAssessmentAddress('shop'),
+    'new-assessment-sheet',
+    'save-state',
+    async (page) => {
+      await fillNewAssessment(page, 'Web shop 2026 Q4');
+      await page.getByTestId('create-assessment').click();
+      await expect(page.getByTestId('new-assessment-date')).toHaveAttribute('aria-invalid', 'true');
+    },
+  ],
+  [
+    'the targets of a scope',
+    'workshop',
+    '/samm/payments',
+    'scope-sheet',
+    'targets-ta-target',
+    async () => {},
+  ],
+  [
+    'the targets that were changed',
+    'workshop',
+    '/samm/payments',
+    'scope-sheet',
+    'save-targets',
+    async (page) => {
+      await choose(page, 'targets-ta-target', '3');
+    },
+  ],
+  [
+    'a conflict of the targets',
+    'workshop#targets-conflict',
+    '/samm/payments',
+    'scope-sheet',
+    'conflict-target-ta',
+    async (page) => {
+      await choose(page, 'targets-ta-target', '3');
+      await page.getByTestId('save-targets').click();
+    },
+  ],
+  [
+    'the targets that were refused',
+    'workshop#targets-invalid',
+    '/samm/payments',
+    'scope-sheet',
+    'targets-failure',
+    async (page) => {
+      await choose(page, 'targets-ta-target', '3');
+      await page.getByTestId('save-targets').click();
+      await expect(page.getByTestId('targets-ta-target')).toHaveAttribute('aria-invalid', 'true');
+    },
+  ],
+  [
+    'the targets read only',
+    'read-only',
+    '/samm/payments',
+    'scope-sheet',
+    'targets',
+    async () => {},
+  ],
+  [
+    'the trend with the versions it leaves out',
+    'workshop',
+    '/samm/payments',
+    'scope-sheet',
+    'trend-omitted',
+    async (page) => {
+      await patchRead(page, `**${trendPath('payments')}`, (trend) => ({ ...trend, omitted: 2 }));
+      await page.reload();
+    },
+  ],
+  [
+    'the evidence of a practice',
+    'workshop',
+    assessmentAddress(OPEN.scope, OPEN.assessment, 'sb'),
+    'practice-sheet',
+    'evidence-editor-table',
+    async () => {},
+  ],
+  [
+    'the editor of an evidence link',
+    'workshop',
+    assessmentAddress(OPEN.scope, OPEN.assessment, 'sb'),
+    'practice-sheet',
+    'evidence-editor-field-url',
+    async (page) => {
+      await page.getByRole('button', { name: 'Add row' }).click();
+      await page.getByTestId('evidence-editor-apply').click();
+    },
+  ],
+  [
+    'the question before an evidence link is removed',
+    'workshop',
+    assessmentAddress(OPEN.scope, OPEN.assessment, 'sb'),
+    'practice-sheet',
+    'evidence-editor-remove-confirm',
+    async (page) => {
+      await page.getByRole('button', { name: 'Remove row 1' }).click();
+    },
+  ],
+  [
+    'the evidence that was refused',
+    'workshop#evidence-invalid',
+    assessmentAddress(OPEN.scope, OPEN.assessment, 'sb'),
+    'practice-sheet',
+    'evidence-editor-errors',
+    async (page) => {
+      await page.getByTestId('comment-sb-b-1').fill('x');
+      await page.getByTestId('save-everyone').click();
+    },
+  ],
+  [
+    'a frozen practice with its evidence',
+    'workshop',
+    assessmentAddress(RELEASED.scope, RELEASED.assessment, 'sb'),
+    'practice-sheet',
+    'start-new-assessment',
+    async () => {},
+  ],
+  [
+    'a frozen assessment',
+    'workshop',
+    assessmentAddress(RELEASED.scope, RELEASED.assessment),
+    'assessment-sheet',
+    'start-new-assessment',
+    async () => {},
+  ],
+  [
+    'the refused comparison',
+    'workshop#model-versions-differ',
+    assessmentAddress(RELEASED.scope, RELEASED.assessment),
+    'assessment-sheet',
+    'versions-differ',
+    async () => {},
+  ],
+];
+
+for (const theme of ['light', 'dark']) {
+  for (const [name, scenario, address, view, shown, prepare] of SAMM_COMPLETION_STATES) {
+    test(`samm completion: ${name} of ${scenario} at ${address} in the ${theme} theme`, async ({
+      page,
+      request,
+    }) => {
+      await useScenario(request, scenario);
+      await login(page, address);
+      await useTheme(page, theme);
+      await expect(page.getByTestId(view)).toBeVisible();
+      await prepare(page);
+      await expect(page.getByTestId(shown).first()).toBeVisible();
+      await expectNoSeriousViolations(page, `samm completion: ${name} (${scenario}, ${theme})`);
     });
   }
 }
