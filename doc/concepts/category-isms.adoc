@@ -138,6 +138,14 @@ complete ISMS. Core and extension are listed in xref:audit-notary-overview.adoc#
 . Deferred: the registers of controls, suppliers, nonconformities and non-application assets, the statement of
   applicability, and audit tags that mark a reporting date.
 
+Decided provisionally with the Reports lens (UC-ISMS-3), recorded in
+xref:../specification/rest-api.adoc#_decided_reports[REST API Register, Open Questions]; the owner may change each one:
+
+. The risk register as of a date is a report of the lens *Reports* (`/reports/risk-register?as-of=`): a calendar date (UTC)
+  or a tag name, released entries only, each as a summary (number, title, rating, treatment, owning team, version, release
+  time, review date, origin) that opens the entry as it was then. The fields of a risk are fixed with the ISMS lens.
+. The application creates no reporting tag; the picker lists the tags that exist.
+
 == Related
 
 * xref:category-samm.adoc[SAMM], xref:category-incident-reports.adoc[Incident Reports],

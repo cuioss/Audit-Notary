@@ -582,7 +582,7 @@ and the practice scores, unrounded; `omitted` counts the released assessments of
 in <<_samm_requests>>
 |`404 NOT_FOUND`; an empty `points` for a scope without a released assessment
 |xref:../use-cases/04-samm.adoc#UC-SAMM-5[UC-SAMM-5]; AUN-SAMM-5 names no trend
-|`PROVISIONAL`
+|`PROVISIONAL`. The trend of every scope in one answer is `GET /api/v1/reports/samm-trend` (<<_reports_requests>>)
 
 |`GET /api/v1/samm/{scope}/compare?from=<assessment>&to=<assessment>`
 |none
@@ -592,7 +592,9 @@ NOT_FOUND` for an assessment that is no assessment of the scope; `422 VALIDATION
 the code `REQUIRED`. The two assessments may be in any state: an open one is read as saved (PROVISIONAL). The bodies are in
 <<_samm_requests>>
 |xref:category-samm.adoc#AUN-SAMM-5[AUN-SAMM-5]
-|`SPECIFIED`; the status of `MODEL_VERSIONS_DIFFER` and the comparison of an open assessment `PROVISIONAL`
+|`SPECIFIED`; the status of `MODEL_VERSIONS_DIFFER` and the comparison of an open assessment `PROVISIONAL`. The page
+`/reports/samm-compare` of the lens *Reports* reads this request and adds none (<<_reports_requests>>, where the `200`
+body is written out)
 
 |`GET /api/v1/documents/samm-assessments/{document}`
 |none
@@ -619,10 +621,53 @@ xref:category-samm.adoc#AUN-SAMM-7[AUN-SAMM-7]
 
 |`GET /api/v1/isms/risks?as-of=<tag\|date>`
 |none
-|The risk register as of a tag or a date, released entries only (shape not yet fixed)
+|The risk register as of a tag or a date, released entries only, as it was at the commit that the tag or the date selects;
+without `as-of` as of now: `{"asOf": {"requested", "date", "tag", "commit", "at"}, "tags": [{"tag", "commit", "at"}],
+"risks": [{"id", "entry", "title", "rating", "treatment", "owner", "version", "releasedAt", "reviewDue", "reference",
+"address"}]}`. The exact body is in <<_reports_requests>>
+|`403 FORBIDDEN` without `read` on `isms-register`; `422 VALIDATION` with the pointer `/as-of` and the code `PATTERN`
+(neither a calendar date nor a tag name), `FUTURE` (a date after today) or `UNKNOWN_TAG`; `503 GIT_UNAVAILABLE` for a
+commit that is not indexed yet
+|xref:category-isms.adoc#AUN-ISMS-3[AUN-ISMS-3], xref:../use-cases/07-isms.adoc#UC-ISMS-3[UC-ISMS-3]
+|`SPECIFIED`; the answer's shape, the codes of `422` and `GIT_UNAVAILABLE` `PROVISIONAL`; read by the page
+`/reports/risk-register` of the lens *Reports*
+
+6+h|Reports
+
+|`GET /api/v1/reports/summary`
 |none
-|xref:category-isms.adoc#AUN-ISMS-3[AUN-ISMS-3]
-|`SPECIFIED`; not yet used by the web app
+|The figures of the dashboard `/reports`, one section per repository the user may read: `{"today", "samm": {"scopes",
+"withoutRelease", "open", "latest": [{"scope", "name", "assessment", "date", "overall", "change"}]}, "threatModels":
+{"services", "withModel", "withoutModel", "openThreats", "untreatedThreats", "overdue", "dueSoon"}, "risks": {"entries",
+"byRating", "dueSoon", "overdue", "latestRelease"}}`. A section the user may not read is absent, and no request fails for
+it. The exact body is in <<_reports_requests>>
+|none beyond the common refusals
+|xref:../use-cases/04-samm.adoc#UC-SAMM-5[UC-SAMM-5], xref:../use-cases/05-threat-models.adoc#UC-TM-4[UC-TM-4],
+xref:../use-cases/07-isms.adoc#UC-ISMS-3[UC-ISMS-3]
+|`PROVISIONAL`
+
+|`GET /api/v1/reports/samm-trend`
+|none
+|The released assessments of every scope over time: `{"scopes": [{"scope", "title", "subject", "modelVersion", "omitted",
+"points": [{"assessment", "document", "title", "date", "overall", "functions"}]}]}`, in the order of
+`GET /api/v1/samm/scopes`, the points oldest first and unrounded. The points are those of
+`GET /api/v1/samm/{scope}/trend` without `practices`. The exact body is in <<_reports_requests>>
+|`403 FORBIDDEN` without `read` on `samm-assessments`; a scope without a released assessment is listed with `modelVersion`
+`null` and `"points": []`
+|xref:../use-cases/04-samm.adoc#UC-SAMM-5[UC-SAMM-5] (a trend of several scopes); AUN-SAMM-5 names no trend
+|`PROVISIONAL`
+
+|`GET /api/v1/reports/threat-evaluation`
+|none
+|The threat models of the services, evaluated: `{"today", "models": [{"service", "protectionNeed", "reviewInterval",
+"model", "address", "state", "version", "lastReview", "daysSinceReview", "reviewDue", "dueInDays", "status", "threats":
+{"total", "open", "untreated", "transferred"}}], "withoutModel": [{"service", "lifecycle", "owner", "protectionNeed",
+"address"}]}`. The same answer serves the lens *Threat models*. The exact body is in <<_reports_requests>>
+|`403 FORBIDDEN` without `read` on `threat-models`; empty lists for an installation without services
+|xref:category-threat-models.adoc#AUN-TM-4[AUN-TM-4], xref:category-threat-models.adoc#AUN-TM-3[AUN-TM-3],
+xref:../use-cases/05-threat-models.adoc#UC-TM-4[UC-TM-4]
+|`PROVISIONAL`; the evaluation per service is specified, the request, the list of the services without a model and the
+members of the status are not
 |===
 
 [#_form_kit_requests]
@@ -873,8 +918,9 @@ before `categories.document`.) The rules:
   falls back to `/`. Without this, the step-up of a view that shows `?at=v1` would return to the start page.
 * The query string is at most 256 characters; the path stays without query in the routes of the mock
   (`CanonicalAddresses.isCanonical(path)`).
-* `?at=` is allowed on `categories.document` only; later steps add it to the address of the other lenses and add
-  `as-of` for the reports, each with its own pattern.
+* `?at=` is allowed on `categories.document` and on `isms.risk` (the risk as it was at a release, from the Reports step);
+  later steps add it to the address of the other lenses. The Reports step adds the names `scope`, `from`, `to` and `as-of`
+  for the four reports, each with its own pattern (<<_reports_addresses>>).
 
 What the code does for it (built by the mock and UI steps, not by this contract):
 
@@ -1922,7 +1968,7 @@ The points are the released assessments of the model version `modelVersion`, old
 AUN-SAMM-5 asks. `omitted` is the number of the scope's released assessments taken with another model version, which the
 trend does not mix (a comparison across versions is deferred). The query `modelVersion` asks for another version; the
 default is the version of the latest released assessment. A scope without a released assessment answers `"points": []`
-with `modelVersion` `null`. The trend of several scopes belongs to the lens *Reports* (the next step).
+with `modelVersion` `null`. The trend of several scopes belongs to the lens *Reports* (<<_samm_cross_scope_trend>>).
 
 === The Comparison and `MODEL_VERSIONS_DIFFER`
 
@@ -1942,6 +1988,297 @@ and nothing is compared. The web app shows a notice that names both versions and
 assessment stay readable. A missing `from` or `to` is `422 VALIDATION` with the pointer `/from` or `/to` and the code
 `REQUIRED`; an assessment that is none of the scope's is `404 NOT_FOUND`. An open assessment may be compared (its scores
 are those of the answers as saved), the two may be in any state.
+
+[#_reports_requests]
+== Reports Requests
+
+The requests of the lens *Reports* (xref:../use-cases/04-samm.adoc#UC-SAMM-5[UC-SAMM-5], xref:../use-cases/05-threat-models.adoc#UC-TM-4[UC-TM-4],
+xref:../use-cases/07-isms.adoc#UC-ISMS-3[UC-ISMS-3]). The rows are in <<_requests>>, *Reports* and *ISMS*; this section
+fixes their bodies and the addresses of the reports. Every body is PROVISIONAL unless a row says otherwise; the decisions
+are in <<_decided_reports>>. The values are those of the mock: the scopes of <<_samm_requests>>, the services of the
+catalog (<<_directory_and_catalog_requests>>) and today, 2026-11-26. A report only reads: it has no draft, no save and no
+event of its own, and every figure is computed by the server from the index, so that the web app only draws it.
+
+[#_reports_addresses]
+=== The Addresses
+
+The lens *Reports* had `/reports` and the generic `/reports/{report}`. The step adds four addresses, each before
+`reports.report` in `canonical-addresses.json`, and gives each its allowed query (<<_allowed_queries>>):
+
+[cols="2,3,2,3"]
+|===
+|Route id |Address |Query |Shows
+
+|`reports`
+|`/reports`
+|none
+|The dashboard (`DashboardPage`): one card per report the user may read, each with its figures from
+`GET /api/v1/reports/summary` and a link to the report
+
+|`reports.samm-trend`
+|`/reports/samm-trend`
+|`scope`
+|The scores of every scope over time: the overall score of each scope as a line, and a table of the points. With `scope`
+the page shows the five business functions of that scope as lines
+
+|`reports.samm-compare`
+|`/reports/samm-compare`
+|`scope`, `from`, `to`
+|Two assessments of one scope side by side, per business function, practice and stream (a dumbbell for each); a notice
+for `MODEL_VERSIONS_DIFFER`. Without `from` and `to` the page offers the pairs the scope has
+
+|`reports.threat-evaluation`
+|`/reports/threat-evaluation`
+|none
+|The table of the threat models per service: open and untreated threats, days since the last review, the review due
+date; below it the services without a model
+
+|`reports.risk-register`
+|`/reports/risk-register`
+|`as-of`
+|The risk register as of a tag or a date, released entries only; without `as-of` as of now
+|===
+
+The values of the names, each matched against the whole value (`queries` of the file): `scope`, `from` and `to` are
+address segments (`[a-z0-9][a-z0-9._-]{0,127}`); `as-of` is `[A-Za-z0-9][A-Za-z0-9._/-]{0,127}`, which holds a calendar
+date (`2026-03-01`) and a tag name (`audit-2026-03`, `risks/R-012/v2`) alike. The pattern checks the form only: a value that
+is no valid date and no known tag is answered by the server (`422`, see below), so that the page can say so. A name the
+address does not admit is ignored, one that appears twice or does not match makes the address not found (the rules of
+<<_allowed_queries>>). `/reports/{report}` stays for the address of every other report: it is the not-found view.
+`/isms/risks/{entry}` (`isms.risk`) gains the allowed query `at`, so that an entry of the as-of list opens as it was then
+(`/isms/risks/r-004?at=v1`); the page of the entry is built with the ISMS lens.
+
+The reports have no address of their own for a chart, a table or a filter: they are parts of the page. The chart and the
+table of a report state the same figures.
+
+[#_reports_summary]
+=== The Dashboard Summary
+
+`GET /api/v1/reports/summary` for a user who may read `samm-assessments`, `threat-models` and `isms-register`:
+
+[source,json]
+----
+{
+  "today": "2026-11-26",
+  "samm": {
+    "scopes": 4, "withoutRelease": 1, "open": 2,
+    "latest": [
+      { "scope": "payments", "name": "Payments", "assessment": "2026-q2", "date": "2026-06-16",
+        "overall": 1.3583333333333332, "change": 0.3999999999999998 },
+      { "scope": "shop", "name": "Web shop", "assessment": "2026-q3", "date": "2026-09-22",
+        "overall": 1.2333333333333334, "change": null },
+      { "scope": "organisation", "name": "Organisation", "assessment": "2026-h1", "date": "2026-05-04",
+        "overall": 1.2083333333333335, "change": null }
+    ]
+  },
+  "threatModels": {
+    "services": 8, "withModel": 6, "withoutModel": 2, "openThreats": 13, "untreatedThreats": 10,
+    "overdue": 2, "dueSoon": 1
+  },
+  "risks": {
+    "entries": 7, "byRating": { "critical": 1, "high": 3, "medium": 2, "low": 1 },
+    "dueSoon": 1, "overdue": 1, "latestRelease": "2026-11-12T10:41:00Z"
+  }
+}
+----
+
+* A section is present exactly when the user holds `read` on its repository (`samm` on `samm-assessments`,
+  `threatModels` on `threat-models`, `risks` on `isms-register`); a user with none of the three gets `{"today"}` and the
+  empty state of a session without rights is shown by the shell before. The request never answers `FORBIDDEN`.
+* `samm.latest` holds, for every scope that has a released assessment, the newest one in the order of the scope list;
+  `change` is its `overall` minus the `overall` of the released assessment before it of the same model version, `null`
+  when there is none. `withoutRelease` counts the scopes that have no released assessment, `open` those that have an
+  assessment in `draft` or `in-review`.
+* `threatModels` counts the services of the catalog that are not retired (`services`), those with at least one threat
+  model (`withModel`) and without one (`withoutModel`), the open and the untreated threats of all models
+  (<<_threat_evaluation>>) and the models whose review is `overdue` or `due-soon`.
+* `risks` counts the released entries as of now (<<_risk_register_as_of>>), by `rating`, those whose `reviewDue` lies
+  within 30 days (`dueSoon`) or before today (`overdue`), and the time of the newest release.
+* The figures are those of the three reports, so a card and its report never disagree; the dashboard makes this one
+  request, and each report its own.
+
+[#_samm_cross_scope_trend]
+=== The Trend of Every Scope
+
+`GET /api/v1/reports/samm-trend` (shortened; every point holds the five business functions, the practices are left to
+`GET /api/v1/samm/{scope}/trend`):
+
+[source,json]
+----
+{
+  "scopes": [
+    { "scope": "payments", "title": "Payments", "subject": { "kind": "team", "id": "payments", "name": "Payments" },
+      "modelVersion": "v2.2.0", "omitted": 0,
+      "points": [
+        { "assessment": "2025-q4", "document": "payments-2025-q4", "title": "Payments 2025 Q4", "date": "2025-12-08",
+          "overall": 0.9583333333333334,
+          "functions": { "governance": 0.9583333333333334, "design": 1.0, "implementation": 1.25,
+                         "verification": 0.8333333333333334, "operations": 0.75 } },
+        { "assessment": "2026-q2", "document": "payments-2026-q2", "title": "Payments 2026 Q2", "date": "2026-06-16",
+          "overall": 1.3583333333333332,
+          "functions": { "governance": 1.4166666666666667, "design": 1.6666666666666667,
+                         "implementation": 1.5416666666666667, "verification": 0.9583333333333334,
+                         "operations": 1.2083333333333333 } }
+      ] },
+    { "scope": "identity", "title": "Identity Platform",
+      "subject": { "kind": "team", "id": "identity", "name": "Identity Platform" },
+      "modelVersion": null, "omitted": 0, "points": [] },
+    { "scope": "shop", "title": "Web shop", "subject": { "kind": "service", "id": "shop", "name": "Web shop" },
+      "modelVersion": "v2.2.0", "omitted": 0, "points": [ "…" ] },
+    { "scope": "organisation", "title": "Organisation",
+      "subject": { "kind": "organisation", "name": "Organisation" },
+      "modelVersion": "v2.2.0", "omitted": 0, "points": [ "…" ] }
+  ]
+}
+----
+
+* The scopes are in the order of `GET /api/v1/samm/scopes`; the points of a scope are those of
+  `GET /api/v1/samm/{scope}/trend` without the member `practices`: the released assessments of the scope's
+  `modelVersion`, oldest first by `date`, scores unrounded (AUN-SAMM-5). `modelVersion` is the version of the scope's
+  latest released assessment, `omitted` the number of its released assessments of other versions, as in the request of
+  one scope. A scope without a released assessment is listed with `modelVersion` `null` and `"points": []`, so that the
+  table names it.
+* Scopes may have different `modelVersion`s. The report does not mix versions inside a scope (as before), but it does draw
+  scopes of different versions on one scale (0 to 3); the page then says which versions occur and that a score of
+  another version is read with that caution. A comparison across versions stays deferred.
+* The request has no query. The query `scope` of the address only chooses which scope the page shows by business function;
+  the answer is the same.
+
+[#_samm_compare_page]
+=== The Comparison Page
+
+The page `/reports/samm-compare?scope=payments&from=2026-q2&to=2026-q4` makes no request of its own beyond the scope list
+(`GET /api/v1/samm/scopes`), the scope (`GET /api/v1/samm/scopes/payments`, whose `assessments` offer the pairs) and
+`GET /api/v1/samm/payments/compare?from=2026-q2&to=2026-q4`. The `200` of the comparison, which the register had left as
+"shape PROVISIONAL" (shortened to one practice; the figures are those of the mock):
+
+[source,json]
+----
+{
+  "from": "2026-q2", "to": "2026-q4", "modelVersion": "v2.2.0",
+  "overall": { "from": 1.3583333333333332, "to": 1.65, "delta": 0.29166666666666674 },
+  "functions": [
+    { "id": "governance", "from": 1.4166666666666667, "to": 1.8333333333333333, "delta": 0.4166666666666665,
+      "practices": [
+        { "id": "sm", "from": 1.25, "to": 1.5, "delta": 0.25,
+          "streams": [
+            { "letter": "A", "from": 1.5, "to": 1.25, "delta": -0.25 },
+            { "letter": "B", "from": 1.0, "to": 1.75, "delta": 0.75 } ] },
+        "…" ] },
+    "…" ]
+}
+----
+
+`delta` is `to` minus `from`, unrounded; the two assessments may be given in either order (the delta then changes its
+sign) and may be in any state (an open one is read as saved). `MODEL_VERSIONS_DIFFER`, `404` and the `422` for a missing
+`from` or `to` are those of <<_samm_requests>>. The page shows the notice of `MODEL_VERSIONS_DIFFER` with both versions
+and no comparison; the scores of each assessment stay readable in the table of the trend. A `scope` that does not exist
+is the not-found view of the page, `from` or `to` that is none of the scope's assessments the notice of the `404`.
+
+[#_threat_evaluation]
+=== The Threat Evaluation
+
+`GET /api/v1/reports/threat-evaluation` (shortened to three models):
+
+[source,json]
+----
+{
+  "today": "2026-11-26",
+  "models": [
+    { "service": { "id": "customer-portal", "name": "Customer Portal" }, "protectionNeed": "very-high",
+      "reviewInterval": "P6M", "model": "portal", "address": "/threat-models/customer-portal/portal",
+      "state": "released", "version": 2, "lastReview": "2025-12-02", "daysSinceReview": 359, "reviewDue": "2026-06-02",
+      "dueInDays": -177, "status": "overdue",
+      "threats": { "total": 6, "open": 2, "untreated": 2, "transferred": 0 } },
+    { "service": { "id": "payment-api", "name": "Payment API" }, "protectionNeed": "very-high",
+      "reviewInterval": "P6M", "model": "checkout-flow", "address": "/threat-models/payment-api/checkout-flow",
+      "state": "released", "version": 3, "lastReview": "2026-06-01", "daysSinceReview": 178, "reviewDue": "2026-12-01",
+      "dueInDays": 5, "status": "due-soon",
+      "threats": { "total": 9, "open": 3, "untreated": 2, "transferred": 1 } },
+    { "service": { "id": "notification-service", "name": "Notification service" }, "protectionNeed": "normal",
+      "reviewInterval": "P24M", "model": "notification-flows", "address": "/threat-models/notification-service/notification-flows",
+      "state": "draft", "version": null, "lastReview": null, "daysSinceReview": null, "reviewDue": null,
+      "dueInDays": null, "status": "unreleased",
+      "threats": { "total": 3, "open": 3, "untreated": 3, "transferred": 0 } }
+  ],
+  "withoutModel": [
+    { "service": { "id": "report-scheduler", "name": "Report scheduler" }, "lifecycle": "active",
+      "owner": { "kind": "team", "id": "security-office", "name": "Security Office" }, "protectionNeed": "normal",
+      "address": "/threat-models/report-scheduler" }
+  ]
+}
+----
+
+* *One row per threat model.* AUN-TM-4 names the service, the address names the model, so a service with two models has
+  two rows. The rows are ordered by `reviewDue` (a model without one last), then by the name of the service. The web app
+  sorts further on its own.
+* `protectionNeed` is the highest of the three effective protection needs of the service (AUN-DIR-5, `normal`, `high` or
+  `very-high`), `reviewInterval` the period AUN-TM-3 selects from it (`P6M`, `P12M`, `P24M`). `lastReview` is the
+  `last-review` of the last released version; `reviewDue` is `lastReview` plus the interval; `daysSinceReview` and
+  `dueInDays` are counted to `today` (the server's UTC date); `dueInDays` is negative when the review is overdue.
+* `status`: `overdue` (`dueInDays` below 0), `due-soon` (0 to 30), `ok` (above 30) and `unreleased` for a model that was
+  never released, which has no review and no due date (UC-TM-2 starts at a released model). `state` and `version` are the
+  workflow state and the number of the last release (`null` before the first).
+* `threats` counts the threats of the model as it is saved: `open` those with the status `open`, `untreated` the open ones
+  without a countermeasure that are not transferred, `transferred` those that carry a reference into the risk register.
+  `untreated` is never more than `open`. The status of a threat (`open`, `mitigated`, `accepted`) belongs to the
+  threat-model data shape of the next step.
+* `withoutModel` lists the services of the catalog that are not retired and have no threat model, a planned one too, the
+  highest `protectionNeed` first and then by name; its `address` is the service's page in the lens *Threat models* (`/threat-models/<service>`), from which a model
+  is created (the next step). `owner` is the owning team of the service.
+* An installation without services answers both lists empty.
+
+[#_risk_register_as_of]
+=== The Risk Register as of a Date
+
+`GET /api/v1/isms/risks?as-of=2026-03-01` (AUN-ISMS-3), shortened to two entries:
+
+[source,json]
+----
+{
+  "asOf": { "requested": "2026-03-01", "date": "2026-03-01", "tag": null, "commit": "3f9a1c2", "at": "2026-02-27T16:20:00Z" },
+  "tags": [
+    { "tag": "management-review-2026-06", "commit": "b81d4e6", "at": "2026-06-18T13:05:00Z" },
+    { "tag": "audit-2026-03", "commit": "3f9a1c2", "at": "2026-02-27T16:20:00Z" }
+  ],
+  "risks": [
+    { "id": "R-004", "entry": "r-004", "title": "Build agents run unpatched images", "rating": "medium",
+      "treatment": "mitigate", "owner": { "kind": "team", "id": "security-office", "name": "Security Office" },
+      "version": 1, "releasedAt": "2025-11-06T14:02:00Z", "reviewDue": "2026-05-06", "reference": null,
+      "address": "/isms/risks/r-004?at=v1" },
+    { "id": "R-007", "entry": "r-007", "title": "Signing keys held by a single administrator", "rating": "low",
+      "treatment": "accept", "owner": { "kind": "team", "id": "security-office", "name": "Security Office" },
+      "version": 1, "releasedAt": "2026-02-18T11:20:00Z", "reviewDue": "2026-11-18", "reference": null,
+      "address": "/isms/risks/r-007" }
+  ]
+}
+----
+
+* `as-of` is a tag or a calendar date (UTC); without it the register is read as of now (`requested` `null`, `date` today).
+  A tag selects the tagged commit, a date the last commit on `main` at or before the end of that day (AUN-ISMS-3). The
+  answer never changes the current index.
+* `asOf` names what was read: `requested` (the parameter as given, or `null`), `date` (the day of the commit's time,
+  UTC), `tag` (the tag when one was asked for), `commit` (seven hexadecimal digits) and `at` (the commit's time). A date
+  before the first commit of the register has `commit` `null`, `at` `null` and `"risks": []`.
+* `tags` are the newest tags of `main` in `isms-register`, newest first, at most 20, for the picker of the page; the
+  application creates none (audit tags that mark a reporting date are deferred,
+  xref:../concepts/category-isms.adoc#_open_questions[ISMS, Open Questions]), so the list may be empty.
+* `risks` are the released entries at that commit, ordered by the running number, each as it was then: `id` (`R-<n>`),
+  `entry` (the address segment, in lower case), `title`, `rating` (`low`, `medium`, `high`, `critical`), `treatment`
+  (`mitigate`, `accept`, `transfer`, `avoid`), `owner` (a team), `version` (the number of the release shown) and
+  `releasedAt`, `reviewDue` (a date or `null`) and `reference`, the origin of the risk as `{"ref", "title", "address"}` (a
+  SAMM practice such as `samm-assessments:assessment/payments-2026-q2#st` or a threat such as
+  `threat-models:threat-model/payment-api-checkout-flow#T-07`, the reference forms of AUN-DP-2; `null` for none). `address` is the entry's page; it carries `?at=v<n>` when the
+  release shown is not the entry's newest one, so that the entry opens as it was then (UC-ISMS-3). A draft or an entry
+  that was never released is not listed.
+* The list is not paged: the register is designed for a few thousand entries
+  (xref:../concepts/category-isms.adoc[ISMS], the design assumption of the index).
+* Refusals: `422 VALIDATION` with the pointer `/as-of` (a query parameter read as one object, see the common refusals)
+  and `PATTERN` for a value that is neither a calendar date nor a tag name (`2026-13-45`), `FUTURE` for a date after
+  today, `UNKNOWN_TAG` for a name that is no tag of the register. `503 GIT_UNAVAILABLE` for a commit whose index is not
+  built and cannot be built while the Git server is down; the register as of now is answered from the index.
+* The rights: `read` on `isms-register`. The owner is a team, never a person: the register names roles and teams, not
+  people (xref:data-protection.adoc[Data Protection]).
 
 [#_the_step_up_handler]
 == The Step-Up Handler
@@ -2238,7 +2575,8 @@ blocked; the owner may change each one. The bodies are in <<_document_lifecycle_
   the category's document types.
 . *An address has an allowed query set.* `?at=<revision>` on `categories.document`, `?kind=<kind>` on `categories.new`;
   unknown names are ignored when an address is read and refused in a login's `return`; a known name with a bad value,
-  or twice, is an address that is not found. Later steps add `as-of` and the like.
+  or twice, is an address that is not found. The Reports step adds `scope`, `from`, `to` and `as-of`, and `at` on
+  `isms.risk` (<<_decided_reports>>).
 . *`GET /api/v1/categories`* is the smallest request that tells the rail whether the lens exists; step 10 extends it
   with the administration of categories.
 . *A revision is read with `GET …/{id}?at=`*, `at` being `v<n>`, a commit id or the full tag, and listed by
@@ -2556,7 +2894,7 @@ change each one. The bodies and addresses are in <<_samm_requests>>:
   against the last release), reading the answers as saved.
 . *The trend is one request per scope,* `GET /api/v1/samm/{scope}/trend`: released assessments of one model version, oldest
   first, with the overall, the function and the practice scores, and the number of the others (`omitted`). UC-SAMM-5 asks
-  for a trend of several scopes as well; that is a report of the lens *Reports* (the next step). The scope sheet's chart
+  for a trend of several scopes as well; that is a report of the lens *Reports*, `GET /api/v1/reports/samm-trend` (<<_decided_reports>>). The scope sheet's chart
   reads this request instead of the assessments of the scope.
 . *The pinned models are a list,* `GET /api/v1/samm/models`, with source, checksum, date and a default; pinning is not
   a web request (UC-SAMM-7 is configuration). The checksum is shown nowhere in the web app yet. The pickers offer only a
@@ -2628,3 +2966,57 @@ should be drawn as text (24); and which draft or session storage the roadmap sho
 save of the targets cannot complete until one is chosen (27; found in the design review: the scope sheet has no draft, so
 the page stays and shows `samm.targets.step-up-stays`). Also: whether a refreshed list should instead interrupt a dialog
 that is open on it (28).
+
+[#_decided_reports]
+*Decided provisionally* with the Reports lens (UC-SAMM-5, UC-TM-4, UC-ISMS-3), so that no screen is blocked; the owner may
+change each one. The bodies and addresses are in <<_reports_requests>>:
+
+. *The addresses.* The lens *Reports* gains `/reports/samm-trend` (query `scope`), `/reports/samm-compare` (`scope`, `from`,
+  `to`), `/reports/threat-evaluation` and `/reports/risk-register` (`as-of`), each before the generic `/reports/{report}`,
+  which stays and means "no such report". The names `scope`, `from`, `to` and `as-of` are new in `queries` of
+  `canonical-addresses.json`; `isms.risk` gains `at`.
+. *The reports live below `/api/v1/reports/`,* each with the right of the repository it reads (`read` on `samm-assessments`,
+  `threat-models`; the register keeps its specified `GET /api/v1/isms/risks?as-of=`). The report of the threat models is
+  not below `/api/v1/threat-models/` so that every report has one prefix; the lens *Threat models* reads the same request.
+. *One summary for the dashboard,* `GET /api/v1/reports/summary`, so that `/reports` is one request and a card never
+  disagrees with its report. A section is absent for a repository the user may not read; the request does not fail for
+  it. The windows of "due soon" are 30 days.
+. *The trend of every scope is one request,* `GET /api/v1/reports/samm-trend`, the points of
+  `GET /api/v1/samm/{scope}/trend` without the practices, scope by scope. The page does not make one request per scope,
+  and the scope sheet keeps the request of its own scope. Scopes of different model versions are drawn on one scale with a
+  notice that names the versions; the versions are not mixed inside a scope (decision 15 of the SAMM completion).
+. *The comparison page adds no request.* It reads the scope and `GET /api/v1/samm/{scope}/compare`; UC-SAMM-5 compares two
+  assessments of one scope, so there is no comparison of two scopes. The `200` body of the comparison is now written down.
+  `delta` is `to` minus `from`; the order of the two is the caller's.
+. *The charts follow the series rule of the design.* The five business functions are the series 1 to 5 in model order
+  (the page of one scope); the scopes are the series 1 to 5 in the order of the scope list (the overview), and a sixth and
+  later scope is in the table and not in the chart, with a line that says so. Every chart carries its figures as direct
+  labels and as a table. This is the decision of the screens and fixes no body.
+. *The threat evaluation is one row per threat model,* with the service named in it, and a second list for the services
+  that have no model (`withoutModel`; a retired service is in neither, a planned one is). The interval comes from the
+  highest effective protection need (`P6M` very high, `P12M` high, `P24M` normal, AUN-TM-3); the review of a model that
+  was never released is `unreleased`, not overdue.
+. *"Open" and "untreated" threats* are counted as the threat model of the next step defines them: `open` is the status
+  `open`, `untreated` is open without a countermeasure and not transferred, `transferred` carries a reference into the
+  risk register. AUN-TM-4 says "open threats" and "untreated threats" without a definition.
+. *The risk register as of a date is answered with a summary of each entry,* not the entry: the running number, title,
+  rating, treatment, owning team, version, release time, review date and the reference of its origin. The fields of a
+  risk are fixed with the ISMS lens; the list needs these and no more. The list is not paged.
+. *`as-of` is a calendar date or a tag name.* A value of the form `YYYY-MM-DD` is a date (UTC), every other value a tag. A
+  date after today is `FUTURE`, a name that is no tag `UNKNOWN_TAG`, a date that does not exist or an unusable name
+  `PATTERN`, each `422` with the pointer `/as-of`. The page keeps what was typed and says so beside the field.
+. *The answer says what it read.* `asOf` carries the commit and its time, so that "as of 1 March" shows that the commit was
+  that of 27 February; the list of tags is part of the answer and may be empty.
+. *An entry of the as-of list opens as it was then:* `/isms/risks/<entry>?at=v<n>` when the release is not the newest, in
+  the generic read of the document with `at` (<<_decided_lifecycle>>).
+. *The register as of now is served from the index; a past commit that is not indexed answers `503 GIT_UNAVAILABLE`
+  while the Git server is down.* The page then keeps the picker and offers the register as of now.
+. *A report is read-only and has no export.* There is no PDF, spreadsheet or print layout; the table of each report is
+  the machine-readable form.
+
+For the owner: whether the reports should be requests of the domain (`/api/v1/samm/...`, `/api/v1/threat-models/...`)
+instead of one prefix (2); whether scopes of different model versions may share a chart (4); whether the comparison of two
+scopes is wanted (5); the definition of an untreated threat and the thresholds of "due soon" (3, 7, 8); whether the register
+as of a date should list the draft entries too, or the entry itself instead of its summary (9); whether the web app
+should create reporting tags (10, 11) and whether the register as of two dates should be compared; whether reports should
+be exported (14).

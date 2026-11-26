@@ -147,3 +147,12 @@ xref:rest-api.adoc#_decided_samm[REST API Register, Open Questions]; the owner m
   an absolute `https` address of at most 2,048 characters, the title 1 to 200 characters.
 . *The comment of an answer* is an AsciiDoc fragment of at most 8,000 characters.
 
+Decided provisionally with the Reports lens (UC-SAMM-5), recorded with the bodies in
+xref:rest-api.adoc#_decided_reports[REST API Register, Open Questions]; the owner may change each one:
+
+. *Trend of several scopes* (AUN-SAMM-5 names no trend): `GET /api/v1/reports/samm-trend` returns, for every scope, the
+  released assessments of the scope's latest model version, oldest first, with the overall and the business function scores,
+  unrounded; the report does not mix versions inside a scope.
+. *Comparison*: the page `/reports/samm-compare` reads the comparison of one scope; `delta` is `to` minus `from`. Two scopes
+  are not compared.
+

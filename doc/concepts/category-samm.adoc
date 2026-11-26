@@ -119,6 +119,15 @@ xref:../specification/rest-api.adoc#_decided_samm[REST API Register, Open Questi
 . The comparison of two assessments of different model versions is refused with `MODEL_VERSIONS_DIFFER` (`422`); the
   trend of a scope reads the released assessments of one model version and counts the others as omitted.
 . The pinned model versions are listed by `GET /api/v1/samm/models`; pinning stays configuration.
+
+Decided provisionally with the Reports lens (UC-SAMM-5), recorded in
+xref:../specification/rest-api.adoc#_decided_reports[REST API Register, Open Questions]; the owner may change each one:
+
+. The trend of every scope is one request of the lens *Reports*, `GET /api/v1/reports/samm-trend`: the released assessments
+  of each scope with the overall and the business function scores, without the practices. Scopes of different model
+  versions share a chart with a notice that names the versions; a comparison across versions stays deferred.
+. The comparison of two assessments of one scope has a page of its own, `/reports/samm-compare`, and no request beyond the
+  one of the scope sheet; there is no comparison of two scopes.
 . The screens read the register as follows (rest-api.adoc, Open Questions, points 20 to 26): a new assessment takes the model
   version of the scope's newest assessment; the targets of a scope are kept on the page until they are saved, and leaving
   asks (a scope has no draft); a due day belongs to a target; the evidence links are drawn as links only when they are

@@ -149,8 +149,10 @@ Variations::
 * *Through an agent*: the same questions answered from the index (xref:08-agents.adoc#UC-AGT-2[UC-AGT-2]).
 Outcome:: the reader knows where the threat models need work.
 Requirements:: xref:../specification/category-threat-models.adoc#AUN-TM-4[AUN-TM-4] (evaluation per service); the
-list of services without a model: none yet.
-Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Threat models*).
+list of services without a model: none yet (decided provisionally, see Design).
+Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *Threat models*); decided
+provisionally: the evaluation is `GET /api/v1/reports/threat-evaluation`, shown in the lens *Threat models* and as the report
+`/reports/threat-evaluation`, with the services without a model beside it (xref:../specification/rest-api.adoc#_decided_reports[REST API Register, Open Questions]).
 
 [#changes-to-the-specification]
 == Changes to the Specification
