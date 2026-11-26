@@ -163,6 +163,25 @@ describe('with candidates', () => {
     expect(screen.getByTestId('welcome-candidates')).toBeInTheDocument();
   });
 
+  it('goes back to the entry with the errors marked when the server finds a field not valid', async () => {
+    await open('first-login#candidates');
+    await saveEntry();
+    await fireEvent.click(await screen.findByLabelText('Robin Newcomer (Payments, Developer)'));
+    await useProfile('first-login#candidates-chosen', 'en', {
+      'PUT /api/v1/directory/me': new Response(
+        JSON.stringify({
+          outcome: 'VALIDATION',
+          errors: [{ pointer: '/name', code: 'REQUIRED' }],
+        }),
+        { status: 422 },
+      ),
+    });
+    await fireEvent.click(screen.getByTestId('welcome-continue'));
+    expect(await screen.findByText('Fill in this field.')).toBeInTheDocument();
+    expect(screen.queryByTestId('welcome-candidates')).toBeNull();
+    expect(screen.getByTestId('welcome-save')).toBeInTheDocument();
+  });
+
   it('speaks German', async () => {
     await open('first-login#candidates', 'de');
     await saveEntry();

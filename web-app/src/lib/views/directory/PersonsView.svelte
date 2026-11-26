@@ -64,6 +64,8 @@
   let teams = $state<CatalogEntry[]>([]);
   let roles = $state<CatalogEntry[]>([]);
   let failure = $state<string | null>(null);
+  /** The teams and roles could not be read: the entry of persons cannot be completed. Kept apart from `failure`, which every read clears. */
+  let catalogFailure = $state<string | null>(null);
   let typed = $state('');
   let query = $state('');
   /** The directory is kept in the organisation's own source: nothing was changed here. */
@@ -98,7 +100,7 @@
         teams = lists.teams;
         roles = lists.roles;
       },
-      (error: unknown) => (failure = errorMessageKey(error)),
+      (error: unknown) => (catalogFailure = errorMessageKey(error)),
     );
     return () => breadcrumb.set([]);
   });
@@ -273,6 +275,9 @@
 >
   {#if failure}
     <Notice tone="danger" title={$t(failure)} live />
+  {/if}
+  {#if catalogFailure}
+    <Notice tone="danger" title={$t(catalogFailure)} live />
   {/if}
   {#if managed}
     <div data-testid="managed-notice">

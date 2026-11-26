@@ -41,6 +41,8 @@
   let documents = $state<ImportDocument[]>([]);
   let pasted = $state('');
   let result = $state<ImportResult | null>(null);
+  /** The documents the preview was made of: the import sends exactly these, whatever was chosen meanwhile. */
+  let checked = $state<ImportDocument[]>([]);
   let working = $state(false);
   let failure = $state<string | null>(null);
   /** The position of the document the server found invalid, or `null`. */
@@ -70,10 +72,24 @@
     return $t('import.size', { value: parts.value, unit: $t(`import.unit.${parts.unit}`) });
   }
 
-  /** Puts a document in the list; one of the same name is replaced, so a file chosen twice stands once. */
+  /**
+   * Puts a document in the list. The same file chosen again (same name, same text) stands once; a different text under
+   * a name that is taken (every repository has a `catalog-info.yaml`) is kept as a further document with a number after
+   * the name, so that no descriptor is dropped silently.
+   */
   function keep(document: ImportDocument) {
-    const at = documents.findIndex((held) => held.name === document.name);
-    documents = at < 0 ? [...documents, document] : documents.with(at, document);
+    const again = documents.some(
+      (held) =>
+        held.content === document.content &&
+        (held.name === document.name || held.name.startsWith(`${document.name} (`)),
+    );
+    if (!again) {
+      let name = document.name;
+      for (let n = 2; documents.some((held) => held.name === name); n += 1) {
+        name = `${document.name} (${n})`;
+      }
+      documents = [...documents, { name, content: document.content }];
+    }
     invalid = null;
     limit = null;
     failure = null;
@@ -96,6 +112,7 @@
     documents = documents.filter((document) => document.name !== name);
     invalid = null;
     limit = null;
+    failure = null;
   }
 
   /**
@@ -125,6 +142,8 @@
         const first = error.errors.find((item) => /^\/documents\/\d+/.test(item.pointer));
         invalid = first ? Number(/^\/documents\/(\d+)/.exec(first.pointer)?.[1]) : null;
         failure = invalid === null ? 'import.error.documents' : 'import.error.format';
+        // The mark of the document stands in the list of documents: the person goes back to it.
+        if (invalid !== null && step === 'preview') back(failure);
       } else if (isApiError(error) && error.outcome === 'TOO_LARGE') {
         limit = typeof error.details.limit === 'number' ? error.details.limit : MAX_IMPORT_BYTES;
         failure = 'import.error.too-large';
@@ -136,13 +155,21 @@
     }
   }
 
-  const preview = () => run(() => apiClient.previewBackstageImport(documents), 'preview');
-  const apply = () => run(() => apiClient.importBackstage(documents), 'done');
+  const preview = () => {
+    const sent = documents;
+    return run(async () => {
+      const answer = await apiClient.previewBackstageImport(sent);
+      checked = sent;
+      return answer;
+    }, 'preview');
+  };
+  const apply = () => run(() => apiClient.importBackstage(checked), 'done');
 
-  function back() {
+  /** @param notice the notice that stays on the page of the documents, if any */
+  function back(notice: string | null = null) {
     step = 'choose';
     result = null;
-    failure = null;
+    failure = notice;
     announcement = '';
   }
 
@@ -390,7 +417,7 @@
           {$t('import.check')}
         </Button>
       {:else if step === 'preview'}
-        <Button onclick={back} data-testid="import-back">{$t('import.change')}</Button>
+        <Button onclick={() => back()} data-testid="import-back">{$t('import.change')}</Button>
         <Button
           variant="primary"
           busy={working}

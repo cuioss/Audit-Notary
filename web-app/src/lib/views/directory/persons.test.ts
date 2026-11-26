@@ -163,6 +163,18 @@ describe('the table', () => {
   });
 });
 
+describe('the teams and roles', () => {
+  it('keeps the notice that they cannot be read, though the table is read after it', async () => {
+    await open('catalog-admin', 'en', {
+      'GET /api/v1/catalogs/team': new Response(JSON.stringify({ outcome: 'GIT_UNAVAILABLE' }), {
+        status: 503,
+      }),
+    });
+    expect(await screen.findByText(/The Git server cannot be reached/)).toBeInTheDocument();
+    expect(screen.getByTestId('persons-table')).toBeInTheDocument();
+  });
+});
+
 describe('without the right', () => {
   it.each(['workshop', 'read-only'])('reads the table and offers no act in %s', async (profile) => {
     await open(profile);

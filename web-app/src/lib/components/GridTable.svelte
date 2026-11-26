@@ -26,7 +26,7 @@
     <caption class="sr-only">{caption}</caption>
     <thead class="grid__head">
       <tr>
-        {#each heads as head (head)}
+        {#each heads as head, position (position)}
           <th scope="col">{head}</th>
         {/each}
       </tr>

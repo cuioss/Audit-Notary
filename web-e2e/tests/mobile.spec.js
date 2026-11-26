@@ -514,6 +514,10 @@ test.describe('at 390 px', () => {
     const choice = page.getByRole('radio', { name: CANDIDATES[0].label });
     await choice.scrollIntoViewIfNeeded();
     await expect(choice).toBeInViewport();
+    // The radio itself is small; the whole label is the target and holds the phone size.
+    expect(
+      (await choice.locator('xpath=ancestor::label').boundingBox()).height,
+    ).toBeGreaterThanOrEqual(43.5);
     await expectNoSideways(page);
     await expectNoSeriousViolations(page, 'welcome candidates (phone)');
     await choice.check();

@@ -119,6 +119,9 @@
         fieldErrors = fieldErrorsOf(error);
         if (Object.keys(fieldErrors).length === 0) {
           failure = errorMessageKey(error);
+        } else if (candidates !== null) {
+          // The candidates have no fields to mark: the person goes back to the entry, where the errors are shown.
+          edit();
         }
       }
     } finally {

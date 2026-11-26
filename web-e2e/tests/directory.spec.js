@@ -157,7 +157,7 @@ test.describe('the Backstage import (UC-CAT-3)', () => {
     await page
       .getByTestId('import-pick-input')
       .setInputFiles([
-        { name: 'groups.yml', mimeType: 'text/yaml', buffer: Buffer.from('kind: Group\n') },
+        { name: 'groups.yml', mimeType: 'text/yaml', buffer: Buffer.from('kind: Group') },
       ]);
     await expect(page.getByTestId('import-documents').getByRole('listitem')).toHaveCount(3);
     await page.getByRole('button', { name: 'Remove Pasted text 1' }).click();

@@ -94,10 +94,20 @@ describe('choosing the descriptors', () => {
       expect(screen.getByTestId('import-documents').querySelectorAll('li')).toHaveLength(2),
     );
     expect(screen.getByTestId('import-document-0')).toHaveTextContent('catalog-info.yaml');
+    await pick([new File([YAML], 'catalog-info.yaml')]);
+    await Promise.resolve();
+    expect(screen.getByTestId('import-documents').querySelectorAll('li')).toHaveLength(2);
+  });
+
+  it('keeps a different text under a name that is taken, and the same file once', async () => {
+    await open();
+    await pick([new File([YAML], 'catalog-info.yaml')]);
+    await waitFor(() => expect(screen.getByTestId('import-document-0')).toBeInTheDocument());
     await pick([new File(['kind: Group\n'], 'catalog-info.yaml')]);
-    await waitFor(() =>
-      expect(screen.getByTestId('import-document-0')).toHaveTextContent('12 bytes'),
-    );
+    await waitFor(() => expect(screen.getByTestId('import-document-1')).toBeInTheDocument());
+    expect(screen.getByTestId('import-document-1')).toHaveTextContent('catalog-info.yaml (2)');
+    await pick([new File(['kind: Group\n'], 'catalog-info.yaml')]);
+    await pick([new File([YAML], 'catalog-info.yaml')]);
     expect(screen.getByTestId('import-documents').querySelectorAll('li')).toHaveLength(2);
   });
 
@@ -236,11 +246,10 @@ describe('the import', () => {
     );
     expect(screen.getByTestId('import-document-0')).toHaveTextContent('Not valid');
     expect(screen.getByTestId('import-document-1')).not.toHaveTextContent('Not valid');
-    // Changing the documents takes the marks away.
+    // Changing the documents takes the marks and the notice away.
     await fireEvent.click(screen.getByRole('button', { name: 'Remove Pasted text 2' }));
-    expect(screen.queryByTestId('import-failure')).not.toBeNull();
-    await paste('b: c\n');
     expect(screen.queryByTestId('import-failure')).toBeNull();
+    expect(screen.queryByText('Not valid')).toBeNull();
   });
 
   it('says how large the server lets the documents be when it refuses their size', async () => {
@@ -310,6 +319,26 @@ describe('the import', () => {
       'The documents are not valid.',
     );
     expect(screen.getByTestId('import-document-0')).not.toHaveTextContent('Not valid');
+  });
+});
+
+describe('a document refused at the import', () => {
+  it('goes back to the documents and marks it', async () => {
+    await useProfile('catalog-admin', 'en', {
+      'POST /api/v1/catalogs/import/backstage': new Response(
+        JSON.stringify({
+          outcome: 'VALIDATION',
+          errors: [{ pointer: '/documents/0/content', code: 'INVALID_FORMAT' }],
+        }),
+        { status: 422 },
+      ),
+    });
+    render(ImportView);
+    await check();
+    await fireEvent.click(screen.getByTestId('import-apply'));
+    expect(await screen.findByTestId('import-choose')).toBeInTheDocument();
+    expect(screen.getByTestId('import-document-0')).toHaveTextContent('Not valid');
+    expect(screen.getByTestId('import-failure')).toHaveTextContent('could not be read');
   });
 });
 
