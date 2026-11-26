@@ -35,7 +35,8 @@
    * unchanged and what was left out, each with its reason. Needs `administer-catalogs`; without it the page says so and
    * shows nothing else.
    */
-  type Step = 'choose' | 'preview' | 'done';
+  const STEPS = ['choose', 'preview', 'done'] as const;
+  type Step = (typeof STEPS)[number];
 
   let step = $state<Step>('choose');
   let documents = $state<ImportDocument[]>([]);
@@ -120,8 +121,10 @@
    *
    * @param send the request
    * @param next the step the answer leads to
+   * @param submitted the documents the request carries: the server names an invalid one by its position in them, and
+   *   the list may have changed since (a document removed or added while the request waits)
    */
-  async function run(send: () => Promise<ImportResult>, next: Step) {
+  async function run(send: () => Promise<ImportResult>, next: Step, submitted: ImportDocument[]) {
     if (working) return;
     working = true;
     failure = null;
@@ -140,7 +143,12 @@
     } catch (error) {
       if (isApiError(error) && error.outcome === 'VALIDATION') {
         const first = error.errors.find((item) => /^\/documents\/\d+/.test(item.pointer));
-        invalid = first ? Number(/^\/documents\/(\d+)/.exec(first.pointer)?.[1]) : null;
+        const sentAt = first ? Number(/^\/documents\/(\d+)/.exec(first.pointer)?.[1]) : null;
+        // The position in what was sent, mapped to the document's place in the list as it stands now; a document
+        // taken out meanwhile leaves nothing to mark.
+        const name = sentAt === null ? undefined : submitted[sentAt]?.name;
+        const now = name === undefined ? -1 : documents.findIndex((held) => held.name === name);
+        invalid = now < 0 ? null : now;
         failure = invalid === null ? 'import.error.documents' : 'import.error.format';
         // The mark of the document stands in the list of documents: the person goes back to it.
         if (invalid !== null && step === 'preview') back(failure);
@@ -157,13 +165,20 @@
 
   const preview = () => {
     const sent = documents;
-    return run(async () => {
-      const answer = await apiClient.previewBackstageImport(sent);
-      checked = sent;
-      return answer;
-    }, 'preview');
+    return run(
+      async () => {
+        const answer = await apiClient.previewBackstageImport(sent);
+        checked = sent;
+        return answer;
+      },
+      'preview',
+      sent,
+    );
   };
-  const apply = () => run(() => apiClient.importBackstage(checked), 'done');
+  const apply = () => {
+    const sent = checked;
+    return run(() => apiClient.importBackstage(sent), 'done', sent);
+  };
 
   /** @param notice the notice that stays on the page of the documents, if any */
   function back(notice: string | null = null) {
@@ -218,7 +233,7 @@
     </EmptyState>
   {:else}
     <ol class="steps" aria-label={$t('import.steps')} data-testid="import-steps">
-      {#each ['choose', 'preview', 'done'] as name, position (name)}
+      {#each STEPS as name, position (name)}
         <li aria-current={step === name ? 'step' : undefined} class:steps__now={step === name}>
           <span class="steps__number">{position + 1}</span>
           {$t(`import.step.${name}`)}

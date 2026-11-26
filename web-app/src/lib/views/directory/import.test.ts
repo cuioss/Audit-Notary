@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 import { MAX_IMPORT_BYTES, MAX_IMPORT_DOCUMENTS } from '../../directory/directory';
-import { resetKit, useProfile, type Kit } from '../documents/testkit';
+import { hold, resetKit, useProfile, type Kit } from '../documents/testkit';
 import ImportView from './ImportView.svelte';
 
 /**
@@ -258,6 +258,28 @@ describe('the import', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Remove Pasted text 2' }));
     expect(screen.queryByTestId('import-failure')).toBeNull();
     expect(screen.queryByText('Not valid')).toBeNull();
+  });
+
+  it('marks the document the server named, though another was removed while the check waited', async () => {
+    await useProfile('catalog-admin', 'en', {
+      'POST /api/v1/catalogs/import/backstage/preview': new Response(
+        JSON.stringify({
+          outcome: 'VALIDATION',
+          errors: [{ pointer: '/documents/1/content', code: 'FORMAT' }],
+        }),
+        { status: 422 },
+      ),
+    });
+    render(ImportView);
+    await paste('a: b\n');
+    await paste(': : :\n');
+    const release = hold('POST', '/api/v1/catalogs/import/backstage/preview');
+    await fireEvent.click(screen.getByTestId('import-check'));
+    await fireEvent.click(screen.getByRole('button', { name: 'Remove Pasted text 1' }));
+    release();
+    await screen.findByTestId('import-failure');
+    // The second document of the request is the only one left, now at the first place.
+    expect(screen.getByTestId('import-document-0')).toHaveTextContent('Not valid');
   });
 
   it('says how large the server lets the documents be when it refuses their size', async () => {

@@ -63,8 +63,11 @@
   let list = $state<PersonList | null>(null);
   let teams = $state<CatalogEntry[]>([]);
   let roles = $state<CatalogEntry[]>([]);
+  /** The refusal of an act (adding, erasing): a read that succeeds later does not take it away. */
   let failure = $state<string | null>(null);
-  /** The teams and roles could not be read: the entry of persons cannot be completed. Kept apart from `failure`, which every read clears. */
+  /** The table could not be read; kept apart from `failure`, so that each is cleared only by what it belongs to. */
+  let readFailure = $state<string | null>(null);
+  /** The teams and roles could not be read: the entry of persons cannot be completed. Kept apart from `failure` and `readFailure`, which a read clears. */
   let catalogFailure = $state<string | null>(null);
   let typed = $state('');
   let query = $state('');
@@ -73,7 +76,7 @@
   let announcement = $state('');
 
   let rows = $state<Row[]>([blank()]);
-  /** The server's field errors of the last entry, by the position of the row and the pointer inside it. */
+  /** The server's field errors of the last entry, by the key of the row and the pointer inside it. */
   let rowErrors = $state<Record<string, string>>({});
   let showMissing = $state(false);
   let adding = $state(false);
@@ -121,9 +124,9 @@
       const answer = await apiClient.listPersons(text === '' ? undefined : text);
       if (number !== latest) return;
       list = answer;
-      failure = null;
+      readFailure = null;
     } catch (error) {
-      if (number === latest) failure = errorMessageKey(error);
+      if (number === latest) readFailure = errorMessageKey(error);
     }
   }
 
@@ -166,8 +169,8 @@
       if (isApiError(error) && error.outcome === 'MANAGED_BY_SOURCE') {
         managed = true;
       } else if (isApiError(error) && error.outcome === 'NOT_FOUND') {
-        // Erased by someone else meanwhile: the table is read again and no longer shows the person. The read clears
-        // the failure of its own, so the notice is set after it.
+        // Erased by someone else meanwhile: the table is read again and no longer shows the person; a failed read
+        // keeps its own notice beside this one.
         await read(query);
         failure = 'directory.persons.gone';
       } else {
@@ -183,8 +186,9 @@
    * Splits the errors of the server into the rows they belong to.
    *
    * @param errors the field errors of the entry
-   * @param sent the row each person of the request came from, by position
-   * @returns the catalogue key of the text of each error, by the row and the place in it (`1/name`)
+   * @param sent the key of the row each person of the request came from, by position in the request
+   * @returns the catalogue key of the text of each error, by the key of the row and the place in it (`1/name`); the key
+   *   of a row does not move when a row before it is removed, so the error stays with the person it was said of
    */
   function placeErrors(errors: FieldError[], sent: number[]): Record<string, string> {
     const result: Record<string, string> = {};
@@ -206,15 +210,19 @@
     managed = false;
     announcement = '';
     rowErrors = {};
-    const sent = rows.flatMap((row, index) => (filled(row) ? [index] : []));
+    const sent = entered.map((row) => row.key);
     const persons: PersonDraft[] = entered.map((row) => ({
       name: row.name.trim(),
-      memberships: row.memberships,
+      memberships: $state.snapshot(row.memberships),
     }));
+    // What was sent, to take out of the form afterwards only the rows that are still as they were sent.
+    const sentText = new Map(entered.map((row) => [row.key, rowText(row)]));
     try {
       const answer = await apiClient.createPersons(persons);
       announcement = $t('directory.persons.added', { count: answer.persons.length });
-      rows = [blank()];
+      // A row typed or changed while the request waited is not sent and stays.
+      const rest = rows.filter((row) => sentText.get(row.key) !== rowText(row));
+      rows = rest.length === 0 ? [blank()] : rest;
       showMissing = false;
       await read(query);
     } catch (error) {
@@ -228,8 +236,22 @@
     }
   }
 
+  /**
+   * @param row a row being entered
+   * @returns what is typed and picked in it, to tell whether it changed
+   */
+  const rowText = (row: Row): string =>
+    JSON.stringify([row.name.trim(), $state.snapshot(row.memberships)]);
+
   function addRow() {
     rows = [...rows, blank()];
+  }
+
+  /** Drops the errors of the memberships of a row: they were said of places that moved. */
+  function forgetMembershipErrors(key: number) {
+    rowErrors = Object.fromEntries(
+      Object.entries(rowErrors).filter(([place]) => !place.startsWith(`${key}/memberships/`)),
+    );
   }
 
   function removeRow(key: number) {
@@ -238,29 +260,22 @@
 
   /**
    * @param row a row being entered
-   * @param index its position
    * @returns the catalogue key of the error of its name: the server's, or that it is empty after the entry was tried
    */
-  function nameError(row: Row, index: number): string | null {
-    const server = rowErrors[`${index}/name`];
+  function nameError(row: Row): string | null {
+    const server = rowErrors[`${row.key}/name`];
     if (server) return server;
     return showMissing && filled(row) && row.name.trim() === '' ? 'form.error.required' : null;
   }
 
   /**
    * @param row a row being entered
-   * @param index its position
    * @param at the position of the membership
    * @param field its field
    * @returns the catalogue key of the error of the field: the server's, or that it is empty after the entry was tried
    */
-  function membershipError(
-    row: Row,
-    index: number,
-    at: number,
-    field: 'team' | 'role',
-  ): string | null {
-    const server = rowErrors[`${index}/memberships/${at}/${field}`];
+  function membershipError(row: Row, at: number, field: 'team' | 'role'): string | null {
+    const server = rowErrors[`${row.key}/memberships/${at}/${field}`];
     if (server) return server;
     return showMissing && filled(row) && row.memberships[at]?.[field] === ''
       ? 'form.error.required'
@@ -276,6 +291,9 @@
   <div class="persons__notices">
     {#if failure}
       <Notice tone="danger" title={$t(failure)} live />
+    {/if}
+    {#if readFailure && readFailure !== failure}
+      <Notice tone="danger" title={$t(readFailure)} live />
     {/if}
     {#if catalogFailure}
       <Notice tone="danger" title={$t(catalogFailure)} live />
@@ -305,7 +323,7 @@
   <section class="persons__section" aria-labelledby="persons-table-title">
     <h2 id="persons-table-title" class="sr-only">{$t('directory.persons.table')}</h2>
     {#if list === null}
-      {#if !failure}<p class="persons__muted">{$t('common.loading')}</p>{/if}
+      {#if !failure && !readFailure}<p class="persons__muted">{$t('common.loading')}</p>{/if}
     {:else}
       {#if !empty}
         <div class="persons__search">
@@ -396,7 +414,7 @@
         novalidate
       >
         {#each rows as row, index (row.key)}
-          {@const nameFailure = nameError(row, index)}
+          {@const nameFailure = nameError(row)}
           <fieldset class="person" data-testid="person-row-{index}">
             <legend class={rows.length > 1 ? 'person__legend' : 'sr-only'}>
               {$t('directory.persons.add.person', { n: index + 1 })}
@@ -423,7 +441,8 @@
               bind:memberships={row.memberships}
               {teams}
               {roles}
-              errorFor={(at, field) => membershipError(row, index, at, field)}
+              errorFor={(at, field) => membershipError(row, at, field)}
+              onremove={() => forgetMembershipErrors(row.key)}
               testId="person-row-{index}-membership"
             />
             <!-- The only row, while nothing is typed in it, has nothing to remove: the act is not offered then. -->

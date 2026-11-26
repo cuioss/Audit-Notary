@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '../api/client';
 import { ApiError } from '../api/errors';
@@ -95,21 +97,35 @@ describe('the limits of the import', () => {
   });
 });
 
+/** The reasons of the import as the register of `doc/specification/rest-api.adoc` names them. */
+function registeredReasons(): string[] {
+  const spec = fs.readFileSync(
+    path.resolve(__dirname, '../../../../doc/specification/rest-api.adoc'),
+    'utf8',
+  );
+  const from = spec.indexOf('The reasons are the ones AUN-DIR-6');
+  const to = spec.indexOf('The text of a reason is', from);
+  if (from < 0 || to < 0)
+    throw new Error('the register of the reasons of the import was not found');
+  return [...new Set(spec.slice(from, to).match(/`[A-Z_]+`/g) ?? [])].map((code) =>
+    code.slice(1, -1),
+  );
+}
+
 describe('the reasons of the import', () => {
-  it('has a text for every reason of the register and a general one for another', () => {
-    messagesStore.set(mockMessages('en'));
-    for (const reason of [
-      'NAMESPACE_NOT_DEFAULT',
-      'REFERENCE_KIND_NOT_SUPPORTED',
-      'LIFECYCLE_UNMAPPED',
-      'DEFAULTS_MISSING',
-      'KIND_NOT_SUPPORTED',
-    ]) {
-      expect(importReasonKey(reason)).toBe(
-        `import.reason.${reason.toLowerCase().replaceAll('_', '-')}`,
-      );
+  it('has a text in both languages for every reason of the register and a general one for another', () => {
+    const reasons = registeredReasons();
+    expect(reasons.length).toBeGreaterThanOrEqual(5);
+    for (const lang of ['en', 'de'] as const) {
+      const messages = mockMessages(lang);
+      messagesStore.set(messages);
+      for (const reason of reasons) {
+        const key = `import.reason.${reason.toLowerCase().replaceAll('_', '-')}`;
+        expect(Object.hasOwn(messages, key), `${key} in ${lang}`).toBe(true);
+        expect(importReasonKey(reason)).toBe(key);
+      }
+      expect(importReasonKey('SOMETHING_NEW')).toBe('import.reason.unknown');
     }
-    expect(importReasonKey('SOMETHING_NEW')).toBe('import.reason.unknown');
   });
 
   it('names a changed field as the form of the catalog does, or in words', () => {

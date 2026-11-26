@@ -176,7 +176,7 @@
         ]}
       />
       <div class="welcome__actions">
-        <Button variant="ghost" onclick={edit} data-testid="welcome-edit">
+        <Button variant="ghost" onclick={edit} disabled={saving} data-testid="welcome-edit">
           {$t('welcome.candidates.edit')}
         </Button>
         <Button

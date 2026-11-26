@@ -61,8 +61,10 @@ describe('the catalogs', () => {
       'href',
       '/directory/import',
     );
-    // The five catalogs stay the only rows of their list.
-    expect(within(screen.getByTestId('catalog-list')).getAllByRole('link')).toHaveLength(5);
+    // The catalogs stay the only rows of their list.
+    expect(within(screen.getByTestId('catalog-list')).getAllByRole('link')).toHaveLength(
+      CATALOGS.length,
+    );
   });
 
   it('keeps the list of the catalogs beside the entries and marks the catalog that is open', async () => {

@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/sv
 import { get } from 'svelte/store';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { session } from '../stores/app';
-import { resetKit, useProfile, type Kit } from './documents/testkit';
+import { hold, resetKit, useProfile, type Kit } from './documents/testkit';
 import WelcomeView from './WelcomeView.svelte';
 
 /**
@@ -72,6 +72,17 @@ describe('with candidates', () => {
     ]);
     expect(kit.scenario.state()).toBe('registered-bound');
     expect(get(session)?.user.pseudonym).toBe('p-3d7a15');
+  });
+
+  it('offers no way back to the entry while the choice is being saved', async () => {
+    const { onnavigate } = await open('first-login#candidates');
+    await saveEntry();
+    await fireEvent.click(await screen.findByLabelText('Robin Newcomer (Payments, Developer)'));
+    const release = hold('PUT', '/api/v1/directory/me');
+    await fireEvent.click(screen.getByTestId('welcome-continue'));
+    expect(screen.getByTestId('welcome-edit')).toBeDisabled();
+    release();
+    await waitFor(() => expect(onnavigate).toHaveBeenCalledWith('/'));
   });
 
   it('creates a new entry when none of them is the person', async () => {

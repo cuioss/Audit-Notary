@@ -17,7 +17,7 @@ vi.mock('$app/navigation', () => ({
 
 import { session } from '../../stores/app';
 import { breadcrumb } from '../../stores/breadcrumb';
-import { resetKit, useProfile, type Kit } from '../documents/testkit';
+import { hold, resetKit, useProfile, type Kit } from '../documents/testkit';
 import ProfileView from './ProfileView.svelte';
 
 /**
@@ -99,6 +99,25 @@ describe('the entry', () => {
     ).toBeGreaterThan(1);
     expect(save()).toHaveAttribute('aria-disabled', 'true');
     expect(kit.requests.filter((request) => request.includes('stepup'))).toEqual([]);
+  });
+
+  it('keeps a name typed while the save waits as an unsaved change', async () => {
+    await open();
+    const release = hold('PUT', '/api/v1/directory/me');
+    await fireEvent.input(screen.getByTestId('profile-name'), {
+      target: { value: 'Alex Q. Example' },
+    });
+    await fireEvent.click(save());
+    await fireEvent.input(screen.getByTestId('profile-name'), {
+      target: { value: 'Alex Z. Later' },
+    });
+    release();
+    await screen.findByTestId('profile-done');
+    // The save ends after the session is read again: give it time to finish.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.getByTestId('profile-name')).toHaveValue('Alex Z. Later');
+    expect(save()).not.toHaveAttribute('aria-disabled', 'true');
+    expect(screen.queryByText('Nothing changed since the last save.')).toBeNull();
   });
 
   it('saves a second membership with the first', async () => {

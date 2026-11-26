@@ -20,11 +20,20 @@
     roles: CatalogEntry[];
     /** The catalogue key of the error of a field of a row, or `null`. */
     errorFor?: (index: number, field: 'team' | 'role') => string | null;
+    /** Called after a row was removed, so that the holder can drop what it keeps by the position of a row. */
+    onremove?: () => void;
     /** A test id prefix; the rows are `<testId>-<n>-team` and `-role`. */
     testId: string;
   }
 
-  let { memberships = $bindable(), teams, roles, errorFor = () => null, testId }: Props = $props();
+  let {
+    memberships = $bindable(),
+    teams,
+    roles,
+    errorFor = () => null,
+    onremove,
+    testId,
+  }: Props = $props();
 
   /**
    * @param entries the entries of a catalog
@@ -47,6 +56,7 @@
 
   function remove(index: number) {
     memberships = memberships.filter((_, position) => position !== index);
+    onremove?.();
   }
 
   function pick(index: number, field: 'team' | 'role', value: string) {

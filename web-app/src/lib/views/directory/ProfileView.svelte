@@ -135,10 +135,19 @@
     errors = null;
     announcement = '';
     try {
-      const answer = await apiClient.putDirectoryMe({ name: name.trim(), memberships });
+      // What is sent is kept apart: the baseline of the saved entry is this, whatever is typed while the request waits.
+      const sent = { name: name.trim(), memberships: memberships.map((m) => ({ ...m })) };
+      const answer = await apiClient.putDirectoryMe(sent);
       const day = answer.confirmedAt ?? new Date().toISOString().slice(0, 10);
       if (entry) {
-        adopt({ ...entry, name: name.trim(), memberships: memberships.map((m) => ({ ...m })) });
+        const saved = { ...entry, ...sent };
+        if (name.trim() === sent.name && sameMemberships(memberships, sent.memberships)) {
+          adopt(saved);
+        } else {
+          // Changed while the request waited: those changes are not saved, the form stays unsaved with them.
+          entry = saved;
+          errors = null;
+        }
       }
       await confirmed(day, 'profile.saved');
     } catch (error) {

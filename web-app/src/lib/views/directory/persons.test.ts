@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import { afterEach, describe, expect, it } from 'vitest';
-import { resetKit, useProfile, type Kit } from '../documents/testkit';
+import { hold, resetKit, useProfile, type Kit } from '../documents/testkit';
 import PersonsView from './PersonsView.svelte';
 
 /**
@@ -298,6 +298,38 @@ describe('adding persons', () => {
     expect(
       within(screen.getByTestId('person-row-1')).queryByText(/This reference leads nowhere/),
     ).toBeNull();
+  });
+
+  it('keeps the refusal at the person it was said of when a row before it is removed', async () => {
+    await open('catalog-admin#persons-invalid');
+    await fireEvent.click(screen.getByTestId('persons-add-row'));
+    await fireEvent.click(screen.getByTestId('persons-add-row'));
+    await fill(1, 'Nadia Kovac', 'team:payments', 'role:developer');
+    await fill(2, 'Omar Haddad', 'team:mobile', 'role:developer');
+    await fireEvent.click(screen.getByTestId('persons-submit'));
+    await within(screen.getByTestId('person-row-2')).findByText(/This reference leads nowhere/);
+    await fireEvent.click(screen.getByTestId('person-row-1-remove'));
+    // Omar Haddad is the second row now, and the refusal went with him.
+    expect(screen.getByTestId('person-row-1-name')).toHaveValue('Omar Haddad');
+    expect(
+      within(screen.getByTestId('person-row-1')).getByText(/This reference leads nowhere/),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId('person-row-0')).queryByText(/This reference leads nowhere/),
+    ).toBeNull();
+  });
+
+  it('keeps a person typed while the request waits, and clears only what was sent', async () => {
+    await open();
+    const release = hold('POST', '/api/v1/directory/persons');
+    await fill(0, 'Nadia Kovac', 'team:payments', 'role:developer');
+    await fireEvent.click(screen.getByTestId('persons-submit'));
+    await fireEvent.click(screen.getByTestId('persons-add-row'));
+    await fill(1, 'Omar Haddad');
+    release();
+    await screen.findByTestId('persons-done');
+    expect(screen.getByTestId('person-row-0-name')).toHaveValue('Omar Haddad');
+    expect(screen.queryByTestId('person-row-1')).toBeNull();
   });
 
   it('says that the persons are kept elsewhere, and that nothing was changed', async () => {

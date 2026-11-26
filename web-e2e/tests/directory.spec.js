@@ -107,6 +107,22 @@ test.describe('the fixtures of this spec', () => {
   });
 });
 
+test.describe('the fixtures of the first login', () => {
+  test('the candidates are what the mock offers the first save', async ({ page, request }) => {
+    await useScenario(request, 'first-login#candidates');
+    await login(page, WELCOME_ADDRESS);
+    const refusal = await page.request.put(ME_PATH, {
+      headers: await csrf(page),
+      data: { name: 'Robin Newcomer', team: 'payments', role: 'developer' },
+    });
+    expect(refusal.status()).toBe(409);
+    const { candidates } = await refusal.json();
+    expect(candidates.map(({ pseudonym, name }) => ({ pseudonym, name }))).toEqual(
+      CANDIDATES.map(({ pseudonym, label }) => ({ pseudonym, name: label.split(' (')[0] })),
+    );
+  });
+});
+
 test.describe('the Backstage import (UC-CAT-3)', () => {
   test('the catalogs lens leads to the page, which starts at the choice and says what is missing', async ({
     page,
