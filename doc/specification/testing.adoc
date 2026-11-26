@@ -73,7 +73,11 @@ besides them, profiles for one flow: `release` (an approver releases with step-u
 pending logins), `local` (the login of local users on the web app's own page) and `login-trouble` (the login cannot
 start or complete); `workshop` also carries the states `session-replaced` and `session-ended`; `workshop` and
 `read-only` answer the requests of the form kit for the fixture categories and carry the states `preview-hostile` and
-`preview-unavailable` (the built-in `render-asciidoc` handler answers every other preview)
+`preview-unavailable` (the built-in `render-asciidoc` handler answers every other preview); `workshop` and `read-only`
+also answer the document lifecycle for the repository `test-notes` (list, read, revisions, diff, search, create, draft,
+save, submit, release; the search is the built-in `search-documents` handler), `read-only` refusing every write, and
+`workshop` carries the `note-*` states (the flow of one document from submit to release and edit, and every outcome of
+the writes)
 
 |Control
 |`GET /mock/state`, `POST /mock/scenario`, `POST /mock/goto/{state}`, `POST /mock/reset`, `POST /mock/broadcast`,

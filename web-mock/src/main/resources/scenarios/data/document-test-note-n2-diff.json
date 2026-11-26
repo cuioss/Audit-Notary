@@ -1,0 +1,76 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8R7A9C1E3G5J7M9P1S3V5X",
+  "from": null,
+  "to": "working",
+  "sections": [
+    {
+      "part": "data",
+      "changes": [
+        {
+          "pointer": "/title",
+          "before": null,
+          "after": "Retention schedule for audit evidence"
+        },
+        {
+          "pointer": "/noted",
+          "before": null,
+          "after": "2026-11-25T15:00:00Z"
+        },
+        {
+          "pointer": "/status",
+          "before": null,
+          "after": "open"
+        },
+        {
+          "pointer": "/pinned",
+          "before": null,
+          "after": false
+        },
+        {
+          "pointer": "/service",
+          "before": null,
+          "after": "service:reporting"
+        },
+        {
+          "pointer": "/owner",
+          "before": null,
+          "after": "p-4c1a9e"
+        },
+        {
+          "pointer": "/related",
+          "before": null,
+          "after": "isms-register:risk/R-042"
+        },
+        {
+          "pointer": "/summary",
+          "before": null,
+          "after": "Keep audit evidence for seven years; review it every two years."
+        },
+        {
+          "pointer": "/body",
+          "before": null,
+          "after": "== Schedule\n\n* Release evidence and assessments: seven years\n* Access logs: 13 months\n\nThe schedule follows the interview notes of 25 November."
+        },
+        {
+          "pointer": "/actions",
+          "before": null,
+          "after": [
+            {
+              "what": "Check the schedule with the legal team",
+              "who": "p-61c0d4",
+              "due": "2026-12-10",
+              "done": false
+            },
+            {
+              "what": "Mark the archive folders",
+              "who": "p-9e33a1",
+              "due": "2026-12-20",
+              "done": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

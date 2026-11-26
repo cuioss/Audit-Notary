@@ -22,6 +22,8 @@ interface RouteDefinition {
   body?: unknown;
   /** A data file below `scenarios/data/` whose JSON is the body, as the mock's `body_file`. */
   body_file?: string;
+  /** The data file a handler reads (the search index), as the mock's `data_file`. */
+  data_file?: string;
 }
 
 /** The most bytes of source the preview handler renders, as the mock's. */
@@ -187,12 +189,70 @@ function renderAnswer(bodyText: string): Response {
   return answer({ body: { html: renderAsciiDocLikeTheMock(source) } });
 }
 
+/** What a built-in handler sees of a request: its body text, its URL, the data file of its route and the rights. */
+interface HandlerContext {
+  bodyText: string;
+  url: URL;
+  data: unknown;
+  rights: { repository: string; actions: string[] }[];
+}
+
+/** The most hits of the search, as the mock's. */
+const SEARCH_LIMIT = 20;
+
+/**
+ * The answer of `GET /api/v1/search?q=` by the rules of the mock's `search-documents` handler (rest-api.adoc, The
+ * Document Lifecycle Requests): no `q` is `422 REQUIRED`, fewer than two characters after trimming `MIN_LENGTH`, more
+ * than 200 `MAX_LENGTH`; else the entries of the index of the repositories the rights grant `read` on whose title or id
+ * contains the text, in any case, by title, at most 20.
+ *
+ * @param context the request
+ * @returns the answer
+ */
+function searchAnswer(context: HandlerContext): Response {
+  const refuse = (code: string): Response =>
+    answer({
+      status: 422,
+      body: { outcome: 'VALIDATION', errors: [{ pointer: '/q', code }] },
+    });
+  const parameter = context.url.searchParams.get('q');
+  if (parameter === null) return refuse('REQUIRED');
+  const text = parameter.trim();
+  if (text.length < 2) return refuse('MIN_LENGTH');
+  if (text.length > 200) return refuse('MAX_LENGTH');
+  const needle = text.toLowerCase();
+  const readable = new Set(
+    context.rights
+      .filter((right) => right.actions.includes('read'))
+      .map((right) => right.repository),
+  );
+  const index = (context.data as { entries?: Record<string, string>[] }).entries ?? [];
+  const hits = index
+    .filter(
+      (entry) =>
+        readable.has(entry.repository) &&
+        (entry.title.toLowerCase().includes(needle) || entry.id.toLowerCase().includes(needle)),
+    )
+    .sort((a, b) => {
+      const [first, second] = [a.title.toLowerCase(), b.title.toLowerCase()];
+      return first < second ? -1 : first > second ? 1 : 0;
+    });
+  return answer({
+    body: {
+      query: text,
+      results: hits.slice(0, SEARCH_LIMIT),
+      truncated: hits.length > SEARCH_LIMIT,
+    },
+  });
+}
+
 /**
  * The built-in handlers of the mock's engine, each name with its own answer. The names are those of the `web-mock`
  * `Handler` enum; `scenarioFetch.test.ts` fails when the two differ.
  */
-export const HANDLERS: ReadonlyMap<string, (bodyText: string) => Response> = new Map([
-  ['render-asciidoc', renderAnswer],
+export const HANDLERS: ReadonlyMap<string, (context: HandlerContext) => Response> = new Map([
+  ['render-asciidoc', (context: HandlerContext) => renderAnswer(context.bodyText)],
+  ['search-documents', searchAnswer],
 ]);
 
 /**
@@ -241,6 +301,56 @@ const SHELL_REQUESTS = new Set([
 
 /** The requests that need no session. */
 const PUBLIC_REQUESTS = new Set(['GET /api/v1/status', 'GET /api/v1/messages']);
+
+/**
+ * The key of a route or link with its parts: `METHOD /path` or `METHOD /path?name=value[&name=value]` (the mock's
+ * `RouteKey`).
+ *
+ * @param key a route key
+ * @returns method, path and the required query
+ */
+function parseKey(key: string): { method: string; path: string; query: URLSearchParams } {
+  const space = key.indexOf(' ');
+  const target = key.slice(space + 1);
+  const mark = target.indexOf('?');
+  return {
+    method: key.slice(0, space),
+    path: mark < 0 ? target : target.slice(0, mark),
+    query: new URLSearchParams(mark < 0 ? '' : target.slice(mark + 1)),
+  };
+}
+
+/**
+ * The most specific match of a request among keyed entries, by the rule of the mock: the key must have the request's
+ * method and path and every listed query name with exactly the listed value (further parameters do not hinder it); a key
+ * without query matches any query; of several matches the one with the most listed parameters wins. Equal matches of
+ * routes are told apart by their key text (`ties: 'text'`, so that the answer never depends on the order of a map);
+ * equal links keep the first in the order of the state (`ties: 'order'`), as `ScenarioState.linkFor` does.
+ *
+ * @param entries the entries as key and value, in their order
+ * @param method the request method
+ * @param url the request URL
+ * @param ties how equal matches are told apart
+ * @returns the entry, or `undefined`
+ */
+function mostSpecific<T>(
+  entries: ReadonlyArray<readonly [string, T]>,
+  method: string,
+  url: URL,
+  ties: 'text' | 'order',
+): T | undefined {
+  let best: { size: number; key: string; entry: T } | undefined;
+  for (const [key, entry] of entries) {
+    const parsed = parseKey(key);
+    if (parsed.method !== method || parsed.path !== url.pathname) continue;
+    if (![...parsed.query].every(([name, value]) => url.searchParams.get(name) === value)) continue;
+    const size = [...parsed.query].length;
+    if (!best || size > best.size || (ties === 'text' && size === best.size && key < best.key)) {
+      best = { size, key, entry };
+    }
+  }
+  return best?.entry;
+}
 
 /** What `scenarioFetch` returns. */
 export interface ScenarioFetch {
@@ -318,8 +428,14 @@ export function scenarioFetch(reference: string): ScenarioFetch {
     if (key === 'GET /api/v1/messages') {
       return answer({ body: mockMessages(url.searchParams.get('lang') === 'de' ? 'de' : 'en') });
     }
-    const link = Object.values(current.links ?? {}).find(
-      (candidate) => candidate.method === method && candidate.path === url.pathname,
+    const link = mostSpecific(
+      Object.values(current.links ?? {}).map((candidate) => [
+        `${candidate.method} ${candidate.path}`,
+        candidate,
+      ]),
+      method,
+      url,
+      'order',
     );
     if (link) {
       const response = answer(link);
@@ -337,7 +453,9 @@ export function scenarioFetch(reference: string): ScenarioFetch {
         },
       });
     }
-    const route = current.routes?.[key] ?? scenario.routes[key];
+    const route =
+      mostSpecific(Object.entries(current.routes ?? {}), method, url, 'text') ??
+      mostSpecific(Object.entries(scenario.routes), method, url, 'text');
     if (route?.handler !== undefined) {
       const handle = HANDLERS.get(route.handler);
       if (handle === undefined) throw new Error(`unknown handler: ${route.handler}`);
@@ -347,7 +465,14 @@ export function scenarioFetch(reference: string): ScenarioFetch {
           : request
             ? await request.clone().text()
             : '';
-      return handle(text);
+      const data =
+        route.data_file === undefined ? undefined : bodyOf({ body_file: route.data_file });
+      return handle({
+        bodyText: text,
+        url,
+        data,
+        rights: scenario.rights as HandlerContext['rights'],
+      });
     }
     return route
       ? answer(route)

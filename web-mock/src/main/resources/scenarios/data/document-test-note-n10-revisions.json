@@ -1,0 +1,19 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ9A3J5M7P9R1T3W5Y7B9D1F",
+  "revisions": [
+    {
+      "ref": "e51a7d3",
+      "commit": "e51a7d3",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-26T09:41:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

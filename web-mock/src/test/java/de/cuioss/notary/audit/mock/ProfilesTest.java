@@ -20,10 +20,14 @@ import de.cuioss.notary.audit.mock.scenario.ScenarioRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -550,6 +554,25 @@ class ProfilesTest {
         }
 
         @Test
+        @DisplayName("finds a login route that lists a query, and keeps the built-in login for a request without it")
+        void shouldFindALoginRouteWithAQuery(@TempDir Path directory) throws IOException {
+            var file = directory.resolve("query-login.json");
+            Files.writeString(file, """
+                    {"format_version": 1, "name": "query-login", "user": {"name": "Alex"}, "start": "a",
+                     "routes": {"GET /api/v1/auth/login?step-up=mfa": {"status": 503, "body": {"outcome": "TOO_MANY_LOGINS"}}},
+                     "states": {"a": {}}}
+                    """);
+            try (var client = MockClient.start(file.toString())) {
+                var listed = client.get("/api/v1/auth/login?return=/&step-up=mfa");
+                var plain = client.get(LOGIN);
+                assertAll(
+                        () -> assertEquals(503, listed.statusCode()),
+                        () -> assertEquals("TOO_MANY_LOGINS", json(listed).path("outcome").asText()),
+                        () -> assertEquals(200, plain.statusCode()));
+            }
+        }
+
+        @Test
         @DisplayName("lets the login start in unknown-transaction and refuses its callback")
         void shouldRefuseTheCallback() {
             try (var client = MockClient.start("login-trouble#unknown-transaction")) {
@@ -798,9 +821,9 @@ class ProfilesTest {
         }
 
         @Test
-        @DisplayName("workshop grants read and edit on test-notes, read-only grants read; the status lists it")
+        @DisplayName("workshop grants read, edit and approve on test-notes, read-only grants read; the status lists it")
         void shouldGrantTestNotes() {
-            for (var entry : Map.of("workshop", List.of("read", "edit"), "read-only", List.of("read")).entrySet()) {
+            for (var entry : Map.of("workshop", List.of("read", "edit", "approve"), "read-only", List.of("read")).entrySet()) {
                 try (var client = MockClient.start(entry.getKey()).login()) {
                     List<String> actions = new ArrayList<>();
                     json(client.get("/api/v1/session")).path("rights").forEach(right -> {

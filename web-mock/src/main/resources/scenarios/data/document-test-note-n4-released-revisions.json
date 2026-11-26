@@ -1,0 +1,55 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8T5C7E9G1J3M5P7R9V1X3Z",
+  "revisions": [
+    {
+      "ref": "v1",
+      "commit": "c7d8e90",
+      "kind": "release",
+      "tag": "notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/v1",
+      "version": 1,
+      "at": "2026-11-26T10:05:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "4d5e6f7",
+      "commit": "4d5e6f7",
+      "kind": "submit",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-25T16:20:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      }
+    },
+    {
+      "ref": "9b8a7c6",
+      "commit": "9b8a7c6",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-25T16:05:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      }
+    },
+    {
+      "ref": "6f7a8b9",
+      "commit": "6f7a8b9",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-25T11:00:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      }
+    }
+  ],
+  "truncated": false
+}

@@ -78,6 +78,15 @@ Canonical addresses: `/` (Due), `/samm/<scope>/<assessment>/<practice>`, `/threa
 `/reports/<report>`, `/settings/<section>`, `/welcome` (first login) and `/<lens path>/release`. `src/lib/routes.ts`
 holds `parseAddress` and `formatAddress`; route files are stubs rendering `AppRouter`.
 
+Provisionally (decided with the document lifecycle, xref:rest-api.adoc#_the_generic_documents_lens[REST API Register,
+The Generic Documents Lens]): a ninth lens, *Documents*, shows the categories without a lens of their own at
+`/categories`, `/categories/<category>`, `/categories/<category>/new`, `/categories/<category>/<document>` and
+`/categories/<category>/<document>/release`; and an address may admit a few named query parameters that belong to its
+canonical form (xref:rest-api.adoc#_allowed_queries[REST API Register, Allowed Queries of an Address]): `at` on a
+document address reads the document as it was at a release or a commit. `parseAddress` and `checkReturn` read them
+under the rules of that section; every other query parameter is ignored in an address and refused in a login's
+`return`.
+
 Three more addresses are shown without the shell: `/login` (local users), `/signed-out` and `/login-problem`
 (provisional, xref:rest-api.adoc#_addresses_outside_the_shell[REST API Register, Addresses Outside the Shell]). They are
 in `canonical-addresses.json` as `outsideShell`, so the web app routes them and the check of a login's `return` refuses
@@ -350,7 +359,8 @@ Requests:
   in xref:architecture-and-modules.adoc#operation-outcomes[Architecture and Modules, Operation Outcomes]. On
   `GIT_UNAVAILABLE` the draft is kept, and the user saves again later.
 * Event stream: `GET /api/v1/events` (`text/event-stream`); event `document-saved` with repository, id, fields; the
-  open form refreshes the fields not edited locally.
+  open form refreshes the fields not edited locally. The events `document-created`, `document-transitioned` and
+  `release-requested` are PROVISIONAL (xref:rest-api.adoc#_lifecycle_events[REST API Register, Events of the Lifecycle]).
 
 [#AUN-WEB-6]
 == AUN-WEB-6: Review and Release
@@ -452,7 +462,9 @@ xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6] on every page. Carries no person
 |`GET /api/v1/due`
 |yes
 |`{"items": [{"kind", "lens", "title", "address", "due"}]}`: the launcher of the *Due* lens; `kind` is `deadline`,
-`review` or `release`, `address` a canonical address (<<AUN-WEB-3>>), `due` an ISO 8601 date
+`review` or `release`, `address` a canonical address (<<AUN-WEB-3>>), `due` an ISO 8601 date. The item of a pending
+release request of an agent has four members more, `requestId`, `requestedBy`, `requestedAt` and `comment` (PROVISIONAL,
+xref:rest-api.adoc#_release_requests[REST API Register, Release Requests])
 
 |`GET /api/v1/events`
 |yes

@@ -160,6 +160,10 @@
     },
     "GET /api/v1/documents/samm-assessments/payments-2026-q4/diff": {
       "body_file": "samm-diff-payments-2026-q4.json"
+    },
+    "GET /api/v1/categories": {
+      "status": 200,
+      "body_file": "categories-none.json"
     }
   },
   "states": {

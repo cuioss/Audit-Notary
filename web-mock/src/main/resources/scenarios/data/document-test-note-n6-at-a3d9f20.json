@@ -1,0 +1,52 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8W1E3G5J7M9P1R3T5X7Z9B",
+  "category": "test-note",
+  "kind": "note",
+  "title": "Vendor onboarding questions",
+  "state": "draft",
+  "version": 1,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "0a1b2c3",
+      "savedAt": "2026-11-02T09:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Developer"
+      },
+      "value": {
+        "title": "Vendor onboarding questions",
+        "noted": "2026-11-02T09:00:00Z",
+        "status": "open",
+        "summary": "Questions to ask a vendor."
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-02T09:00:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "releaseRequest": null,
+  "transitions": [],
+  "at": {
+    "ref": "a3d9f20",
+    "kind": "create",
+    "commit": "a3d9f20",
+    "tag": null,
+    "at": "2026-11-02T09:00:00Z",
+    "by": {
+      "pseudonym": "p-2b7f10",
+      "name": "Jordan Weber"
+    }
+  }
+}

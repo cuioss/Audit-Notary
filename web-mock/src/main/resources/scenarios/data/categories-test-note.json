@@ -1,0 +1,14 @@
+{
+  "categories": [
+    {
+      "id": "test-note",
+      "generic": true,
+      "kinds": [
+        {
+          "id": "note",
+          "repository": "test-notes"
+        }
+      ]
+    }
+  ]
+}

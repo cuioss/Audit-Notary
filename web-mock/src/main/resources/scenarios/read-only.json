@@ -243,6 +243,373 @@
     },
     "POST /api/v1/render/asciidoc": {
       "handler": "render-asciidoc"
+    },
+    "GET /api/v1/categories": {
+      "body_file": "categories-test-note.json"
+    },
+    "GET /api/v1/documents/test-notes": {
+      "body_file": "documents-test-notes.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G": {
+      "body_file": "document-test-note-n1.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G/revisions": {
+      "body_file": "document-test-note-n1-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X": {
+      "body_file": "document-test-note-n2.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/revisions": {
+      "body_file": "document-test-note-n2-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8S2B4D6F8H0K2N4Q6T8W0Y": {
+      "body_file": "document-test-note-n3.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8S2B4D6F8H0K2N4Q6T8W0Y/revisions": {
+      "body_file": "document-test-note-n3-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+      "body_file": "document-test-note-n4.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/revisions": {
+      "body_file": "document-test-note-n4-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A": {
+      "body_file": "document-test-note-n5.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/revisions": {
+      "body_file": "document-test-note-n5-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B": {
+      "body_file": "document-test-note-n6.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/revisions": {
+      "body_file": "document-test-note-n6-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C": {
+      "body_file": "document-test-note-n7.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C/revisions": {
+      "body_file": "document-test-note-n7-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8Y7G9J1M3P5R7T9W1Z3B5D": {
+      "body_file": "document-test-note-n8.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8Y7G9J1M3P5R7T9W1Z3B5D/revisions": {
+      "body_file": "document-test-note-n8-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E": {
+      "body_file": "document-test-note-n9.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/revisions": {
+      "body_file": "document-test-note-n9-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ9A3J5M7P9R1T3W5Y7B9D1F": {
+      "body_file": "document-test-note-n10.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ9A3J5M7P9R1T3W5Y7B9D1F/revisions": {
+      "body_file": "document-test-note-n10-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/diff": {
+      "body_file": "document-test-note-n2-diff.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/diff": {
+      "body_file": "document-test-note-n4-diff.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/diff": {
+      "body_file": "document-test-note-n5-diff.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C/diff": {
+      "body_file": "document-test-note-n7-diff.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/diff": {
+      "body_file": "document-test-note-n9-diff.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=v1": {
+      "body_file": "document-test-note-n6-at-v1.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=v2": {
+      "body_file": "document-test-note-n6-at-v2.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=4be0c3a": {
+      "body_file": "document-test-note-n6-at-4be0c3a.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=a3d9f20": {
+      "body_file": "document-test-note-n6-at-a3d9f20.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C?at=v2": {
+      "body_file": "document-test-note-n7-at-v2.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?at=v1": {
+      "body_file": "document-test-note-n1-at-v1.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=deadbee": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      }
+    },
+    "GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/search": {
+      "handler": "search-documents",
+      "data_file": "documents-index.json"
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G/save": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G/transitions/test-note.submit": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/releases/test-notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/save": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/transitions/test-note.submit": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/releases/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8S2B4D6F8H0K2N4Q6T8W0Y": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8S2B4D6F8H0K2N4Q6T8W0Y/save": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8S2B4D6F8H0K2N4Q6T8W0Y/transitions/test-note.submit": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/releases/test-notes/01JZ8S2B4D6F8H0K2N4Q6T8W0Y": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/save": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/transitions/test-note.submit": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/save": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/transitions/test-note.submit": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/releases/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/save": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/transitions/test-note.submit": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/releases/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C/save": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C/transitions/test-note.submit": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/releases/test-notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8Y7G9J1M3P5R7T9W1Z3B5D": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8Y7G9J1M3P5R7T9W1Z3B5D/save": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8Y7G9J1M3P5R7T9W1Z3B5D/transitions/test-note.submit": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/releases/test-notes/01JZ8Y7G9J1M3P5R7T9W1Z3B5D": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/save": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/transitions/test-note.submit": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/releases/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ9A3J5M7P9R1T3W5Y7B9D1F": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ9A3J5M7P9R1T3W5Y7B9D1F/save": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ9A3J5M7P9R1T3W5Y7B9D1F/transitions/test-note.submit": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/releases/test-notes/01JZ9A3J5M7P9R1T3W5Y7B9D1F": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
+    },
+    "POST /api/v1/documents/test-notes": {
+      "status": 403,
+      "body": {
+        "outcome": "FORBIDDEN"
+      }
     }
   },
   "states": {

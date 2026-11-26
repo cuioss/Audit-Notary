@@ -1,0 +1,98 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8T5C7E9G1J3M5P7R9V1X3Z",
+  "category": "test-note",
+  "kind": "note",
+  "title": "Supplier security questionnaire",
+  "state": "released",
+  "version": 1,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "1f2e3d4",
+      "savedAt": "2026-11-26T09:20:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Developer"
+      },
+      "value": {
+        "title": "Supplier security questionnaire",
+        "noted": "2026-11-25T11:00:00Z",
+        "status": "open",
+        "pinned": false,
+        "service": "service:customer-portal",
+        "owner": "p-2b7f10",
+        "related": "isms-register:risk/R-012",
+        "summary": "Every supplier with access to production answers the same twenty questions once a year, in January.",
+        "body": "== Questions\n\n* Who may reach our systems?\n* How are leavers removed?\n* Where is our data stored?",
+        "actions": [
+          {
+            "what": "Send the questionnaire to the three largest suppliers",
+            "who": "p-2b7f10",
+            "due": "2026-12-05",
+            "done": false
+          }
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-26T10:05:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/v1"
+    },
+    {
+      "at": "2026-11-26T09:20:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2026-11-25T16:20:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-11-25T16:05:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2026-11-25T11:00:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/v1",
+    "at": "2026-11-26T10:05:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": []
+}

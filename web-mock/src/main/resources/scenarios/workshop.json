@@ -36,7 +36,8 @@
       "repository": "test-notes",
       "actions": [
         "read",
-        "edit"
+        "edit",
+        "approve"
       ]
     }
   ],
@@ -125,45 +126,7 @@
     },
     "GET /api/v1/due": {
       "status": 200,
-      "body": {
-        "items": [
-          {
-            "kind": "review",
-            "lens": "samm",
-            "title": "Payments 2026 Q4: Strategy and Metrics",
-            "address": "/samm/payments/2026-q4/sm",
-            "due": "2026-11-27"
-          },
-          {
-            "kind": "release",
-            "lens": "samm",
-            "title": "Payments 2026 Q4 assessment",
-            "address": "/samm/payments/2026-q4/release",
-            "due": "2026-12-04"
-          },
-          {
-            "kind": "review",
-            "lens": "threat-models",
-            "title": "Payment gateway: checkout flow",
-            "address": "/threat-models/payment-gateway/checkout-flow",
-            "due": "2026-12-01"
-          },
-          {
-            "kind": "deadline",
-            "lens": "incidents",
-            "title": "INC-0007 card data exposure: notification to the authority",
-            "address": "/incidents/2026/inc-0007",
-            "due": "2026-11-22"
-          },
-          {
-            "kind": "review",
-            "lens": "isms",
-            "title": "Risk R-012: supplier access to production",
-            "address": "/isms/risks/r-012",
-            "due": "2026-12-15"
-          }
-        ]
-      }
+      "body_file": "due-workshop-lifecycle.json"
     },
     "GET /api/v1/samm/models/v2.2.0": {
       "body_file": "samm-model-v2.2.0.json"
@@ -284,11 +247,501 @@
     },
     "POST /api/v1/render/asciidoc": {
       "handler": "render-asciidoc"
+    },
+    "GET /api/v1/categories": {
+      "body_file": "categories-test-note.json"
+    },
+    "GET /api/v1/documents/test-notes": {
+      "body_file": "documents-test-notes.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G": {
+      "body_file": "document-test-note-n1.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G/revisions": {
+      "body_file": "document-test-note-n1-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X": {
+      "body_file": "document-test-note-n2.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/revisions": {
+      "body_file": "document-test-note-n2-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8S2B4D6F8H0K2N4Q6T8W0Y": {
+      "body_file": "document-test-note-n3.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8S2B4D6F8H0K2N4Q6T8W0Y/revisions": {
+      "body_file": "document-test-note-n3-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+      "body_file": "document-test-note-n4.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/revisions": {
+      "body_file": "document-test-note-n4-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A": {
+      "body_file": "document-test-note-n5.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/revisions": {
+      "body_file": "document-test-note-n5-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B": {
+      "body_file": "document-test-note-n6.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/revisions": {
+      "body_file": "document-test-note-n6-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C": {
+      "body_file": "document-test-note-n7.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C/revisions": {
+      "body_file": "document-test-note-n7-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8Y7G9J1M3P5R7T9W1Z3B5D": {
+      "body_file": "document-test-note-n8.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8Y7G9J1M3P5R7T9W1Z3B5D/revisions": {
+      "body_file": "document-test-note-n8-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E": {
+      "body_file": "document-test-note-n9.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/revisions": {
+      "body_file": "document-test-note-n9-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ9A3J5M7P9R1T3W5Y7B9D1F": {
+      "body_file": "document-test-note-n10.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ9A3J5M7P9R1T3W5Y7B9D1F/revisions": {
+      "body_file": "document-test-note-n10-revisions.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/diff": {
+      "body_file": "document-test-note-n2-diff.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/diff": {
+      "body_file": "document-test-note-n4-diff.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/diff": {
+      "body_file": "document-test-note-n5-diff.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C/diff": {
+      "body_file": "document-test-note-n7-diff.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/diff": {
+      "body_file": "document-test-note-n9-diff.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=v1": {
+      "body_file": "document-test-note-n6-at-v1.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=v2": {
+      "body_file": "document-test-note-n6-at-v2.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=4be0c3a": {
+      "body_file": "document-test-note-n6-at-4be0c3a.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=a3d9f20": {
+      "body_file": "document-test-note-n6-at-a3d9f20.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C?at=v2": {
+      "body_file": "document-test-note-n7-at-v2.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?at=v1": {
+      "body_file": "document-test-note-n1-at-v1.json"
+    },
+    "GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=deadbee": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      }
+    },
+    "GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      }
+    },
+    "GET /api/v1/search": {
+      "handler": "search-documents",
+      "data_file": "documents-index.json"
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "b8c0d41",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        },
+        "state": "draft",
+        "version": 2
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "b8c0d41",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        }
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8S2B4D6F8H0K2N4Q6T8W0Y": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8S2B4D6F8H0K2N4Q6T8W0Y/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "b8c0d41",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        }
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "b8c0d41",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        }
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "b8c0d41",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        }
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "b8c0d41",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        },
+        "state": "draft",
+        "version": 3
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "b8c0d41",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        }
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8Y7G9J1M3P5R7T9W1Z3B5D": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8Y7G9J1M3P5R7T9W1Z3B5D/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "b8c0d41",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        }
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "b8c0d41",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        }
+      }
+    },
+    "PUT /api/v1/drafts/test-notes/01JZ9A3J5M7P9R1T3W5Y7B9D1F": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ9A3J5M7P9R1T3W5Y7B9D1F/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "b8c0d41",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        }
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/transitions/test-note.submit": {
+      "status": 200,
+      "body": {
+        "outcome": "TRANSITIONED",
+        "state": "in-review",
+        "version": 1,
+        "at": "2026-11-26T09:50:00Z"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C/transitions/test-note.submit": {
+      "status": 200,
+      "body": {
+        "outcome": "TRANSITIONED",
+        "state": "in-review",
+        "version": 3,
+        "at": "2026-11-26T09:50:00Z"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8Y7G9J1M3P5R7T9W1Z3B5D/transitions/test-note.submit": {
+      "status": 200,
+      "body": {
+        "outcome": "TRANSITIONED",
+        "state": "in-review",
+        "version": 1,
+        "at": "2026-11-26T09:50:00Z"
+      }
+    },
+    "POST /api/v1/documents/test-notes/01JZ8S2B4D6F8H0K2N4Q6T8W0Y/transitions/test-note.submit": {
+      "status": 422,
+      "body": {
+        "outcome": "MANDATORY_FIELDS_MISSING",
+        "missing": [
+          "/noted",
+          "/status"
+        ]
+      }
+    },
+    "POST /api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+      "status": 200,
+      "body": {
+        "outcome": "RELEASED",
+        "tag": "notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/v1",
+        "at": "2026-11-26T10:05:00Z"
+      }
+    },
+    "POST /api/v1/releases/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A": {
+      "status": 200,
+      "body": {
+        "outcome": "RELEASED",
+        "tag": "notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/v2",
+        "at": "2026-11-26T10:05:00Z"
+      }
+    },
+    "POST /api/v1/documents/test-notes": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "id": "01JZ9A3J5M7P9R1T3W5Y7B9D1F",
+        "repository": "test-notes",
+        "address": "/categories/test-note/01JZ9A3J5M7P9R1T3W5Y7B9D1F",
+        "state": "draft",
+        "version": 1,
+        "at": "2026-11-26T09:41:00Z",
+        "parts": {
+          "data": {
+            "blob": "e51a7d3",
+            "savedAt": "2026-11-26T09:41:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        }
+      }
     }
   },
   "states": {
     "ready": {
-      "description": "Everything is fetched; the Due list is populated."
+      "description": "Everything is fetched; the Due list is populated.",
+      "links": {
+        "create-note": {
+          "method": "POST",
+          "path": "/api/v1/documents/test-notes",
+          "next": "note-created",
+          "status": 201,
+          "body": {
+            "outcome": "CREATED",
+            "id": "01JZ9A3J5M7P9R1T3W5Y7B9D1F",
+            "repository": "test-notes",
+            "address": "/categories/test-note/01JZ9A3J5M7P9R1T3W5Y7B9D1F",
+            "state": "draft",
+            "version": 1,
+            "at": "2026-11-26T09:41:00Z",
+            "parts": {
+              "data": {
+                "blob": "e51a7d3",
+                "savedAt": "2026-11-26T09:41:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example",
+                  "role": "Security Champion"
+                }
+              }
+            }
+          }
+        },
+        "submit-n9": {
+          "method": "POST",
+          "path": "/api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/transitions/test-note.submit",
+          "next": "note-submitted",
+          "body": {
+            "outcome": "TRANSITIONED",
+            "state": "in-review",
+            "version": 1,
+            "at": "2026-11-26T09:50:00Z"
+          }
+        }
+      }
     },
     "saved-by-other": {
       "description": "Another assessor saved two answers of Strategy and Metrics in the open assessment; a document-saved event follows, and the assessment reads with them.",
@@ -386,6 +839,713 @@
           "status": 503,
           "body": {
             "outcome": "RENDER_UNAVAILABLE"
+          }
+        }
+      }
+    },
+    "note-created": {
+      "description": "The first save of a new note answered CREATED: the list holds the new note (Phishing drill notes) and the lists refresh.",
+      "routes": {
+        "GET /api/v1/documents/test-notes": {
+          "body_file": "documents-test-notes-created.json"
+        },
+        "GET /api/v1/search": {
+          "handler": "search-documents",
+          "data_file": "documents-index-created.json"
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-created",
+          "data": {
+            "repository": "test-notes",
+            "id": "01JZ9A3J5M7P9R1T3W5Y7B9D1F",
+            "kind": "note"
+          }
+        }
+      ]
+    },
+    "note-submitted": {
+      "description": "The Incident communication checklist was submitted for review: it reads in review, and the release of it is possible.",
+      "routes": {
+        "GET /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E": {
+          "body_file": "document-test-note-n9-in-review.json"
+        },
+        "GET /api/v1/documents/test-notes": {
+          "body_file": "documents-test-notes-n9-in-review.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/revisions": {
+          "body_file": "document-test-note-n9-in-review-revisions.json"
+        }
+      },
+      "links": {
+        "release-n9": {
+          "method": "POST",
+          "path": "/api/v1/releases/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E",
+          "next": "note-released",
+          "body": {
+            "outcome": "RELEASED",
+            "tag": "notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/v1",
+            "at": "2026-11-26T10:05:00Z"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-transitioned",
+          "data": {
+            "repository": "test-notes",
+            "id": "01JZ8Z0H2K4N6Q8S0V2X4A6C8E",
+            "state": "in-review",
+            "version": 1,
+            "by": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example"
+            }
+          }
+        }
+      ]
+    },
+    "note-released": {
+      "description": "The Incident communication checklist was released as v1: it reads released, and a save reopens it as version 2.",
+      "routes": {
+        "GET /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E": {
+          "body_file": "document-test-note-n9-released.json"
+        },
+        "GET /api/v1/documents/test-notes": {
+          "body_file": "documents-test-notes-n9-released.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/revisions": {
+          "body_file": "document-test-note-n9-released-revisions.json"
+        }
+      },
+      "links": {
+        "save-n9": {
+          "method": "POST",
+          "path": "/api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/save",
+          "next": "note-reopened",
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T10:12:00Z",
+            "parts": {
+              "data": {
+                "blob": "b8c0d41",
+                "savedAt": "2026-11-26T10:12:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example",
+                  "role": "Security Champion"
+                }
+              }
+            },
+            "state": "draft",
+            "version": 2
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-transitioned",
+          "data": {
+            "repository": "test-notes",
+            "id": "01JZ8Z0H2K4N6Q8S0V2X4A6C8E",
+            "state": "released",
+            "version": 1,
+            "by": {
+              "pseudonym": "p-7d2e58",
+              "name": "Noor Haddad"
+            }
+          }
+        }
+      ]
+    },
+    "note-reopened": {
+      "description": "The Incident communication checklist was saved after its release: it is a draft again, version 2, and the release v1 is the last one.",
+      "routes": {
+        "GET /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E": {
+          "body_file": "document-test-note-n9-reopened.json"
+        },
+        "GET /api/v1/documents/test-notes": {
+          "body_file": "documents-test-notes-n9-reopened.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/revisions": {
+          "body_file": "document-test-note-n9-reopened-revisions.json"
+        }
+      }
+    },
+    "note-saved-by-other": {
+      "description": "Jordan Weber saved the summary and the pinned flag of the Retention schedule: a document-saved event follows, and the note reads with them; the user's own draft is older now.",
+      "routes": {
+        "GET /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X": {
+          "body_file": "document-test-note-n2-saved-by-other.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/revisions": {
+          "body_file": "document-test-note-n2-saved-by-other-revisions.json"
+        }
+      },
+      "events": [
+        {
+          "after_ms": 300,
+          "event": "document-saved",
+          "data": {
+            "repository": "test-notes",
+            "id": "01JZ8R7A9C1E3G5J7M9P1S3V5X",
+            "part": "data",
+            "fields": [
+              "/summary",
+              "/pinned"
+            ],
+            "by": {
+              "pseudonym": "p-2b7f10",
+              "name": "Jordan Weber"
+            }
+          }
+        }
+      ]
+    },
+    "note-conflict": {
+      "description": "Jordan Weber saved the same two fields of the Retention schedule first: the next save answers CONFLICT with both values; the decided values then go through.",
+      "links": {
+        "save-n2": {
+          "method": "POST",
+          "path": "/api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/save",
+          "next": "note-conflict-resolved",
+          "status": 409,
+          "body": {
+            "outcome": "CONFLICT",
+            "conflicts": [
+              {
+                "part": "data",
+                "blob": "5d1e9a0",
+                "fields": [
+                  {
+                    "pointer": "/summary",
+                    "own": "Rotate every 90 days.",
+                    "other": "Rotate every 60 days.",
+                    "by": {
+                      "pseudonym": "p-2b7f10",
+                      "name": "Jordan Weber",
+                      "role": "Developer"
+                    }
+                  },
+                  {
+                    "pointer": "/status",
+                    "own": "agreed",
+                    "other": "dropped",
+                    "by": {
+                      "pseudonym": "p-2b7f10",
+                      "name": "Jordan Weber",
+                      "role": "Developer"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "note-conflict-resolved": {
+      "description": "The conflict was decided: the next save of the Retention schedule is accepted with the following blob.",
+      "routes": {
+        "POST /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/save": {
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T09:47:00Z",
+            "parts": {
+              "data": {
+                "blob": "5d1e9a1",
+                "savedAt": "2026-11-26T09:47:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example",
+                  "role": "Security Champion"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "note-invalid": {
+      "description": "The server refuses a save, a draft and a create with three per-field errors (reference, person, length).",
+      "routes": {
+        "POST /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/save": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "part": "data",
+                "pointer": "/related",
+                "code": "REFERENCE_NOT_FOUND"
+              },
+              {
+                "part": "data",
+                "pointer": "/owner",
+                "code": "PSEUDONYM_UNKNOWN"
+              },
+              {
+                "part": "data",
+                "pointer": "/actions/1/what",
+                "code": "MAX_LENGTH"
+              }
+            ]
+          }
+        },
+        "PUT /api/v1/drafts/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "part": "data",
+                "pointer": "/related",
+                "code": "REFERENCE_NOT_FOUND"
+              },
+              {
+                "part": "data",
+                "pointer": "/owner",
+                "code": "PSEUDONYM_UNKNOWN"
+              },
+              {
+                "part": "data",
+                "pointer": "/actions/1/what",
+                "code": "MAX_LENGTH"
+              }
+            ]
+          }
+        },
+        "POST /api/v1/documents/test-notes": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "part": "data",
+                "pointer": "/related",
+                "code": "REFERENCE_NOT_FOUND"
+              },
+              {
+                "part": "data",
+                "pointer": "/owner",
+                "code": "PSEUDONYM_UNKNOWN"
+              },
+              {
+                "part": "data",
+                "pointer": "/actions/1/what",
+                "code": "MAX_LENGTH"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "note-released-meanwhile": {
+      "description": "Somebody released the Retention schedule while it was open: a save answers DOCUMENT_RELEASED and the draft stays.",
+      "routes": {
+        "POST /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/save": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/v1"
+          }
+        }
+      }
+    },
+    "note-rejected": {
+      "description": "The Git server refuses the push: a save, a submit, a create and a release answer REJECTED and write nothing.",
+      "routes": {
+        "POST /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/save": {
+          "status": 502,
+          "body": {
+            "outcome": "REJECTED"
+          }
+        },
+        "POST /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/transitions/test-note.submit": {
+          "status": 502,
+          "body": {
+            "outcome": "REJECTED"
+          }
+        },
+        "POST /api/v1/documents/test-notes": {
+          "status": 502,
+          "body": {
+            "outcome": "REJECTED"
+          }
+        },
+        "POST /api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+          "status": 502,
+          "body": {
+            "outcome": "REJECTED"
+          }
+        }
+      }
+    },
+    "note-git-unavailable": {
+      "description": "The Git server of the test notes cannot be reached: reads, lists, revisions, the search and the draft still work; a save, a submit, a create and a release answer GIT_UNAVAILABLE.",
+      "routes": {
+        "POST /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/transitions/test-note.submit": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/documents/test-notes": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "POST /api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          }
+        },
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": true,
+            "loginProvider": "oidc",
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              },
+              {
+                "alias": "test-notes",
+                "fetch": "DOWN"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "note-submit-step-up": {
+      "description": "The submit of the Retention schedule asks for a fresh login first; after it the same request passes.",
+      "links": {
+        "submit-n2": {
+          "method": "POST",
+          "path": "/api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/transitions/test-note.submit",
+          "next": "note-submit-stepped-up",
+          "status": 403,
+          "body": {
+            "outcome": "STEP_UP_REQUIRED",
+            "stepUp": "/api/v1/auth/login?step-up=mfa"
+          }
+        }
+      }
+    },
+    "note-submit-stepped-up": {
+      "description": "The fresh login of the submit is done: the Retention schedule is submitted for review.",
+      "routes": {
+        "POST /api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/transitions/test-note.submit": {
+          "status": 200,
+          "body": {
+            "outcome": "TRANSITIONED",
+            "state": "in-review",
+            "version": 1,
+            "at": "2026-11-26T09:50:00Z"
+          }
+        }
+      }
+    },
+    "note-release-step-up": {
+      "description": "The release of the Supplier security questionnaire asks for a fresh login first; after it the same request passes.",
+      "links": {
+        "release-n4": {
+          "method": "POST",
+          "path": "/api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z",
+          "next": "note-release-stepped-up",
+          "status": 403,
+          "body": {
+            "outcome": "STEP_UP_REQUIRED",
+            "stepUp": "/api/v1/auth/login?step-up=mfa"
+          }
+        }
+      }
+    },
+    "note-release-stepped-up": {
+      "description": "The fresh login of the release is done: the release of the Supplier security questionnaire is accepted.",
+      "links": {
+        "release-n4": {
+          "method": "POST",
+          "path": "/api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z",
+          "next": "note-release-done",
+          "body": {
+            "outcome": "RELEASED",
+            "tag": "notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/v1",
+            "at": "2026-11-26T10:05:00Z"
+          }
+        }
+      }
+    },
+    "note-release-done": {
+      "description": "The Supplier security questionnaire is released as v1.",
+      "routes": {
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+          "body_file": "document-test-note-n4-released.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/revisions": {
+          "body_file": "document-test-note-n4-released-revisions.json"
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-transitioned",
+          "data": {
+            "repository": "test-notes",
+            "id": "01JZ8T5C7E9G1J3M5P7R9V1X3Z",
+            "state": "released",
+            "version": 1,
+            "by": {
+              "pseudonym": "p-7d2e58",
+              "name": "Noor Haddad"
+            }
+          }
+        }
+      ]
+    },
+    "note-release-password": {
+      "description": "Local users: the release asks for the password and sends it with the request.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": false,
+            "loginProvider": "local",
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              },
+              {
+                "alias": "test-notes",
+                "fetch": "UP"
+              }
+            ],
+            "stepUp": "password"
+          }
+        }
+      },
+      "links": {
+        "release-n4": {
+          "method": "POST",
+          "path": "/api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z",
+          "next": "note-release-done",
+          "body": {
+            "outcome": "RELEASED",
+            "tag": "notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/v1",
+            "at": "2026-11-26T10:05:00Z"
+          }
+        }
+      }
+    },
+    "note-release-wrong-password": {
+      "description": "Local users: a wrong password; nothing is released.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": false,
+            "loginProvider": "local",
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              },
+              {
+                "alias": "test-notes",
+                "fetch": "UP"
+              }
+            ],
+            "stepUp": "password"
+          }
+        },
+        "POST /api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+          "status": 401,
+          "body": {
+            "outcome": "INVALID_CREDENTIALS"
+          }
+        }
+      }
+    },
+    "note-release-changed": {
+      "description": "Somebody saved the Supplier security questionnaire after the review was opened: the release answers CHANGED_SINCE_REVIEW, the review reads the new text and diff.",
+      "routes": {
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+          "body_file": "document-test-note-n4-saved-after.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/diff": {
+          "body_file": "document-test-note-n4-saved-after-diff.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/revisions": {
+          "body_file": "document-test-note-n4-saved-after-revisions.json"
+        }
+      },
+      "links": {
+        "release-n4": {
+          "method": "POST",
+          "path": "/api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z",
+          "next": "note-release-changed-refused",
+          "status": 409,
+          "body": {
+            "outcome": "CHANGED_SINCE_REVIEW"
+          }
+        }
+      }
+    },
+    "note-release-changed-refused": {
+      "description": "The release was refused as changed since the review: it stays refused until the new text and diff are read again; the next read of the diff is that review.",
+      "routes": {
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+          "body_file": "document-test-note-n4-saved-after.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/revisions": {
+          "body_file": "document-test-note-n4-saved-after-revisions.json"
+        }
+      },
+      "links": {
+        "review-n4": {
+          "method": "GET",
+          "path": "/api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/diff",
+          "next": "note-release-changed-reviewed",
+          "body_file": "document-test-note-n4-saved-after-diff.json"
+        },
+        "release-n4": {
+          "method": "POST",
+          "path": "/api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z",
+          "next": "note-release-changed-refused",
+          "status": 409,
+          "body": {
+            "outcome": "CHANGED_SINCE_REVIEW"
+          }
+        }
+      }
+    },
+    "note-release-changed-reviewed": {
+      "description": "The new text and diff were read after the refusal: the release of the Supplier security questionnaire is accepted.",
+      "routes": {
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+          "body_file": "document-test-note-n4-saved-after.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/diff": {
+          "body_file": "document-test-note-n4-saved-after-diff.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/revisions": {
+          "body_file": "document-test-note-n4-saved-after-revisions.json"
+        }
+      },
+      "links": {
+        "release-n4": {
+          "method": "POST",
+          "path": "/api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z",
+          "next": "note-release-changed-done",
+          "body": {
+            "outcome": "RELEASED",
+            "tag": "notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/v1",
+            "at": "2026-11-26T10:05:00Z"
+          }
+        }
+      }
+    },
+    "note-release-changed-done": {
+      "description": "The Supplier security questionnaire is released as v1, with the text Jordan Weber saved after the review was opened.",
+      "routes": {
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+          "body_file": "document-test-note-n4-saved-after-released.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/revisions": {
+          "body_file": "document-test-note-n4-saved-after-released-revisions.json"
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-transitioned",
+          "data": {
+            "repository": "test-notes",
+            "id": "01JZ8T5C7E9G1J3M5P7R9V1X3Z",
+            "state": "released",
+            "version": 1,
+            "by": {
+              "pseudonym": "p-7d2e58",
+              "name": "Noor Haddad"
+            }
+          }
+        }
+      ]
+    },
+    "note-release-too-many-logins": {
+      "description": "Every place of pending logins is taken: the release cannot start its step-up; nothing is written.",
+      "routes": {
+        "POST /api/v1/releases/test-notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z": {
+          "status": 503,
+          "body": {
+            "outcome": "TOO_MANY_LOGINS"
           }
         }
       }

@@ -1,0 +1,28 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8V8D0F2H4K6N8Q0S2W4Y6A",
+  "from": "notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/v1",
+  "to": "working",
+  "sections": [
+    {
+      "part": "data",
+      "changes": [
+        {
+          "pointer": "/status",
+          "before": "open",
+          "after": "agreed"
+        },
+        {
+          "pointer": "/summary",
+          "before": "Review who has access to the identity provider every quarter.",
+          "after": "Review who has access to the identity provider every quarter; the service accounts every half year."
+        },
+        {
+          "pointer": "/actions/1/done",
+          "before": false,
+          "after": true
+        }
+      ]
+    }
+  ]
+}

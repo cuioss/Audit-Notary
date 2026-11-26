@@ -112,6 +112,19 @@ class MessagesTest {
     }
 
     @Test
+    @DisplayName("names the submit transition of the test category in both languages")
+    void shouldNameTheSubmitTransition() {
+        var en = json(client.get("/api/v1/messages"));
+        var de = json(client.get("/api/v1/messages?lang=de"));
+        String key = "category.test-note.transition.test-note.submit";
+        assertAll(
+                () -> assertEquals("Submit for review", en.path(key).asText()),
+                () -> assertEquals("Zur Pr\u00fcfung einreichen", de.path(key).asText()),
+                () -> assertFalse(en.has("category.test-note.transition.test-note.release"),
+                        "the release has no key: its text is the Release of the web app"));
+    }
+
+    @Test
     @DisplayName("keeps the web app catalogue next to the fixture keys")
     void shouldKeepTheCatalogue() {
         // Act

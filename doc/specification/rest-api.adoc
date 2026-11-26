@@ -117,20 +117,25 @@ without a mapped right answers `"rights": []` and is a session like any other (<
 
 |`GET /api/v1/due`
 |none
-|`{"items": [{"kind", "lens", "title", "address", "due"}]}`; `kind` is `deadline`, `review` or `release`
+|`{"items": [{"kind", "lens", "title", "address", "due"}]}`; `kind` is `deadline`, `review` or `release`. A pending
+release request of an agent (xref:../use-cases/02-documents.adoc#UC-DOC-8[UC-DOC-8]) adds the members `requestId`,
+`requestedBy` `{"pseudonym", "name"}`, `requestedAt` and `comment` to its item (PROVISIONAL); `lens` is one of the
+lenses of the rail, `categories` for the documents of the generic lens (<<_the_document_lifecycle>>)
 |none
 |xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]
-|`SPECIFIED`
+|`SPECIFIED`; the members of a release request and the lens `categories` `PROVISIONAL`
 
 |`GET /api/v1/events`
 |none
-|`text/event-stream`: the event `document-saved` `{"repository", "id", "fields"}` and the event `status` with the body
-of `GET /api/v1/status`. The stream belongs to the session that opened it and closes when that session ends: a
+|`text/event-stream`: the event `document-saved` `{"repository", "id", "fields"}`, the event `status` with the body
+of `GET /api/v1/status`, and the events of the document lifecycle `document-created`, `document-transitioned` and
+`release-requested` (PROVISIONAL, <<_the_document_lifecycle>>). The stream belongs to the session that opened it and closes when that session ends: a
 logout, a back-channel logout, a refused refresh, the end of idle time or lifetime, a bound, or a new login in the same
 browser that replaced it (xref:../use-cases/01-access.adoc#change-events[UC-ACC changes, event stream])
 |none
 |xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5], xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]
-|`SPECIFIED`; the closing with the session `PROVISIONAL` until the use cases are agreed
+|`SPECIFIED`; the closing with the session `PROVISIONAL` until the use cases are agreed; the three lifecycle events
+and the optional members of `document-saved` `PROVISIONAL`
 
 6+h|Login and logout
 
@@ -271,6 +276,17 @@ https://github.com/cuioss/git-document-repository/blob/main/doc/specification/gi
 
 6+h|Forms
 
+|`GET /api/v1/categories`
+|none
+|`{"categories": [{"id", "generic", "kinds": [{"id", "repository"}]}]}`: the categories that are switched on and have a
+repository the user may read. `generic` is `true` for a category that the generic documents lens shows (a custom
+category, the test category `test-note`) and `false` for one with a lens of its own (SAMM, threat models, incidents,
+ISMS). The web app shows the lens *Documents* in the rail only when one category is `generic`
+(<<_the_document_lifecycle>>). The exact body is in <<_document_lifecycle_requests>>
+|`403 FORBIDDEN`
+|xref:../use-cases/09-categories.adoc#change-web-3[UC-KND, AUN-WEB-3 change], xref:architecture-and-modules.adoc#AUN-GEN-1[AUN-GEN-1]
+|`PROVISIONAL`; step 10 extends it with the administration of categories
+
 |`GET /api/v1/categories/{category}/schema`
 |none
 |`{"category", "kinds": [{"id", "repository", "schema"}]}`: per document type (kind) of the category its id, the alias
@@ -306,55 +322,106 @@ https://github.com/cuioss/git-document-repository/blob/main/doc/specification/gi
 
 6+h|Documents and release
 
+|`GET /api/v1/documents/{repository}`
+|none; the optional query `kind` and `state` narrow the list
+|`{"repository", "documents": [{"id", "kind", "title", "state", "version", "updatedAt", "updatedBy", "release",
+"requested", "address"}], "truncated"}`: the documents of the repository, newest change first, at most 500; `truncated`
+is `true` when more matched. A client filters by kind and state itself, which is complete only while `truncated` is
+`false`; with `true` it asks again with the query and the server filters. The exact body is in
+<<_document_lifecycle_requests>>
+|`403 FORBIDDEN` for a repository the user may not read; `404 NOT_FOUND` for an unknown alias. Served from the last
+fetched state while the Git server is unreachable
+|xref:../use-cases/02-documents.adoc#UC-DOC-1[UC-DOC-1], xref:web-app.adoc#AUN-WEB-3[AUN-WEB-3]
+|`PROVISIONAL`
+
+|`GET /api/v1/search?q=<text>`
+|none; `q` required
+|`{"query", "results": [{"repository", "id", "category", "kind", "title", "state", "address"}], "truncated"}`: the
+documents of every category whose title or id contains the text, upper and lower case alike, ordered by title, at most
+20, only from repositories the user may read. Served from the index, also while the Git server is unreachable. The
+exact body is in <<_document_lifecycle_requests>>
+|`422 VALIDATION` with the pointer `/q` and the code `REQUIRED` (missing), `MIN_LENGTH` (fewer than 2 characters after
+trimming) or `MAX_LENGTH` (more than 200)
+|xref:../use-cases/02-documents.adoc#UC-DOC-1[UC-DOC-1], xref:mcp-server.adoc#AUN-MCP-6[AUN-MCP-6] (`search`)
+|`PROVISIONAL`
+
+|`POST /api/v1/documents/{repository}`
+|`{"kind", "parts": {"<part>": {"fields"}}}`: the first save of a new document of a document type of the repository;
+`fields` as in the save, without `blob`
+|`201 {"outcome": "CREATED", "id", "repository", "address", "state", "version", "at", "parts"}`: the server assigns the
+id (a ULID) and writes the first commit; `parts` holds the new blob ids
+|`VALIDATION` per field (`part` and `pointer` as in the save); `FORBIDDEN` without `edit`; `REJECTED`;
+`GIT_UNAVAILABLE`; `404 NOT_FOUND` for an unknown `kind`
+|xref:../use-cases/02-documents.adoc#UC-DOC-3[UC-DOC-3], xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5]
+|`PROVISIONAL`
+
 |`GET /api/v1/documents/{repository}/{id}`
-|none
-|The document with its parts (one file each, with the blob id loaded), its state and its signed history; today
-`samm-assessments` (shape PROVISIONAL)
-|none
+|none; the optional query `at=<revision>` reads the document as it was at a release or a commit
+|The document with its parts (one file each, with the blob id loaded), its state and its signed history. For the
+documents of the generic lens, and for every category from now on, the shape of <<_document_lifecycle_requests>>:
+`parts` carry their `value`, and the members `version`, `frozen`, `draft`, `transitions`, `releaseRequest` and, for a
+revision, `at` are added. `samm-assessments` keeps its own shape (shape PROVISIONAL)
+|`404 NOT_FOUND` for a document or a revision that does not exist, or that the user may not read; `422 VALIDATION` with
+the pointer `/at` and the code `FORMAT` for a value that is no revision
 |xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5], xref:category-samm.adoc#AUN-SAMM-1[AUN-SAMM-1]
+|`PROVISIONAL`
+
+|`GET /api/v1/documents/{repository}/{id}/revisions`
+|none
+|`{"repository", "id", "revisions": [{"ref", "commit", "kind", "tag", "version", "at", "by"}], "truncated"}`: every
+commit of the document's working history and every release, newest first, at most 200; `ref` is what `at` takes: `v<n>`
+for a release, the short commit id for any other commit
+|`404 NOT_FOUND`; `403 FORBIDDEN`
+|xref:../use-cases/02-documents.adoc#UC-DOC-2[UC-DOC-2], xref:mcp-server.adoc#AUN-MCP-6[AUN-MCP-6] (`read_document` with a revision)
 |`PROVISIONAL`
 
 |`GET /api/v1/documents/{repository}/{id}/diff?from=released`
 |none
 |The structured diff of the YAML data against the last released state, grouped by schema section: `{"repository",
 "id", "from", "to", "sections": [{"part", "changes": [{"pointer", "before", "after"}]}]}` (shape PROVISIONAL); `from`
-is `null` before the first release
+is `null` before the first release. The view groups the changes of one part by the first segment of the pointer, the
+property of the schema (<<_document_lifecycle_requests>>)
 |none
 |xref:web-app.adoc#AUN-WEB-6[AUN-WEB-6]
 |`SPECIFIED`
 
 |`PUT /api/v1/drafts/{repository}/{id}`
-|`{"parts": {"<part>": {"blob", "fields"}}}`
+|`{"parts": {"<part>": {"blob", "fields"}}}`; with step-up by password `"password"`
 |`{"outcome": "DRAFT_SAVED", "at"}`
-|`VALIDATION` per field
+|`VALIDATION` per field: a draft with field errors is refused and nothing is written (PROVISIONAL, <<_decided_lifecycle>>);
+`GIT_UNAVAILABLE` does not apply, a draft stays in the application
 |xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5]
 |`SPECIFIED`; body and answer `PROVISIONAL`
 
 |`POST /api/v1/documents/{repository}/{id}/save`
-|`{"parts": {"<part>": {"blob", "fields"}}}`, the blob ids the form loaded
-|`{"outcome": "SAVED", "at", "parts"}` with the new blob ids
+|`{"parts": {"<part>": {"blob", "fields"}}}`, the blob ids the form loaded; with step-up by password `"password"`
+|`{"outcome": "SAVED", "at", "parts"}` with the new blob ids; the first save after a release of a document type
+released more than once also answers `"state": "draft"` and the new `"version"`
 |`CONFLICT` per part with the fields that differ, own and other value, and who saved them; `VALIDATION`, among them
-`REFERENCE_NOT_FOUND`; `DOCUMENT_RELEASED`; `REJECTED`; `STEP_UP_REQUIRED`
+`REFERENCE_NOT_FOUND`; `DOCUMENT_RELEASED`; `REJECTED`; `GIT_UNAVAILABLE`; `STEP_UP_REQUIRED`. The bodies are in
+<<_document_lifecycle_requests>>
 |xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5], xref:architecture-and-modules.adoc#operation-outcomes[AUN-GEN, Operation Outcomes]
 |`SPECIFIED`; body and answer `PROVISIONAL`
 
 |`POST /api/v1/documents/{repository}/{id}/transitions/{t}`
-|none; `{t}` is a transition of the category's workflow, such as `samm.submit`
-|`{"outcome": "TRANSITIONED", "state"}`
-|`MANDATORY_FIELDS_MISSING` with `missing`, the JSON Pointers of the empty fields; `STEP_UP_REQUIRED` when the
+|none, or `{"password"}`; `{t}` is a transition of the category's workflow, such as `samm.submit` or `test-note.submit`
+|`{"outcome": "TRANSITIONED", "state"}`; with `"version"` and `"at"` (PROVISIONAL)
+|`MANDATORY_FIELDS_MISSING` (`422`) with `missing`, the JSON Pointers of the empty fields; `STEP_UP_REQUIRED` when the
 workflow requires step-up for the transition, and `503 TOO_MANY_LOGINS` when it cannot be started
-(<<_the_step_up_handler>>); `REJECTED`
+(<<_the_step_up_handler>>); `REJECTED`; `GIT_UNAVAILABLE`; `FORBIDDEN` without the transition's right; `NOT_FOUND` for
+an unknown transition. The release is no transition of this request: it is the next row
 |xref:category-samm.adoc#AUN-SAMM-4[AUN-SAMM-4] (the transition), xref:architecture-and-modules.adoc#operation-outcomes[AUN-GEN, Operation Outcomes]
 |`PROVISIONAL`
 
 |`POST /api/v1/releases/{repository}/{id}`
-|none; with local users `{"password"}`
+|none; with local users `{"password"}`. The request names no reviewed revision (PROVISIONAL, <<_decided_lifecycle>>)
 |`{"outcome": "RELEASED", "tag", "at"}`
 |`STEP_UP_REQUIRED` (`403`, PROVISIONAL) with `stepUp`, the step-up address (none with local users: the web app asks for
 the password); `503 TOO_MANY_LOGINS` with `Retry-After: 60` when the step-up cannot be started because every place of
 pending logins is taken (nothing is written, PROVISIONAL status); `INVALID_CREDENTIALS` (`401`, local users, nothing is
-written); `MANDATORY_FIELDS_MISSING`; `REJECTED`; `CHANGED_SINCE_REVIEW` (`409`, PROVISIONAL: someone saved after the
-release was opened). The handling of the step-up outcomes is the contract of <<_the_step_up_handler>>
+written); `MANDATORY_FIELDS_MISSING`; `REJECTED`; `GIT_UNAVAILABLE`; `CHANGED_SINCE_REVIEW` (`409`, PROVISIONAL: someone
+saved after the release was opened); `FORBIDDEN` without `approve`. The handling of the step-up outcomes is the contract
+of <<_the_step_up_handler>>
 |xref:web-app.adoc#AUN-WEB-6[AUN-WEB-6], xref:authentication.adoc#AUN-AUTH-4[AUN-AUTH-4], xref:authentication.adoc#AUN-AUTH-6[AUN-AUTH-6]
 |`SPECIFIED`; the outcome `CHANGED_SINCE_REVIEW` and the status of `STEP_UP_REQUIRED` and `TOO_MANY_LOGINS` `PROVISIONAL`
 
@@ -530,6 +597,494 @@ and one person, `GET /api/v1/directory/persons/p-0f8a42`, here an erased one:
 The pointers of the form are those into the form's own value (xref:web-app.adoc#_values[AUN-WEB-4, Values]). A refusal
 of the save of a document names its pointers into the request body of that request, and how the two map onto each
 other is the request's (<<_decided_forms>>, the last point).
+
+[#_the_document_lifecycle]
+== The Document Lifecycle
+
+The requests of this section serve the use cases UC-DOC-1, -2, -3, -4, -6, -7, -8 and -9
+(xref:../use-cases/02-documents.adoc[Use Cases: Documents]). Everything here is PROVISIONAL where the rows say so; the
+exact bodies are in <<_document_lifecycle_requests>>, the decisions in <<_decided_lifecycle>>.
+
+*The workflow of `test-note`.* The test category `test-note` has one document type, `note` (repository `test-notes`,
+collection `notes`), released more than once. States `draft`, `in-review`, `released`; the transition
+`test-note.submit` (`draft` to `in-review`, right `edit`, no step-up) and the release `test-note.release`
+(`in-review` to `released`, right `approve`, step-up; the tag is `notes/<id>/v<n>`). A save is possible in every state.
+The first save after a release starts the next version: the document is `draft` again, `version` is one higher and
+`release` still names the last release, which the diff compares with. A document type released once (a SAMM
+assessment) answers `DOCUMENT_RELEASED` instead and reads `frozen: true`.
+
+*Versions.* `version` is the number of the working state of the document: `1` until the first release, `n+1` after the
+release `v<n>` and the first save that follows. A released document has `version` equal to the number of its last
+release.
+
+*Single-file document types* have one part, named `data`; its `value` is the document's data, the value the form edits
+(xref:web-app.adoc#_values[AUN-WEB-4, Values]).
+
+*Reading while the Git server is unreachable.* Lists, reads, revisions and the search are served from the last fetched
+state and answer `200`; `status.degraded` says that they may be old. Writes answer `503 GIT_UNAVAILABLE`, except the
+draft, which stays in the application and is written.
+
+[#_the_generic_documents_lens]
+=== The Generic Documents Lens and Its Addresses
+
+The documents of a category without a lens of its own (a custom category, `test-note`) are shown by the generic lens
+*Documents* (German *Dokumente*), the ninth entry of the rail, between *ISMS* and *Catalogs*. It is in the rail only
+while `GET /api/v1/categories` lists a category with `generic: true`. PROVISIONAL: the use cases of the categories
+name it as an open point (xref:../use-cases/09-categories.adoc#open-points[UC-KND, Open Points], point 3, and the
+change `change-web-3`).
+
+[cols="2,3,3"]
+|===
+|Route id |Address |Shows
+
+|`categories`
+|`/categories`
+|The generic categories (`GET /api/v1/categories`), one column; with one category the lens opens it
+
+|`categories.category`
+|`/categories/{category}`
+|The documents of every document type of the category: title, state, version, last change; filter by state; the action
+*New*
+
+|`categories.new`
+|`/categories/{category}/new?kind=<kind>`
+|The form of a new document of the document type `kind` (without `kind`, the first one, or a choice when the category
+has several); nothing is stored before the first save
+
+|`categories.document`
+|`/categories/{category}/{document}`, optional query `at`
+|The document sheet: the form, the workflow acts, the history; with `at` the document as it was at that revision,
+read-only
+
+|`categories.release`
+|`/categories/{category}/{document}/release`
+|The review and release of the document
+|===
+
+`{category}` is a category id, a segment as in the other addresses. `{document}` is a document id, a ULID: it needs its
+own placeholder pattern `document`, `[0-9A-Za-z][0-9A-Za-z._-]{0,127}`, because the default pattern of a segment is
+lower case and a ULID is upper case. The segments `new` and `edit` (the editor of step 10) are reserved: their routes
+come before `categories.document` in the file, and no document has such an id. The address names the category and the
+document, never the repository: the web app finds the document among the repositories of the category's document types
+(`GET /api/v1/categories` names them) and reads `404 NOT_FOUND` as an address that does not exist. An address under
+`/categories/{category}` of a category that is not `generic` shows the not-found view, and so does one of a custom
+category that is not switched on and holds no documents. A custom category that is switched off but still holds
+documents is listed with `"enabled": false` (the member is absent for a category that is on): its generic addresses stay
+readable, because the references to its documents and the search results resolve through them
+(xref:../use-cases/09-categories.adoc[UC-KND-5], _Switched off with documents_), but they are read-only: the document
+sheet and the revisions offer no save, no workflow act and no release, `new` shows the not-found view, and neither the
+rail entry nor the lens counts the category. The writes answer `403 FORBIDDEN`. PROVISIONAL, see
+<<_open_questions>>. The delivered categories keep their own addresses.
+
+[#_allowed_queries]
+=== Allowed Queries of an Address
+
+Until now an address was a path. An address gains an *allowed query set*: a few named parameters that belong to the
+view and are part of its canonical form. `canonical-addresses.json` gets two additions (data, shown here, not yet in the
+file):
+
+[source,json]
+----
+{
+  "params":  { "year": "[0-9]{4}", "document": "[0-9A-Za-z][0-9A-Za-z._-]{0,127}" },
+  "queries": { "at": "(v[0-9]{1,4}|[0-9a-f]{7,40})", "kind": "[a-z0-9][a-z0-9-]{0,63}" },
+  "addresses": [
+    { "route": "categories",          "pattern": "/categories" },
+    { "route": "categories.category", "pattern": "/categories/{category}" },
+    { "route": "categories.new",      "pattern": "/categories/{category}/new", "query": ["kind"] },
+    { "route": "categories.document", "pattern": "/categories/{category}/{document}", "query": ["at"] },
+    { "route": "categories.release",  "pattern": "/categories/{category}/{document}/release" }
+  ]
+}
+----
+
+(`queries` is a new top-level member like `params`: name to value pattern; `query` is a new optional member of an
+address: the names it admits, in the order they are written. The addresses are inserted in file order: `categories.new`
+before `categories.document`.) The rules:
+
+* A path is matched first, as today. The query string is read as `name=value` pairs split at `&`, each percent-decoded
+  once; a `+` stays a plus.
+* *Reading an address* (`parseAddress(pathname, search)`): a name the address does not admit is ignored, so a tracking
+  parameter breaks no link; a name it admits whose value does not match the pattern of `queries`, or that appears twice,
+  makes the address not found (`null`). The address carries its admitted parameters as `query`.
+* *Writing an address* (`formatAddress`): the admitted names that have a value, in the order of the file, each value
+  checked against its pattern; nothing else is written.
+* *The `return` of a login* (`checkReturn`, AUN-AUTH-1) takes path and query: the path must be a canonical address,
+  and every name must be one that address admits, with a matching value, each once; anything else, a fragment included,
+  falls back to `/`. Without this, the step-up of a view that shows `?at=v1` would return to the start page.
+* The query string is at most 256 characters; the path stays without query in the routes of the mock
+  (`CanonicalAddresses.isCanonical(path)`).
+* `?at=` is allowed on `categories.document` only; later steps add it to the address of the other lenses and add
+  `as-of` for the reports, each with its own pattern.
+
+What the code needs, to be built by the mock and UI steps, not by this contract:
+
+[cols="2,3"]
+|===
+|File |Change
+
+|`web-app/src/main/resources/META-INF/audit-notary/canonical-addresses.json`
+|The two members above and the five addresses
+
+|`web-app/src/lib/routes.ts`
+|`CanonicalFile` gains `queries` and `query`; `compileAddresses` keeps each address's admitted names and value
+patterns; `Address` gains `query?: Record<string, string>`; `parseAddress(pathname, search = '')` reads it; `formatAddress`
+writes it; `checkReturn` splits the candidate at the first `?` and checks both parts; `Lens` and `LENSES` gain
+`categories` (rail order: after `isms`), `routeTitleKey` gives `lens.categories`
+
+|`web-mock/.../runtime/CanonicalAddresses.java`
+|`of(JsonNode)` reads `queries` and `query`; `isCanonical(path)` stays; `checkReturn(candidate)` splits at the first
+`?` and applies the rules above; the mock's login keeps redirecting to the checked `return` with its query
+|===
+
+[#_release_requests]
+=== Release Requests
+
+An agent's `request_release` (UC-DOC-8) has no web request: the web app only shows what it left. PROVISIONAL, because
+the storage in Git is open (xref:../concepts/mcp-server.adoc#_open_questions[MCP Server, Open Questions]):
+
+* The request is an item of `GET /api/v1/due` for the requesting user, `kind` `release`, with `requestId`,
+  `requestedBy`, `requestedAt` and `comment`. Its `address` follows the state of the document: the document's address
+  while it is in its first state (the user submits it there), the release address once it is in review.
+* An approver sees the document in review as `kind` `review`; the item carries the same four members when a request
+  exists, so that the comment is read before the release (decided provisionally: a pending request is shown to the
+  approvers too).
+* The document read carries `releaseRequest` (`null` without a request), so that the sheet and the review show the
+  comment and who asked.
+* The request ends with the release of the document; a document edited further keeps it. A release request carries no
+  reviewed revision: see the open question in <<_open_questions>>.
+
+[#_lifecycle_events]
+=== Events of the Lifecycle
+
+PROVISIONAL, all on `GET /api/v1/events`, only for repositories the user may read:
+
+[cols="2,3"]
+|===
+|Event |Data
+
+|`document-saved`
+|`{"repository", "id", "fields"}` as specified, with the optional members `part` (the part the save changed) and `by`
+`{"pseudonym", "name"}`; for a document of the generic lens `fields` are JSON Pointers into the value of `part`. The
+open form re-reads the document and refreshes the fields not edited locally
+
+|`document-created`
+|`{"repository", "id", "kind"}`; the lists refresh
+
+|`document-transitioned`
+|`{"repository", "id", "state", "version", "by"}`, for a submit and for a release; the open sheet re-reads, the lists and
+Due refresh
+
+|`release-requested`
+|`{"repository", "id", "requestId"}`; Due refreshes
+|===
+
+[#_document_lifecycle_requests]
+== Document Lifecycle Requests
+
+The exact bodies of the requests of the document lifecycle, PROVISIONAL like the rows. The values are those of the test
+category `test-note`; pseudonyms and catalog entries are those of the form kit (<<_form_kit_requests>>).
+
+*The categories*, `GET /api/v1/categories`:
+
+[source,json]
+----
+{
+  "categories": [
+    { "id": "test-note", "generic": true, "kinds": [ { "id": "note", "repository": "test-notes" } ] }
+  ]
+}
+----
+
+*The list*, `GET /api/v1/documents/test-notes`:
+
+[source,json]
+----
+{
+  "repository": "test-notes",
+  "documents": [
+    { "id": "01JZ8R7A9C1E3G5J7M9P1S3V5X", "kind": "note", "title": "Retention schedule for audit evidence",
+      "state": "draft", "version": 1, "updatedAt": "2026-11-26T08:12:00Z",
+      "updatedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example" },
+      "release": null, "requested": true,
+      "address": "/categories/test-note/01JZ8R7A9C1E3G5J7M9P1S3V5X" },
+    { "id": "01JZ8Q4Y5N6V7X8B9C0D1E2F3G", "kind": "note", "title": "Key rotation, decision of 24 November",
+      "state": "released", "version": 1, "updatedAt": "2026-11-24T10:05:00Z",
+      "updatedBy": { "pseudonym": "p-7d2e58", "name": "Noor Haddad" },
+      "release": { "tag": "notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G/v1", "at": "2026-11-24T10:05:00Z" }, "requested": false,
+      "address": "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G" }
+  ],
+  "truncated": false
+}
+----
+
+`title` is the value of the property `title`; `requested` is `true` while a release request is pending; `release` is
+the last release.
+
+*The search*, `GET /api/v1/search?q=rotation`:
+
+[source,json]
+----
+{
+  "query": "rotation",
+  "results": [
+    { "repository": "test-notes", "id": "01JZ8Q4Y5N6V7X8B9C0D1E2F3G", "category": "test-note", "kind": "note",
+      "title": "Key rotation, decision of 24 November", "state": "released",
+      "address": "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G" }
+  ],
+  "truncated": false
+}
+----
+
+A query of one character answers `422` `{"outcome": "VALIDATION", "errors": [{"pointer": "/q", "code": "MIN_LENGTH"}]}`.
+No hit is an empty `results`.
+
+*A document*, `GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B` (the data is shortened):
+
+[source,json]
+----
+{
+  "repository": "test-notes",
+  "id": "01JZ8W1E3G5J7M9P1R3T5X7Z9B",
+  "category": "test-note",
+  "kind": "note",
+  "title": "Vendor onboarding questions",
+  "state": "released",
+  "version": 2,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "7be21c4",
+      "savedAt": "2026-11-20T14:02:00Z",
+      "savedBy": { "pseudonym": "p-2b7f10", "name": "Jordan Weber", "role": "Developer" },
+      "value": { "title": "Vendor onboarding questions", "noted": "2026-11-02T09:00:00Z", "status": "agreed" }
+    }
+  },
+  "draft": null,
+  "history": [
+    { "at": "2026-11-20T14:30:00Z", "by": { "pseudonym": "p-7d2e58", "name": "Noor Haddad" }, "kind": "release",
+      "tag": "notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/v2" },
+    { "at": "2026-11-20T14:02:00Z", "by": { "pseudonym": "p-2b7f10", "name": "Jordan Weber" }, "kind": "save",
+      "part": "data", "count": 2 }
+  ],
+  "release": { "tag": "notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/v2", "at": "2026-11-20T14:30:00Z",
+               "by": { "pseudonym": "p-7d2e58", "name": "Noor Haddad" } },
+  "releaseRequest": null,
+  "transitions": []
+}
+----
+
+* `transitions` are the transitions the workflow offers in the current state, whoever the user is (the web app reads
+  the rights of the session): `{"id", "to", "right", "stepUp"}`, and `"release": true` on the one that is the release.
+  A draft offers `{"id": "test-note.submit", "to": "in-review", "right": "edit", "stepUp": false}`; a document in
+  review offers `{"id": "test-note.release", "to": "released", "right": "approve", "stepUp": true, "release": true}`;
+  a released document offers none (a save reopens it). The release is requested with `POST /api/v1/releases/…`, any
+  other transition with `POST …/transitions/{id}`.
+* `draft` is the user's own unsaved draft, `null` without one: `{"at", "parts": {"data": {"blob", "fields"}}}`, `blob`
+  the blob id the draft was started from (it may be older than `parts.data.blob`, when someone saved since) and
+  `fields` as in a save.
+* `frozen` is `true` for a document that refuses every save (a released SAMM assessment, a revision).
+* `releaseRequest` is `{"id", "by", "at", "comment"}` or `null`.
+* `history` is the newest lines of the signed history, at most 20, the kinds `create`, `save`, `submit`, `release`.
+
+*A revision*, `GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=v1`: the same shape, as the document was
+then, with the member `at`, and `frozen: true`, `draft: null`, `transitions: []`, `releaseRequest: null`:
+
+[source,json]
+----
+{
+  "…": "…",
+  "state": "released",
+  "version": 1,
+  "frozen": true,
+  "at": { "ref": "v1", "kind": "release", "commit": "c0ffee1", "tag": "notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/v1",
+          "at": "2026-11-05T09:40:00Z", "by": { "pseudonym": "p-7d2e58", "name": "Noor Haddad" } }
+}
+----
+
+`at` accepts `v<n>` (the release of that version), a commit id of seven to forty hexadecimal characters, or the full
+tag (what an agent sends; the web app does not). A value of another shape answers `422`
+`{"outcome": "VALIDATION", "errors": [{"pointer": "/at", "code": "FORMAT"}]}`; a revision that does not exist answers
+`404 NOT_FOUND`.
+
+*The revisions*, `GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/revisions`:
+
+[source,json]
+----
+{
+  "repository": "test-notes",
+  "id": "01JZ8W1E3G5J7M9P1R3T5X7Z9B",
+  "revisions": [
+    { "ref": "v2", "commit": "9d41e07", "kind": "release", "tag": "notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/v2",
+      "version": 2, "at": "2026-11-20T14:30:00Z", "by": { "pseudonym": "p-7d2e58", "name": "Noor Haddad" } },
+    { "ref": "4be0c3a", "commit": "4be0c3a", "kind": "submit", "tag": null,
+      "version": 2, "at": "2026-11-20T14:10:00Z", "by": { "pseudonym": "p-2b7f10", "name": "Jordan Weber" } },
+    { "ref": "7be21c4", "commit": "7be21c4", "kind": "save", "tag": null,
+      "version": 2, "at": "2026-11-20T14:02:00Z", "by": { "pseudonym": "p-2b7f10", "name": "Jordan Weber" } },
+    { "ref": "v1", "commit": "c0ffee1", "kind": "release", "tag": "notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/v1",
+      "version": 1, "at": "2026-11-05T09:40:00Z", "by": { "pseudonym": "p-7d2e58", "name": "Noor Haddad" } },
+    { "ref": "a3d9f20", "commit": "a3d9f20", "kind": "create", "tag": null,
+      "version": 1, "at": "2026-11-02T09:00:00Z", "by": { "pseudonym": "p-2b7f10", "name": "Jordan Weber" } }
+  ],
+  "truncated": false
+}
+----
+
+*The first save, a new document*, `POST /api/v1/documents/test-notes`:
+
+[source,json]
+----
+{ "kind": "note", "parts": { "data": { "fields": {
+    "/title": "Phishing drill notes", "/noted": "2026-11-26T09:30:00Z", "/status": "open" } } } }
+----
+
+answers `201`
+
+[source,json]
+----
+{ "outcome": "CREATED", "id": "01JZ9A3J5M7P9R1T3W5Y7B9D1F", "repository": "test-notes",
+  "address": "/categories/test-note/01JZ9A3J5M7P9R1T3W5Y7B9D1F", "state": "draft", "version": 1,
+  "at": "2026-11-26T09:41:00Z",
+  "parts": { "data": { "blob": "e51a7d3", "savedAt": "2026-11-26T09:41:00Z",
+                       "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example" } } } }
+----
+
+*A draft and a save*, `PUT /api/v1/drafts/test-notes/{id}` and `POST /api/v1/documents/test-notes/{id}/save`, the same
+body:
+
+[source,json]
+----
+{ "parts": { "data": { "blob": "3f9a1c2", "fields": {
+    "/summary": "Rotate the signing keys every 90 days.",
+    "/pinned": true,
+    "/actions": [ { "what": "Write the runbook", "who": "p-2b7f10", "due": "2026-12-15" } ],
+    "/service": null } } } }
+----
+
+`fields` maps a JSON Pointer into the value of the part to its new value; the form sends the properties of the top
+level that changed, a list or a section as a whole; `null` removes the property. (For `samm-assessments` the keys are
+those of the SAMM practice, `<question>/answer`; the key is opaque to the document controller.) With step-up by
+password the body carries `"password"` as well. The save answers
+
+[source,json]
+----
+{ "outcome": "SAVED", "at": "2026-11-26T09:45:00Z",
+  "parts": { "data": { "blob": "b8c0d41", "savedAt": "2026-11-26T09:45:00Z",
+                       "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example" } } } }
+----
+
+and the draft `{"outcome": "DRAFT_SAVED", "at": "2026-11-26T09:44:00Z"}`. A save after a release of this document type
+adds `"state": "draft", "version": <n+1>`.
+
+*Per-field refusals* of a draft, a save or a create, `422`: as in the form kit, with the part: the pointer is into the
+value of the part named by `part`, so it is the pointer of the form (<<_decided_lifecycle>>, point 9):
+
+[source,json]
+----
+{ "outcome": "VALIDATION", "errors": [
+    { "part": "data", "pointer": "/related", "code": "REFERENCE_NOT_FOUND" },
+    { "part": "data", "pointer": "/owner", "code": "PSEUDONYM_UNKNOWN" },
+    { "part": "data", "pointer": "/actions/1/what", "code": "MAX_LENGTH" } ] }
+----
+
+*A conflict*, `409`, per part with the blob id now current (the blob of the next save) and per field the own and the
+other value, pointers into the value of the part:
+
+[source,json]
+----
+{ "outcome": "CONFLICT", "conflicts": [
+    { "part": "data", "blob": "5d1e9a0", "fields": [
+        { "pointer": "/summary", "own": "Rotate every 90 days.", "other": "Rotate every 60 days.",
+          "by": { "pseudonym": "p-2b7f10", "name": "Jordan Weber", "role": "Developer" } },
+        { "pointer": "/status", "own": "agreed", "other": "dropped",
+          "by": { "pseudonym": "p-2b7f10", "name": "Jordan Weber", "role": "Developer" } } ] } ] }
+----
+
+The user decides per field; the next save carries the decided values as `fields` and `blob` `5d1e9a0`.
+
+*A save to a document released meanwhile or frozen*, `409`:
+`{"outcome": "DOCUMENT_RELEASED", "tag": "notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/v1"}`; the draft stays.
+
+*The refusals of the Git server*: `502 {"outcome": "REJECTED"}` (the push was refused) and
+`503 {"outcome": "GIT_UNAVAILABLE"}`; nothing is written and the draft stays.
+
+*A submit*, `POST /api/v1/documents/test-notes/{id}/transitions/test-note.submit`:
+
+[source,json]
+----
+{ "outcome": "TRANSITIONED", "state": "in-review", "version": 1, "at": "2026-11-26T09:50:00Z" }
+----
+
+or, `422`, with the empty mandatory fields (pointers into the document's value; for a single-part document the value
+of its part; SAMM uses its own layout):
+
+[source,json]
+----
+{ "outcome": "MANDATORY_FIELDS_MISSING", "missing": [ "/noted", "/status" ] }
+----
+
+*A step-up demand*, `403`, as in the release: `{"outcome": "STEP_UP_REQUIRED", "stepUp": "/api/v1/auth/login?step-up=mfa"}`.
+`401 {"outcome": "INVALID_CREDENTIALS"}` answers a wrong password.
+
+*A release*, `POST /api/v1/releases/test-notes/{id}`, answers
+`{"outcome": "RELEASED", "tag": "notes/01JZ8T5C7E9G1J3M5P7R9V1X3Z/v1", "at": "2026-11-26T10:05:00Z"}`, or `409`
+`{"outcome": "CHANGED_SINCE_REVIEW"}` when the working branch moved after the release was opened.
+
+*A release request in Due*, `GET /api/v1/due` (the other members as before):
+
+[source,json]
+----
+{ "kind": "release", "lens": "categories", "title": "Retention schedule for audit evidence",
+  "address": "/categories/test-note/01JZ8R7A9C1E3G5J7M9P1S3V5X", "due": "2026-11-30",
+  "requestId": "rr-01JZ8R9B1D3F5H7K9N1Q3S5V7X",
+  "requestedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example" }, "requestedAt": "2026-11-26T08:20:00Z",
+  "comment": "Written from the interview notes; please submit it and release it." }
+----
+
+[#_outcomes_of_the_document_requests]
+*The outcomes with their statuses.* A view decides by the outcome; the statuses are PROVISIONAL where no source fixes
+them (the common refusals are above):
+
+[cols="1,1,3"]
+|===
+|`outcome` |Status |Meaning
+
+|`CREATED`, `SAVED`, `DRAFT_SAVED`, `TRANSITIONED`, `RELEASED`
+|`201` for `CREATED`, else `200`
+|Success
+
+|`CONFLICT`
+|`409`
+|A file changed since the form loaded it; per part the fields that differ (AUN-WEB-5)
+
+|`DOCUMENT_RELEASED`
+|`409`
+|The document is frozen or was released meanwhile; the draft stays
+
+|`CHANGED_SINCE_REVIEW`
+|`409`
+|The document was saved after the release was opened; nothing is written
+
+|`MANDATORY_FIELDS_MISSING`
+|`422`
+|`missing`: the pointers of the empty required fields; nothing is written
+
+|`REJECTED`
+|`502`
+|The Git server refused the push; nothing is written, the draft stays
+
+|`STEP_UP_REQUIRED`
+|`403`
+|<<_the_step_up_handler>>
+
+|`INVALID_CREDENTIALS`
+|`401`
+|A wrong password of a local user; not a lost session
+
+|`GIT_UNAVAILABLE`
+|`503`
+|As in the common refusals
+|===
 
 [#_the_step_up_handler]
 == The Step-Up Handler
@@ -797,8 +1352,87 @@ bytes. The web app builds its elements from the parsed answer with the same allo
 JSON Pointer into the query parameters read as one object (`/ref`), as the common table says.
 . *`NOT_FOUND` is a common refusal* (`404`), for an object that does not exist and for one the user may not read.
 . *The pointers of the form are those of its own value.* How the pointers of a save's answer, which name the request
-body, map onto them is decided with the save of generic documents.
+body, map onto them is decided with the save of generic documents (<<_decided_lifecycle>>, point 9).
 
 For the owner: whether the server renders the preview with a sanitiser that needs a dependency (the application's
 implementation, not this register), whether the browser's `format` advice should stop a save, and whether the category
 schema should carry the field labels instead of the catalogue.
+
+[#_decided_lifecycle]
+*Decided provisionally* with the document lifecycle (UC-DOC-1, -2, -3, -4, -6, -7, -8, -9), so that no screen is
+blocked; the owner may change each one. The bodies are in <<_document_lifecycle_requests>>, the addresses in
+<<_the_generic_documents_lens>>:
+
+. *A generic documents lens* shows the categories without a lens of their own (custom categories, `test-note`): the
+  ninth entry of the rail, *Documents*, only while `GET /api/v1/categories` lists a `generic` category. The addresses are
+  `/categories`, `/categories/{category}`, `/categories/{category}/new`, `/categories/{category}/{document}` and
+  `/categories/{category}/{document}/release`. They differ from the reading of `change-web-3` in the use cases of the
+  categories, which gives `/categories/<category>` to the definition and the editor: the definition and the editor take
+  `/categories/{category}/edit` (step 10), the segments `new` and `edit` are reserved, and `/categories/{category}`
+  lists the documents.
+. *A document id is a ULID* and has a placeholder pattern of its own (`document`), case sensitive. The address names
+  the category and the document, never the repository; the web app resolves the repository among the repositories of
+  the category's document types.
+. *An address has an allowed query set.* `?at=<revision>` on `categories.document`, `?kind=<kind>` on `categories.new`;
+  unknown names are ignored when an address is read and refused in a login's `return`; a known name with a bad value,
+  or twice, is an address that is not found. Later steps add `as-of` and the like.
+. *`GET /api/v1/categories`* is the smallest request that tells the rail whether the lens exists; step 10 extends it
+  with the administration of categories.
+. *A revision is read with `GET …/{id}?at=`*, `at` being `v<n>`, a commit id or the full tag, and listed by
+  `GET …/{id}/revisions` with the `ref` the picker passes on. A revision is read-only (`frozen: true`) and has no
+  draft and no workflow acts.
+. *The generic read has `parts.<part>.value`*, `version`, `frozen`, `draft`, `transitions` and `releaseRequest`; a
+  single-file document type has one part, `data`. The workflow offers its transitions in the read, so that no view
+  hard-codes a workflow; the release is the transition marked `release: true`, its text is "Release" in every case, and
+  the text of any other is the catalogue key `category.<category>.transition.<transition id>`.
+. *The first save after a release* of a document type released more than once makes the document `draft` again with
+  the next `version`; `release` keeps the last release, which the diff compares with (UC-DOC-3, `change-reopen`). A
+  document type released once, and a revision, are `frozen`.
+. *A save and a draft carry `fields` keyed by JSON Pointer* into the value of the part (`null` removes a property), for
+  every document type but the SAMM practice, whose keys stay as they are.
+. *The pointers of a refusal of a save, a draft or a create* are into the value of the part named by the new member
+  `part` of each error, so they are those of the form; this closes the last point of the form kit's decisions.
+. *A draft with field errors is refused and nothing is written* (`422`), as the use case's flow shows; the web app
+  keeps what the user typed in the page until a draft passes, and says so. A draft is never refused because the Git
+  server is unreachable: it lives in the application.
+. *A new document has no draft.* `/categories/{category}/new` holds the value in the page; the first save creates the
+  document (`POST /api/v1/documents/{repository}`, `201 CREATED`, the server assigns the id) and the page moves to its
+  address. The page asks before it is left with typed content. The mock answers a fixed id.
+. *No "discard draft" in the web app* (UC-DOC-5, open point): a draft ends by a save or by expiry, as the use case says.
+. *A release request is no web request.* It is an item of Due (`kind` `release`, with `requestId`, `requestedBy`,
+  `requestedAt`, `comment`), the member `releaseRequest` of the document read, and the same four members on the
+  `review` item of the approvers (the open point of UC-DOC-8: a pending request is shown to the approvers too). Its
+  `address` follows the document's state: the document while it is in its first state, the release address in review.
+  Where the request lives in Git stays the application's open question.
+. *The release request carries no reviewed revision.* `POST /api/v1/releases/…` has no body but `password`; the mock
+  answers `CHANGED_SINCE_REVIEW` by the state it is in, as the register's notes say. The web app re-reads the diff on
+  that outcome. An exact check needs the field of `change-reviewed-revision`.
+. *Statuses of the outcomes:* `409` for `CONFLICT`, `DOCUMENT_RELEASED` and `CHANGED_SINCE_REVIEW`, `422` for
+  `MANDATORY_FIELDS_MISSING` and `VALIDATION`, `502` for `REJECTED`, `503` for `GIT_UNAVAILABLE`, `403` for
+  `STEP_UP_REQUIRED`, `401` for `INVALID_CREDENTIALS`, `201` for `CREATED`.
+. *The search* needs at least two characters (after trimming) and at most 200, matches title and id, returns at most 20
+  documents from the repositories the user may read, and is the palette's. It is read from the index, so it works while
+  the Git server is unreachable.
+. *The lists* hold at most 500 documents with `truncated`; the filters `kind` and `state` are done by the client as
+  well, completely only while `truncated` is `false`.
+. *Three events* join `document-saved`: `document-created`, `document-transitioned`, `release-requested`; `document-saved`
+  gains the optional `part` and `by`. The open sheet re-reads the document on any of them.
+. *Reading while the Git server is unreachable* serves lists, reads, revisions and search from the last fetched state;
+  every write but the draft answers `GIT_UNAVAILABLE`.
+. *The Due `lens` of the generic lens is `categories`*, and an item opens the address it names: a `review` item the
+  release address, a `release` item (a request) the document's address while the document is in its first state (the
+  user submits it there, UC-DOC-8) and the release address once it is in review, as _Release Requests_ states.
+. *A switched-off custom category stays readable.* UC-KND-5 keeps the documents of a switched-off category readable
+  through references and the search. `GET /api/v1/categories` therefore lists a switched-off category that still holds
+  documents with `"enabled": false` and its document types, so that the web app finds the repository of an address; the
+  generic document and revision addresses of it are read-only (no save, no act, no release; the writes answer
+  `403 FORBIDDEN`), `new` is not offered, and neither the rail entry nor the lens counts the category. The mock has
+  no such category yet; the web app builds this with the administration of categories (step 10).
+. *The test category `test-note`* has one document type, `note`, released more than once, with the transitions
+  `test-note.submit` and `test-note.release`, the collection `notes` and the tag `notes/<id>/v<n>`; a save is possible
+  in every state.
+
+For the owner: whether the rail may gain a ninth lens, and whether `/categories/{category}` may list documents, given
+that the use cases of the categories name it for the definition (1); whether a refused draft is right, or the draft
+should be written and the errors only advised (10); whether a pending release request belongs in the approvers' Due as
+well (13); whether the release request should carry the reviewed revision now (14); the status `502` of `REJECTED` (15); whether a switched-off custom category keeps readable, read-only generic addresses (21).

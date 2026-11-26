@@ -1,0 +1,33 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8X4F6H8K0N2Q4S6V8Y0A2C",
+  "from": "notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C/v2",
+  "to": "working",
+  "sections": [
+    {
+      "part": "data",
+      "changes": [
+        {
+          "pointer": "/status",
+          "before": "agreed",
+          "after": "open"
+        },
+        {
+          "pointer": "/summary",
+          "before": "Check every year that each third party still needs the access it has.",
+          "after": "Check every year that each third party still needs the access it has; start in October."
+        },
+        {
+          "pointer": "/actions/2",
+          "before": null,
+          "after": {
+            "what": "Plan the check of next year",
+            "who": "p-4c1a9e",
+            "due": "2026-11-30",
+            "done": false
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -34,6 +34,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -112,6 +114,9 @@ public final class MockEngine implements AutoCloseable {
     private static final String SCENARIO_FIELD = "scenario";
     private static final String EVENTS_PATH = API + "events";
     private static final int ORDERED_DEPTH_LIMIT = 64;
+    private static final int SEARCH_MIN = 2;
+    private static final int SEARCH_MAX = 200;
+    private static final int SEARCH_LIMIT = 20;
 
     /** The requests answered during the first login (doc/specification/directory.adoc, AUN-DIR-2). */
     private static final Set<String> FIRST_LOGIN_ALLOWED = Set.of("GET /api/v1/directory/me",
@@ -227,7 +232,7 @@ public final class MockEngine implements AutoCloseable {
                 return json(403, object().put(OUTCOME, "CSRF_REJECTED"));
             }
             if (request.isStateChanging()) {
-                acts.add(new Act(request.method(), path, state.id(), redacted(parseBody(request))));
+                acts.add(new Act(request.method(), request.target(), state.id(), redacted(parseBody(request))));
             }
             if (scenario.firstLoginRequired(state) && !FIRST_LOGIN_ALLOWED.contains(key)) {
                 return json(403, object().put(OUTCOME, "FIRST_LOGIN_REQUIRED"));
@@ -272,7 +277,8 @@ public final class MockEngine implements AutoCloseable {
     }
 
     private MockResponse scenarioAnswer(MockRequest request, String key) {
-        Optional<Link> link = state.linkFor(request.method(), request.path());
+        var query = request.queryParameters();
+        Optional<Link> link = state.linkFor(request.method(), request.path(), query);
         if (link.isPresent()) {
             var taken = link.get();
             if (!taken.next().equals(state.id())) {
@@ -280,16 +286,53 @@ public final class MockEngine implements AutoCloseable {
             }
             return answer(taken.status(), taken.body());
         }
-        return scenario.route(state, key).map(route -> route.handler() == null
-                ? answer(route.status(), route.body()) : handled(route.handler(), request))
+        return scenario.route(state, request.method(), request.path(), query).map(route -> route.handler() == null
+                ? answer(route.status(), route.body()) : handled(route.handler(), route, request))
                 .orElseGet(() -> noRoute(request));
     }
 
     /** The answer a built-in handler computes; the switch is exhaustive over {@link Handler}. */
-    private MockResponse handled(Handler handler, MockRequest request) {
+    private MockResponse handled(Handler handler, Route route, MockRequest request) {
         return switch (handler) {
             case RENDER_ASCIIDOC -> renderAsciiDoc(request);
+            case SEARCH_DOCUMENTS -> searchDocuments(request, route.body());
         };
+    }
+
+    /**
+     * {@code GET /api/v1/search?q=}: the documents of the index whose title or id contains the text, among the
+     * repositories the scenario's rights grant {@code read} on (doc/specification/rest-api.adoc, the search).
+     */
+    private MockResponse searchDocuments(MockRequest request, JsonNode index) {
+        var parameter = request.queryParameter("q");
+        if (parameter.isEmpty()) {
+            return invalid("/q", "REQUIRED");
+        }
+        String text = parameter.get().strip();
+        if (text.length() < SEARCH_MIN) {
+            return invalid("/q", "MIN_LENGTH");
+        }
+        if (text.length() > SEARCH_MAX) {
+            return invalid("/q", "MAX_LENGTH");
+        }
+        String needle = text.toLowerCase(Locale.ROOT);
+        Set<String> readable = new HashSet<>();
+        scenario.rights().stream().filter(right -> right.actions().contains("read"))
+                .forEach(right -> readable.add(right.repository()));
+        List<JsonNode> hits = new ArrayList<>();
+        index.path("entries").forEach(entry -> {
+            if (readable.contains(entry.path("repository").asText())
+                    && (entry.path("title").asText().toLowerCase(Locale.ROOT).contains(needle)
+                    || entry.path("id").asText().toLowerCase(Locale.ROOT).contains(needle))) {
+                hits.add(entry);
+            }
+        });
+        hits.sort(Comparator.comparing(entry -> entry.path("title").asText().toLowerCase(Locale.ROOT)));
+        ObjectNode body = object().put("query", text);
+        var results = body.putArray("results");
+        hits.stream().limit(SEARCH_LIMIT).forEach(results::add);
+        body.put("truncated", hits.size() > SEARCH_LIMIT);
+        return json(200, body);
     }
 
     /**
@@ -352,7 +395,7 @@ public final class MockEngine implements AutoCloseable {
     private MockResponse login(MockRequest request) {
         lock.lock();
         try {
-            var route = scenario.route(state, LOGIN_ROUTE);
+            var route = scenario.route(state, request.method(), request.path(), request.queryParameters());
             if (route.isPresent()) {
                 return navigation(request, route.get());
             }
@@ -379,7 +422,8 @@ public final class MockEngine implements AutoCloseable {
     private Optional<MockResponse> callback(MockRequest request) {
         lock.lock();
         try {
-            return scenario.route(state, CALLBACK_ROUTE).map(route -> navigation(request, route));
+            return scenario.route(state, request.method(), request.path(), request.queryParameters())
+                    .map(route -> navigation(request, route));
         } finally {
             lock.unlock();
         }
@@ -563,7 +607,7 @@ public final class MockEngine implements AutoCloseable {
                 .put("timing", timing.name().toLowerCase(Locale.ROOT));
         var links = body.putArray("links");
         state.links().values().forEach(link -> links.addObject().put("name", link.name())
-                .put("method", link.method()).put("path", link.path()).put("next", link.next()));
+                .put("method", link.method()).put("path", link.key().target()).put("next", link.next()));
         return body;
     }
 

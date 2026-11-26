@@ -74,6 +74,35 @@ public record MockRequest(String method, String path, String query, Map<String, 
     }
 
     /**
+     * The query parameters, decoded: the first value of each name, in the order sent. A parameter without {@code =}
+     * has the empty value.
+     *
+     * @return the parameters, empty without query
+     */
+    public Map<String, String> queryParameters() {
+        Map<String, String> parameters = new LinkedHashMap<>();
+        for (String pair : query.split("&")) {
+            if (pair.isEmpty()) {
+                continue;
+            }
+            int equals = pair.indexOf('=');
+            parameters.putIfAbsent(URLDecoder.decode(equals < 0 ? pair : pair.substring(0, equals),
+                    StandardCharsets.UTF_8), equals < 0 ? "" : URLDecoder.decode(pair.substring(equals + 1),
+                    StandardCharsets.UTF_8));
+        }
+        return parameters;
+    }
+
+    /**
+     * The path with the query as sent, for the record of an act.
+     *
+     * @return the path, followed by {@code ?} and the raw query when there is one
+     */
+    public String target() {
+        return query.isEmpty() ? path : path + "?" + query;
+    }
+
+    /**
      * A cookie the request carries.
      *
      * @param name the cookie name

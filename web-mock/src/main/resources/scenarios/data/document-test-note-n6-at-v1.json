@@ -1,0 +1,78 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8W1E3G5J7M9P1R3T5X7Z9B",
+  "category": "test-note",
+  "kind": "note",
+  "title": "Vendor onboarding questions",
+  "state": "released",
+  "version": 1,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "1b2c3d4",
+      "savedAt": "2026-11-05T09:20:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Developer"
+      },
+      "value": {
+        "title": "Vendor onboarding questions",
+        "noted": "2026-11-02T09:00:00Z",
+        "status": "open",
+        "service": "service:customer-portal",
+        "owner": "p-2b7f10",
+        "summary": "Questions to ask a vendor before onboarding.",
+        "actions": [
+          {
+            "what": "Collect the questions of the last three onboardings",
+            "who": "p-2b7f10",
+            "due": "2026-11-04",
+            "done": true
+          }
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-05T09:40:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/v1"
+    },
+    {
+      "at": "2026-11-02T09:00:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/v1",
+    "at": "2026-11-05T09:40:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "at": {
+    "ref": "v1",
+    "kind": "release",
+    "commit": "c0ffee1",
+    "tag": "notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/v1",
+    "at": "2026-11-05T09:40:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  }
+}

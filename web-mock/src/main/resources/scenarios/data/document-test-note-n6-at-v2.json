@@ -1,0 +1,113 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8W1E3G5J7M9P1R3T5X7Z9B",
+  "category": "test-note",
+  "kind": "note",
+  "title": "Vendor onboarding questions",
+  "state": "released",
+  "version": 2,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "7be21c4",
+      "savedAt": "2026-11-20T14:02:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Developer"
+      },
+      "value": {
+        "title": "Vendor onboarding questions",
+        "noted": "2026-11-02T09:00:00Z",
+        "status": "agreed",
+        "pinned": false,
+        "service": "service:customer-portal",
+        "owner": "p-2b7f10",
+        "summary": "Questions to ask a vendor before onboarding, including where the data is stored and who may reach it.",
+        "body": "== Questions\n\n* Where is our data stored?\n* Who may reach it?\n* How is it removed at the end?",
+        "actions": [
+          {
+            "what": "Collect the questions of the last three onboardings",
+            "who": "p-2b7f10",
+            "due": "2026-11-04",
+            "done": true
+          },
+          {
+            "what": "Add the questions to the onboarding checklist",
+            "who": "p-61c0d4",
+            "due": "2026-11-18",
+            "done": true
+          }
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-20T14:30:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/v2"
+    },
+    {
+      "at": "2026-11-20T14:10:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-11-20T14:02:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2026-11-05T09:40:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/v1"
+    },
+    {
+      "at": "2026-11-02T09:00:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/v2",
+    "at": "2026-11-20T14:30:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "at": {
+    "ref": "v2",
+    "kind": "release",
+    "commit": "9d41e07",
+    "tag": "notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/v2",
+    "at": "2026-11-20T14:30:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  }
+}

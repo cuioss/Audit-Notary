@@ -1,0 +1,55 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8Q4Y5N6V7X8B9C0D1E2F3G",
+  "revisions": [
+    {
+      "ref": "v1",
+      "commit": "d0c1b2a",
+      "kind": "release",
+      "tag": "notes/01JZ8Q4Y5N6V7X8B9C0D1E2F3G/v1",
+      "version": 1,
+      "at": "2026-11-24T10:05:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "e4f5a6b",
+      "commit": "e4f5a6b",
+      "kind": "submit",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-24T09:50:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "a1b2c3d",
+      "commit": "a1b2c3d",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-24T09:35:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "5a6b7c8",
+      "commit": "5a6b7c8",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-24T09:10:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

@@ -1,0 +1,73 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8Y7G9J1M3P5R7T9W1Z3B5D",
+  "category": "test-note",
+  "kind": "note",
+  "title": "Old decision",
+  "state": "draft",
+  "version": 1,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "2a3b4c5",
+      "savedAt": "2026-11-10T11:30:00Z",
+      "savedBy": {
+        "pseudonym": "p-61c0d4",
+        "name": "Lea Brandt",
+        "role": "Product Owner"
+      },
+      "value": {
+        "title": "Old decision",
+        "noted": "2025-03-02T14:00:00+01:00",
+        "status": "dropped",
+        "service": "service:ledger",
+        "owner": "p-7d52e8",
+        "related": "isms-register:risk/R-999",
+        "actions": [
+          {
+            "what": "Hand over the ledger",
+            "who": "p-0f8a42"
+          },
+          {
+            "what": "Ask the former owner",
+            "who": "p-3b9d00"
+          },
+          {
+            "what": "Check the unknown catalog entry"
+          }
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-10T11:30:00Z",
+      "by": {
+        "pseudonym": "p-61c0d4",
+        "name": "Lea Brandt"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 3
+    },
+    {
+      "at": "2026-11-10T11:00:00Z",
+      "by": {
+        "pseudonym": "p-61c0d4",
+        "name": "Lea Brandt"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "test-note.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8S2B4D6F8H0K2N4Q6T8W0Y",
+  "category": "test-note",
+  "kind": "note",
+  "title": "Backup restore test, Q4",
+  "state": "draft",
+  "version": 1,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "c4d5e6f",
+      "savedAt": "2026-11-25T10:40:00Z",
+      "savedBy": {
+        "pseudonym": "p-9e33a1",
+        "name": "Sam Okafor",
+        "role": "Developer"
+      },
+      "value": {
+        "title": "Backup restore test, Q4",
+        "summary": "Restore the nightly backup of the reporting database on a clean host and measure the time."
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-25T10:40:00Z",
+      "by": {
+        "pseudonym": "p-9e33a1",
+        "name": "Sam Okafor"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2026-11-25T10:15:00Z",
+      "by": {
+        "pseudonym": "p-9e33a1",
+        "name": "Sam Okafor"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "test-note.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ]
+}

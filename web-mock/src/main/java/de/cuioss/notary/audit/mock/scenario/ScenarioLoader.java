@@ -32,7 +32,8 @@ import java.util.regex.Pattern;
  * Rules: the format version is {@value #FORMAT_VERSION}; name, user name and start are present; the start state and
  * every {@code next} of a link or a timed transition name an existing state; a route key is {@code "METHOD /path"}
  * and every method is {@code GET}, {@code POST}, {@code PUT} or {@code DELETE}; every path starts with
- * {@value #API_PREFIX}; a status lies between 100 and 599; the actions of a right are those of
+ * {@value #API_PREFIX} and may be followed by a query {@code ?name=value[&name=value]} (names and values non-empty, no
+ * {@code #}, no name twice; the key then matches only a request that carries those parameters); a status lies between 100 and 599; the actions of a right are those of
  * {@link Right#ACTIONS}; a delay is not negative; the login provider is {@code oidc} or {@code local} and only
  * {@code local} has users, each with a username and a password; the state flags {@code session_replaced} and
  * {@code session_ended} are booleans. A violation throws a {@link ScenarioValidationException} naming
@@ -43,7 +44,8 @@ import java.util.regex.Pattern;
  * registry resolves it below {@code scenarios/data/}). Large or shared answers, such as the SAMM model, live there
  * once instead of inline in every profile, and a data file under another licence stays a file of its own. A route (not
  * a link) may instead name a built-in {@code handler} of the engine ({@link Handler}); it then has no
- * {@code body}, {@code body_file} or {@code status}.
+ * {@code body}, {@code body_file} or {@code status}, and a handler that reads data (the search) names its
+ * {@code data_file}, read like a {@code body_file}.
  */
 public final class ScenarioLoader {
 
@@ -64,6 +66,7 @@ public final class ScenarioLoader {
     private static final String BODY = "body";
     private static final String BODY_FILE = "body_file";
     private static final String HANDLER = "handler";
+    private static final String DATA_FILE_MEMBER = "data_file";
     private static final Pattern DATA_FILE = Pattern.compile("[a-z0-9][a-z0-9.-]*\\.json");
 
     private final ObjectMapper mapper;
@@ -256,10 +259,11 @@ public final class ScenarioLoader {
     private Link readLink(Context context, String location, String name, JsonNode node) {
         String method = requiredText(context.at(location), node, "method");
         checkMethod(context, location + ".method", method);
-        String path = requiredText(context.at(location), node, "path");
-        checkPath(context, location + ".path", path);
+        String target = requiredText(context.at(location), node, "path");
+        var key = checkTarget(context, location + ".path", method, target);
         String next = requiredText(context.at(location), node, "next");
-        return new Link(name, method, path, next, status(context, location, node), answerBody(context, location, node));
+        return new Link(name, method, key.path(), key.query(), next, status(context, location, node),
+                answerBody(context, location, node));
     }
 
     private Map<String, Route> readRoutes(Context context, String location, JsonNode node) {
@@ -278,7 +282,7 @@ public final class ScenarioLoader {
                 throw context.fail(routeLocation, "a route key must be \"METHOD /path\"");
             }
             checkMethod(context, routeLocation, matcher.group(1));
-            checkPath(context, routeLocation, matcher.group(2));
+            checkTarget(context, routeLocation, matcher.group(1), matcher.group(2));
             routes.put(key, readRoute(context, routeLocation, entry.getValue()));
         });
         return routes;
@@ -301,7 +305,18 @@ public final class ScenarioLoader {
                 throw context.fail(handlerLocation, "a route with a handler has no " + member);
             }
         }
-        return new Route(200, JsonNodeFactory.instance.objectNode(), named.get());
+        var dataNode = node.path(DATA_FILE_MEMBER);
+        if (!named.get().usesDataFile()) {
+            if (!dataNode.isMissingNode()) {
+                throw context.fail(location + "." + DATA_FILE_MEMBER, "only a handler that reads data has a data_file: "
+                        + name);
+            }
+            return new Route(200, JsonNodeFactory.instance.objectNode(), named.get());
+        }
+        if (dataNode.isMissingNode()) {
+            throw context.fail(handlerLocation, "the handler " + name + " needs a " + DATA_FILE_MEMBER);
+        }
+        return new Route(200, dataFile(context, location + "." + DATA_FILE_MEMBER, dataNode), named.get());
     }
 
     private static void checkTargets(Context context, ScenarioState state, Map<String, ScenarioState> states) {
@@ -323,10 +338,15 @@ public final class ScenarioLoader {
         }
     }
 
-    private static void checkPath(Context context, String location, String path) {
-        if (!path.startsWith(API_PREFIX) || path.contains("?")) {
-            throw context.fail(location, "path must start with " + API_PREFIX + " and carry no query: " + path);
+    /** A path of {@value #API_PREFIX}, optionally followed by a query of the form {@code ?name=value[&name=value]}. */
+    private static RouteKey checkTarget(Context context, String location, String method, String target) {
+        int mark = target.indexOf('?');
+        String path = mark < 0 ? target : target.substring(0, mark);
+        if (!path.startsWith(API_PREFIX)) {
+            throw context.fail(location, "path must start with " + API_PREFIX + ": " + target);
         }
+        return RouteKey.of(method, target).orElseThrow(() -> context.fail(location,
+                "a query is name=value[&name=value], names and values non-empty, no #, no name twice: " + target));
     }
 
     private static int status(Context context, String location, JsonNode node) {
@@ -371,10 +391,14 @@ public final class ScenarioLoader {
         if (file.isMissingNode()) {
             return bodyOf(node, BODY);
         }
-        String fileLocation = location + "." + BODY_FILE;
         if (!node.path(BODY).isMissingNode()) {
-            throw context.fail(fileLocation, "an answer has either body or body_file");
+            throw context.fail(location + "." + BODY_FILE, "an answer has either body or body_file");
         }
+        return dataFile(context, location + "." + BODY_FILE, file);
+    }
+
+    /** The JSON of the data file a member names. */
+    private JsonNode dataFile(Context context, String fileLocation, JsonNode file) {
         String name = file.asText("");
         if (!file.isTextual() || !DATA_FILE.matcher(name).matches()) {
             throw context.fail(fileLocation, "must name a data file of the pattern [a-z0-9][a-z0-9.-]*.json: " + name);

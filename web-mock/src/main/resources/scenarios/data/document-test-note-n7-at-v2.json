@@ -1,0 +1,96 @@
+{
+  "repository": "test-notes",
+  "id": "01JZ8X4F6H8K0N2Q4S6V8Y0A2C",
+  "category": "test-note",
+  "kind": "note",
+  "title": "Third-party access, annual check",
+  "state": "released",
+  "version": 2,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "9c0d1e2",
+      "savedAt": "2026-09-30T14:40:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Third-party access, annual check",
+        "noted": "2026-09-28T08:30:00Z",
+        "status": "agreed",
+        "pinned": true,
+        "service": "service:payment-api",
+        "owner": "p-4c1a9e",
+        "related": "samm-assessments:assessment/payments-2025-q4",
+        "summary": "Check every year that each third party still needs the access it has.",
+        "body": "== Check\n\n* List the third parties with access\n* Ask the owner whether the access is still needed",
+        "actions": [
+          {
+            "what": "List the third parties with access",
+            "who": "p-9e33a1",
+            "due": "2026-09-30",
+            "done": true
+          },
+          {
+            "what": "Ask the owners",
+            "who": "p-2b7f10",
+            "due": "2026-09-30",
+            "done": true
+          }
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-09-30T15:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C/v2"
+    },
+    {
+      "at": "2025-09-29T10:30:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C/v1"
+    },
+    {
+      "at": "2025-09-22T08:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C/v2",
+    "at": "2026-09-30T15:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "at": {
+    "ref": "v2",
+    "kind": "release",
+    "commit": "5d6e7f8",
+    "tag": "notes/01JZ8X4F6H8K0N2Q4S6V8Y0A2C/v2",
+    "at": "2026-09-30T15:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  }
+}

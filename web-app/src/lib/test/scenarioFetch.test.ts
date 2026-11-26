@@ -33,6 +33,23 @@ describe('scenarioFetch', () => {
     expect(scenario.state()).toBe('stepped-up');
   });
 
+  it('keeps a release refused as changed since the review until the diff is read again, like the mock', async () => {
+    const scenario = scenarioFetch('workshop');
+    const n4 = '01JZ8T5C7E9G1J3M5P7R9V1X3Z';
+    const release = () =>
+      scenario.fetch(`/api/v1/releases/test-notes/${n4}`, { method: 'POST', body: '{}' });
+    scenario.goto('note-release-changed');
+    expect((await release()).status).toBe(409);
+    expect(scenario.state()).toBe('note-release-changed-refused');
+    expect((await release()).status).toBe(409);
+    await scenario.fetch(`/api/v1/documents/test-notes/${n4}`);
+    expect((await release()).status).toBe(409);
+    await scenario.fetch(`/api/v1/documents/test-notes/${n4}/diff`);
+    expect(scenario.state()).toBe('note-release-changed-reviewed');
+    expect(await (await release()).json()).toMatchObject({ outcome: 'RELEASED' });
+    expect(scenario.state()).toBe('note-release-changed-done');
+  });
+
   it('reads a data file and refuses what the mock refuses', () => {
     expect(bodyOf({ body_file: 'samm-scopes.json' })).toHaveProperty('scopes');
     expect(() => bodyOf({ body: {}, body_file: 'samm-scopes.json' })).toThrow(
@@ -122,9 +139,62 @@ describe('scenarioFetch', () => {
       path.resolve(SCENARIO_DIR, '../../java/de/cuioss/notary/audit/mock/scenario/Handler.java'),
       'utf8',
     );
-    const names = [...source.matchAll(/^\s+[A-Z_]+\("([a-z-]+)"\)[,;]/gm)].map((match) => match[1]);
+    const names = [...source.matchAll(/^\s+[A-Z_]+\("([a-z-]+)"[,)]/gm)].map((match) => match[1]);
     expect(names.length).toBeGreaterThan(0);
     expect([...HANDLERS.keys()].sort()).toEqual(names.sort());
+  });
+
+  describe('the query-keyed routes and the search of the mock', () => {
+    const N6 = '/api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B';
+
+    it('answers a key with a query to a request that holds it, and a key without query to any query', async () => {
+      const scenario = scenarioFetch('workshop');
+      const read = async (query: string) => await (await scenario.fetch(`${N6}${query}`)).json();
+      expect((await read('?at=v1')).at.ref).toBe('v1');
+      expect((await read('?at=v1&x=1')).at.ref).toBe('v1');
+      expect((await read('?at=4be0c3a')).state).toBe('in-review');
+      expect((await read('')).at).toBeUndefined();
+      expect((await read('?x=1')).at).toBeUndefined();
+      expect((await read('?at=deadbee')).outcome).toBe('NOT_FOUND');
+      const malformed = await scenario.fetch(`${N6}?at=zzz`);
+      expect(malformed.status).toBe(422);
+      expect(await malformed.json()).toMatchObject({
+        errors: [{ pointer: '/at', code: 'FORMAT' }],
+      });
+    });
+
+    it('searches the index of the repositories the rights read, like the handler of the mock', async () => {
+      const scenario = scenarioFetch('workshop');
+      const search = async (query: string) => await scenario.fetch(`/api/v1/search${query}`);
+      const rotation = await (await search('?q=rotation')).json();
+      expect(rotation.results.map((hit: { id: string }) => hit.id)).toEqual([
+        '01JZ8Q4Y5N6V7X8B9C0D1E2F3G',
+      ]);
+      const payments = await (await search('?q=PAYMENTS')).json();
+      expect(payments.results.map((hit: { title: string }) => hit.title)).toEqual([
+        'Payments 2025 Q4',
+        'Payments 2026 Q2',
+        'Payments 2026 Q4',
+      ]);
+      expect((await (await search('')).json()).errors[0].code).toBe('REQUIRED');
+      expect((await (await search('?q=a')).json()).errors[0].code).toBe('MIN_LENGTH');
+      expect((await (await search(`?q=${'x'.repeat(201)}`)).json()).errors[0].code).toBe(
+        'MAX_LENGTH',
+      );
+      expect((await (await search('?q=ZZZZ')).json()).results).toEqual([]);
+    });
+
+    it('follows a link of the flow and moves on, and answers the state of the flow', async () => {
+      const scenario = scenarioFetch('workshop');
+      const submit = await scenario.fetch(
+        '/api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E/transitions/test-note.submit',
+        { method: 'POST' },
+      );
+      expect(await submit.json()).toMatchObject({ outcome: 'TRANSITIONED' });
+      expect(scenario.state()).toBe('note-submitted');
+      const read = await scenario.fetch('/api/v1/documents/test-notes/01JZ8Z0H2K4N6Q8S0V2X4A6C8E');
+      expect((await read.json()).state).toBe('in-review');
+    });
   });
 
   describe('the preview handler of the mock (render-asciidoc)', () => {
