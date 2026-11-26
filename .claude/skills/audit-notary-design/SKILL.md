@@ -84,6 +84,9 @@ Read the concept first, then the component you are about to change.
 - The release view reads the act "Release" and nothing else; that the person confirms their identity once more is a
   line in the margin. A refusal of the release is told by `ReleaseFlow` once for every category (changed since the
   review, released meanwhile, mandatory fields missing, the Git server); a lens adds no notice of its own.
+- In the release view a list or a row that is new or gone is read row by row and field by field, as the form reads
+  it (a person by the name, never the pseudonym); the record folds once the release is made; and the margin promises no
+  release (the seal, the identity line) where the act is disabled.
 - The search of the command palette offers an address only after the canonical-address check (`checkReturn`); the
   server's text is data, drawn as text.
 

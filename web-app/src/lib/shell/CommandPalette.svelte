@@ -267,7 +267,7 @@
 <style>
   .palette__input {
     inline-size: 100%;
-    min-block-size: 40px;
+    min-block-size: max(40px, var(--control-height));
     padding: 0 var(--space-3);
     border: 1px solid var(--control-border);
     border-radius: var(--control-radius);
@@ -300,7 +300,7 @@
     align-items: center;
     gap: var(--space-3);
     inline-size: 100%;
-    min-block-size: 40px;
+    min-block-size: max(40px, var(--control-height));
     padding-inline: var(--space-2);
     border-radius: var(--radius-sm);
     text-align: start;

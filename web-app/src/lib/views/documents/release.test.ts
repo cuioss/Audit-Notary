@@ -84,6 +84,16 @@ describe('the review', () => {
     ]);
   });
 
+  it('reads a new list row by row and field by field, with the name of a person and never the pseudonym', async () => {
+    await open('workshop', N4);
+    const actions = screen.getByTestId('record-actions');
+    expect(actions).toHaveTextContent('Row 1');
+    expect(actions).toHaveTextContent('Send the questionnaire to the three largest suppliers');
+    await vi.waitFor(() => expect(actions).toHaveTextContent('Jordan Weber'));
+    expect(actions).not.toHaveTextContent('p-2b7f10');
+    expect(actions).not.toHaveTextContent('1 entry');
+  });
+
   it('compares with the last release, shows the earlier value and names the row of a table', async () => {
     await open('workshop', N5);
     expect(screen.getByText('Changes since v1.')).toBeInTheDocument();
@@ -119,6 +129,41 @@ describe('the review', () => {
     });
     expect(screen.getByTestId('record-dropped')).toHaveTextContent('old');
     expect(screen.getByTestId('record-dropped')).toHaveTextContent('2 fields');
+  });
+
+  it('reads a row that is gone field by field, and a row with more than plain fields in one line', async () => {
+    await open('workshop', N5, 'en', {
+      'GET /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/diff': {
+        repository: REPOSITORY,
+        id: N5,
+        from: 'notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/v1',
+        to: 'working',
+        sections: [
+          {
+            part: 'data',
+            changes: [
+              {
+                pointer: '/actions/0',
+                before: { what: 'Old task', who: 'p-2b7f10', due: '2026-12-05', done: false },
+                after: null,
+              },
+              {
+                pointer: '/actions/1',
+                before: { what: 'Other task', extra: { nested: true } },
+                after: null,
+              },
+            ],
+          },
+        ],
+      },
+    });
+    const actions = screen.getByTestId('record-actions');
+    expect(actions).toHaveTextContent('Row 1');
+    expect(actions).toHaveTextContent('Old task');
+    await vi.waitFor(() => expect(actions).toHaveTextContent('Jordan Weber'));
+    expect(actions).not.toHaveTextContent('p-2b7f10');
+    // A row with a member the schema does not read is told in one line, as before.
+    expect(actions).toHaveTextContent('2 fields');
   });
 
   it('says so when nothing changed since the last release', async () => {
@@ -365,6 +410,12 @@ describe('when the release cannot be taken', () => {
     const act = screen.getByTestId('release-act');
     expect(act).toHaveAttribute('aria-disabled', 'true');
     expect(screen.getByText('Releasing needs the approve right.')).toBeInTheDocument();
+    // The margin states the facts of the review and promises no release that cannot be taken.
+    expect(screen.getByText('Every mandatory field is filled in')).toBeInTheDocument();
+    expect(screen.queryByText('The release is signed in your name and tagged.')).toBeNull();
+    expect(
+      screen.queryByText('You confirm your identity once more before the release.'),
+    ).toBeNull();
     await fireEvent.click(act);
     expect(kit.requests.filter((request) => request.startsWith('POST'))).toEqual([]);
   });

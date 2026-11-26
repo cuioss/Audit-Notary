@@ -225,7 +225,11 @@
           },
         ]
       : []),
-    { key: 'tag', text: $t('documents.release.check.tag'), icon: 'state.seal' },
+    // What the release will do is told only while it can be taken; a released document, a draft or a person without the
+    // right is told why by the act, and the margin does not promise a release that will not happen.
+    ...(unavailable === null
+      ? [{ key: 'tag', text: $t('documents.release.check.tag'), icon: 'state.seal' as const }]
+      : []),
   ]);
 
   /** @returns the words of a field the server found empty */

@@ -30,7 +30,9 @@ Ports: `AUDIT_NOTARY_WEB_PORT` (5173) and `AUDIT_NOTARY_MOCK_PORT` (7420), named
 |Path |Content
 
 |`global-setup.js`
-|Starts `web-mock` (or uses the one that answers) before the Vite dev server of `playwright.config.js`
+|Starts `web-mock` (or uses the one that answers); the Vite dev server of `playwright.config.js` is already up by then.
+It then warms the dev server up: a browser loads `/login` and the shell once and waits until each has drawn itself, so
+the first test of a run does not pay for the first transform of every module (see _Cold start_)
 
 |`tests/helpers/mock.js`
 |The control routes: `useScenario` (profile, optionally `name#state`), `gotoState`, `broadcast` (an event on the
@@ -99,3 +101,14 @@ the notices and the documents lens at 390 px: nothing scrolls sideways, the acts
 
 A new view gets its address in `navigation.spec.js` and its audit in `theme-readability.spec.js`; a new profile of
 `web-mock` gets the spec of the flow it exists for.
+
+== Cold start
+
+Vite transforms a module when it is first requested, and the first page of a run asks for about 700 of them. The first
+test of a run (`access.spec.js`, a deep link without a session that must reach `/login` within the default timeout of
+5 s) used to pay for that: measured on a quiet machine with a fresh dev server, the redirect took 2.0 to 3.5 s on
+`main` and on the branch alike (0.35 to 0.45 s once the pages were loaded before), and the whole test 5.6 to 6.3 s
+against 1.1 s. On a busy machine the cold redirect passes 5 s and the test fails; it is the same on `main`.
+`global-setup.js` therefore loads `/login` and the shell once, in a browser, before the first test and waits for the
+pages themselves (`login-view` or `view-title`, up to 120 s), never for a duration. A failed warm-up is a warning; the
+tests then say what is wrong.

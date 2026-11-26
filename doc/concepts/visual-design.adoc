@@ -58,7 +58,8 @@ release line in the history a gold dot.
 A document without a rosette, a note of the generic documents lens, wears the same ring around its version
 (`ReleaseSeal`): the scalloped ring of gold, the word "Released" and the version in the serif, pressed in once when the
 release is made, in the same motion. It appears only after the release; before it, the release view shows the facts of
-the document and the changes. The notary stands beside either seal, because a finished release is a calm surface.
+the document and the changes. After the release the record folds, so that the seal is the one bold thing on the page,
+and the margin tells what was done; where the release cannot be taken, it tells why and promises nothing. The notary stands beside either seal, because a finished release is a calm surface.
 
 === The Daybook
 

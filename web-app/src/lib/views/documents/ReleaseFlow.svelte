@@ -172,7 +172,7 @@
   const stepUp = new StepUpHandler();
   const stepUpState = stepUp.state;
 
-  let confirms = $derived(stepUpMethodOf($status) !== 'off');
+  let confirms = $derived(stepUpMethodOf($status) !== 'off' && !unavailable);
 
   onDestroy(() => stepUp.cancel());
 
@@ -288,7 +288,7 @@
         <p class="section__lede">{texts.recordLede}</p>
         <div class="record" data-testid="release-record">
           {#each groups as group (group.key)}
-            <Disclosure testId="record-{group.key}" open={!folded}>
+            <Disclosure testId="record-{group.key}" open={!folded && !released}>
               {#snippet summary()}
                 <span class="record__summary">
                   <span class="record__name">{group.title}</span>
@@ -530,6 +530,8 @@
     inline-size: 100%;
     max-inline-size: none;
     align-items: stretch;
+    white-space: normal;
+    text-align: center;
   }
 
   .margin__block--acts :global(.btn__reason) {
