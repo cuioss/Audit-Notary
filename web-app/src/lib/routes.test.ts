@@ -180,6 +180,37 @@ describe('checkReturn', () => {
   });
 });
 
+describe('the directory and the catalogs', () => {
+  it.each([
+    ['/catalogs', 'catalogs', {}],
+    ['/catalogs/service', 'catalogs.catalog', { catalog: 'service' }],
+    ['/catalogs/service/new', 'catalogs.new', { catalog: 'service' }],
+    ['/catalogs/service/payment-api', 'catalogs.entry', { catalog: 'service', id: 'payment-api' }],
+    ['/directory/import', 'catalogs.import', {}],
+    ['/directory/persons', 'catalogs.persons', {}],
+    ['/settings/profile', 'settings.profile', {}],
+    ['/settings/appearance', 'settings.section', { section: 'appearance' }],
+  ])('reads %s as %s and writes it back', (path, route, params) => {
+    expect(parseAddress(path)).toEqual({ route, params });
+    expect(formatAddress({ route, params })).toBe(path);
+    expect(checkReturn(path)).toBe(path);
+  });
+
+  it('keeps the administration pages in the lens Catalogs and the own entry in Settings', () => {
+    expect(lensOf('catalogs.import')).toBe('catalogs');
+    expect(lensOf('catalogs.persons')).toBe('catalogs');
+    expect(lensOf('catalogs.new')).toBe('catalogs');
+    expect(lensOf('settings.profile')).toBe('settings');
+  });
+
+  it('never reads an address of /directory as a catalog address', () => {
+    expect(parseAddress('/directory/import')?.route).not.toBe('catalogs.entry');
+    expect(parseAddress('/directory')).toBeNull();
+    expect(parseAddress('/directory/other')).toBeNull();
+    expect(parseAddress('/catalogs/import/backstage')?.route).toBe('catalogs.entry');
+  });
+});
+
 const N1 = '01JZ8Q4Y5N6V7X8B9C0D1E2F3G';
 
 describe('the generic documents lens', () => {

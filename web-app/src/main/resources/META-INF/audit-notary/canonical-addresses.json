@@ -43,10 +43,14 @@
     { "route": "categories.release", "pattern": "/categories/{category}/{document}/release" },
     { "route": "catalogs", "pattern": "/catalogs" },
     { "route": "catalogs.catalog", "pattern": "/catalogs/{catalog}" },
+    { "route": "catalogs.new", "pattern": "/catalogs/{catalog}/new" },
     { "route": "catalogs.entry", "pattern": "/catalogs/{catalog}/{id}" },
+    { "route": "catalogs.import", "pattern": "/directory/import" },
+    { "route": "catalogs.persons", "pattern": "/directory/persons" },
     { "route": "reports", "pattern": "/reports" },
     { "route": "reports.report", "pattern": "/reports/{report}" },
     { "route": "settings", "pattern": "/settings" },
+    { "route": "settings.profile", "pattern": "/settings/profile" },
     { "route": "settings.section", "pattern": "/settings/{section}" }
   ],
   "outsideShell": [

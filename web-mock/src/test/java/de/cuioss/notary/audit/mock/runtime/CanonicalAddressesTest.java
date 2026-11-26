@@ -32,7 +32,8 @@ class CanonicalAddressesTest {
     @ValueSource(strings = {"/", "/welcome", "/samm", "/samm/payments", "/samm/payments/2026-q4",
             "/samm/payments/2026-q4/sm", "/samm/a/b/release", "/threat-models/payment-gateway/checkout-flow",
             "/incidents/2026/inc-0007", "/isms/risks/r-012", "/isms/documents/policy-01", "/catalogs/team/payments",
-            "/reports/trends", "/settings/appearance"})
+            "/reports/trends", "/settings/appearance", "/settings/profile", "/catalogs", "/catalogs/service",
+            "/catalogs/service/new", "/catalogs/service/payment-api", "/directory/import", "/directory/persons"})
     @DisplayName("keeps a canonical return address")
     void shouldKeepCanonical(String address) {
         assertEquals(address, addresses.checkReturn(address));
