@@ -350,6 +350,36 @@ describe('SammCompareView', () => {
     );
   });
 
+  it('refuses the same assessment twice without asking the server, also from an address', async () => {
+    await useProfile('workshop');
+    const compare = vi.spyOn(apiClient, 'compareSamm');
+    render(SammCompareView, {
+      query: { scope: 'payments', from: '2026-q2', to: '2026-q2' },
+      onnavigate: navigate,
+    });
+    expect(await screen.findByTestId('compare-same')).toHaveTextContent(
+      'Choose two different assessments.',
+    );
+    expect(compare).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('compare-result')).toBeNull();
+  });
+
+  it('forgets the failed read of a scope when another scope is read', async () => {
+    await useProfile('workshop');
+    const read = apiClient.getSammScope.bind(apiClient);
+    vi.spyOn(apiClient, 'getSammScope').mockImplementation((id: string) =>
+      id === 'shop' ? Promise.reject(new ApiError('NETWORK', 0)) : read(id),
+    );
+    const { rerender } = render(SammCompareView, {
+      query: { scope: 'shop' },
+      onnavigate: navigate,
+    });
+    expect(await screen.findByRole('alert')).toHaveTextContent('No connection');
+    await rerender({ query: { scope: 'payments' }, onnavigate: navigate });
+    expect(await screen.findByTestId('compare-from')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
   it('names a failed comparison', async () => {
     await useProfile('workshop');
     vi.spyOn(apiClient, 'compareSamm').mockRejectedValue(new ApiError('NETWORK', 0));
@@ -514,13 +544,15 @@ describe('ThreatEvaluationView', () => {
   });
 
   it('can be drawn without the order control, as a lens that has its own', async () => {
-    const evaluation: ThreatEvaluation = {
-      today: '2026-11-26',
-      models: [],
-      withoutModel: [],
-    };
+    await useProfile('workshop');
+    // The control stands over a table, so the evaluation needs a model: an empty one takes the branch without it.
+    const evaluation: ThreatEvaluation = await apiClient.getThreatEvaluation();
+    expect(evaluation.models.length).toBeGreaterThan(0);
+    const { unmount } = render(ThreatEvaluationTable, { evaluation, testId: 'sorted' });
+    expect(screen.getByTestId('sorted-sort')).toBeInTheDocument();
+    unmount();
     render(ThreatEvaluationTable, { evaluation, sortable: false, testId: 'embedded' });
-    expect(screen.getByTestId('embedded')).toBeInTheDocument();
+    expect(screen.getByTestId('embedded-table')).toBeInTheDocument();
     expect(screen.queryByTestId('embedded-sort')).toBeNull();
   });
 });
@@ -621,6 +653,52 @@ describe('RiskRegisterView', () => {
       'cannot be read now',
     );
     expect(screen.getByTestId('risk-now')).toBeInTheDocument();
+    // The tags are offered from the register as it is now, although the first read was refused.
+    expect(await screen.findByTestId('risk-tag')).toBeInTheDocument();
+  });
+
+  it('shows the day of a tag in UTC, as the register dates its commit', async () => {
+    await useProfile('workshop');
+    const register = await apiClient.getRiskRegister();
+    // Late in the evening in UTC is the next day in a zone ahead of it.
+    vi.spyOn(apiClient, 'getRiskRegister').mockResolvedValue({
+      ...register,
+      tags: [{ ...register.tags[0], tag: 'late-tag', at: '2026-06-18T23:30:00Z' }],
+    });
+    render(RiskRegisterView, { onnavigate: navigate });
+    const tag = (await screen.findByTestId('risk-tag')) as HTMLSelectElement;
+    expect(within(tag).getByRole('option', { name: 'late-tag, Jun 18, 2026' })).toBeInTheDocument();
+  });
+
+  it('says of a tag without a risk that the tag held none, not the end of a day', async () => {
+    await useProfile('workshop');
+    const register = await apiClient.getRiskRegister('audit-2026-03');
+    vi.spyOn(apiClient, 'getRiskRegister').mockResolvedValue({ ...register, risks: [] });
+    render(RiskRegisterView, { query: { 'as-of': 'audit-2026-03' }, onnavigate: navigate });
+    expect(
+      await screen.findByText('The register held no released risk at the tag audit-2026-03.'),
+    ).toBeInTheDocument();
+  });
+
+  it('reads the register again when Show is pressed for the value it shows', async () => {
+    await useProfile('workshop');
+    const read = vi.spyOn(apiClient, 'getRiskRegister');
+    render(RiskRegisterView, { query: { 'as-of': '2026-03-01' }, onnavigate: navigate });
+    await screen.findByTestId('risk-table');
+    const before = read.mock.calls.length;
+    await fireEvent.click(screen.getByTestId('risk-show'));
+    await vi.waitFor(() => expect(read.mock.calls.length).toBeGreaterThan(before));
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('keeps the refusal beside the field only while the field holds the refused value', async () => {
+    await useProfile('workshop');
+    render(RiskRegisterView, { query: { 'as-of': 'no-such-tag' }, onnavigate: navigate });
+    expect(await screen.findByText(/No tag of the register has this name\./)).toBeInTheDocument();
+    await fireEvent.input(screen.getByTestId('risk-asof'), { target: { value: 'audit-2026-03' } });
+    expect(screen.queryByText(/No tag of the register has this name\./)).toBeNull();
+    // The notice belongs to the address and stays.
+    expect(screen.getByTestId('risk-refused')).toBeInTheDocument();
   });
 
   it('says that the register holds no released risk', async () => {

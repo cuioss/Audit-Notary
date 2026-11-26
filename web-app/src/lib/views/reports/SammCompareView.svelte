@@ -48,7 +48,10 @@
   let scope = $state<SammScope | null>(null);
   /** The scope of the address does not exist: the not-found view of the page. */
   let scopeMissing = $state(false);
+  /** The list of the scopes could not be read. */
   let failure = $state<string | null>(null);
+  /** The scope of the address could not be read; it ends with the scope of the address. */
+  let scopeFailure = $state<string | null>(null);
   let comparison = $state<SammComparison | null>(null);
   /** The refusal of two model versions: the two assessments and their versions. */
   let differ = $state<{ from: string; fromVersion: string; to: string; toVersion: string } | null>(
@@ -80,6 +83,7 @@
   $effect(() => {
     const id = query.scope;
     scopeMissing = false;
+    scopeFailure = null;
     if (!id) {
       scope = null;
       return;
@@ -93,7 +97,7 @@
       (error: unknown) => {
         if (!current) return;
         if (isApiError(error) && error.outcome === 'NOT_FOUND') scopeMissing = true;
-        else failure = errorMessageKey(error);
+        else scopeFailure = errorMessageKey(error);
       },
     );
     return () => {
@@ -113,7 +117,8 @@
     differ = null;
     missing = false;
     compareFailure = null;
-    if (!id || !from || !to) return;
+    // The same assessment twice is refused on the page, whichever way the address was reached: no request.
+    if (!id || !from || !to || from === to) return;
     let current = true;
     apiClient.compareSamm(id, from, to).then(
       (answer) => {
@@ -276,8 +281,8 @@
     address={SAMM_COMPARE_ADDRESS}
     testId="samm-compare-view"
   >
-    {#if failure}
-      <Notice tone="danger" title={$t(failure)} live />
+    {#if failure || scopeFailure}
+      <Notice tone="danger" title={$t(failure ?? scopeFailure ?? '')} live />
     {:else if scopes === null}
       <p class="muted">{$t('common.loading')}</p>
     {:else if scopes.scopes.length === 0}
@@ -374,6 +379,10 @@
         </div>
       {:else if compareFailure}
         <Notice tone="danger" title={$t(compareFailure)} live />
+      {:else if query.from && query.from === query.to}
+        <div data-testid="compare-same">
+          <Notice tone="attention" title={$t('reports.compare.pick.same')} live />
+        </div>
       {:else if comparison}
         <section class="section" aria-labelledby="compare-title" data-testid="compare-result">
           <h2 class="section__title" id="compare-title">{$t('reports.compare.functions')}</h2>

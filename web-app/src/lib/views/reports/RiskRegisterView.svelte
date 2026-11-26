@@ -23,6 +23,7 @@
     ratingTone,
     RISK_REGISTER_ADDRESS,
     riskRegisterAddress,
+    utcDay,
   } from '../../reports/reports';
   import ReportPage from './ReportPage.svelte';
 
@@ -55,11 +56,14 @@
   /** The key of the server's refusal of the value, shown beside the field. */
   let refused = $state<string | null>(null);
   let typed = $state('');
-  /** The key of the browser's own check of what was typed. */
-  let typedError = $state<string | null>(null);
+  /** The browser's own check of what was typed: the key of its sentence and the text it was about. */
+  let typedError = $state<{ key: string; text: string } | null>(null);
+  /** Counts the submissions of the field, so that an unchanged value reads the register again. */
+  let reloads = $state(0);
 
   $effect(() => {
     const value = asOf;
+    void reloads;
     typed = value ?? '';
     typedError = null;
     register = null;
@@ -68,6 +72,17 @@
     unavailable = false;
     refused = null;
     let current = true;
+    // The tags are offered although the value was refused or the register could not be built: the register as of now
+    // names them.
+    const offerTags = () => {
+      if (tags.length > 0) return;
+      apiClient.getRiskRegister().then(
+        (now) => {
+          if (current) tags = now.tags;
+        },
+        () => {},
+      );
+    };
     apiClient.getRiskRegister(value).then(
       (loaded) => {
         if (!current) return;
@@ -80,18 +95,11 @@
           forbidden = true;
         } else if (isApiError(error) && error.outcome === 'GIT_UNAVAILABLE') {
           unavailable = true;
+          offerTags();
         } else if (isApiError(error) && error.outcome === 'VALIDATION') {
           const code = error.errors.find((entry) => entry.pointer === '/as-of')?.code ?? 'PATTERN';
           refused = asOfErrorKey(code);
-          // The tags are offered although the value was refused: the register as of now names them.
-          if (tags.length === 0) {
-            apiClient.getRiskRegister().then(
-              (now) => {
-                if (current) tags = now.tags;
-              },
-              () => {},
-            );
-          }
+          offerTags();
         } else {
           failure = errorMessageKey(error);
         }
@@ -103,16 +111,25 @@
   });
 
   let tagValue = $derived(tags.some((entry) => entry.tag === typed.trim()) ? typed.trim() : '');
-  let error = $derived(typedError ?? refused);
+  /** A refusal stands beside the field only while the field still holds the value that was refused or checked. */
+  let error = $derived(
+    typedError && typedError.text === typed.trim()
+      ? typedError.key
+      : refused && typed.trim() === (asOf ?? '')
+        ? refused
+        : null,
+  );
 
   function show() {
     const text = typed.trim();
     if (text !== '' && !isAsOfText(text)) {
-      typedError = 'reports.risk.asof.pattern';
+      typedError = { key: 'reports.risk.asof.pattern', text };
       return;
     }
     typedError = null;
-    onnavigate(riskRegisterAddress(text === '' ? undefined : text));
+    // The address of the value the register shows does not change: the register is read again instead.
+    if ((text === '' ? undefined : text) === asOf) reloads += 1;
+    else onnavigate(riskRegisterAddress(text === '' ? undefined : text));
   }
 
   /** What the page says it read: now, a day or a tag. */
@@ -172,7 +189,7 @@
           value: entry.tag,
           label: $t('reports.risk.asof.tag.option', {
             tag: entry.tag,
-            date: formatDate(entry.at, $currentLocale),
+            date: formatDate(utcDay(entry.at), $currentLocale),
           }),
         }))}
         value={tagValue}
@@ -254,9 +271,11 @@
           title={$t('reports.risk.empty.title')}
           body={register.asOf.requested === null
             ? $t('reports.risk.empty.now')
-            : $t('reports.risk.empty.date', {
-                date: formatDate(register.asOf.date, $currentLocale),
-              })}
+            : register.asOf.tag
+              ? $t('reports.risk.empty.tag', { tag: register.asOf.tag })
+              : $t('reports.risk.empty.date', {
+                  date: formatDate(register.asOf.date, $currentLocale),
+                })}
         />
       {:else}
         <p class="count" data-testid="risk-count">

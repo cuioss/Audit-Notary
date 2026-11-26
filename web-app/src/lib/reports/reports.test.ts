@@ -14,6 +14,7 @@ import {
   sortModels,
   statusTone,
   trendAddress,
+  utcDay,
 } from './reports';
 
 /**
@@ -68,6 +69,14 @@ describe('the value of as-of', () => {
     expect(asOfErrorKey('UNKNOWN_TAG')).toBe('reports.risk.asof.unknown-tag');
     expect(asOfErrorKey('PATTERN')).toBe('reports.risk.asof.pattern');
     expect(asOfErrorKey('SOMETHING_ELSE')).toBe('reports.risk.asof.pattern');
+  });
+});
+
+describe('the day of a commit', () => {
+  it('is the calendar day in UTC, whatever the zone of the reader', () => {
+    expect(utcDay('2026-06-18T23:30:00Z')).toBe('2026-06-18');
+    expect(utcDay('2026-06-19T01:30:00+02:00')).toBe('2026-06-18');
+    expect(utcDay('not a time')).toBe('not a time');
   });
 });
 
@@ -168,9 +177,24 @@ describe('the arithmetic of the charts', () => {
     expect(thinTicks(ticks, position, 210).map((tick) => tick.x)).toEqual([0, 2]);
   });
 
-  it('leaves one or two labels alone', () => {
+  it('leaves a single label alone', () => {
     const ticks = [{ x: 0, label: 'a' }];
     expect(thinTicks(ticks, () => 0)).toBe(ticks);
+  });
+
+  it('checks two labels against each other too', () => {
+    const wide = [
+      { x: 0, label: 'a label of 20 chars' },
+      { x: 1, label: 'a label of 20 chars' },
+    ];
+    // 154 px apart on a figure of 240 px: the two labels of about 112 px do not fit side by side.
+    expect(thinTicks(wide, (x) => 28 + x * 154, 240)).toEqual([wide[0]]);
+    // Short labels at the same positions still both stay.
+    const short = [
+      { x: 0, label: 'Q1' },
+      { x: 1, label: 'Q2' },
+    ];
+    expect(thinTicks(short, (x) => 28 + x * 154, 240)).toEqual(short);
   });
 
   it('moves labels that stand close together apart and leaves the others', () => {

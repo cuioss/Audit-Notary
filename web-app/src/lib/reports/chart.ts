@@ -61,7 +61,7 @@ export function thinTicks(
   position: (x: number) => number,
   width = Number.POSITIVE_INFINITY,
 ): AxisTick[] {
-  if (ticks.length <= 2) return ticks;
+  if (ticks.length <= 1) return ticks;
   const half = (tick: AxisTick) => (tick.label.length * CHAR_WIDTH) / 2;
   /** The centre of a label as drawn: a label that would leave the figure stands at the edge instead. */
   const centre = (tick: AxisTick) => {

@@ -851,12 +851,16 @@ test.describe('at 390 px', () => {
   }) => {
     await useScenario(request, 'workshop');
     await loginToReports(page, REPORTS_ADDRESS, 'reports-view');
+    // The links exist once the figures are read: wait for them before the links are counted.
+    const row = page.getByTestId('reports-latest-payments');
+    await expect(row).toBeVisible();
     await expectNoSideways(page);
-    for (const link of await page.getByTestId('reports-view').locator('a.link').all()) {
+    const links = await page.getByTestId('reports-view').locator('a.link').all();
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
       await expectTarget(link);
     }
     // The latest assessments stack: the score and the change come under the name.
-    const row = page.getByTestId('reports-latest-payments');
     await row.scrollIntoViewIfNeeded();
     const name = await row.locator('.latest__name').boundingBox();
     const change = await row.locator('.latest__change').boundingBox();

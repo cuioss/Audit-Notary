@@ -1,8 +1,9 @@
+import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { useLanguage } from './helpers/documents.js';
 import { acts, clearActs, useScenario } from './helpers/mock.js';
 import { login } from './helpers/login.js';
-import { choose, comparePath, patchRead } from './helpers/samm.js';
+import { MODELS_PATH, choose, comparePath, patchRead } from './helpers/samm.js';
 import {
   COMPARE_ADDRESS,
   DIFFER,
@@ -101,6 +102,8 @@ async function expectLabelsClear(page, chart) {
   for (const label of [...labels, ...ticks]) {
     expect(label.left, `${label.text} inside on the left`).toBeGreaterThanOrEqual(svg.left - 1);
     expect(label.right, `${label.text} inside on the right`).toBeLessThanOrEqual(svg.right + 1);
+    expect(label.top, `${label.text} inside on the top`).toBeGreaterThanOrEqual(svg.top - 1);
+    expect(label.bottom, `${label.text} inside on the bottom`).toBeLessThanOrEqual(svg.bottom + 1);
   }
   // Two labels that stand over each other keep the distance of a line of figures (13 px in the chart, a digit is about 10).
   for (const [index, a] of labels.entries()) {
@@ -179,6 +182,11 @@ test.describe('the fixtures of this spec', () => {
     const payments = trend.scopes[0].points.at(-1);
     expect(FUNCTIONS.map((fn) => round(payments.functions[fn.id]))).toEqual(
       FUNCTIONS.map((fn) => fn.end),
+    );
+    // The identities, the names and the order of the business functions are those of the pinned model they are drawn from.
+    const { body: pinned } = await read(`${MODELS_PATH}/${trend.scopes[0].modelVersion}`);
+    expect(pinned.functions.map((fn) => [fn.id, fn.name])).toEqual(
+      FUNCTIONS.map((fn) => [fn.id, fn.name]),
     );
 
     const { body: threat } = await read(THREATS_PATH);
@@ -495,21 +503,24 @@ test.describe('the trend of every scope', () => {
     await useScenario(request, 'workshop');
     await loginToReports(page, TREND_ADDRESS, 'samm-trend-view');
     const chart = page.getByTestId('trend-chart');
-    const shapes = await chart.evaluate((figure) =>
-      [...figure.querySelectorAll('svg.chart__figure [data-series]')].map((series) => {
-        const mark = series.querySelector('.chart__mark > *');
-        return `${mark.tagName}:${mark.tagName === 'path' ? mark.getAttribute('d').replace(/[-\d. ]+/g, '#') : ''}`;
-      }),
-    );
+    // The shape of a mark: its element, and for a path its commands without the coordinates.
+    const shapeOf = (mark) =>
+      `${mark.tagName}:${mark.tagName === 'path' ? mark.getAttribute('d').replace(/[-\d. ]+/g, '#') : ''}`;
+    const { shapes, swatches } = await chart.evaluate((figure, shapeSource) => {
+      const shape = new Function(`return ${shapeSource}`)();
+      return {
+        shapes: [...figure.querySelectorAll('svg.chart__figure [data-series]')].map((series) =>
+          shape(series.querySelector('.chart__mark > *')),
+        ),
+        swatches: [...figure.querySelectorAll('.chart__legend .chart__mark > *')].map(shape),
+      };
+    }, shapeOf.toString());
     // Payments a circle, Web shop a diamond, Organisation a triangle.
     expect(shapes).toHaveLength(3);
     expect(new Set(shapes).size).toBe(3);
     expect(shapes[0]).toBe('circle:');
-    // The legend swatch repeats the shape of its series.
-    const swatches = await chart
-      .locator('.chart__legend .chart__mark > *')
-      .evaluateAll((marks) => marks.map((mark) => mark.tagName));
-    expect(swatches).toEqual(['circle', 'path', 'path']);
+    // The legend swatch of each series repeats the shape of the mark that series is drawn with, in the same order.
+    expect(swatches).toEqual(shapes);
   });
 
   test('writes the end value of each line and keeps every label inside the figure and clear of the others', async ({
@@ -1419,6 +1430,8 @@ test.describe('the risk register', () => {
   }) => {
     await useScenario(request, 'workshop');
     await loginToReports(page, RISKS_ADDRESS, 'risk-register-view');
+    // The register as it is now is read; from here on no request to it, with or without a query, may follow.
+    await expect(page.getByTestId('risk-table')).toBeVisible();
     await clearActs(request);
     await page.getByTestId('risk-asof').fill('not a day!');
     await page.getByTestId('risk-show').click();
@@ -1426,9 +1439,7 @@ test.describe('the risk register', () => {
       'Use a day such as 2026-03-01 or the name of a tag.',
     );
     await expect(page).toHaveURL(RISKS_ADDRESS);
-    expect(
-      (await requested(request, RISKS_PATH)).filter((act) => act.path.includes('as-of')),
-    ).toEqual([]);
+    expect(await requested(request, RISKS_PATH)).toEqual([]);
   });
 
   test('says that the Git server cannot be reached for a past register, and leaves the register as it is now', async ({
@@ -1442,6 +1453,8 @@ test.describe('the risk register', () => {
     await expect(notice).toContainText('The register as it is now stays available.');
     await expect(page.getByTestId('risk-table')).toHaveCount(0);
     await expect(page.getByTestId('risk-asof')).toHaveValue('2026-03-01');
+    // The tags are offered from the register as it is now, although the first read was refused.
+    await expect(page.getByTestId('risk-tag').locator('option')).toHaveCount(TAGS.length + 1);
     await page.getByTestId('risk-now').click();
     await expect(page.getByTestId('risk-table')).toBeVisible();
     await expect(page.getByTestId('risk-git-unavailable')).toHaveCount(0);
@@ -1513,20 +1526,60 @@ test.describe('the risk register', () => {
   });
 });
 
+/** The test id of the view of every concrete address of the lens; a new address of the lens needs its entry here. */
+const REPORT_VIEWS = {
+  reports: 'reports-view',
+  'reports.samm-trend': 'samm-trend-view',
+  'reports.samm-compare': 'samm-compare-view',
+  'reports.threat-evaluation': 'threat-evaluation-view',
+  'reports.risk-register': 'risk-register-view',
+};
+
+/** The addresses of the states of a report that the sweep visits besides the plain address of each. */
+const REPORT_STATES = [
+  [trendAddress('payments'), 'samm-trend-view'],
+  [compareAddress(PAIR.scope, PAIR.from, PAIR.to), 'samm-compare-view'],
+  [risksAddress('2026-03-01'), 'risk-register-view'],
+];
+
+/**
+ * @returns the concrete addresses of the lens as `canonical-addresses.json` registers them (the `/reports/{report}`
+ * fallback of an unknown report is not one), each with the view that shows it
+ */
+function concreteReportAddresses() {
+  const file = JSON.parse(
+    readFileSync(
+      new URL(
+        '../../web-app/src/main/resources/META-INF/audit-notary/canonical-addresses.json',
+        import.meta.url,
+      ),
+      'utf8',
+    ),
+  );
+  return file.addresses
+    .filter(
+      (entry) =>
+        (entry.route === 'reports' || entry.route.startsWith('reports.')) &&
+        !entry.pattern.includes('{'),
+    )
+    .map((entry) => {
+      const view = REPORT_VIEWS[entry.route];
+      expect(view, `${entry.route} has a view in REPORT_VIEWS`).toBeTruthy();
+      return [entry.pattern, view];
+    });
+}
+
 test.describe('the reports are read-only', () => {
   test('no page of the lens sends a request that changes anything', async ({ page, request }) => {
     await useScenario(request, 'workshop');
     await clearActs(request);
-    for (const [address, view] of [
-      [REPORTS_ADDRESS, 'reports-view'],
-      [TREND_ADDRESS, 'samm-trend-view'],
-      [trendAddress('payments'), 'samm-trend-view'],
-      [compareAddress(PAIR.scope, PAIR.from, PAIR.to), 'samm-compare-view'],
-      [THREATS_ADDRESS, 'threat-evaluation-view'],
-      [risksAddress('2026-03-01'), 'risk-register-view'],
-    ]) {
+    const addresses = concreteReportAddresses();
+    expect(addresses.length).toBe(Object.keys(REPORT_VIEWS).length);
+    for (const [address, view] of [...addresses, ...REPORT_STATES]) {
       await loginToReports(page, address, view);
     }
+    // The register of a past day is read when its view has loaded, so a write sent by it would show in the log by now.
+    await expect(page.getByTestId('risk-table')).toBeVisible();
     const writes = (await acts(request)).filter(
       (act) => act.method !== 'GET' && !act.path.startsWith('/api/v1/auth/'),
     );

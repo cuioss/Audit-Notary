@@ -407,7 +407,7 @@ export const RISKS_AS_OF = {
 };
 
 /**
- * Signs in at the mock and waits for the view at the returned address. On a phone the top bar shows only the last step
+ * Signs in at the mock and waits for the view at the returned address and for its report to be read. On a phone the top bar shows only the last step
  * of a path, so the title (which `login` waits for) is not always visible there.
  *
  * @param page the page
@@ -418,6 +418,8 @@ export async function loginToReports(page, address, view) {
   await page.goto(`/api/v1/auth/login?return=${encodeURIComponent(address)}`);
   await expect(page).toHaveURL(address);
   await expect(page.getByTestId(view)).toBeVisible();
+  // The view shows before its report is read: the report is there once the line of loading is gone.
+  await expect(page.getByTestId(view).getByText(/^(Loading…|Wird geladen…)$/)).toHaveCount(0);
 }
 
 /**

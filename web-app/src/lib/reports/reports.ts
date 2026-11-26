@@ -2,6 +2,7 @@
  * What the pages of the lens Reports know: their addresses, the words of a status, the typed date or tag of the risk
  * register and the order of the threat evaluation (rest-api.adoc, Reports Requests).
  */
+import { PROTECTION_LEVELS } from '../api/types';
 import type {
   ProtectionLevel,
   RiskRating,
@@ -9,7 +10,7 @@ import type {
   ThreatStatus,
 } from '../api/types';
 import type { StatusTone } from '../components/StatusLabel.svelte';
-import { checkReturn, formatAddress } from '../routes';
+import { checkReturn, formatAddress, isQueryValue } from '../routes';
 
 /** The dashboard of the lens. */
 export const REPORTS_ADDRESS = '/reports';
@@ -77,15 +78,13 @@ export function linkTarget(address: string | null | undefined): string | null {
   return address && checkReturn(address) === address ? address : null;
 }
 
-/** The value pattern of the query `as-of` (`canonical-addresses.json`). */
-const AS_OF = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$/;
-
 /**
  * @param text what the person typed into the date-or-tag field
- * @returns whether the address admits it; the server decides whether it is a date or tag that exists
+ * @returns whether the address admits it (the pattern of the query `as-of` in `canonical-addresses.json`); the server
+ * decides whether it is a date or tag that exists
  */
 export function isAsOfText(text: string): boolean {
-  return AS_OF.test(text);
+  return isQueryValue('as-of', text);
 }
 
 /** A calendar date as the server reads it. */
@@ -97,6 +96,16 @@ const DATE_TEXT = /^\d{4}-\d{2}-\d{2}$/;
  */
 export function isDateText(text: string): boolean {
   return DATE_TEXT.test(text);
+}
+
+/**
+ * @param instant an ISO 8601 date-time
+ * @returns its calendar day in UTC, `YYYY-MM-DD`, whatever the zone of the reader (the day the server dates a commit
+ * by); the value itself when it is no date-time
+ */
+export function utcDay(instant: string): string {
+  const date = new Date(instant);
+  return Number.isNaN(date.getTime()) ? instant : date.toISOString().slice(0, 10);
 }
 
 /**
@@ -141,15 +150,17 @@ export function intervalMonths(interval: string): number | null {
   return match ? Number(match[1]) : null;
 }
 
-/** The levels of a protection need, highest first. */
-const NEED_RANK: Record<ProtectionLevel, number> = { 'very-high': 0, high: 1, normal: 2 };
+/** The levels of a protection need, highest first: the order of `PROTECTION_LEVELS`, which rises, reversed. */
+const NEED_RANK = new Map<ProtectionLevel, number>(
+  [...PROTECTION_LEVELS].reverse().map((level, index) => [level, index]),
+);
 
 /**
  * @param level a protection need
  * @returns its place in a list that starts with the highest
  */
 export function needRank(level: ProtectionLevel): number {
-  return NEED_RANK[level];
+  return NEED_RANK.get(level) ?? PROTECTION_LEVELS.length;
 }
 
 /** The orders the threat evaluation offers. */
