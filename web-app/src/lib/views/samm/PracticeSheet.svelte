@@ -6,15 +6,13 @@
   import HistoryList from '../../components/HistoryList.svelte';
   import Link from '../../components/Link.svelte';
   import Notice from '../../components/Notice.svelte';
-  import SaveState, { type SaveStateKind } from '../../components/SaveState.svelte';
+  import SaveState from '../../components/SaveState.svelte';
   import ScoreMeter from '../../components/ScoreMeter.svelte';
   import Sheet from '../../components/Sheet.svelte';
   import SheetHead from '../../components/SheetHead.svelte';
   import StatusLabel from '../../components/StatusLabel.svelte';
   import TextArea from '../../components/TextArea.svelte';
   import Toggle from '../../components/Toggle.svelte';
-  import { apiClient } from '../../api/client';
-  import { errorMessageKey, isApiError } from '../../api/errors';
   import type {
     ConflictField,
     SammAssessment,
@@ -22,11 +20,13 @@
     SammQuestion,
     SammScope,
   } from '../../api/types';
-  import { formatTime } from '../../format';
+  import { DocumentController, type DocumentSnapshot } from '../../documents/controller.svelte';
+  import { errorKey } from '../../forms/fieldErrors';
+  import { saveLabel } from '../../documents/saveLabel';
   import { currentLocale, t } from '../../i18n';
   import { historyEntries } from '../../samm/history';
+  import { SAMM_KEYS } from '../../samm/fieldKeys';
   import { findPractice, formatScore, practiceScore, practicesInOrder } from '../../samm/scores';
-  import { StepUpHandler } from '../../stepup/stepUp';
   import StepUpDialog from '../../stepup/StepUpDialog.svelte';
   import { session } from '../../stores/app';
   import { now } from '../../stores/clock';
@@ -42,6 +42,9 @@
    * you"); "Save for everyone" writes one signed commit with the blob id the sheet loaded. A conflict shows each
    * differing question with both answers, and the person decides. A save by another assessor refreshes the answers
    * nobody changed here, and says who saved.
+   *
+   * What every document sheet shares (the draft, the save, the conflicts, the step-up, the refresh) is the document
+   * controller's; this sheet keeps what is SAMM's: the questions, the scores and the keys.
    */
   interface Props {
     scope: SammScope | null;
@@ -50,45 +53,17 @@
     practiceId: string;
     /** Called after a save for everyone, so the view reads the assessment again. */
     onsaved?: () => void;
+    /** Called when the view should read the assessment again: a save answered that the assessment was released. */
+    onrefresh?: () => void;
   }
 
-  let { scope, assessment, model, practiceId, onsaved }: Props = $props();
+  let { scope, assessment, model, practiceId, onsaved, onrefresh }: Props = $props();
 
-  /** How long after the last change the draft is kept: well inside the 5 seconds of AUN-WEB-5. */
-  const DRAFT_DELAY_MS = 1200;
   const HINTS_KEY = 'audit_notary_key_hints';
 
-  interface Edit {
-    answer?: number | null;
-    comment?: string;
-  }
-
-  let edits: Record<string, Edit> = $state({});
-  /** Answers saved for everyone that the loaded assessment does not show yet, by the blob they replaced. */
-  let committed: { blob: string; answers: Record<string, Edit> } | null = $state(null);
-  let saveState: SaveStateKind = $state('clean');
-  let stamp = $state('');
-  let failure = $state<string | null>(null);
-  // A save may ask for step-up (UC-ACC-3): the handler decides whether and how.
-  // The identity provider keeps nothing of this page, so the changes are kept as the draft before the app leaves.
-  // A draft that cannot be kept keeps the person on the page (the hook rejects), and no edit is accepted from the
-  // moment the draft is read until the app has left, so every accepted edit is in the draft.
-  let leaving = $state(false);
-  const stepUp = new StepUpHandler(apiClient, undefined, async () => {
-    leaving = true;
-    try {
-      await keepDraft(true);
-    } catch (error) {
-      leaving = false;
-      throw error;
-    }
-  });
-  let conflicts: Record<string, ConflictField> = $state({});
-  let conflictBlob = $state('');
   let announcement = $state('');
   let changedBy: Record<string, string> = $state({});
   let hints = $state(readHints());
-  let draftTimer: ReturnType<typeof setTimeout> | null = null;
   let questionElements: HTMLElement[] = $state([]);
   let active = $state(0);
 
@@ -104,10 +79,36 @@
   let readonly = $derived(
     !assessment || assessment.state === 'released' || !rights.includes('edit'),
   );
+
+  // A save may ask for step-up (UC-ACC-3): the controller's handler decides whether and how. The identity provider keeps
+  // nothing of this page, so the changes are kept as the draft before the app leaves, and no edit is accepted from then.
+  const controller = new DocumentController({
+    repository: 'samm-assessments',
+    keys: SAMM_KEYS,
+    // A SAMM assessment is released once: `DOCUMENT_RELEASED` means frozen for good.
+    releasedOnce: true,
+    onsaved: () => onsaved?.(),
+    onrefresh: () => onrefresh?.(),
+    onremote: ({ by, edited }) => {
+      // Another assessor saved the practice: the questions nobody changed here are marked, and the change is said.
+      const marks: Record<string, string> = {};
+      for (const question of questions) {
+        if (!edited.has(`${question.id}/answer`) && !edited.has(`${question.id}/comment`)) {
+          marks[question.id] = by.name;
+        }
+      }
+      changedBy = marks;
+      announcement = $t('practice.saved-by-other', {
+        name: by.name,
+        practice: practice?.name ?? practiceId,
+      });
+    },
+  });
+
   /** Whether the controls refuse a change: the sheet is read-only, or the departure for the provider has begun. */
-  let locked = $derived(readonly || leaving);
+  let locked = $derived(readonly || controller.leaving);
   let target = $derived(scope?.targets[practiceId]?.target ?? null);
-  let dirty = $derived(Object.keys(edits).length > 0);
+  let dirty = $derived(controller.dirty);
 
   function readHints(): boolean {
     try {
@@ -128,13 +129,16 @@
 
   /** The answer a question shows: the own change, else what was saved for everyone, else what was loaded. */
   function answerOf(id: string): number | null {
-    if (edits[id]?.answer !== undefined) return edits[id].answer ?? null;
-    if (committed?.answers[id]?.answer !== undefined) return committed.answers[id].answer ?? null;
-    return loaded[id]?.answer ?? null;
+    return (
+      (controller.fieldValue(`${id}/answer`, loaded[id]?.answer ?? null) as number | null) ?? null
+    );
   }
 
   function commentOf(id: string): string {
-    return edits[id]?.comment ?? committed?.answers[id]?.comment ?? loaded[id]?.comment ?? '';
+    return (
+      (controller.fieldValue(`${id}/comment`, loaded[id]?.comment) as string | null | undefined) ??
+      ''
+    );
   }
 
   let shown = $derived.by(() => {
@@ -144,243 +148,68 @@
   });
   let score = $derived(practice ? practiceScore({ [practiceId]: shown }, practice) : null);
 
-  // Another practice: a fresh sheet.
-  // The work on the sheet belongs to one practice of one assessment. When either changes, unsaved changes are kept
-  // as the draft of the document they were made on, and the sheet starts fresh.
-  let owner = { document: '', practice: '', blob: '' };
+  // The work on the sheet belongs to one practice of one assessment: when either changes, the controller keeps unsaved
+  // changes as the draft of the document they were made on and starts fresh. It runs before the sheet is drawn, so the
+  // first draw already knows the rights and the loaded version.
+  $effect.pre(() => {
+    const part = assessment?.parts[practiceId];
+    const next: DocumentSnapshot | null = assessment
+      ? {
+          document: assessment.id,
+          part: practiceId,
+          blob: part?.blob ?? '',
+          savedBy: part?.savedBy ?? null,
+          frozen: assessment.state === 'released',
+          canEdit: rights.includes('edit'),
+        }
+      : null;
+    untrack(() => controller.sync(next));
+  });
+
+  // Another practice: the marks and the question in focus start fresh too.
+  let shownFor = '';
   $effect(() => {
-    const document = assessment?.id ?? '';
-    if (document === owner.document && practiceId === owner.practice) return;
-    untrack(() => {
-      const pending: Record<string, Edit> = $state.snapshot(edits);
-      if (owner.document && Object.keys(pending).length > 0) {
-        void apiClient
-          .saveDraft(
-            'samm-assessments',
-            owner.document,
-            requestFor(owner.practice, pending, owner.blob),
-          )
-          .catch(() => {});
-      }
-      if (draftTimer) clearTimeout(draftTimer);
-      draftTimer = null;
-    });
-    owner = {
-      document,
-      practice: practiceId,
-      blob: untrack(() => assessment?.parts[practiceId]?.blob ?? ''),
-    };
-    edits = {};
-    committed = null;
-    conflicts = {};
-    failure = null;
+    const owner = `${assessment?.id ?? ''}/${practiceId}`;
+    if (owner === shownFor) return;
+    shownFor = owner;
     changedBy = {};
     active = 0;
-    saveState = 'clean';
   });
 
-  // A new version of this practice's file: once the server shows what was saved here, the overlay goes; a save by
-  // someone else is said, and the questions it changed are marked.
-  let lastBlob = '';
-  $effect(() => {
-    const part = assessment?.parts[practiceId];
-    const blob = part?.blob ?? '';
-    if (blob === lastBlob) return;
-    const first = lastBlob === '';
-    lastBlob = blob;
-    if (committed && committed.blob !== blob) committed = null;
-    if (first || !part || part.savedBy.pseudonym === $session?.user.pseudonym) return;
-    const marks: Record<string, string> = {};
-    for (const question of questions) {
-      if (edits[question.id] === undefined) marks[question.id] = part.savedBy.name;
-    }
-    changedBy = marks;
-    announcement = $t('practice.saved-by-other', {
-      name: part.savedBy.name,
-      practice: practice?.name ?? practiceId,
-    });
-  });
-
-  function change(id: string, edit: Edit) {
+  function setAnswer(id: string, value: number | null) {
     if (locked) return;
-    edits = { ...edits, [id]: { ...edits[id], ...edit } };
-    failure = null;
-    // While a save for everyone runs, it stays the state: the act stays busy, and the save keeps this change for
-    // the next one when it returns.
-    if (saveState === 'saving') return;
-    saveState = 'changed';
-    if (draftTimer) clearTimeout(draftTimer);
-    draftTimer = setTimeout(() => void keepDraft(), DRAFT_DELAY_MS);
+    controller.change(`${id}/answer`, value);
   }
 
-  /**
-   * @param part the practice
-   * @param pending its changes
-   * @param blob the version of its file the changes are based on
-   * @returns the body of a draft or a save
-   */
-  function requestFor(part: string, pending: Record<string, Edit>, blob: string) {
-    const fields: Record<string, unknown> = {};
-    for (const [id, edit] of Object.entries(pending)) {
-      if (edit.answer !== undefined) fields[`${id}/answer`] = edit.answer;
-      if (edit.comment !== undefined) fields[`${id}/comment`] = edit.comment;
-    }
-    return { parts: { [part]: { blob, fields } } };
-  }
-
-  function partRequest() {
-    const blob = conflictBlob || assessment?.parts[practiceId]?.blob || '';
-    return requestFor(practiceId, edits, blob);
-  }
-
-  /**
-   * Keeps the changes as the person's draft.
-   *
-   * @param rethrow whether a failed write is thrown after it was shown, for the caller that must not go on without
-   *   a draft (the departure for the identity provider); the timer and the blur swallow it
-   */
-  async function keepDraft(rethrow = false) {
-    draftTimer = null;
-    if (!assessment || !dirty) return;
-    saveState = 'drafting';
-    try {
-      const answer = await apiClient.saveDraft('samm-assessments', assessment.id, partRequest());
-      if (saveState === 'drafting') {
-        saveState = 'draft';
-        stamp = formatTime(answer.at ? new Date(answer.at) : new Date(), $currentLocale);
-      }
-    } catch (error) {
-      // A save for everyone started meanwhile keeps its own state.
-      if (saveState === 'drafting') {
-        saveState = 'failed';
-        failure = errorMessageKey(error);
-      }
-      if (rethrow) throw error;
-    }
-  }
-
-  /**
-   * @param current the changes now
-   * @param sent the changes a save sent
-   * @returns the changes the save did not carry: fields changed since, or never sent
-   */
-  function withoutSent(
-    current: Record<string, Edit>,
-    sent: Record<string, Edit>,
-  ): Record<string, Edit> {
-    const rest: Record<string, Edit> = {};
-    for (const [id, edit] of Object.entries(current)) {
-      const left: Edit = {};
-      if (edit.answer !== undefined && edit.answer !== sent[id]?.answer) left.answer = edit.answer;
-      if (edit.comment !== undefined && edit.comment !== sent[id]?.comment)
-        left.comment = edit.comment;
-      if (Object.keys(left).length > 0) rest[id] = left;
-    }
-    return rest;
-  }
-
-  async function saveForEveryone() {
-    if (!assessment || !dirty) return;
-    if (draftTimer) clearTimeout(draftTimer);
-    draftTimer = null;
-    saveState = 'saving';
-    failure = null;
-    // What this save sends; changes made while it runs stay in `edits` and are kept and saved later.
-    const sent: Record<string, Edit> = $state.snapshot(edits);
-    const request = partRequest();
-    // The version this save is based on: until the server shows a newer one, the sent answers stand on the sheet.
-    const base = request.parts[practiceId].blob;
-    try {
-      const documentId = assessment.id;
-      const result = await stepUp.run((password) =>
-        apiClient.saveDocument('samm-assessments', documentId, request, password),
-      );
-      if (result.status === 'handled') {
-        // Nothing was saved for everyone (cancelled, too many logins; or the app is leaving for the provider, after
-        // the changes were kept as a draft): the changes stay the person's and are kept as a draft.
-        // A draft that failed before the departure keeps its message until the next write.
-        // (`keepDraft` set the state meanwhile, which the compiler cannot see.)
-        if ((saveState as SaveStateKind) !== 'failed') saveState = 'changed';
-        draftTimer = setTimeout(() => void keepDraft(), DRAFT_DELAY_MS);
-        return;
-      }
-      if (result.status === 'refused') throw result.error;
-      const answer = result.value;
-      const merged: Record<string, Edit> = { ...committed?.answers };
-      for (const [id, edit] of Object.entries(sent)) merged[id] = { ...merged[id], ...edit };
-      // A newer version that arrived meanwhile already shows the save, or will with the next read.
-      committed =
-        (assessment?.parts[practiceId]?.blob ?? '') === base
-          ? { blob: base, answers: merged }
-          : null;
-      edits = withoutSent(edits, sent);
-      conflicts = {};
-      conflictBlob = '';
-      saveState = Object.keys(edits).length > 0 ? 'changed' : 'saved';
-      stamp = formatTime(answer.at ? new Date(answer.at) : new Date(), $currentLocale);
-      if (saveState === 'changed') draftTimer = setTimeout(() => void keepDraft(), DRAFT_DELAY_MS);
-      onsaved?.();
-    } catch (error) {
-      if (isApiError(error) && error.outcome === 'CONFLICT') {
-        const part = (
-          error.details.conflicts as { part: string; blob: string; fields: ConflictField[] }[]
-        )?.find((entry) => entry.part === practiceId);
-        // Keyed by question and field: `<question>` for the answer, `<question>/comment` for the comment.
-        const found: Record<string, ConflictField> = {};
-        for (const field of part?.fields ?? []) {
-          const segments = field.pointer.split('/');
-          const id = segments.at(-2) ?? '';
-          found[segments.at(-1) === 'comment' ? `${id}/comment` : id] = field;
-        }
-        conflicts = found;
-        conflictBlob = part?.blob ?? '';
-        saveState = 'conflict';
-      } else {
-        saveState = 'failed';
-        failure = errorMessageKey(error);
-        // The changes are still the person's: they are kept as a draft again.
-        if (draftTimer) clearTimeout(draftTimer);
-        draftTimer = setTimeout(() => void keepDraft(), DRAFT_DELAY_MS);
-      }
-    }
-  }
-
-  /**
-   * Decides one conflict: keeps the own value, or takes the other into the field it belongs to.
-   *
-   * @param key `<question>` for the answer, `<question>/comment` for the comment
-   * @param keep which value stays
-   */
-  function resolve(key: string, keep: 'own' | 'other') {
-    const field = conflicts[key];
-    if (!field) return;
-    const [id, name] = key.split('/');
-    if (keep === 'other') {
-      const value: Edit =
-        name === 'comment'
-          ? { comment: typeof field.other === 'string' ? field.other : '' }
-          : { answer: typeof field.other === 'number' ? field.other : null };
-      edits = { ...edits, [id]: { ...edits[id], ...value } };
-    }
-    const rest = { ...conflicts };
-    delete rest[key];
-    conflicts = rest;
+  function setComment(id: string, text: string) {
+    if (locked) return;
+    controller.change(`${id}/comment`, text);
   }
 
   /** The conflicts of one question: its answer first, then its comment. */
   function conflictsOf(
     id: string,
-  ): { key: string; field: 'answer' | 'comment'; conflict: ConflictField }[] {
+  ): { key: string; testKey: string; field: 'answer' | 'comment'; conflict: ConflictField }[] {
     return [
-      { key: id, field: 'answer' as const, conflict: conflicts[id] },
-      { key: `${id}/comment`, field: 'comment' as const, conflict: conflicts[`${id}/comment`] },
-    ].filter(
-      (entry): entry is { key: string; field: 'answer' | 'comment'; conflict: ConflictField } =>
-        Boolean(entry.conflict),
-    );
+      { key: `${id}/answer`, testKey: id, field: 'answer' as const },
+      { key: `${id}/comment`, testKey: `${id}-comment`, field: 'comment' as const },
+    ].flatMap((entry) => {
+      const conflict = controller.conflicts[entry.key];
+      return conflict ? [{ ...entry, conflict }] : [];
+    });
   }
 
-  let open = $derived(Object.keys(conflicts).length);
+  let open = $derived(controller.open);
+
+  // The errors of a refused save or draft, at the control of the answer or the comment they name. An error that names
+  // no control of this sheet is the notice's: it already says that entries are not valid.
+  let fieldErrors = $derived.by(() => {
+    const byKey: Record<string, string> = {};
+    for (const entry of controller.errors ?? []) {
+      byKey[SAMM_KEYS.keyOf(entry.pointer)] ??= $t(errorKey(entry.code));
+    }
+    return byKey;
+  });
 
   function answerText(question: SammQuestion, value: unknown): string {
     return (
@@ -388,30 +217,18 @@
     );
   }
 
-  let saveLabel = $derived.by(() => {
-    switch (saveState) {
-      case 'changed':
-        return $t('save.changed');
-      case 'drafting':
-        return $t('save.drafting');
-      case 'draft':
-        return $t('save.draft', { time: stamp });
-      case 'saving':
-        return $t('save.saving');
-      case 'saved':
-        return $t('save.saved', { time: stamp });
-      case 'conflict':
-        return $t('save.conflict', { count: open });
-      case 'failed':
-        return $t('save.failed');
-      default:
-        return readonly
-          ? assessment?.state === 'released'
-            ? $t('save.read-only.released')
-            : $t('save.read-only.right')
-          : $t('save.clean');
-    }
-  });
+  let label = $derived(
+    saveLabel(
+      controller,
+      $t,
+      $currentLocale,
+      readonly
+        ? assessment?.state === 'released'
+          ? $t('save.read-only.released')
+          : $t('save.read-only.right')
+        : null,
+    ),
+  );
 
   function handleKeydown(event: KeyboardEvent) {
     const target = event.target as HTMLElement | null;
@@ -423,7 +240,7 @@
       const option = question.answers[Number(event.key) - 1];
       if (option) {
         event.preventDefault();
-        change(question.id, { answer: option.value });
+        setAnswer(question.id, option.value);
       }
     } else if (event.key === 'j' || event.key === 'k') {
       event.preventDefault();
@@ -450,11 +267,7 @@
   let base = $derived(scope && assessment ? `/samm/${scope.id}/${assessment.slug}` : '');
 
   // Closing the sheet keeps every unsaved change as a draft, whether or not a draft timer is still running.
-  onDestroy(() => {
-    if (draftTimer) clearTimeout(draftTimer);
-    draftTimer = null;
-    if (dirty) void keepDraft();
-  });
+  onDestroy(() => controller.destroy());
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -487,15 +300,15 @@
       </SheetHead>
 
       <StepUpDialog
-        handler={stepUp}
+        handler={controller.stepUp}
         lede={$t('stepup.lede.save', { title: assessment.title })}
         actLabel={$t('practice.save')}
         icon="act.save"
         testId="practice"
       />
 
-      {#if failure}
-        <div class="notice"><Notice tone="danger" title={$t(failure)} live /></div>
+      {#if controller.failure}
+        <div class="notice"><Notice tone="danger" title={$t(controller.failure)} live /></div>
       {/if}
       {#if open > 0}
         <div class="notice">
@@ -552,13 +365,14 @@
                     labelledby="q-{question.id}"
                     options={question.answers}
                     value={answerOf(question.id)}
-                    onchange={(value) => change(question.id, { answer: value })}
+                    onchange={(value) => setAnswer(question.id, value)}
                     readonly={locked}
                     hints={hints && active === index}
+                    error={fieldErrors[`${question.id}/answer`] ?? null}
                     testId="answer-{question.id}"
                   />
-                  {#each questionConflicts as { key, field, conflict } (key)}
-                    <div class="conflict" data-testid="conflict-{key.replace('/', '-')}">
+                  {#each questionConflicts as { key, testKey, field, conflict } (key)}
+                    <div class="conflict" data-testid="conflict-{testKey}">
                       <p class="conflict__text">
                         {$t(
                           field === 'comment'
@@ -578,10 +392,16 @@
                         )}
                       </p>
                       <div class="conflict__acts">
-                        <Button onclick={() => resolve(key, 'own')}>
+                        <Button
+                          onclick={() => controller.resolve(key, 'own')}
+                          disabledReason={controller.locked ? $t('practice.conflict.locked') : null}
+                        >
                           {$t('practice.conflict.keep-own')}
                         </Button>
-                        <Button onclick={() => resolve(key, 'other')}>
+                        <Button
+                          onclick={() => controller.resolve(key, 'other')}
+                          disabledReason={controller.locked ? $t('practice.conflict.locked') : null}
+                        >
                           {$t(
                             field === 'comment'
                               ? 'practice.conflict.take-other-comment'
@@ -610,7 +430,8 @@
                         hint={$t('field.free-text.hint')}
                         value={commentOf(question.id)}
                         readonly={locked}
-                        oninput={(value) => change(question.id, { comment: value })}
+                        error={fieldErrors[`${question.id}/comment`] ?? null}
+                        oninput={(value) => setComment(question.id, value)}
                         testId="comment-{question.id}"
                       />
                     </Disclosure>
@@ -642,16 +463,16 @@
     {#snippet status()}
       <div class="status">
         <SaveState
-          state={readonly ? 'read-only' : saveState}
-          label={saveLabel}
+          state={readonly ? 'read-only' : controller.saveState}
+          {label}
           testId="save-state"
         />
         {#if !readonly}
           <Button
             variant="primary"
             icon="act.save"
-            busy={saveState === 'saving'}
-            onclick={saveForEveryone}
+            busy={controller.saveState === 'saving'}
+            onclick={() => void controller.save()}
             disabledReason={open > 0
               ? $t('practice.save.resolve-first', { count: open })
               : dirty

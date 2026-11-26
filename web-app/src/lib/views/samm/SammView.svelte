@@ -288,6 +288,9 @@
         onsaved={() => {
           if (assessment) void reloadAssessment(assessment.id);
         }}
+        onrefresh={() => {
+          if (assessment) void reloadAssessment(assessment.id);
+        }}
       />
     {/if}
   {/snippet}

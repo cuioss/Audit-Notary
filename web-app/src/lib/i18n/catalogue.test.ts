@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadMessages } from '../../test/catalogue-fixture';
+import { LENSES } from '../routes';
 import { LOCALES } from './index';
 
 /**
@@ -56,16 +57,7 @@ describe('the message catalogue', () => {
 
   it('holds the texts of every lens and kind the app builds keys for', () => {
     const built = [
-      ...[
-        'due',
-        'samm',
-        'threat-models',
-        'incidents',
-        'isms',
-        'catalogs',
-        'reports',
-        'settings',
-      ].map((lens) => `lens.${lens}`),
+      ...LENSES.map((lens) => `lens.${lens}`),
       ...['deadline', 'review', 'release'].map((kind) => `due.kind.${kind}`),
       'error.validation.REQUIRED',
       'error.validation.REFERENCE_NOT_FOUND',

@@ -680,7 +680,7 @@ rail entry nor the lens counts the category. The writes answer `403 FORBIDDEN`. 
 === Allowed Queries of an Address
 
 Until now an address was a path. An address gains an *allowed query set*: a few named parameters that belong to the
-view and are part of its canonical form. `canonical-addresses.json` gets two additions (data, shown here, not yet in the
+view and are part of its canonical form. `canonical-addresses.json` has two additions (data; the excerpt shows them as they are in the
 file):
 
 [source,json]
@@ -717,7 +717,7 @@ before `categories.document`.) The rules:
 * `?at=` is allowed on `categories.document` only; later steps add it to the address of the other lenses and add
   `as-of` for the reports, each with its own pattern.
 
-What the code needs, to be built by the mock and UI steps, not by this contract:
+What the code does for it (built by the mock and UI steps, not by this contract):
 
 [cols="2,3"]
 |===
@@ -1431,6 +1431,30 @@ blocked; the owner may change each one. The bodies are in <<_document_lifecycle_
 . *The test category `test-note`* has one document type, `note`, released more than once, with the transitions
   `test-note.submit` and `test-note.release`, the collection `notes` and the tag `notes/<id>/v<n>`; a save is possible
   in every state.
+. *The web app's document controller* (`web-app/src/lib/documents/controller.svelte.ts`, shared by every lens that edits
+  a document; the SAMM practice sheet is its first user) takes these readings of the contract, none of which adds a
+  request:
+  a save and a draft stand on the blob the first change of the sheet was made on (after a save, the blob the answer
+  names), so that the server finds what others changed in the same fields since; a draft restored with the document
+  that started from an older blob is saved on that blob, and the sheet marks it as older. An address is read leniently
+  (a name it does not admit is ignored, an unreadable escape in such a name too) and a `return` strictly, as the rules
+  above say; the 256 characters apply to the `return` only. A transition acts on the saved document: with unsaved
+  changes the controller sends nothing and the sheet asks to save first. A save answered `DOCUMENT_RELEASED` keeps the
+  changes as the draft, makes the sheet read the document again, and says "released while you were working" for a
+  document type released more than once and "released and frozen" for one released once. Decided provisionally, after the
+  review of the controller (none adds a request): the controller keeps the unsaved changes of a part the sheet leaves in
+  memory until their draft is written, tries a failed write again at every later switch, and gives the changes back,
+  with the reason, when the part is shown again; a save and a draft are sent only for the changes and the document the
+  answer was awaited for, so that an answer that arrives after another document opened, another change was made or
+  another draft started changes nothing on the page (the departure for the identity provider included: it neither
+  locks nor leaves for a document the asking one is no longer); a field changed back to its loaded value while a save of
+  another value runs stays an edit of the next save when that save succeeds; changes made while a save runs stand on the
+  blob the save's answer names; a refused save with field conflicts keeps drafting the changes, on the blob they were
+  made on, with the conflicts left to decide; no save is sent while the sheet is frozen, without the right `edit` or
+  leaving, and the decisions of a conflict are disabled then; a transition is sent only when no unsaved change exists at
+  the moment it is sent, also after the confirmation of the step-up; and any event of the lifecycle that names the open
+  document (`document-saved`, `document-created`, `document-transitioned`, `release-requested`) makes the sheet read it
+  again.
 
 For the owner: whether the rail may gain a ninth lens, and whether `/categories/{category}` may list documents, given
 that the use cases of the categories name it for the definition (1); whether a refused draft is right, or the draft

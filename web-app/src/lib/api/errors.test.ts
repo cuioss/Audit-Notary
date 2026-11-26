@@ -28,6 +28,7 @@ describe('errors', () => {
     );
     expect(errorMessageKey(new ApiError('TOO_MANY_LOGINS', 503))).toBe('error.too-many-logins');
     expect(errorMessageKey(new ApiError('CONFLICT', 409))).toBe('error.conflict');
+    expect(errorMessageKey(new ApiError('VALIDATION', 422))).toBe('error.validation');
     expect(errorMessageKey(new Error('x'))).toBe('error.unexpected');
     expect(isApiError(new ApiError('VALIDATION', 422))).toBe(true);
   });

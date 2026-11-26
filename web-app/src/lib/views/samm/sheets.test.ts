@@ -508,6 +508,68 @@ describe('PracticeSheet', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong. Try again.');
   });
 
+  it('asks the view to read the assessment again when a save finds it released', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    vi.spyOn(apiClient, 'saveDocument').mockRejectedValue(
+      new ApiError('DOCUMENT_RELEASED', 409, [], { tag: 'samm/payments/2026-q4' }),
+    );
+    const onrefresh = vi.fn();
+    const onsaved = vi.fn();
+    render(PracticeSheet, { scope, assessment, model, practiceId: 'sm', onrefresh, onsaved });
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    await vi.waitFor(() => expect(onrefresh).toHaveBeenCalledOnce());
+    expect(onsaved).not.toHaveBeenCalled();
+  });
+
+  it('shows the errors of a refused save at the answer and the comment they name', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    vi.spyOn(apiClient, 'saveDocument').mockRejectedValue(
+      new ApiError(
+        'VALIDATION',
+        422,
+        [
+          { pointer: '/answers/sm/sm-a-1/answer', code: 'ENUM', part: 'sm' },
+          { pointer: '/answers/sm/sm-a-2/comment', code: 'MAX_LENGTH', part: 'sm' },
+        ],
+        {},
+      ),
+    );
+    render(PracticeSheet, { scope, assessment, model, practiceId: 'sm' });
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    await vi.waitFor(() =>
+      expect(screen.getByTestId('answer-sm-a-1')).toHaveAttribute('aria-invalid', 'true'),
+    );
+    expect(screen.getByTestId('answer-sm-a-2')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByTestId('comment-sm-a-2')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByTestId('comment-sm-a-1')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByText('Choose one of the offered values.')).toBeInTheDocument();
+    expect(screen.getByText('This text is too long.')).toBeInTheDocument();
+  });
+
+  it('disables the decisions of a conflict while the sheet cannot be edited', async () => {
+    const { scope, assessment, model } = await fixture('workshop#conflict');
+    const { rerender } = render(PracticeSheet, { scope, assessment, model, practiceId: 'sm' });
+    await fireEvent.click(screen.getByTestId('answer-sm-a-2-3'));
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    const conflict = await screen.findByTestId('conflict-sm-a-2');
+    const keep = within(conflict).getByRole('button', { name: 'Keep mine' });
+    expect(keep).not.toHaveAttribute('aria-disabled');
+    await rerender({
+      scope,
+      assessment: { ...assessment, state: 'released' },
+      model,
+      practiceId: 'sm',
+    });
+    const frozen = within(screen.getByTestId('conflict-sm-a-2'));
+    expect(frozen.getByRole('button', { name: 'Keep mine' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    expect(frozen.getAllByText(/can no longer be edited/)).toHaveLength(2);
+  });
+
   it('says when the draft cannot be kept', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const { scope, assessment, model } = await fixture('workshop');

@@ -28,7 +28,7 @@
 
   let { pathname, search = '', onnavigate }: Props = $props();
 
-  let address = $derived(parseAddress(pathname));
+  let address = $derived(parseAddress(pathname, search));
   let route = $derived(address?.route ?? null);
   // A session without a right sees the empty state in place of every view on a repository; the first-login form and
   // the settings need none.

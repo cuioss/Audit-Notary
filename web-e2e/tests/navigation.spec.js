@@ -1,10 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { useScenario } from './helpers/mock.js';
-import { login } from './helpers/login.js';
+import { login, loginLocal } from './helpers/login.js';
 
 /**
  * AUN-WEB-3: the eight lenses on the rail, one canonical address per view, and a reload restores it.
  */
+const NOTE = '01JZ8W1E3G5J7M9P1R3T5X7Z9B';
+
 // [address, view, lens in the breadcrumb, page title]
 const ADDRESSES = [
   ['/', 'due-view', 'Due', 'Due'],
@@ -15,6 +17,13 @@ const ADDRESSES = [
   ['/incidents/2026/inc-0007', 'lens-view', 'Incidents', 'Incidents'],
   ['/isms/risks/r-012', 'lens-view', 'ISMS', 'ISMS'],
   ['/isms/documents/policy-access', 'lens-view', 'ISMS', 'ISMS'],
+  // The generic documents lens (rest-api.adoc, The Generic Documents Lens): routed, its views are a later stage.
+  ['/categories', 'lens-view', 'Documents', 'Documents'],
+  ['/categories/test-note', 'lens-view', 'Documents', 'Documents'],
+  ['/categories/test-note/new?kind=note', 'lens-view', 'Documents', 'Documents'],
+  [`/categories/test-note/${NOTE}`, 'lens-view', 'Documents', 'Documents'],
+  [`/categories/test-note/${NOTE}?at=v1`, 'lens-view', 'Documents', 'Documents'],
+  [`/categories/test-note/${NOTE}/release`, 'lens-view', 'Release', 'Release'],
   ['/catalogs/team/payments', 'lens-view', 'Catalogs', 'Catalogs'],
   ['/reports/trends', 'lens-view', 'Reports', 'Reports'],
   ['/settings', 'settings-view', 'Settings', 'Settings'],
@@ -79,4 +88,48 @@ test('an unknown address answers with the not-found view', async ({ page }) => {
   await expect(page.getByTestId('not-found-view')).toBeVisible();
   await page.getByRole('link', { name: 'Go to Due' }).click();
   await expect(page.getByTestId('due-view')).toBeVisible();
+});
+
+test('a name an address does not admit is ignored, a bad value of one it admits is not found', async ({
+  page,
+}) => {
+  await login(page, '/');
+  await page.goto(`/categories/test-note/${NOTE}?at=v1&utm_source=mail`);
+  await expect(page.getByTestId('lens-view')).toBeVisible();
+  await page.goto(`/categories/test-note/${NOTE}?at=latest`);
+  await expect(page.getByTestId('not-found-view')).toBeVisible();
+  await page.goto(`/categories/test-note/${NOTE}?at=v1&at=v2`);
+  await expect(page.getByTestId('not-found-view')).toBeVisible();
+});
+
+test('a login with the identity provider returns to the address with its query', async ({
+  page,
+}) => {
+  const address = `/categories/test-note/${NOTE}?at=v1`;
+  await page.goto(`/api/v1/auth/login?return=${encodeURIComponent(address)}`);
+  await expect(page).toHaveURL(address);
+  await expect(page.getByTestId('lens-view')).toBeVisible();
+});
+
+test('a login with a query the address does not admit returns to the start page', async ({
+  page,
+}) => {
+  await page.goto(
+    `/api/v1/auth/login?return=${encodeURIComponent(`/categories/test-note/${NOTE}?at=v1&x=1`)}`,
+  );
+  await expect(page).toHaveURL('/');
+  await expect(page.getByTestId('due-view')).toBeVisible();
+});
+
+test('the login page of local test accounts returns to the address with its query', async ({
+  page,
+  request,
+}) => {
+  await useScenario(request, 'local');
+  const address = `/categories/test-note/${NOTE}?at=4be0c3a`;
+  await loginLocal(page, address);
+  await expect(page.getByTestId('lens-view')).toBeVisible();
+  await page.reload();
+  await expect(page).toHaveURL(address);
+  await expect(page.getByTestId('lens-view')).toBeVisible();
 });

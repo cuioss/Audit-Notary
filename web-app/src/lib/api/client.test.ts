@@ -256,6 +256,89 @@ describe('the form kit requests (rest-api.adoc, Form Kit Requests)', () => {
   });
 });
 
+describe('the document lifecycle requests (rest-api.adoc, Document Lifecycle Requests)', () => {
+  it('reads the categories, the list of a repository and the search with GET', async () => {
+    fetchMock.mockImplementation(async () => json(200, { ok: true }));
+    await client.listCategories();
+    await client.listDocuments('test-notes');
+    await client.search('key rotation & more');
+    expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
+      '/api/v1/categories',
+      '/api/v1/documents/test-notes',
+      '/api/v1/search?q=key%20rotation%20%26%20more',
+    ]);
+    for (const call of fetchMock.mock.calls) {
+      expect(call[1].method).toBe('GET');
+    }
+  });
+
+  it('reads a document, and a revision of it with the encoded `at`', async () => {
+    fetchMock.mockImplementation(async () => json(200, { ok: true }));
+    await client.getDocument('test-notes', '01JZ8W1E3G5J7M9P1R3T5X7Z9B');
+    await client.getDocument('test-notes', '01JZ8W1E3G5J7M9P1R3T5X7Z9B', 'v1');
+    await client.getDocument('test-notes', '01JZ8W1E3G5J7M9P1R3T5X7Z9B', '');
+    await client.getDocument('test-notes', 'a/b', '4be0c3a');
+    await client.listRevisions('test-notes', '01JZ8W1E3G5J7M9P1R3T5X7Z9B');
+    expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
+      '/api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B',
+      '/api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=v1',
+      '/api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B',
+      '/api/v1/documents/test-notes/a%2Fb?at=4be0c3a',
+      '/api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B/revisions',
+    ]);
+  });
+
+  it('creates a document with POST and the anti-CSRF header, and answers the 201 body', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json(200, SESSION))
+      .mockResolvedValueOnce(json(201, { outcome: 'CREATED', id: 'N10' }));
+    const created = await client.createDocument('test-notes', {
+      kind: 'note',
+      parts: { data: { fields: { '/title': 'Phishing drill notes' } } },
+    });
+    expect(created.id).toBe('N10');
+    const [path, init] = fetchMock.mock.calls[1];
+    expect(path).toBe('/api/v1/documents/test-notes');
+    expect(init.method).toBe('POST');
+    expect(init.headers[CSRF_HEADER]).toBe('token-1');
+    expect(JSON.parse(init.body)).toEqual({
+      kind: 'note',
+      parts: { data: { fields: { '/title': 'Phishing drill notes' } } },
+    });
+  });
+
+  it('keeps the part of every field error of a refusal, and the details of the other outcomes', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json(200, SESSION))
+      .mockResolvedValueOnce(
+        json(422, {
+          outcome: 'VALIDATION',
+          errors: [{ part: 'data', pointer: '/related', code: 'REFERENCE_NOT_FOUND' }],
+        }),
+      )
+      .mockResolvedValueOnce(json(409, { outcome: 'DOCUMENT_RELEASED', tag: 'notes/x/v1' }))
+      .mockResolvedValueOnce(json(422, { outcome: 'MANDATORY_FIELDS_MISSING', missing: ['/a'] }))
+      .mockResolvedValueOnce(json(502, { outcome: 'REJECTED' }));
+    const body = { parts: {} } as Parameters<ApiClient['saveDocument']>[2];
+    await expect(client.saveDocument('test-notes', 'x', body)).rejects.toMatchObject({
+      outcome: 'VALIDATION',
+      errors: [{ part: 'data', pointer: '/related' }],
+    });
+    await expect(client.saveDocument('test-notes', 'x', body)).rejects.toMatchObject({
+      outcome: 'DOCUMENT_RELEASED',
+      details: { tag: 'notes/x/v1' },
+    });
+    await expect(client.transition('test-notes', 'x', 'test-note.submit')).rejects.toMatchObject({
+      outcome: 'MANDATORY_FIELDS_MISSING',
+      details: { missing: ['/a'] },
+    });
+    await expect(client.release('test-notes', 'x')).rejects.toMatchObject({
+      outcome: 'REJECTED',
+      status: 502,
+    });
+  });
+});
+
 describe('the event stream', () => {
   it('parses frames, comments and multi-line data', () => {
     expect(parseSseChunk('event: status\ndata: {"a":1}')).toEqual({

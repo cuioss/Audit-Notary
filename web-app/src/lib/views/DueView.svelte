@@ -12,7 +12,7 @@
   import type { DueItem } from '../api/types';
   import { dayParts, daysFrom, formatDate, formatRelativeDay } from '../format';
   import { currentLocale, t } from '../i18n';
-  import { parseAddress } from '../routes';
+  import { parseHref } from '../routes';
   import { now } from '../stores/clock';
   import DashboardPage from '../templates/DashboardPage.svelte';
 
@@ -42,7 +42,7 @@
     try {
       const list = await apiClient.getDue();
       // An address the app has no view for is not offered.
-      items = list.items.filter((item) => parseAddress(item.address) !== null);
+      items = list.items.filter((item) => parseHref(item.address) !== null);
     } catch (error) {
       failure = errorMessageKey(error);
     }

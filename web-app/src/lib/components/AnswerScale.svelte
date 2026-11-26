@@ -30,6 +30,8 @@
     readonly?: boolean;
     /** Whether the number keys are shown. */
     hints?: boolean;
+    /** The field error: the server refused the answer. */
+    error?: string | null;
     /** A test id prefix; each answer gets `<testId>-<index>`. */
     testId?: string;
   }
@@ -41,10 +43,12 @@
     onchange,
     readonly = false,
     hints = false,
+    error = null,
     testId,
   }: Props = $props();
 
   const name = uniqueId('answer');
+  const errorId = uniqueId('answer-error');
   const max = $derived(Math.max(...options.map((option) => option.value), 1));
 </script>
 
@@ -55,6 +59,8 @@
     role="radiogroup"
     aria-labelledby={labelledby}
     aria-readonly={readonly ? 'true' : undefined}
+    aria-invalid={error ? 'true' : undefined}
+    aria-describedby={error ? errorId : undefined}
     data-testid={testId}
   >
     {#each options as option, index (option.value)}
@@ -81,6 +87,9 @@
       </label>
     {/each}
   </div>
+  {#if error}
+    <p class="scale__error" id={errorId}>{error}</p>
+  {/if}
 </div>
 
 <style>
@@ -92,6 +101,12 @@
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--space-2);
+  }
+
+  .scale__error {
+    margin-block-start: var(--space-2);
+    color: var(--color-danger);
+    font-size: var(--text-sm);
   }
 
   .scale__option {
