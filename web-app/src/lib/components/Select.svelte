@@ -98,7 +98,7 @@
     data-testid={testId}
   >
     <option value="">{placeholder}</option>
-    {#each groups as group (group.label ?? group.options[0].value)}
+    {#each groups as group (group.label === null ? `o:${group.options[0].value}` : `g:${group.label}`)}
       {#if group.label === null}
         {#each group.options as option (option.value)}
           <option value={option.value}>{option.label}</option>

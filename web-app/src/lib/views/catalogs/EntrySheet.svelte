@@ -111,10 +111,12 @@
       seen = read.at;
       const by = read.history[0]?.by;
       const mine = by !== undefined && by.pseudonym === get(session)?.user.pseudonym;
-      if (dirty) {
+      // A retired entry reads only: what the person typed has no place to go, so the entry as read replaces it.
+      if (dirty && !read.retired) {
         if (!mine && by) staleBy = by.name;
         return;
       }
+      staleBy = null;
       baseline = copy(read.value);
       value = copy(read.value);
       if (!mine && by) announcement = $t('catalogs.saved-by-other', { name: by.name });
@@ -160,7 +162,7 @@
   });
 
   async function save() {
-    if (saving || !dirty || !canEdit) return;
+    if (saving || retiring || !dirty || !canEdit) return;
     saving = true;
     failure = null;
     errors = null;
@@ -194,7 +196,7 @@
 
   async function retire() {
     confirmRetire = false;
-    if (retiring || isNew) return;
+    if (retiring || saving || isNew) return;
     retiring = true;
     failure = null;
     try {
@@ -295,7 +297,7 @@
       kind={catalog}
       bind:value
       {errors}
-      readonly={!canEdit || saving}
+      readonly={!canEdit || saving || retiring}
       testId="entry-form"
     />
 
@@ -335,6 +337,7 @@
             <p class="margin__text">{$t('catalogs.retire.lede')}</p>
             <Button
               busy={retiring}
+              disabledReason={saving ? $t('catalogs.save.saving') : null}
               onclick={() => (confirmRetire = true)}
               data-testid="retire-entry"
             >

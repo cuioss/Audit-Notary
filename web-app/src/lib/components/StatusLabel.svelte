@@ -16,12 +16,14 @@
     label: string;
     /** A test id. */
     testId?: string;
+    /** The word is a sentence: it wraps beside the dot instead of staying on one line. */
+    wrap?: boolean;
   }
 
-  let { tone = 'neutral', label, testId }: Props = $props();
+  let { tone = 'neutral', label, testId, wrap = false }: Props = $props();
 </script>
 
-<span class="status status--{tone}" data-testid={testId} data-tone={tone}>
+<span class="status status--{tone}" class:status--wrap={wrap} data-testid={testId} data-tone={tone}>
   <span class="status__dot" aria-hidden="true"></span>
   <span class="status__word">{label}</span>
 </span>
@@ -35,6 +37,15 @@
     line-height: var(--line-height-sm);
     color: var(--color-text-secondary);
     white-space: nowrap;
+  }
+
+  .status--wrap {
+    white-space: normal;
+    align-items: flex-start;
+  }
+
+  .status--wrap .status__dot {
+    margin-block-start: 0.5em;
   }
 
   .status__dot {

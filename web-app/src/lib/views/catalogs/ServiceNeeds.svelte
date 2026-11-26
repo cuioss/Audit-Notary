@@ -149,7 +149,8 @@
                 {/if}
               </td>
               <td data-label={$t('catalogs.depends.state')}>
-                <StatusLabel tone={state.tone} label={state.label} />
+                <!-- The reasons are sentences: they wrap inside the cell instead of widening the page on a phone. -->
+                <StatusLabel tone={state.tone} label={state.label} wrap />
               </td>
             </tr>
           {/each}
@@ -213,16 +214,6 @@
 
   .grid tbody th {
     font-weight: var(--weight-medium);
-  }
-
-  /* The reasons are sentences: they wrap inside the cell instead of widening the page on a phone. */
-  .grid :global(.status) {
-    white-space: normal;
-    align-items: flex-start;
-  }
-
-  .grid :global(.status__dot) {
-    margin-block-start: 0.5em;
   }
 
   .grid__figure {

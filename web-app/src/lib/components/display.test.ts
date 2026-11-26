@@ -355,6 +355,13 @@ describe('StatusLabel', () => {
     expect(screen.getByTestId('sealed')).toHaveClass('status--sealed');
     expect(screen.getByTestId('sealed')).toHaveTextContent('Released');
   });
+
+  it('wraps a sentence beside its dot only when asked to', () => {
+    render(StatusLabel, { label: 'Short', testId: 'one-line' });
+    render(StatusLabel, { label: 'A long reason', wrap: true, testId: 'wrapping' });
+    expect(screen.getByTestId('one-line')).not.toHaveClass('status--wrap');
+    expect(screen.getByTestId('wrapping')).toHaveClass('status--wrap');
+  });
 });
 
 describe('TrendLine', () => {

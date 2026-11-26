@@ -195,7 +195,7 @@ test.describe('the catalogs and their entries (UC-CAT-1)', () => {
     );
     await expect(page.getByText('8 Einträge')).toBeVisible();
     await expect(page.getByTestId('new-entry')).toHaveText('Dienst anlegen');
-    await expect(page.getByTestId('entry-ledger')).toContainText('Nicht mehr in Gebrauch');
+    await expect(page.getByTestId('entry-ledger')).toContainText('Stillgelegt');
     await expect(page.getByText('Nach Namen filtern')).toBeVisible();
     await page.getByTestId('entry-payment-api').click();
     await expect(page.getByTestId('save-entry')).toHaveText('Speichern');
@@ -850,7 +850,7 @@ test.describe('retire an entry (UC-CAT-1)', () => {
     await expect(page.getByTestId('retired-notice')).toContainText(
       'Dieser Eintrag ist stillgelegt',
     );
-    await expect(page.getByTestId('entry-state')).toHaveText('Nicht mehr in Gebrauch');
+    await expect(page.getByTestId('entry-state')).toHaveText('Stillgelegt');
   });
 });
 

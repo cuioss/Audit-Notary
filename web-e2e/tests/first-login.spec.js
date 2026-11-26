@@ -26,6 +26,8 @@ test('a refused team is shown at the field', async ({ page, request }) => {
   await page.goto('/welcome');
   await page.getByTestId('welcome-role').selectOption({ index: 1 });
   await page.getByTestId('welcome-save').click();
-  await expect(page.getByText('Pick an entry from the list.')).toBeVisible();
+  await expect(
+    page.getByText('This reference leads nowhere. Check it or choose another.'),
+  ).toBeVisible();
   await expect(page).toHaveURL('/welcome');
 });

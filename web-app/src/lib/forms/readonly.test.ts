@@ -179,7 +179,7 @@ describe('the same form, read (AUN-WEB-4, Read-Only Rendering)', () => {
     );
     useMessages('de');
     expect(await screen.findByText('Titel', { selector: 'dt' })).toBeInTheDocument();
-    expect(await screen.findByText('Nicht mehr in Gebrauch')).toBeInTheDocument();
+    expect(await screen.findByText('Stillgelegt')).toBeInTheDocument();
     expect(await screen.findByText('Nicht gefunden')).toBeInTheDocument();
     expect(await screen.findByText('Noch nicht verknüpft')).toBeInTheDocument();
     expect(await screen.findByText('Ehemaliges Mitglied')).toBeInTheDocument();

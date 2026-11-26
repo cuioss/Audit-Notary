@@ -458,6 +458,19 @@ describe('an entry that someone else saved', () => {
     expect(name()).toHaveValue('Payments API');
   });
 
+  it('drops what the person typed when the entry was retired meanwhile, so nothing unsavable is left', async () => {
+    const kit = await openEntry('service', 'customer-portal');
+    await fireEvent.input(name(), { target: { value: 'Portal' } });
+    kit.scenario.goto('service-retired');
+    kit.emit('catalog-changed', { catalog: 'service', id: 'customer-portal' });
+    expect(await screen.findByTestId('retired-notice')).toBeInTheDocument();
+    expect(screen.queryByTestId('stale-notice')).toBeNull();
+    await waitFor(() =>
+      expect(screen.getByTestId('entry-form')).toHaveTextContent('Customer Portal'),
+    );
+    expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'read-only');
+  });
+
   it('reads nothing for an entry of another id', async () => {
     const kit = await openEntry('service', 'payment-api');
     const reads = () =>
