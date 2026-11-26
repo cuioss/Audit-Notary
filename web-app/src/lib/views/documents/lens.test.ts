@@ -248,6 +248,8 @@ describe('addresses that are no address of the lens', () => {
       onnavigate: vi.fn(),
     });
     expect(await screen.findByTestId('not-found-view')).toBeInTheDocument();
+    // An address that leads nowhere has no chain: the crumb does not stay at "Loading…".
+    expect(get(breadcrumb)).toEqual([]);
     first.unmount();
     render(DocumentsView, {
       route: 'categories.category',

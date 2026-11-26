@@ -117,20 +117,23 @@
         title={$t('documents.missing.title')}
         body={$t('documents.missing.body')}
         live
+        stacked
       >
         {#snippet actions()}
-          <ul class="missing" data-testid="missing-fields">
-            {#each missing as field (field.pointer)}
-              <li>
-                <Button onclick={() => ongo(field.pointer)}>
-                  {$t('documents.missing.go', { field: field.label })}
-                </Button>
-              </li>
-            {/each}
-          </ul>
-          <Button onclick={onback} data-testid="back-to-editing">
-            {$t('documents.missing.back')}
-          </Button>
+          <div class="missing__acts">
+            <ul class="missing" data-testid="missing-fields">
+              {#each missing as field (field.pointer)}
+                <li>
+                  <Button onclick={() => ongo(field.pointer)}>
+                    {$t('documents.missing.go', { field: field.label })}
+                  </Button>
+                </li>
+              {/each}
+            </ul>
+            <Button onclick={onback} data-testid="back-to-editing">
+              {$t('documents.missing.back')}
+            </Button>
+          </div>
         {/snippet}
       </Notice>
     {/if}
@@ -151,10 +154,17 @@
     gap: var(--space-3);
   }
 
+  .missing__acts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
   .missing {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--space-2);
     list-style: none;
   }
 </style>

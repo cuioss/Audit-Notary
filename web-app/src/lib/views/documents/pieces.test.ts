@@ -217,6 +217,52 @@ describe('the columns', () => {
   });
 });
 
+describe('the filters of the list column', () => {
+  const NOTE_CATEGORY = {
+    id: 'test-note',
+    generic: true,
+    kinds: [{ id: 'note', repository: 'test-notes' }],
+  };
+  const ONE = [
+    {
+      id: 'N1',
+      kind: 'note',
+      title: 'A note',
+      state: 'draft' as const,
+      version: 1,
+      updatedAt: '2026-11-26T08:00:00Z',
+      updatedBy: { pseudonym: 'p-1', name: 'Alex Example' },
+      release: null,
+      address: '/categories/test-note/N1',
+      requested: false,
+    },
+  ];
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('stand open where the list is the page and there is room', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: false }));
+    render(DocumentListColumn, {
+      category: NOTE_CATEGORY,
+      documents: ONE,
+      selected: null,
+      object: true,
+    });
+    expect(screen.getByTestId('document-filters')).toHaveAttribute('open');
+  });
+
+  it('stand folded on a phone, so the documents come first', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    render(DocumentListColumn, {
+      category: NOTE_CATEGORY,
+      documents: ONE,
+      selected: null,
+      object: true,
+    });
+    expect(screen.getByTestId('document-filters')).not.toHaveAttribute('open');
+  });
+});
+
 describe('RevisionPicker', () => {
   const by = { pseudonym: 'p', name: 'Noor Haddad' };
   const revisions: Revision[] = [

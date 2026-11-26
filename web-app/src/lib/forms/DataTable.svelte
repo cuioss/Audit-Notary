@@ -256,7 +256,7 @@
     display: flex;
   }
 
-  @container (max-width: 36rem) {
+  @container (max-width: 44rem) {
     .table__grid,
     .table__grid tbody,
     .table__grid tr,
@@ -295,7 +295,8 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
+      gap: var(--space-3);
       white-space: normal;
     }
   }

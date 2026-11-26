@@ -146,4 +146,12 @@
     font-size: var(--text-sm);
     color: var(--color-text-secondary);
   }
+
+  @media (max-width: 599px) {
+    .resolved :global(a.link) {
+      display: inline-flex;
+      align-items: center;
+      min-block-size: 44px;
+    }
+  }
 </style>

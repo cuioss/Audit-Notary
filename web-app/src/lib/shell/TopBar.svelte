@@ -130,6 +130,12 @@
     text-overflow: ellipsis;
   }
 
+  /* The way up keeps its words; the long title of the page itself gives way first. */
+  .crumbs__step:not(:last-child) {
+    flex-shrink: 0;
+    max-inline-size: 16rem;
+  }
+
   .crumbs__step :global(.link:hover) {
     color: var(--color-text-primary);
     text-decoration: underline;

@@ -78,4 +78,10 @@
     transform: translateX(12px);
     background-color: var(--color-on-brand);
   }
+
+  @media (max-width: 599px) {
+    .toggle {
+      min-block-size: 44px;
+    }
+  }
 </style>

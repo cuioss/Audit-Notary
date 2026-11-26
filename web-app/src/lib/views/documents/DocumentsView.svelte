@@ -305,10 +305,13 @@
   });
 
   $effect(() => {
+    // An address that leads nowhere has no chain: the crumb must not stay at "Loading…".
     breadcrumb.set(
-      levels
-        .filter((level) => level.key !== 'categories')
-        .map((level) => ({ label: level.title, href: level.href })),
+      notFound
+        ? []
+        : levels
+            .filter((level) => level.key !== 'categories')
+            .map((level) => ({ label: level.title, href: level.href })),
     );
   });
 

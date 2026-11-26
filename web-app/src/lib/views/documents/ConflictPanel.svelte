@@ -104,7 +104,6 @@
   .conflicts__list {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
     list-style: none;
   }
 
@@ -112,10 +111,8 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
-    padding: var(--space-3) var(--space-4);
-    border: 1px solid var(--color-attention);
-    border-radius: var(--radius-md);
-    background-color: var(--color-attention-subtle);
+    padding-block: var(--space-4);
+    border-block-start: 1px solid var(--color-border-strong);
   }
 
   .conflict__field {

@@ -39,6 +39,13 @@
 
   const STATES: WorkflowState[] = ['draft', 'in-review', 'released'];
 
+  /** On a phone the documents come first: the filters stand folded, one tap away. */
+  const NARROW = '(max-width: 599px)';
+  const roomForFilters =
+    typeof window === 'undefined' || typeof window.matchMedia !== 'function'
+      ? true
+      : !window.matchMedia(NARROW).matches;
+
   let stateFilter = $state('');
   let title = $state('');
 
@@ -103,7 +110,7 @@
         : $t('documents.list.empty.read-only')}
     />
   {:else}
-    <Disclosure open={object} testId="document-filters">
+    <Disclosure open={object && roomForFilters} testId="document-filters">
       {#snippet summary()}{$t('documents.list.filter')}{/snippet}
       <div class="column__filters">
         <Select

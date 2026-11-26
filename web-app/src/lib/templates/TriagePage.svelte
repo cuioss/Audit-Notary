@@ -249,5 +249,6 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
+    min-block-size: 44px;
   }
 </style>
