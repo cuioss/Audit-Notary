@@ -164,9 +164,10 @@
       if (isApiError(error) && error.outcome === 'MANAGED_BY_SOURCE') {
         managed = true;
       } else if (isApiError(error) && error.outcome === 'NOT_FOUND') {
-        // Erased by someone else meanwhile: the table is read again and no longer shows the person.
-        failure = 'directory.persons.gone';
+        // Erased by someone else meanwhile: the table is read again and no longer shows the person. The read clears
+        // the failure of its own, so the notice is set after it.
         await read(query);
+        failure = 'directory.persons.gone';
       } else {
         failure = errorMessageKey(error);
       }

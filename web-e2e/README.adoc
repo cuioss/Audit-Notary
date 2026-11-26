@@ -47,6 +47,13 @@ stream)
 |`tests/helpers/documents.js`
 |The notes of the test category, the paths of their writes at the mock, the choice of the language and the locator of a
 field of the generated form
+
+|`tests/helpers/catalogs.js`
+|The five catalogs, the addresses and the paths of the writes of the catalogs lens, and the fill of a new service
+
+|`tests/helpers/directory.js`
+|The addresses and paths of the directory pages, the static fixtures (persons, result of the import, candidates, the
+limits) and the shared steps; the first test of `directory.spec.js` compares the fixtures with the mock
 |===
 
 == Specs
@@ -88,15 +95,29 @@ fields, the password and the fresh login, a new document and the question before
 identity provider and with the password, every refusal, a note from submit to its next version, the release requests
 in Due and their way to the release, and the search of the documents in the palette in English and German
 
+|`catalogs.spec.js`
+|The catalogs lens (UC-CAT-1, UC-CAT-2): the five catalogs and their entries, the sheet generated from the schema,
+create, change and retire behind a confirmation, the protection needs of a service, the read-only paths and every
+refusal, in English and German
+
+|`directory.spec.js`
+|The directory pages (UC-ACC-4, UC-ACC-5, UC-CAT-3 to UC-CAT-5): the Backstage import with its three steps, its limits
+and every refusal; the persons table with search, prefill (refusals on the row they belong to) and erasure behind a
+question, `MANAGED_BY_SOURCE` and the page without the right; the candidates of a first login and `NOT_BINDABLE`, never
+with a pseudonym on screen; the own entry at `/settings/profile` with "Is this still right?", the saved change that
+confirms and the question before leaving; the notice of the shell while the confirmation is due; English and German
+
 |`theme-readability.spec.js`
-|The axe-core audit of every view in both themes, and of the states of the documents lens, the release and the palette
+|The axe-core audit of every view in both themes, and of the states of the documents lens, the release, the palette, the
+catalogs lens and the directory pages
 
 |`fonts.spec.js`
 |Every request stays on the own origin, and Inter is loaded
 
 |`mobile.spec.js`
 |On a narrow screen the bottom bar replaces the rail, and "More" holds the other lenses; the pages outside the shell,
-the notices and the documents lens at 390 px: nothing scrolls sideways, the acts are in reach, axe
+the notices, the documents lens, the catalogs lens and the directory pages at 390 px: nothing scrolls sideways, the acts
+are in reach, axe
 |===
 
 A new view gets its address in `navigation.spec.js` and its audit in `theme-readability.spec.js`; a new profile of

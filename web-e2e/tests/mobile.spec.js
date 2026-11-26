@@ -10,6 +10,17 @@ import {
   loginToCatalogs,
   newEntryAddress,
 } from './helpers/catalogs.js';
+import {
+  CANDIDATES,
+  DESCRIPTOR,
+  IMPORT_ADDRESS,
+  PERSONS_ADDRESS,
+  PROFILE_ADDRESS,
+  WELCOME_ADDRESS,
+  fillPerson,
+  loginToDirectory,
+  pasteDescriptor,
+} from './helpers/directory.js';
 
 /**
  * The phone layout (pm-web-app design, below 768 px): the rail gives way to the bottom bar with "More".
@@ -374,5 +385,186 @@ test.describe('at 390 px', () => {
     await expect(field(page, '/owner/team')).toContainText('This reference leads nowhere.');
     await expectNoSideways(page);
     await expectNoSeriousViolations(page, 'catalog entry with errors (phone)');
+  });
+
+  test('the pages of the directory are reached from the catalogs, with targets of the phone size', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'catalog-admin');
+    await loginToCatalogs(page, catalogAddress('team'));
+    await page.getByTestId('triage-up').click();
+    await expect(page.getByTestId('directory-nav')).toBeVisible();
+    for (const link of await page.getByTestId('directory-nav').getByRole('link').all()) {
+      expect((await link.boundingBox()).height).toBeGreaterThanOrEqual(43.5);
+    }
+    await page.getByTestId('directory-import').click();
+    await expect(page).toHaveURL(IMPORT_ADDRESS);
+    await expect(page.getByTestId('import-view')).toBeVisible();
+  });
+
+  test('the import fits in every step, and its acts are in reach', async ({ page, request }) => {
+    await useScenario(request, 'catalog-admin');
+    await loginToDirectory(page, IMPORT_ADDRESS, 'import-view');
+    await page.getByTestId('import-check').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('import-check')).toBeInViewport();
+    await expect(page.getByTestId('import-view')).toContainText(
+      'Choose or paste a document first.',
+    );
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'import choose (phone)');
+    await pasteDescriptor(page, DESCRIPTOR);
+    await page.getByTestId('import-check').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('import-check')).toBeInViewport();
+    await expectNoSideways(page);
+    await page.getByTestId('import-check').click();
+    await expect(page.getByTestId('import-result')).toBeVisible();
+    // The tables stack: each cell names itself.
+    await page.getByTestId('import-left-out').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('left-out-0')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'import check (phone)');
+    await page.getByTestId('import-apply').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('import-apply')).toBeInViewport();
+    await expect(page.getByTestId('import-back')).toBeInViewport();
+    await page.getByTestId('import-apply').click();
+    await expect(page.getByTestId('import-again')).toBeVisible();
+    await expect(page.getByTestId('import-open')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'import result (phone)');
+  });
+
+  test('a refusal of the import and the page without the right fit', async ({ page, request }) => {
+    await useScenario(request, 'catalog-admin#import-too-large');
+    await loginToDirectory(page, IMPORT_ADDRESS, 'import-view');
+    await pasteDescriptor(page, DESCRIPTOR);
+    await page.getByTestId('import-check').click();
+    await expect(page.getByTestId('import-failure')).toBeVisible();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'import refused (phone)');
+    await useScenario(request, 'workshop');
+    await page.goto(IMPORT_ADDRESS);
+    await expect(page.getByTestId('import-view')).toContainText('Importing needs the right');
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'import without the right (phone)');
+  });
+
+  test('the table of the persons fits, the erase act of a row and the question before it are in reach', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'catalog-admin');
+    await loginToDirectory(page, PERSONS_ADDRESS, 'persons-view');
+    await expect(page.getByTestId('person-p-2b7f10')).toContainText('Payments, Developer');
+    await page.getByTestId('erase-p-2b7f10').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('erase-p-2b7f10')).toBeInViewport();
+    expect((await page.getByTestId('erase-p-2b7f10').boundingBox()).height).toBeGreaterThanOrEqual(
+      43.5,
+    );
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'persons (phone)');
+    await page.getByTestId('erase-p-2b7f10').click();
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expect(page.getByTestId('erase-cancel')).toBeInViewport();
+    await expect(page.getByTestId('erase-confirm')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'erase question (phone)');
+  });
+
+  test('the prefill fits, and its acts and the refusal on a row are in reach', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'catalog-admin#persons-invalid');
+    await loginToDirectory(page, PERSONS_ADDRESS, 'persons-view');
+    await page.getByTestId('persons-add').scrollIntoViewIfNeeded();
+    await fillPerson(page, 0, { name: 'Nadia Kovac' });
+    await page.getByTestId('persons-add-row').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('persons-add-row')).toBeInViewport();
+    await page.getByTestId('persons-submit').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('persons-submit')).toBeInViewport();
+    await expectNoSideways(page);
+    await page.getByTestId('persons-add-row').click();
+    await fillPerson(page, 1, { name: 'Omar Haddad' });
+    await page.getByTestId('persons-submit').click();
+    await page.getByTestId('person-row-1').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('person-row-1')).toContainText('leads nowhere');
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'prefill refused (phone)');
+  });
+
+  test('the persons without the right fit and offer no act', async ({ page, request }) => {
+    await useScenario(request, 'read-only');
+    await loginToDirectory(page, PERSONS_ADDRESS, 'persons-view');
+    await expect(page.getByTestId('persons-read-only')).toBeVisible();
+    await expect(page.getByTestId('persons-add')).toHaveCount(0);
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'persons read only (phone)');
+  });
+
+  test('the candidates of a first login fit, and choosing and continuing are in reach', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'first-login#candidates-not-bindable');
+    await loginToDirectory(page, WELCOME_ADDRESS, 'welcome-view');
+    await page.getByTestId('welcome-role').selectOption({ label: 'Developer' });
+    await page.getByTestId('welcome-save').click();
+    await expect(page.getByTestId('welcome-candidates')).toBeVisible();
+    const choice = page.getByRole('radio', { name: CANDIDATES[0].label });
+    await choice.scrollIntoViewIfNeeded();
+    await expect(choice).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'welcome candidates (phone)');
+    await choice.check();
+    await page.getByTestId('welcome-continue').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('welcome-continue')).toBeInViewport();
+    await page.getByTestId('welcome-continue').click();
+    await expect(page.getByTestId('welcome-candidates')).toContainText('cannot be taken over');
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'welcome not bindable (phone)');
+  });
+
+  test('the notice of a due confirmation fits, its link is a target of the phone size, and the entry fits', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop#confirmation-due');
+    await loginToDirectory(page, '/', 'due-view');
+    await expect(page.getByTestId('confirmation-notice')).toBeVisible();
+    await expect(page.getByTestId('confirmation-link')).toBeInViewport();
+    expect(
+      (await page.getByTestId('confirmation-link').boundingBox()).height,
+    ).toBeGreaterThanOrEqual(43.5);
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'confirmation notice (phone)');
+    await page.getByTestId('confirmation-link').click();
+    await expect(page.getByTestId('profile-view')).toBeVisible();
+    await expect(page.getByTestId('profile-confirm-act')).toBeVisible();
+    await page.getByTestId('profile-confirm-act').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('profile-confirm-act')).toBeInViewport();
+    await expect(page.getByTestId('profile-save')).toBeVisible();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'profile confirmation (phone)');
+  });
+
+  test('the own entry fits, saving is in reach, and the question before leaving is in the viewport', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToDirectory(page, PROFILE_ADDRESS, 'profile-view');
+    await page.getByTestId('profile-name').fill('Alexandra Example');
+    await page.getByTestId('profile-membership-add').click();
+    await expect(page.getByTestId('profile-membership-1')).toBeVisible();
+    await page.getByTestId('profile-save').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('profile-save')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'profile (phone)');
+    await page.getByTestId('bottom-nav-samm').click();
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expect(page.getByTestId('leave-stay')).toBeInViewport();
+    await expect(page.getByTestId('leave-confirm')).toBeInViewport();
+    await expectNoSeriousViolations(page, 'profile leave question (phone)');
   });
 });

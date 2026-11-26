@@ -445,6 +445,11 @@ describe('erasing a person', () => {
       await screen.findByText('This entry is gone already. The list is up to date.'),
     ).toBeInTheDocument();
     expect(reads()).toBe(before + 1);
+    // The read that follows does not wipe the notice: give it time to finish.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(
+      screen.getByText('This entry is gone already. The list is up to date.'),
+    ).toBeInTheDocument();
   });
 });
 

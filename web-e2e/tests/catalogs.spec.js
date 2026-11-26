@@ -20,7 +20,8 @@ import { login } from './helpers/login.js';
  * generated from the schema, create, change, retire behind a confirmation, the retired entry and the user without the
  * right reading only, the protection needs a service comes to, and the refusals, against the profiles `workshop`,
  * `read-only`, `catalog-admin` and `empty` of the mock (web-mock/README.adoc, Directory and Catalogs). The pages of the
- * directory (`/directory/import`, `/directory/persons`: UC-CAT-3 to UC-CAT-5) are not built yet and have no test here.
+ * directory (`/directory/import`, `/directory/persons`: UC-CAT-3 to UC-CAT-5), the own entry and the first login are in
+ * `directory.spec.js`, which also follows the two links of the lens that lead to the first two.
  */
 const FORBIDDEN = 'You have no right for this action.';
 const ID_TAKEN = 'An entry with this id exists already';

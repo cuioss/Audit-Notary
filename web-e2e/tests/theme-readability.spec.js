@@ -4,6 +4,16 @@ import { gotoState, useScenario } from './helpers/mock.js';
 import { login, loginLocal } from './helpers/login.js';
 import { NOTES, field, noteAddress } from './helpers/documents.js';
 import {
+  CANDIDATES,
+  DESCRIPTOR,
+  IMPORT_ADDRESS,
+  PERSONS_ADDRESS,
+  PROFILE_ADDRESS,
+  WELCOME_ADDRESS,
+  fillPerson,
+  pasteDescriptor,
+} from './helpers/directory.js';
+import {
   catalogAddress,
   entryAddress,
   fillNewService,
@@ -335,6 +345,245 @@ for (const theme of ['light', 'dark']) {
       await prepare(page, request);
       await expect(page.getByTestId(view)).toBeVisible();
       await expectNoSeriousViolations(page, `catalogs: ${name} (${scenario}, ${theme})`);
+    });
+  }
+}
+
+/**
+ * The directory pages (UC-ACC-4, UC-ACC-5, UC-CAT-3 to UC-CAT-5): each state is reached on the page, after the theme is
+ * chosen, because choosing it reloads the page. `view` is the root of the page; `shown` is what the state must show.
+ */
+const DIRECTORY_STATES = [
+  [
+    'the choice of the documents',
+    'catalog-admin',
+    IMPORT_ADDRESS,
+    'import-view',
+    'import-choose',
+    async () => {},
+  ],
+  [
+    'the chosen documents',
+    'catalog-admin',
+    IMPORT_ADDRESS,
+    'import-view',
+    'import-documents',
+    async (page) => {
+      await pasteDescriptor(page, DESCRIPTOR);
+    },
+  ],
+  [
+    'the check of the import',
+    'catalog-admin',
+    IMPORT_ADDRESS,
+    'import-view',
+    'import-left-out',
+    async (page) => {
+      await pasteDescriptor(page, DESCRIPTOR);
+      await page.getByTestId('import-check').click();
+    },
+  ],
+  [
+    'the result of the import',
+    'catalog-admin',
+    IMPORT_ADDRESS,
+    'import-view',
+    'import-updated',
+    async (page) => {
+      await pasteDescriptor(page, DESCRIPTOR);
+      await page.getByTestId('import-check').click();
+      await page.getByTestId('import-apply').click();
+      await expect(page.getByTestId('import-again')).toBeVisible();
+    },
+  ],
+  [
+    'an import without news',
+    'catalog-admin#import-nothing-new',
+    IMPORT_ADDRESS,
+    'import-view',
+    'import-left-out',
+    async (page) => {
+      await pasteDescriptor(page, DESCRIPTOR);
+      await page.getByTestId('import-check').click();
+    },
+  ],
+  [
+    'a descriptor that is not valid',
+    'catalog-admin#import-invalid',
+    IMPORT_ADDRESS,
+    'import-view',
+    'import-document-invalid',
+    async (page) => {
+      await pasteDescriptor(page, DESCRIPTOR);
+      await page.getByTestId('import-check').click();
+    },
+  ],
+  [
+    'a request that is too large',
+    'catalog-admin#import-too-large',
+    IMPORT_ADDRESS,
+    'import-view',
+    'import-failure',
+    async (page) => {
+      await pasteDescriptor(page, DESCRIPTOR);
+      await page.getByTestId('import-check').click();
+    },
+  ],
+  [
+    'the import without the right',
+    'workshop',
+    IMPORT_ADDRESS,
+    'import-view',
+    'import-view',
+    async () => {},
+  ],
+  [
+    'the persons with the prefill',
+    'catalog-admin',
+    PERSONS_ADDRESS,
+    'persons-view',
+    'persons-add',
+    async () => {},
+  ],
+  [
+    'the persons without the right',
+    'read-only',
+    PERSONS_ADDRESS,
+    'persons-view',
+    'persons-read-only',
+    async () => {},
+  ],
+  [
+    'the persons of an empty installation',
+    'empty',
+    PERSONS_ADDRESS,
+    'persons-view',
+    'persons-add',
+    async () => {},
+  ],
+  [
+    'the prefill with a refusal on its row',
+    'catalog-admin#persons-invalid',
+    PERSONS_ADDRESS,
+    'persons-view',
+    'person-row-0',
+    async (page) => {
+      await fillPerson(page, 0, { name: 'Nadia Kovac' });
+      await page.getByTestId('persons-add-row').click();
+      await fillPerson(page, 1, { name: 'Omar Haddad' });
+      await page.getByTestId('persons-submit').click();
+      await expect(page.getByTestId('person-row-1')).toContainText('leads nowhere');
+    },
+  ],
+  [
+    'the question before an erasure',
+    'catalog-admin',
+    PERSONS_ADDRESS,
+    'persons-view',
+    'erase-confirm',
+    async (page) => {
+      await page.getByTestId('erase-p-2b7f10').click();
+    },
+  ],
+  [
+    'persons kept in the source of the organisation',
+    'catalog-admin#erase-managed-by-source',
+    PERSONS_ADDRESS,
+    'persons-view',
+    'managed-notice',
+    async (page) => {
+      await page.getByTestId('erase-p-2b7f10').click();
+      await page.getByTestId('erase-confirm').click();
+    },
+  ],
+  [
+    'the own entry',
+    'workshop',
+    PROFILE_ADDRESS,
+    'profile-view',
+    'profile-last-confirmed',
+    async () => {},
+  ],
+  [
+    'the own entry with the question "Is this still right?"',
+    'workshop#confirmation-due',
+    PROFILE_ADDRESS,
+    'profile-view',
+    'profile-confirm',
+    async () => {},
+  ],
+  [
+    'the own entry with changes that are not saved',
+    'workshop#confirmation-due',
+    PROFILE_ADDRESS,
+    'profile-view',
+    'profile-confirm',
+    async (page) => {
+      await page.getByTestId('profile-name').fill('Alexandra Example');
+      await expect(page.getByTestId('profile-confirm-act')).toBeDisabled();
+    },
+  ],
+  [
+    'the own entry refused by the server',
+    'workshop#entry-invalid',
+    PROFILE_ADDRESS,
+    'profile-view',
+    'profile-save',
+    async (page) => {
+      await page.getByTestId('profile-name').fill('Alexandra Example');
+      await page.getByTestId('profile-save').click();
+      await expect(page.getByTestId('profile-view')).toContainText('leads nowhere');
+    },
+  ],
+  [
+    'the notice of a due confirmation on a shell page',
+    'workshop#confirmation-due',
+    '/',
+    'due-view',
+    'confirmation-notice',
+    async () => {},
+  ],
+  [
+    'the entries a first login is offered',
+    'first-login#candidates',
+    WELCOME_ADDRESS,
+    'welcome-view',
+    'welcome-candidates',
+    async (page) => {
+      await page.getByTestId('welcome-role').selectOption({ label: 'Developer' });
+      await page.getByTestId('welcome-save').click();
+      await expect(page.getByRole('radio', { name: CANDIDATES[0].label })).toBeVisible();
+    },
+  ],
+  [
+    'an entry that cannot be taken over',
+    'first-login#candidates-not-bindable',
+    WELCOME_ADDRESS,
+    'welcome-view',
+    'welcome-candidates',
+    async (page) => {
+      await page.getByTestId('welcome-role').selectOption({ label: 'Developer' });
+      await page.getByTestId('welcome-save').click();
+      await page.getByRole('radio', { name: CANDIDATES[0].label }).check();
+      await page.getByTestId('welcome-continue').click();
+      await expect(page.getByTestId('welcome-candidates')).toContainText('cannot be taken over');
+    },
+  ],
+];
+
+for (const theme of ['light', 'dark']) {
+  for (const [name, scenario, address, view, shown, prepare] of DIRECTORY_STATES) {
+    test(`directory: ${name} of ${scenario} at ${address} in the ${theme} theme`, async ({
+      page,
+      request,
+    }) => {
+      await useScenario(request, scenario);
+      await login(page, address);
+      await useTheme(page, theme);
+      await expect(page.getByTestId(view)).toBeVisible();
+      await prepare(page);
+      await expect(page.getByTestId(shown).first()).toBeVisible();
+      await expectNoSeriousViolations(page, `directory: ${name} (${scenario}, ${theme})`);
     });
   }
 }
