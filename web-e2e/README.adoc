@@ -81,8 +81,13 @@ list and its filters, a note and its earlier states, the form kit through the sh
 the save, the conflict decided per field, every refusal of a save, the steps with save-first and the empty mandatory
 fields, the password and the fresh login, a new document and the question before leaving it, the read-only paths
 
+|`documents-release.spec.js`
+|The release of a note and what leads to it (UC-DOC-7 to UC-DOC-9): the review with its diff, the release with the
+identity provider and with the password, every refusal, a note from submit to its next version, the release requests
+in Due and their way to the release, and the search of the documents in the palette in English and German
+
 |`theme-readability.spec.js`
-|The axe-core audit of every view in both themes, and of the states of the documents lens
+|The axe-core audit of every view in both themes, and of the states of the documents lens, the release and the palette
 
 |`fonts.spec.js`
 |Every request stays on the own origin, and Inter is loaded

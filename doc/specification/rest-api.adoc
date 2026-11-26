@@ -1476,7 +1476,7 @@ blocked; the owner may change each one. The bodies are in <<_document_lifecycle_
   of `at`, is the not-found view; the person's own draft is restored only into a sheet they can edit, so a reader, a
   frozen document, an earlier state and a switched-off category show the saved value; a step acts on the saved document,
   so with unsaved changes the sheet offers "Save for everyone, then <step>", and a refused save sends no step; the step
-  that is the release is a link to `…/release`, which stays the placeholder view until the release flow is built; a new
+  that is the release is a link to `…/release`, the release view of the next item; a new
   document of a category with several document types without `kind` asks which one, and without the right `edit` the
   address says that creating needs it; the address of a document type whose schema the server does not serve is the
   not-found view.
@@ -1487,6 +1487,32 @@ otherwise only when the server answers `STEP_UP_REQUIRED`, after which the same 
 (<<_the_step_up_handler>>). A save of a document and a step without `stepUp` therefore ask nothing of a local user when
 the server asks nothing, and the sheet's line "You confirm your identity once more before this step" is shown only for
 a step that declares `stepUp`.
+
+. *The release view* (`web-app/src/lib/views/documents/ReleaseFlow.svelte`, the same for every category; the SAMM release
+  is its first user, `DocumentReleaseView.svelte` is the one of the generic lens) takes these readings of the contract,
+  decided provisionally with its construction (none adds a request): the diff of the release is grouped by part and then
+  by the first segment of the pointer, the property of the schema, with its label from the catalogue, and a change below
+  a table names its row ("Row 2, Done"); a value is drawn as the form reads it (the name of a person, the text of an
+  option), so the approver never reads a pseudonym; a document that is released already has nothing to release, so the
+  view does not ask for its diff and shows the record as unchanged since that release; the release always asks for the
+  confirmation of a local user before it is sent (the final rule of the step-up above: the dialog opens before the
+  release, and before a transition that declares `stepUp`); `CHANGED_SINCE_REVIEW` shows a notice and reads the document
+  and its diff again, which is the review of the mock (the request names no reviewed revision); `DOCUMENT_RELEASED`
+  reads the document again, shows it as released with a notice, and writes nothing; `MANDATORY_FIELDS_MISSING` lists the
+  fields the server found empty by their labels; `REJECTED`, `GIT_UNAVAILABLE` and every other refusal are a notice and
+  leave the review as it was; `TOO_MANY_LOGINS` and `INVALID_CREDENTIALS` are the step-up handler's. The act reads only
+  "Release". "Back to the document" writes nothing. A release request is shown on the release view with who asked and the
+  comment, in Due on the `release` item of the requester and on the `review` item of an approver
+  (`requestedBy`, `comment`; the requester's own request reads "You asked for the release."), and Due reads its list again
+  on `release-requested` and `document-transitioned`.
+. *The search of the documents* is part of the command palette (`GET /api/v1/search?q=`): it asks from two characters
+  after trimming, 250 milliseconds after the last key, and drops the answer of a text that was left; the hits stand under
+  their own group beneath the views, with title, category (the category's own name, or the name of the lens for a
+  delivered category) and state, each a link to the address the server names (an address the app has no view for is not
+  offered); one character shows a hint and no error (`MIN_LENGTH` is no message); an answer of `FORBIDDEN` or any failure
+  is a neutral notice that costs the documents only; the search is served while the Git server cannot be reached, so
+  nothing in the palette depends on `status.degraded`. Enter opens the first view that matches, else the first document;
+  the arrow keys move through the matches.
 
 . *A release of a document that someone released meanwhile* answers `409 DOCUMENT_RELEASED` with the `tag`, like a save of
   it (decided provisionally with the release flow; the release flow re-reads the document and shows it as released, and

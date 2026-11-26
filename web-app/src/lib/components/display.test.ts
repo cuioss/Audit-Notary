@@ -18,6 +18,7 @@ import MaturitySeal, {
   type SealFunction,
 } from './MaturitySeal.svelte';
 import ReasonBadge from './ReasonBadge.svelte';
+import ReleaseSeal from './ReleaseSeal.svelte';
 import RowLink from './RowLink.svelte';
 import SaveState, { SAVE_STATE_ICONS, SAVE_STATES } from './SaveState.svelte';
 import ScoreMeter from './ScoreMeter.svelte';
@@ -435,6 +436,37 @@ describe('MaturitySeal geometry', () => {
     expect(cells[1].streams[0][0]).toBeCloseTo(afterPractice);
     expect(cells[2].streams[0][0]).toBeCloseTo(cells[1].streams[1][1] + GEOMETRY.functionGap);
     expect(cells[0].middle).toBeCloseTo((cells[0].streams[0][0] + cells[0].streams[1][1]) / 2);
+  });
+});
+
+describe('ReleaseSeal', () => {
+  it('shows the version in a scalloped ring of gold, named for assistive technology', () => {
+    render(ReleaseSeal, {
+      version: 'v2',
+      caption: 'Released',
+      label: 'Seal of the release of Access review cadence: v2',
+      testId: 'seal',
+    });
+    const seal = screen.getByTestId('seal');
+    expect(seal).toHaveAttribute('data-sealed', 'v2');
+    expect(seal).not.toHaveClass('release-seal--pressing');
+    expect(screen.getByRole('img')).toHaveAccessibleName(
+      'Seal of the release of Access review cadence: v2',
+    );
+    expect(seal.querySelector('.release-seal__version')).toHaveTextContent('v2');
+    expect(seal.querySelector('.release-seal__caption')).toHaveTextContent('Released');
+    expect(seal.querySelector('.release-seal__rim')?.getAttribute('d')).toMatch(/^M/);
+  });
+
+  it('is pressed in once when the release was just made', () => {
+    render(ReleaseSeal, {
+      version: 'v1',
+      caption: 'Released',
+      label: 'Seal',
+      pressing: true,
+      testId: 'seal',
+    });
+    expect(screen.getByTestId('seal')).toHaveClass('release-seal--pressing');
   });
 });
 

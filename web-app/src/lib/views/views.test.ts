@@ -199,8 +199,7 @@ describe('AppRouter', () => {
     ['/categories/test-note/new?kind=note', 'documents-view'],
     ['/categories/test-note/01JZ8W1E3G5J7M9P1R3T5X7Z9B', 'documents-view'],
     ['/categories/test-note/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=v1', 'documents-view'],
-    // The release of a document is the release flow's, a later stage.
-    ['/categories/test-note/01JZ8W1E3G5J7M9P1R3T5X7Z9B/release', 'lens-view'],
+    ['/categories/test-note/01JZ8W1E3G5J7M9P1R3T5X7Z9B/release', 'release-view'],
     ['/nowhere/at/all/here/x', 'not-found-view'],
   ])('renders %s as %s', async (pathname, testId) => {
     vi.spyOn(apiClient, 'listCategories').mockReturnValue(new Promise(() => {}));
