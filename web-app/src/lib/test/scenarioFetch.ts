@@ -323,22 +323,29 @@ function parseKey(key: string): { method: string; path: string; query: URLSearch
 /**
  * The most specific match of a request among keyed entries, by the rule of the mock: the key must have the request's
  * method and path and every listed query name with exactly the listed value (further parameters do not hinder it); a key
- * without query matches any query; of several matches the one with the most listed parameters wins, equal keys by
- * their text.
+ * without query matches any query; of several matches the one with the most listed parameters wins. Equal matches of
+ * routes are told apart by their key text (`ties: 'text'`, so that the answer never depends on the order of a map);
+ * equal links keep the first in the order of the state (`ties: 'order'`), as `ScenarioState.linkFor` does.
  *
- * @param entries the entries by key
+ * @param entries the entries as key and value, in their order
  * @param method the request method
  * @param url the request URL
+ * @param ties how equal matches are told apart
  * @returns the entry, or `undefined`
  */
-function mostSpecific<T>(entries: Record<string, T>, method: string, url: URL): T | undefined {
+function mostSpecific<T>(
+  entries: ReadonlyArray<readonly [string, T]>,
+  method: string,
+  url: URL,
+  ties: 'text' | 'order',
+): T | undefined {
   let best: { size: number; key: string; entry: T } | undefined;
-  for (const [key, entry] of Object.entries(entries)) {
+  for (const [key, entry] of entries) {
     const parsed = parseKey(key);
     if (parsed.method !== method || parsed.path !== url.pathname) continue;
     if (![...parsed.query].every(([name, value]) => url.searchParams.get(name) === value)) continue;
     const size = [...parsed.query].length;
-    if (!best || size > best.size || (size === best.size && key < best.key)) {
+    if (!best || size > best.size || (ties === 'text' && size === best.size && key < best.key)) {
       best = { size, key, entry };
     }
   }
@@ -422,14 +429,13 @@ export function scenarioFetch(reference: string): ScenarioFetch {
       return answer({ body: mockMessages(url.searchParams.get('lang') === 'de' ? 'de' : 'en') });
     }
     const link = mostSpecific(
-      Object.fromEntries(
-        Object.values(current.links ?? {}).map((candidate) => [
-          `${candidate.method} ${candidate.path}`,
-          candidate,
-        ]),
-      ),
+      Object.values(current.links ?? {}).map((candidate) => [
+        `${candidate.method} ${candidate.path}`,
+        candidate,
+      ]),
       method,
       url,
+      'order',
     );
     if (link) {
       const response = answer(link);
@@ -448,7 +454,8 @@ export function scenarioFetch(reference: string): ScenarioFetch {
       });
     }
     const route =
-      mostSpecific(current.routes ?? {}, method, url) ?? mostSpecific(scenario.routes, method, url);
+      mostSpecific(Object.entries(current.routes ?? {}), method, url, 'text') ??
+      mostSpecific(Object.entries(scenario.routes), method, url, 'text');
     if (route?.handler !== undefined) {
       const handle = HANDLERS.get(route.handler);
       if (handle === undefined) throw new Error(`unknown handler: ${route.handler}`);

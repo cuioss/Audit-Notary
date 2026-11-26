@@ -395,7 +395,7 @@ public final class MockEngine implements AutoCloseable {
     private MockResponse login(MockRequest request) {
         lock.lock();
         try {
-            var route = scenario.route(state, LOGIN_ROUTE);
+            var route = scenario.route(state, request.method(), request.path(), request.queryParameters());
             if (route.isPresent()) {
                 return navigation(request, route.get());
             }
@@ -422,7 +422,8 @@ public final class MockEngine implements AutoCloseable {
     private Optional<MockResponse> callback(MockRequest request) {
         lock.lock();
         try {
-            return scenario.route(state, CALLBACK_ROUTE).map(route -> navigation(request, route));
+            return scenario.route(state, request.method(), request.path(), request.queryParameters())
+                    .map(route -> navigation(request, route));
         } finally {
             lock.unlock();
         }

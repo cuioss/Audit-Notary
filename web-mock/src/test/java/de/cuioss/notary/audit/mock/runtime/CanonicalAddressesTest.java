@@ -72,6 +72,7 @@ class CanonicalAddressesTest {
             "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?at=v1&at=v2",
             "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?kind=note",
             "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?at=v1#x",
+            "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?at=%", "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G?at=%zz",
             "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G#x",
             "/categories/test-note/new?at=v1", "/categories/test-note/new?kind=NOTE", "/categories/test-note/new?kind=a&kind=b",
             "/categories/test-note/new#x", "/categories/test-note?at=v1", "/categories?kind=note",

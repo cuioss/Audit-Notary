@@ -11,6 +11,7 @@
 package de.cuioss.notary.audit.mock.scenario;
 
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -74,8 +75,14 @@ public record RouteKey(String method, String path, Map<String, String> query) {
             if (equals <= 0 || equals == pair.length() - 1) {
                 return Optional.empty();
             }
-            String name = URLDecoder.decode(pair.substring(0, equals), StandardCharsets.UTF_8);
-            String value = URLDecoder.decode(pair.substring(equals + 1), StandardCharsets.UTF_8);
+            String name;
+            String value;
+            try {
+                name = URLDecoder.decode(pair.substring(0, equals), StandardCharsets.UTF_8);
+                value = URLDecoder.decode(pair.substring(equals + 1), StandardCharsets.UTF_8);
+            } catch (IllegalArgumentException malformedEscape) {
+                return Optional.empty();
+            }
             if (name.isEmpty() || value.isEmpty() || query.putIfAbsent(name, value) != null) {
                 return Optional.empty();
             }
@@ -93,9 +100,14 @@ public record RouteKey(String method, String path, Map<String, String> query) {
             return path;
         }
         var text = new StringBuilder(path).append('?');
-        query.forEach((name, value) -> text.append(name).append('=').append(value).append('&'));
+        query.forEach((name, value) -> text.append(encode(name)).append('=').append(encode(value)).append('&'));
         text.setLength(text.length() - 1);
         return text.toString();
+    }
+
+    /** Percent-encodes a query component so that {@link #parseQuery(String)} reads it back unchanged. */
+    private static String encode(String component) {
+        return URLEncoder.encode(component, StandardCharsets.UTF_8);
     }
 
     /**

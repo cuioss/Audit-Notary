@@ -162,8 +162,14 @@ public final class CanonicalAddresses {
             if (equals <= 0) {
                 return false;
             }
-            String name = decode(pair.substring(0, equals));
-            String value = decode(pair.substring(equals + 1));
+            String name;
+            String value;
+            try {
+                name = decode(pair.substring(0, equals));
+                value = decode(pair.substring(equals + 1));
+            } catch (IllegalArgumentException malformedEscape) {
+                return false;
+            }
             var allowed = queries.get(name);
             if (!address.query().contains(name) || allowed == null || !allowed.matcher(value).matches()
                     || !seen.add(name)) {

@@ -43,7 +43,10 @@ class RouteKeyTest {
                      "links": {
                        "plain": {"method": "POST", "path": "/api/v1/go", "next": "a", "body": {"which": "link-plain"}},
                        "one": {"method": "POST", "path": "/api/v1/go?a=1", "next": "a", "body": {"which": "link-one"}},
-                       "two": {"method": "POST", "path": "/api/v1/go?a=1&b=2", "next": "a", "body": {"which": "link-two"}}}}}}
+                       "two": {"method": "POST", "path": "/api/v1/go?a=1&b=2", "next": "a", "body": {"which": "link-two"}}}},
+               "d": {"links": {
+                       "second-b": {"method": "POST", "path": "/api/v1/tie?b=2", "next": "a"},
+                       "first-a": {"method": "POST", "path": "/api/v1/tie?a=1", "next": "a"}}}}}
             """);
 
     private static String which(String state, String method, String path, Map<String, String> query) {
@@ -111,6 +114,13 @@ class RouteKeyTest {
     }
 
     @Test
+    @DisplayName("takes the first link in the order of the state when links list equally many parameters")
+    void shouldKeepTheFirstOfEqualLinks() {
+        var state = SCENARIO.state("d").orElseThrow();
+        assertEquals("second-b", state.linkFor("POST", "/api/v1/tie", Map.of("a", "1", "b", "2")).orElseThrow().name());
+    }
+
+    @Test
     @DisplayName("writes a link target with its query, for /mock/state")
     void shouldWriteTheTargetOfALink() {
         var links = SCENARIO.state("c").orElseThrow().links();
@@ -130,8 +140,18 @@ class RouteKeyTest {
                 () -> assertFalse(key.matches("GET", "/api/v1/due", Map.of("a", "ä"))));
     }
 
+    @Test
+    @DisplayName("writes the target with encoded query components, so that it parses back to the same key")
+    void shouldRoundTripATargetWithReservedCharacters() {
+        var key = RouteKey.of("GET", "/api/v1/go?b=x%26y&c=a%3Db%23").orElseThrow();
+        var written = key.target();
+        assertAll(
+                () -> assertEquals("/api/v1/go?b=x%26y&c=a%3Db%23", written),
+                () -> assertEquals(key, RouteKey.of("GET", written).orElseThrow()));
+    }
+
     @ParameterizedTest
-    @ValueSource(strings = {"", "a", "a=", "=1", "a=1&a=2", "a=1#b", "a=1&", "&a=1", "a=1&&b=2"})
+    @ValueSource(strings = {"", "a", "a=", "=1", "a=1&a=2", "a=1#b", "a=1&", "&a=1", "a=1&&b=2", "a=%", "a=%zz", "%=1", "%4=1"})
     @DisplayName("refuses a query of another form")
     void shouldRefuseMalformedQueries(String query) {
         assertEquals(Optional.empty(), RouteKey.parseQuery(query));
