@@ -1140,10 +1140,14 @@ was cancelled or failed at the provider, or was met by another user, comes back 
 request answers `STEP_UP_REQUIRED` again; the handler has no page for it
 
 |`password`
-|Asks first, in a dialog titled "Confirm your identity", and sends the password as the member `password` of the JSON
-body of the request (PROVISIONAL generalisation: the release's `{"password"}` is the body member of any request that
-can ask; the other members stay). `401 INVALID_CREDENTIALS` keeps the dialog open with the error and writes nothing; any
-other answer closes the dialog and is the view's. The password is never kept, logged or shown
+|Asks, in a dialog titled "Confirm your identity", only where the server requires the confirmation for that step, and
+sends the password as the member `password` of the JSON body of the request (PROVISIONAL generalisation: the release's
+`{"password"}` is the body member of any request that can ask; the other members stay). The dialog opens before the
+request when the caller knows the step to need it (the release; a transition whose entry in `transitions` says
+`"stepUp": true`), and otherwise after `403 STEP_UP_REQUIRED`, which the handler answers by asking and sending the same
+request again with the password: a save, and a step that declares no step-up, go out without a question when the server
+asks for none. `401 INVALID_CREDENTIALS` keeps the dialog open with the error and writes nothing; any other answer closes
+the dialog and is the view's. The password is never kept, logged or shown
 
 |`off`
 |Sends the request; there is no dialog and no line in the margin
@@ -1167,8 +1171,9 @@ rows of stage completion, configuration save and category activation use it when
 
 |`403` (PROVISIONAL)
 |`STEP_UP_REQUIRED`
-|As above. With `stepUp: "password"` the status has already told the web app to ask; a server that answers it without
-an address is answered by opening the dialog
+|As above. With `stepUp: "password"` a server that answers it, with or without an address, is answered by opening the
+dialog (when the dialog was opened already and the server asks again without an address, it stays open with the
+error)
 
 |`401`
 |`INVALID_CREDENTIALS`
@@ -1471,10 +1476,15 @@ blocked; the owner may change each one. The bodies are in <<_document_lifecycle_
   document of a category with several document types without `kind` asks which one, and without the right `edit` the
   address says that creating needs it; the address of a document type whose schema the server does not serve is the
   not-found view.
++
+The confirmation of a local user is asked for only where the server requires it for that step (decided by the owner,
+final): the password dialog opens before a step whose transition declares `"stepUp": true` and before the release, and
+otherwise only when the server answers `STEP_UP_REQUIRED`, after which the same request is sent again with the password
+(<<_the_step_up_handler>>). A save of a document and a step without `stepUp` therefore ask nothing of a local user when
+the server asks nothing, and the sheet's line "You confirm your identity once more before this step" is shown only for
+a step that declares `stepUp`.
 
 For the owner: whether the rail may gain a ninth lens, and whether `/categories/{category}` may list documents, given
 that the use cases of the categories name it for the definition (1); whether a refused draft is right, or the draft
 should be written and the errors only advised (10); whether a pending release request belongs in the approvers' Due as
-well (13); whether the release request should carry the reviewed revision now (14); the status `502` of `REJECTED` (15); whether a switched-off custom category keeps readable, read-only generic addresses (21); whether the step-up handler should
-ask a local user for the password only for a step whose transition says `stepUp` (it decides by the method alone and asks
-for every save and every step: 24).
+well (13); whether the release request should carry the reviewed revision now (14); the status `502` of `REJECTED` (15); whether a switched-off custom category keeps readable, read-only generic addresses (21).

@@ -39,16 +39,22 @@ export async function loadCategories(client: ApiClient = apiClient): Promise<Cat
 }
 
 /**
- * Reads the categories for the rail and keeps quiet when that is not possible: a session without a right, a first login
- * or a server that cannot be reached has no documents lens for now.
+ * Reads the categories for the rail and keeps quiet when that is not possible: a session without a right or a first
+ * login has no documents lens (a refusal clears the list), while a server that cannot be reached for a moment leaves
+ * the list as it was, so the lens does not vanish from the rail under the person's hands.
  *
  * @param client the client
  */
 export async function refreshCategories(client: ApiClient = apiClient): Promise<void> {
   try {
     await loadCategories(client);
-  } catch {
-    categoryList.set(null);
+  } catch (error) {
+    if (
+      isApiError(error) &&
+      (error.outcome === 'FORBIDDEN' || error.outcome === 'UNAUTHENTICATED')
+    ) {
+      categoryList.set(null);
+    }
   }
 }
 

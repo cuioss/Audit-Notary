@@ -746,12 +746,18 @@ export class DocumentController {
     // The page may also show another document by now: the confirmation was for the one asked, so nothing is sent.
     let unsaved = false;
     let moved = false;
-    const result = await this.stepUp.run<Transitioned>((password) => {
-      moved = this.generation !== generation;
-      unsaved = !moved && this.dirty;
-      if (moved || unsaved) return Promise.reject(new Error('transition not sent'));
-      return this.client.transition(this.repository, snapshot.document, id, password);
-    });
+    // A local user is asked for the password first only where the transition declares `stepUp`; otherwise the request is
+    // sent and the server's `STEP_UP_REQUIRED` opens the question.
+    const asks = typeof transition === 'string' ? false : transition.stepUp;
+    const result = await this.stepUp.run<Transitioned>(
+      (password) => {
+        moved = this.generation !== generation;
+        unsaved = !moved && this.dirty;
+        if (moved || unsaved) return Promise.reject(new Error('transition not sent'));
+        return this.client.transition(this.repository, snapshot.document, id, password);
+      },
+      { asks },
+    );
     if (moved) return { kind: 'handled' };
     if (unsaved) return { kind: 'unsaved' };
     if (result.status === 'handled') return { kind: 'handled' };

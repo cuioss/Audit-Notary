@@ -78,6 +78,7 @@
   /** What the step-up dialog asks to confirm: a save, or a step of the workflow. */
   let confirming = $state<{ act: string; lede: string }>({ act: '', lede: '' });
   let form: SchemaForm | undefined = $state();
+  let statusEl: HTMLElement | undefined = $state();
 
   let rights = $derived(actionsOn($session, doc.repository));
   let switchedOff = $derived(category.enabled === false);
@@ -385,6 +386,7 @@
     kind={doc.kind}
     locked={controller.locked}
     onresolve={(pointer, keep) => controller.resolve(pointer, keep)}
+    ondecided={() => statusEl?.querySelector<HTMLElement>('button, [aria-disabled]')?.focus()}
   />
 
   {#if !reading && !switchedOff}
@@ -419,7 +421,7 @@
   <p class="sr-only" role="status" aria-live="polite">{announcement}</p>
 
   {#snippet status()}
-    <div class="status">
+    <div class="status" bind:this={statusEl}>
       <SaveState
         state={readonly ? 'read-only' : controller.saveState}
         {label}

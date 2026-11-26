@@ -710,20 +710,90 @@ test.describe('the steps of the workflow (UC-DOC-6)', () => {
     await expect(announcement(page)).toContainText('is now In review');
   });
 
-  test('a local user confirms a save and a submit with the password', async ({ page, request }) => {
+  test('a local user is asked for no password for a save or a step the server accepts', async ({
+    page,
+    request,
+  }) => {
     await useScenario(request, 'workshop#note-release-password');
     await clearActs(request);
     await login(page, noteAddress(NOTES.N2));
+    await page.getByTestId('save-everyone').click();
+    await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'saved');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await page.getByTestId('transition-test-note.submit').click();
+    await expect(announcement(page)).toContainText('is now In review');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    const sent = await acts(request);
+    expect(sentTo(sent, savePath(NOTES.N2), 'POST')).toHaveLength(1);
+    expect(sentTo(sent, submitPath(NOTES.N2), 'POST')).toHaveLength(1);
+  });
+
+  test('a local user is asked for the password when the server requires it for a save, and the same request goes out with it', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop#note-release-password');
+    await clearActs(request);
+    await login(page, noteAddress(NOTES.N2));
+    // The mock has no state that demands a confirmation without naming an address: the first save is answered here.
+    const bodies = [];
+    let demanded = false;
+    await page.route(`**${savePath(NOTES.N2)}`, async (route) => {
+      bodies.push(route.request().postDataJSON());
+      if (demanded) return route.continue();
+      demanded = true;
+      return route.fulfill({
+        status: 403,
+        contentType: 'application/json',
+        body: JSON.stringify({ outcome: 'STEP_UP_REQUIRED' }),
+      });
+    });
     await page.getByTestId('save-everyone').click();
     await expect(page.getByRole('dialog')).toContainText('Enter your password to save');
     await page.getByTestId('document-password').fill('local-password');
     await page.getByTestId('document-confirm').click();
     await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'saved');
+    expect(bodies).toHaveLength(2);
+    expect(bodies[0].password).toBeUndefined();
+    expect(bodies[1].password).toBe('local-password');
+    expect(JSON.stringify(await acts(request))).not.toContain('local-password');
+  });
+
+  test('a local user is asked for the password before a step that declares step-up, and the step is not sent before', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop#note-release-password');
+    await clearActs(request);
+    // The mock's note declares no step-up on its submit: the read is changed here, as the read of a category that does.
+    await page.route(
+      (url) => url.pathname === `/api/v1/documents/test-notes/${NOTES.N2}`,
+      async (route) => {
+        const response = await route.fetch();
+        const body = await response.json();
+        body.transitions = body.transitions.map((transition) => ({ ...transition, stepUp: true }));
+        await route.fulfill({ response, json: body });
+      },
+    );
+    const bodies = [];
+    await page.route(`**${submitPath(NOTES.N2)}`, (route) => {
+      bodies.push(route.request().postDataJSON());
+      return route.continue();
+    });
+    await login(page, noteAddress(NOTES.N2));
+    await expect(page.getByTestId('step-up-note')).toContainText(
+      'You confirm your identity once more',
+    );
+    await page.getByTestId('save-everyone').click();
+    await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'saved');
     await page.getByTestId('transition-test-note.submit').click();
     await expect(page.getByRole('dialog')).toContainText('Enter your password to confirm');
+    expect(bodies).toHaveLength(0);
     await page.getByTestId('document-password').fill('local-password');
     await page.getByTestId('document-confirm').click();
     await expect(announcement(page)).toContainText('is now In review');
+    expect(bodies).toHaveLength(1);
+    expect(bodies[0].password).toBe('local-password');
     expect(JSON.stringify(await acts(request))).not.toContain('local-password');
   });
 });
@@ -768,6 +838,13 @@ test.describe('in German (AUN-WEB-7)', () => {
     await clearActs(request);
     await login(page, noteAddress(NOTES.N2));
     await useLanguage(page, 'de');
+    await page.route(`**${savePath(NOTES.N2)}`, (route) =>
+      route.fulfill({
+        status: 403,
+        contentType: 'application/json',
+        body: JSON.stringify({ outcome: 'STEP_UP_REQUIRED' }),
+      }),
+    );
     await page.getByTestId('save-everyone').click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toContainText('Identität bestätigen');

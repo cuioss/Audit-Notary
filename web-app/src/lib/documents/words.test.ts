@@ -68,14 +68,14 @@ describe('the categories', () => {
     expect(get(categoryList)).toEqual(list);
   });
 
-  it('keeps quiet when the categories cannot be read: no lens', async () => {
+  it('keeps quiet when the categories cannot be read: a refusal ends the lens, a failure to reach the server does not', async () => {
     categoryList.set({ categories: [NOTE] });
-    vi.stubGlobal('fetch', async () => Response.json({ outcome: 'FORBIDDEN' }, { status: 403 }));
-    await refreshCategories(new ApiClient(() => {}));
-    expect(get(categoryList)).toBeNull();
     vi.stubGlobal('fetch', async () => {
       throw new TypeError('offline');
     });
+    await refreshCategories(new ApiClient(() => {}));
+    expect(get(categoryList)).toEqual({ categories: [NOTE] });
+    vi.stubGlobal('fetch', async () => Response.json({ outcome: 'FORBIDDEN' }, { status: 403 }));
     await refreshCategories(new ApiClient(() => {}));
     expect(get(categoryList)).toBeNull();
   });

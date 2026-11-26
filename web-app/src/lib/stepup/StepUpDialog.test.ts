@@ -34,7 +34,7 @@ describe('StepUpDialog', () => {
     show(handler);
     const dialog = document.querySelector('dialog') as HTMLDialogElement;
     expect(dialog).not.toHaveAttribute('open');
-    const run = handler.run(() => Promise.resolve('ok'));
+    const run = handler.run(() => Promise.resolve('ok'), { asks: true });
     await vi.waitFor(() => expect(dialog).toHaveAttribute('open'));
     expect(within(dialog).getByText('Confirm your identity')).toBeInTheDocument();
     expect(within(dialog).getByText('Enter your password to release X.')).toBeInTheDocument();
@@ -51,7 +51,7 @@ describe('StepUpDialog', () => {
     const request = vi.fn(() => Promise.resolve('ok'));
     show(handler);
     const dialog = document.querySelector('dialog') as HTMLDialogElement;
-    void handler.run(request);
+    void handler.run(request, { asks: true });
     await vi.waitFor(() => expect(dialog).toHaveAttribute('open'));
     await fireEvent.click(within(dialog).getByTestId('x-confirm'));
     expect(within(dialog).getByText('Fill in this field.')).toBeInTheDocument();
@@ -59,7 +59,7 @@ describe('StepUpDialog', () => {
     await fireEvent.input(within(dialog).getByTestId('x-password'), { target: { value: 'pw' } });
     handler.cancel();
     await vi.waitFor(() => expect(dialog).not.toHaveAttribute('open'));
-    void handler.run(request);
+    void handler.run(request, { asks: true });
     await vi.waitFor(() => expect(dialog).toHaveAttribute('open'));
     expect(within(dialog).getByTestId('x-password')).toHaveValue('');
     expect(within(dialog).queryByText('Fill in this field.')).toBeNull();
@@ -69,7 +69,9 @@ describe('StepUpDialog', () => {
     const handler = new StepUpHandler(apiClient, () => 'password');
     show(handler);
     const dialog = document.querySelector('dialog') as HTMLDialogElement;
-    void handler.run(() => Promise.reject(new ApiError('INVALID_CREDENTIALS', 401)));
+    void handler.run(() => Promise.reject(new ApiError('INVALID_CREDENTIALS', 401)), {
+      asks: true,
+    });
     await vi.waitFor(() => expect(dialog).toHaveAttribute('open'));
     await fireEvent.input(within(dialog).getByTestId('x-password'), { target: { value: 'no' } });
     await fireEvent.click(within(dialog).getByTestId('x-confirm'));
@@ -89,6 +91,7 @@ describe('StepUpDialog', () => {
         new Promise<string>((_, reject) => {
           refuse = reject;
         }),
+      { asks: true },
     );
     await vi.waitFor(() => expect(dialog).toHaveAttribute('open'));
     const field = within(dialog).getByTestId('x-password');
@@ -109,7 +112,7 @@ describe('StepUpDialog', () => {
     const handler = new StepUpHandler(apiClient, () => 'password');
     show(handler);
     const dialog = document.querySelector('dialog') as HTMLDialogElement;
-    const run = handler.run(() => Promise.resolve('ok'));
+    const run = handler.run(() => Promise.resolve('ok'), { asks: true });
     await vi.waitFor(() => expect(dialog).toHaveAttribute('open'));
     await fireEvent.click(within(dialog).getAllByRole('button', { name: 'Cancel' })[0]);
     expect(await run).toEqual({ status: 'handled' });

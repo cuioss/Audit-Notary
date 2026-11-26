@@ -39,9 +39,10 @@
   let rights = $derived(
     `${$session?.firstLoginRequired ?? ''}|${JSON.stringify($session?.rights ?? null)}`,
   );
+  let entitled = $derived(!!$session && !$session.firstLoginRequired && !hasNoRights($session));
   $effect(() => {
     void rights;
-    if ($session && !$session.firstLoginRequired && !hasNoRights($session)) {
+    if (entitled) {
       void refreshCategories();
     } else {
       categoryList.set(null);

@@ -159,8 +159,10 @@
     if (!assessment) return;
     const id = assessment.id;
     notice = null;
-    const result = await stepUp.run((password) =>
-      apiClient.release('samm-assessments', id, password),
+    // The release always needs the confirmation (AUN-SAMM-4): a local user is asked before it is sent.
+    const result = await stepUp.run(
+      (password) => apiClient.release('samm-assessments', id, password),
+      { asks: true },
     );
     if (result.status === 'done') {
       released = { tag: result.value.tag, at: result.value.at };

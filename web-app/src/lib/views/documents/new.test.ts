@@ -10,6 +10,7 @@ vi.mock('$app/navigation', () => ({
   beforeNavigate: (callback: (navigation: unknown) => void) => {
     navigation.callback = callback;
   },
+  afterNavigate: () => {},
   goto: navigation.goto,
 }));
 

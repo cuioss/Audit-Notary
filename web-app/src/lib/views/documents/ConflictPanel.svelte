@@ -5,6 +5,7 @@
   import { fieldLabel } from '../../documents/categories';
   import { plainValue } from '../../documents/display';
   import { messagesStore, t } from '../../i18n';
+  import { tick } from 'svelte';
 
   /**
    * The conflict of a save (UC-DOC-4, AUN-WEB-5): each field that someone else changed meanwhile, with the own and the
@@ -22,15 +23,34 @@
     locked: boolean;
     /** Decides one field. */
     onresolve: (pointer: string, keep: 'own' | 'other') => void;
+    /** Called after the last field was decided and the panel is gone: where the keyboard goes on. */
+    ondecided?: () => void;
   }
 
-  let { conflicts, category, kind, locked, onresolve }: Props = $props();
+  let { conflicts, category, kind, locked, onresolve, ondecided }: Props = $props();
 
   let entries = $derived(Object.entries(conflicts));
+  let panel: HTMLElement | undefined = $state();
+
+  /**
+   * Decides one field. The decided field leaves the list together with the button that was pressed, so the focus moves
+   * on to the next field to decide, or to `ondecided` after the last one, and never falls to the page.
+   */
+  async function decide(pointer: string, keep: 'own' | 'other') {
+    const index = entries.findIndex(([key]) => key === pointer);
+    onresolve(pointer, keep);
+    await tick();
+    const rows = panel?.querySelectorAll<HTMLElement>('.conflict') ?? [];
+    if (rows.length === 0) {
+      ondecided?.();
+      return;
+    }
+    rows[Math.min(index, rows.length - 1)].querySelector<HTMLElement>('button')?.focus();
+  }
 </script>
 
 {#if entries.length > 0}
-  <section class="conflicts" data-testid="conflict-panel">
+  <section class="conflicts" data-testid="conflict-panel" bind:this={panel}>
     <Notice
       tone="attention"
       title={$t('documents.conflict.title', { count: entries.length })}
@@ -53,14 +73,14 @@
           </dl>
           <div class="conflict__acts">
             <Button
-              onclick={() => onresolve(pointer, 'own')}
+              onclick={() => void decide(pointer, 'own')}
               disabledReason={locked ? $t('documents.conflict.locked') : null}
               data-testid="keep-own-{pointer}"
             >
               {$t('documents.conflict.keep-own')}
             </Button>
             <Button
-              onclick={() => onresolve(pointer, 'other')}
+              onclick={() => void decide(pointer, 'other')}
               disabledReason={locked ? $t('documents.conflict.locked') : null}
               data-testid="take-other-{pointer}"
             >

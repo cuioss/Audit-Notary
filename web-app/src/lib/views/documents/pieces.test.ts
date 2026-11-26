@@ -151,6 +151,29 @@ describe('ConflictPanel', () => {
     expect(onresolve).toHaveBeenNthCalledWith(2, '/pinned', 'other');
   });
 
+  it('moves the focus on to the next field to decide, and to the sheet after the last', async () => {
+    const ondecided = vi.fn();
+    let current = { ...conflicts };
+    const view = render(ConflictPanel, {
+      conflicts: current,
+      category: 'test-note',
+      kind: 'note',
+      locked: false,
+      onresolve: (pointer: string) => {
+        const { [pointer]: _decided, ...rest } = current;
+        current = rest;
+        void view.rerender({ conflicts: current });
+      },
+      ondecided,
+    });
+    await fireEvent.click(screen.getByTestId('keep-own-/status'));
+    await vi.waitFor(() => expect(screen.getByTestId('keep-own-/pinned')).toHaveFocus());
+    await fireEvent.click(screen.getByTestId('keep-own-/pinned'));
+    await vi.waitFor(() => expect(screen.getByTestId('keep-own-/actions')).toHaveFocus());
+    await fireEvent.click(screen.getByTestId('keep-own-/actions'));
+    await vi.waitFor(() => expect(ondecided).toHaveBeenCalledOnce());
+  });
+
   it('decides nothing while the sheet cannot be edited, and says so', async () => {
     const onresolve = vi.fn();
     render(ConflictPanel, {

@@ -54,7 +54,7 @@
 
   let categories = $state<Category[] | null>(null);
   let documents = $state<Record<string, { list: DocumentSummary[]; truncated: boolean }>>({});
-  let schemas = $state<CategorySchema | null>(null);
+  let loadedSchemas = $state<CategorySchema | null>(null);
   let doc = $state<DocumentRead | null>(null);
   let revisions = $state<{ list: Revision[]; truncated: boolean } | null>(null);
   let missing = $state(false);
@@ -78,6 +78,8 @@
 
   let shown = $derived((categories ?? []).filter(isShown));
   let category = $derived(categories?.find((entry) => entry.id === params.category) ?? null);
+  /** The schemas of the category of the address: those read for another category are no schemas here. */
+  let schemas = $derived(loadedSchemas?.category === category?.id ? loadedSchemas : null);
   /** The address names a category this lens does not show. */
   let unknownCategory = $derived(
     categories !== null && !!params.category && (!category || !category.generic),
@@ -175,13 +177,13 @@
   $effect(() => {
     const current = category;
     if (!current || (route !== 'categories.document' && route !== 'categories.new')) return;
-    if (untrack(() => schemas) !== null) return;
+    if (untrack(() => loadedSchemas)?.category === current.id) return;
     let live = true;
     apiClient
       .getCategorySchema(current.id)
       .then((answer) => {
         if (!live) return;
-        schemas = answer;
+        loadedSchemas = answer;
         succeed('schema');
       })
       .catch((error) => {
@@ -237,6 +239,8 @@
       doc = null;
       revisions = null;
       missing = false;
+      // The failure of a read belongs to the document asked: it does not stay over the list or the new document.
+      untrack(() => succeed('document'));
       return;
     }
     untrack(() => {
@@ -340,18 +344,21 @@
         />
       {:else if level.key === 'new'}
         {#if category}
-          <NewDocumentSheet
-            {category}
-            kind={kindEntry?.id ?? null}
-            schema={newSchema}
-            repository={kindEntry?.repository ?? ''}
-            canCreate={kindEntry
-              ? actionsOn($session, kindEntry.repository).includes('edit')
-              : category.kinds.some((entry) =>
-                  actionsOn($session, entry.repository).includes('edit'),
-                )}
-            {onnavigate}
-          />
+          <!-- Another category or document type is another form, never the typed one. -->
+          {#key `${category.id}:${kindEntry?.id ?? ''}`}
+            <NewDocumentSheet
+              {category}
+              kind={kindEntry?.id ?? null}
+              schema={newSchema}
+              repository={kindEntry?.repository ?? ''}
+              canCreate={kindEntry
+                ? actionsOn($session, kindEntry.repository).includes('edit')
+                : category.kinds.some((entry) =>
+                    actionsOn($session, entry.repository).includes('edit'),
+                  )}
+              {onnavigate}
+            />
+          {/key}
         {:else}
           <Sheet><p class="muted">{$t('common.loading')}</p></Sheet>
         {/if}

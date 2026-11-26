@@ -8,8 +8,11 @@
  * - `mfa`: the request is sent; on `403 STEP_UP_REQUIRED` with an address the app leaves for it and keeps nothing
  *   across the redirect — the user chooses the act again after the return (PROVISIONAL; Token Sheriff's planned
  *   pending action, SESSION-8, replaces this).
- * - `password`: a dialog asks first and the password travels as the member `password` of the request's body (PROVISIONAL
- *   generalisation). `401 INVALID_CREDENTIALS` keeps the dialog open; the password is never kept, logged or shown.
+ * - `password`: the password travels as the member `password` of the request's body (PROVISIONAL generalisation). The
+ *   dialog asks first only for a step the caller knows to need it (`asks`: the release, a transition that declares
+ *   `stepUp`); every other request is sent without it and the dialog opens when the server answers
+ *   `STEP_UP_REQUIRED`, after which the same request is sent with the password. `401 INVALID_CREDENTIALS` keeps the
+ *   dialog open; the password is never kept, logged or shown.
  * - `off`: the request is sent.
  *
  * The handler owns `STEP_UP_REQUIRED`, `INVALID_CREDENTIALS`, `TOO_MANY_LOGINS` (a notice; nothing was written) and
@@ -67,6 +70,16 @@ function stepUpAddress(error: ApiError): string | null {
 /** A request the handler sends: with the password when the dialog collected one. */
 export type StepUpRequest<T> = (password?: string) => Promise<T>;
 
+/** What the caller knows of the request it hands to the handler. */
+export interface StepUpOptions {
+  /**
+   * Whether the step is known to need the confirmation (the release; a transition that declares `stepUp`). With the
+   * password method the dialog then opens before the request is sent. Without it the request is sent first and the
+   * dialog opens only when the server answers `STEP_UP_REQUIRED`.
+   */
+  asks?: boolean;
+}
+
 /** The handler of one view. */
 export class StepUpHandler {
   private readonly store = writable<StepUpState>({ ...IDLE });
@@ -100,23 +113,35 @@ export class StepUpHandler {
   /**
    * Sends a request that can ask for step-up.
    *
-   * @param request the request; it gets the password when the method is `password`
+   * @param request the request; it gets the password when the dialog collected one
+   * @param options what the caller knows of the step
    * @returns what came of it
    */
-  run<T>(request: StepUpRequest<T>): Promise<StepUpResult<T>> {
+  run<T>(request: StepUpRequest<T>, options: StepUpOptions = {}): Promise<StepUpResult<T>> {
     this.patch({ notice: null });
-    if (this.method() === 'password') {
+    if (this.method() === 'password' && options.asks) {
       return this.ask(request);
     }
     return this.attempt(request);
   }
 
-  /** Sends the request without a dialog: `mfa` and `off`. */
+  /**
+   * Sends the request without a dialog: `mfa` and `off`, and `password` for a step not known to need the password,
+   * which the server then demands with `STEP_UP_REQUIRED`.
+   */
   private async attempt<T>(request: StepUpRequest<T>): Promise<StepUpResult<T>> {
     this.patch({ working: true });
     try {
       return { status: 'done', value: await request() };
     } catch (error) {
+      if (
+        this.method() === 'password' &&
+        isApiError(error) &&
+        error.outcome === 'STEP_UP_REQUIRED'
+      ) {
+        // The server requires the confirmation of this step: ask for the password and send the request again.
+        return this.ask(request);
+      }
       return await this.classify<T>(error);
     } finally {
       this.patch({ working: false });

@@ -398,6 +398,50 @@ describe('the document of an address', () => {
   });
 });
 
+describe('moving between addresses without leaving the lens', () => {
+  it('reads the schema of the category it moved to, never keeping the one of the last', async () => {
+    const first = await useProfile();
+    const schema = await (
+      await first.scenario.fetch(new Request('http://localhost/api/v1/categories/test-note/schema'))
+    ).json();
+    const kit = await useProfile('workshop', 'en', {
+      'GET /api/v1/categories': categories(TEST_NOTE, { ...TEST_NOTE, id: 'other-note' }),
+      'GET /api/v1/categories/other-note/schema': { ...schema, category: 'other-note' },
+    });
+    const view = render(DocumentsView, {
+      route: 'categories.document',
+      params: { category: 'test-note', document: N2 },
+      onnavigate: vi.fn(),
+    });
+    await screen.findByTestId('document-sheet');
+    await view.rerender({
+      route: 'categories.document',
+      params: { category: 'other-note', document: N2 },
+    });
+    await vi.waitFor(() =>
+      expect(kit.requests).toContain('GET /api/v1/categories/other-note/schema'),
+    );
+    expect(await screen.findByTestId('document-sheet')).toBeInTheDocument();
+  });
+
+  it('drops the failure of a document read when the address moves to the list', async () => {
+    await useProfile('workshop', 'en', {
+      [`GET /api/v1/documents/${REPOSITORY}/${N2}`]: Response.json(
+        { outcome: 'GIT_UNAVAILABLE' },
+        { status: 503 },
+      ),
+    });
+    const view = render(DocumentsView, {
+      route: 'categories.document',
+      params: { category: 'test-note', document: N2 },
+      onnavigate: vi.fn(),
+    });
+    expect(await screen.findByRole('alert')).toHaveTextContent('The Git server cannot be reached');
+    await view.rerender({ ...CATEGORY });
+    await vi.waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
+  });
+});
+
 describe('in German', () => {
   it('shows the list, its filters and its marks with the German texts', async () => {
     await useProfile('workshop', 'de');

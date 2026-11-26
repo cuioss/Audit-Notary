@@ -522,11 +522,14 @@ describe('the steps of the workflow', () => {
       repositories: [],
     });
     await open('workshop', N3);
+    // The step declares no step-up: it is sent first, and the server's demand opens the question.
     const transition = vi
       .spyOn(apiClient, 'transition')
+      .mockRejectedValueOnce(new ApiError('STEP_UP_REQUIRED', 403))
       .mockRejectedValueOnce(new ApiError('INVALID_CREDENTIALS', 401))
       .mockRejectedValueOnce(new ApiError('TOO_MANY_LOGINS', 503));
     await fireEvent.click(screen.getByTestId('transition-test-note.submit'));
+    expect(transition).toHaveBeenCalledTimes(1);
     const password = await screen.findByTestId('document-password');
     expect(screen.getByText('Confirm your identity')).toBeInTheDocument();
     expect(
@@ -544,7 +547,25 @@ describe('the steps of the workflow', () => {
     expect(
       await screen.findByText('Many people are logging in right now. Try again in a minute.'),
     ).toBeInTheDocument();
-    expect(transition).toHaveBeenCalledTimes(2);
+    expect(transition).toHaveBeenCalledTimes(3);
+  });
+
+  it('does not ask a local user for the password for a step that needs none', async () => {
+    status.set({
+      version: 't',
+      degraded: false,
+      loginProvider: 'local',
+      stepUp: 'password',
+      repositories: [],
+    });
+    await open('workshop', N3);
+    const transition = vi
+      .spyOn(apiClient, 'transition')
+      .mockRejectedValueOnce(new ApiError('REJECTED', 502));
+    await fireEvent.click(screen.getByTestId('transition-test-note.submit'));
+    await vi.waitFor(() => expect(transition).toHaveBeenCalledTimes(1));
+    expect(transition.mock.calls[0][3]).toBeUndefined();
+    expect(document.querySelector('dialog')).not.toHaveAttribute('open');
   });
 
   it('shows the release of a document in review as a step the reader may not take, with the reason', async () => {

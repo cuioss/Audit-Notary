@@ -717,10 +717,11 @@ describe('the sheets and the step-up handler (UC-ACC-3)', () => {
   it('asks a local user for the password before it submits, and sends it with the transition', async () => {
     const { scope, assessment, model } = await fixture('workshop');
     status.set({ ...PASSWORD });
-    const transition = vi.spyOn(apiClient, 'transition').mockResolvedValue({
-      outcome: 'TRANSITIONED',
-      state: 'in-review',
-    });
+    // The submit is sent first; the server's demand for the confirmation opens the question.
+    const transition = vi
+      .spyOn(apiClient, 'transition')
+      .mockRejectedValueOnce(new ApiError('STEP_UP_REQUIRED', 403))
+      .mockResolvedValue({ outcome: 'TRANSITIONED', state: 'in-review' });
     const onchanged = vi.fn();
     render(AssessmentSheet, {
       scope,
@@ -748,6 +749,30 @@ describe('the sheets and the step-up handler (UC-ACC-3)', () => {
     );
   });
 
+  it('submits for a local user without a question when the server asks for none', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    status.set({ ...PASSWORD });
+    const transition = vi
+      .spyOn(apiClient, 'transition')
+      .mockResolvedValue({ outcome: 'TRANSITIONED', state: 'in-review' });
+    const onchanged = vi.fn();
+    render(AssessmentSheet, {
+      scope,
+      assessment: answeredFully(model, assessment),
+      model,
+      onchanged,
+    });
+    await fireEvent.click(screen.getByTestId('assessment-submit'));
+    await vi.waitFor(() => expect(onchanged).toHaveBeenCalled());
+    expect(transition).toHaveBeenCalledWith(
+      'samm-assessments',
+      assessment.id,
+      'samm.submit',
+      undefined,
+    );
+    expect(document.querySelector('dialog')).not.toHaveAttribute('open');
+  });
+
   it('says that many people are logging in when a submit cannot start its step-up', async () => {
     const { scope, assessment, model } = await fixture('workshop');
     vi.spyOn(apiClient, 'transition').mockRejectedValue(new ApiError('TOO_MANY_LOGINS', 503));
@@ -766,7 +791,9 @@ describe('the sheets and the step-up handler (UC-ACC-3)', () => {
   it('asks for the password before it saves for everyone, and the number keys do not answer meanwhile', async () => {
     const { scope, assessment, model } = await fixture('workshop');
     status.set({ ...PASSWORD });
-    const save = vi.spyOn(apiClient, 'saveDocument');
+    const save = vi
+      .spyOn(apiClient, 'saveDocument')
+      .mockRejectedValueOnce(new ApiError('STEP_UP_REQUIRED', 403));
     render(PracticeSheet, { scope, assessment, model, practiceId: 'sm' });
     await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
     await fireEvent.click(screen.getByTestId('save-everyone'));
@@ -780,13 +807,30 @@ describe('the sheets and the step-up handler (UC-ACC-3)', () => {
     await vi.waitFor(() =>
       expect(screen.getByTestId('save-state')).toHaveTextContent(/Saved for everyone at/),
     );
-    expect(save.mock.calls[0][3]).toBe('2');
+    expect(save.mock.calls[0][3]).toBeUndefined();
+    expect(save.mock.calls[1][3]).toBe('2');
+  });
+
+  it('saves for a local user without a question when the server asks for none', async () => {
+    const { scope, assessment, model } = await fixture('workshop');
+    status.set({ ...PASSWORD });
+    const save = vi.spyOn(apiClient, 'saveDocument');
+    render(PracticeSheet, { scope, assessment, model, practiceId: 'sm' });
+    await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    await vi.waitFor(() =>
+      expect(screen.getByTestId('save-state')).toHaveTextContent(/Saved for everyone at/),
+    );
+    expect(save.mock.calls[0][3]).toBeUndefined();
+    expect(document.querySelector('dialog')).not.toHaveAttribute('open');
   });
 
   it('keeps the changes as the own when the password is not given', async () => {
     const { scope, assessment, model } = await fixture('workshop');
     status.set({ ...PASSWORD });
-    const save = vi.spyOn(apiClient, 'saveDocument');
+    const save = vi
+      .spyOn(apiClient, 'saveDocument')
+      .mockRejectedValueOnce(new ApiError('STEP_UP_REQUIRED', 403));
     render(PracticeSheet, { scope, assessment, model, practiceId: 'sm' });
     await fireEvent.click(screen.getByTestId('answer-sm-a-1-3'));
     await fireEvent.click(screen.getByTestId('save-everyone'));
@@ -794,7 +838,7 @@ describe('the sheets and the step-up handler (UC-ACC-3)', () => {
     await vi.waitFor(() => expect(dialog).toHaveAttribute('open'));
     await fireEvent.click(within(dialog).getAllByRole('button', { name: 'Cancel' }).at(-1)!);
     await vi.waitFor(() => expect(dialog).not.toHaveAttribute('open'));
-    expect(save).not.toHaveBeenCalled();
+    expect(save).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'changed');
     expect(screen.getByTestId('answer-sm-a-1-3')).toBeChecked();
   });
