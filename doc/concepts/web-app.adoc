@@ -219,6 +219,25 @@ each one:
   of the specification (xref:../specification/web-app.adoc#AUN-WEB-4[AUN-WEB-4], AsciiDoc Preview) and of the server's
   allow-list.
 
+Decided provisionally with the document lifecycle (UC-DOC-1, -2, -3, -4, -6, -7, -8, -9), recorded with the bodies in
+xref:../specification/rest-api.adoc#_decided_lifecycle[REST API Register, Open Questions]; the owner may change each
+one:
+
+. A generic lens, *Documents*, shows the categories that have no lens of their own (custom categories and the test
+  category `test-note`); it is the ninth entry of the rail and appears only when such a category is switched on. Its
+  addresses are `/categories/<category>` (the documents), `…/new`, `…/<document>` and `…/<document>/release`; the
+  definition and the editor of a category take `…/edit` later.
+. An address may admit a few query parameters as part of its canonical form: `?at=<revision>` on a document reads it as
+  it was at a release or a commit, read-only.
+. A document of any category is read with its parts' values, its workflow's transitions and its own draft in one
+  request, so that no view knows a workflow; the first save after a release of a document type released more than once
+  starts the next version.
+. A draft with field errors is refused, and the page keeps what was typed; a new document has no draft until its first
+  save creates it; the web app offers no way to discard a draft.
+. A release request of an agent is shown in *Due* to the user who asked and, with its comment, to the approvers; it
+  carries no reviewed revision, so a release answers `CHANGED_SINCE_REVIEW` by the state of the document.
+. The search of the top bar finds documents of every category by title and id, from the index, whatever the state of
+  the Git server.
 
 == Related
 

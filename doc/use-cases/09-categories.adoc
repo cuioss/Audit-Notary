@@ -354,7 +354,10 @@ Design:: the configuration editor (xref:10-operations.adoc#UC-OPS-6[UC-OPS-6]).
   be shown and validated against that version, is open; the library has no notion of either.
 . *Where a custom category is shown.* xref:../specification/web-app.adoc#AUN-WEB-3[AUN-WEB-3] has a fixed list of
   lenses and canonical addresses; a custom category needs a generic lens (for example *Documents*, category ›
-  document type › document) and an address of its own.
+  document type › document) and an address of its own. Decided provisionally with the document lifecycle: the lens
+  *Documents* at `/categories/<category>` (the documents), `/categories/<category>/new` and
+  `/categories/<category>/<document>`; the definition and the editor take `/categories/<category>/edit`
+  (xref:../specification/rest-api.adoc#_decided_lifecycle[REST API Register, Open Questions]).
 . *What an agent may read.* Agents work on documents of custom document types through the generic tools; whether
   they may also read a category's definition (a tool `read_category`) is open. They never change one.
 . *Blocking or confirming.* Whether a change that would make saved, unreleased documents invalid is refused, or

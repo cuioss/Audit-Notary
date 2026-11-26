@@ -152,7 +152,9 @@ human.
 . The exact tool list per category, and whether recipes are offered as MCP prompts.
 . How a release request is stored in Git: as a field of the document on its working branch or as a document of a kind
   of its own, and in which repository
-  (xref:../specification/architecture-and-modules.adoc#AUN-GEN-3[AUN-GEN-3]).
+  (xref:../specification/architecture-and-modules.adoc#AUN-GEN-3[AUN-GEN-3]). The web app and its mock decide
+  provisionally only how a request is read, not where it lives: an item of *Due* and the member `releaseRequest` of the
+  document (xref:../specification/rest-api.adoc#_release_requests[REST API Register, Release Requests]).
 . Deferred: the trailer `Actor-Client`. Until it comes, the history does not show whether a commit came from the user
   in the web app or from an agent acting for the user; only the audit log records the client.
 . Deferred: sender-constrained tokens (DPoP, RFC 9449).

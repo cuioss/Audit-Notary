@@ -223,7 +223,8 @@ Flow::
 Variations::
 * *In the web app*: not offered; a draft there ends by saving or by expiry.
 Outcome:: the user has no draft of the document; the document is as last saved.
-Open points:: whether the web app should offer discarding a draft too.
+Open points:: whether the web app should offer discarding a draft too; decided provisionally: no, a draft there ends by
+a save or by expiry (xref:../specification/rest-api.adoc#_decided_lifecycle[REST API Register, Open Questions]).
 Requirements:: xref:../specification/architecture-and-modules.adoc#AUN-GEN-2[AUN-GEN-2] (tools without a web-app
 equivalent), xref:../specification/mcp-server.adoc#AUN-MCP-6[AUN-MCP-6] (`discard_draft`).
 
@@ -361,7 +362,10 @@ Outcome:: the release, if it happens, is a human act with step-up; the request a
 Open points:: how a release request is stored in Git: as a field of the document on its working branch, or as a
 document of a document type of its own, and in which repository
 (xref:../concepts/mcp-server.adoc#_open_questions[MCP Server, Open Questions]); whether a pending request is also shown
-to the approvers, not only to the requesting user.
+to the approvers, not only to the requesting user. Decided provisionally for the web app: the request is an item of the
+requesting user's *Due* lens and the member `releaseRequest` of the document, and its comment is shown to the approvers
+too, on their review item; it carries no reviewed revision
+(xref:../specification/rest-api.adoc#_decided_lifecycle[REST API Register, Open Questions]).
 Requirements:: xref:../specification/mcp-server.adoc#AUN-MCP-6[AUN-MCP-6] (human-bound releases),
 xref:../specification/architecture-and-modules.adoc#AUN-GEN-3[AUN-GEN-3] (open requests are documents),
 xref:../specification/architecture-and-modules.adoc#operation-outcomes[Operation Outcomes] (request a release).
