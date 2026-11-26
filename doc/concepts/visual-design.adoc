@@ -251,6 +251,29 @@ one act *Start a new assessment*, a primary link in the head of the assessment a
 comparison with the previous release that the server refuses (`MODEL_VERSIONS_DIFFER`) is an information notice in the place of
 the changes, naming both assessments and both versions; the scores stay readable.
 
+== The Reports
+
+The lens *Reports* is the launcher template (`DashboardPage`): the dashboard `/reports` and the four reports are sections on
+the desk, divided by hairlines, never cards and never a sheet in a sheet. The top bar's breadcrumb is the way back; no page
+draws a second one. The dashboard says each register in figures set in the serif (a number above its term), the ones that
+need the person in the colour of their state and always with the term in words, then the report's link. A report holds no
+act that writes; its controls only choose what is read (a scope, two assessments, an order, a day or a tag).
+
+*Two charts are added to the closed vocabulary.* `SeriesChart` draws several lines on one fixed scale from 0 to 3: the
+scopes of the trend (the series 1 to 5 in the order of the scope list) or the five business functions of one scope (the
+series 1 to 5 in model order). A series is a slot of the validated series colours and, beside the colour, a marker of its
+own shape (circle, square, diamond, triangle, cross), so that no line depends on a colour alone. The end of every line
+carries its value as a direct label; labels that would touch are moved apart. A legend names every series, and the page
+repeats every figure as a table under the chart. A sixth scope has no line: the table has it, and a line says so.
+`Dumbbell` shows the same measure at two moments: a ring at the earlier score, a filled dot at the later one, a bar between
+them, and the two scores and the change in words beside it. The ring and the dot differ in form, not only in place. A
+practice and its streams stand in a disclosure under their business function.
+
+*The threat evaluation* is one table component (`ThreatEvaluationTable`), used by the report and by the lens *Threat
+models*: a review that is overdue or due within 30 days is a box (`ReasonBadge`) with its words, one in date or never released
+a dot. *The risk register as of a day or tag* takes a day or the name of a tag in one field with the tags of the register
+beside it; what the server refuses is said beside the field and the value stays in it.
+
 == The Pages of the Directory
 
 Three pages belong to the lens *Catalogs* and *Settings* but are not a chain of columns, because each is a task, not an
@@ -327,8 +350,10 @@ warning.
 . Whether `pm-web-app` takes the sheet, the seal or the column depth cue over into a shared component package.
 . The poses of the mascot: the notary still holds the tape measure of its first role
   (xref:brand.adoc#_the_mascot[Name and Brand, The Mascot]).
-. Charts of the Reports lens (trend, comparison, gaps) beyond the scope's trend line, and the deadline clock of the
-  incident report, follow with their lenses.
+. The deadline clock of the incident report follows with its lens. The gaps chart of the Reports lens is not built: the
+  gaps stay in the scope sheet.
+. Whether the trend across scopes of different model versions should be drawn on one scale at all (decided provisionally:
+  yes, with a notice naming the versions; rest-api.adoc, Decided Provisionally with the Reports lens).
 
 == Related
 

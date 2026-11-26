@@ -213,6 +213,17 @@ describe('AppRouter', () => {
     ['/directory/import', 'import-view'],
     ['/directory/persons', 'persons-view'],
     ['/settings/profile', 'profile-view'],
+    ['/reports', 'reports-view'],
+    ['/reports/samm-trend', 'samm-trend-view'],
+    ['/reports/samm-trend?scope=payments', 'samm-trend-view'],
+    ['/reports/samm-compare', 'samm-compare-view'],
+    ['/reports/samm-compare?scope=payments&from=2025-q4&to=2026-q2', 'samm-compare-view'],
+    ['/reports/threat-evaluation', 'threat-evaluation-view'],
+    ['/reports/risk-register', 'risk-register-view'],
+    ['/reports/risk-register?as-of=2026-03-01', 'risk-register-view'],
+    // The generic address of the lens is no report: it means "no such report".
+    ['/reports/trends', 'not-found-view'],
+    ['/reports/samm-trend?scope=a&scope=b', 'not-found-view'],
     ['/nowhere/at/all/here/x', 'not-found-view'],
   ])('renders %s as %s', async (pathname, testId) => {
     vi.spyOn(apiClient, 'listCategories').mockReturnValue(new Promise(() => {}));
@@ -223,6 +234,10 @@ describe('AppRouter', () => {
     vi.spyOn(apiClient, 'getCatalogEntry').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'getSammScopes').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'getSammScope').mockReturnValue(new Promise(() => {}));
+    vi.spyOn(apiClient, 'getReportsSummary').mockReturnValue(new Promise(() => {}));
+    vi.spyOn(apiClient, 'getSammTrendReport').mockReturnValue(new Promise(() => {}));
+    vi.spyOn(apiClient, 'getThreatEvaluation').mockReturnValue(new Promise(() => {}));
+    vi.spyOn(apiClient, 'getRiskRegister').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'subscribeEvents').mockReturnValue(() => {});
     const [path, search = ''] = pathname.split('?');
     render(AppRouter, { pathname: path, search: search ? `?${search}` : '', onnavigate: () => {} });

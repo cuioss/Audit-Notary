@@ -44,6 +44,14 @@ Read the concept first, then the component you are about to change.
    `EvidenceEditor` (a `DataTable` with a dialog over a copy, removal asked first). The roadmap of a scope has no draft:
    the document controller takes `drafts: false`, and the status says "Not saved for everyone yet". A released assessment is
    frozen; the way on is the primary link *Start a new assessment* to `/samm/{scope}/new`, never a button that writes.
+   `web-app/src/lib/views/reports/` holds the lens Reports (`ReportsView`, `SammTrendView`, `SammCompareView`,
+   `ThreatEvaluationView`, `RiskRegisterView`) on `ReportPage` (a `DashboardPage` with the breadcrumb; no page draws a
+   second way back) and `ThreatEvaluationTable`, which the lens Threat models draws as well; what they know is in
+   `web-app/src/lib/reports/` (addresses, statuses, the arithmetic of the charts). A report only reads: its controls choose
+   what is read, and every chart carries its figures as direct labels and as a table under it. `SeriesChart` (several lines,
+   one slot of the series colours and one marker shape each, a legend, the end value of every line as a label) and
+   `Dumbbell` (the same measure at two moments: ring, filled dot, bar, the scores and the change in words) are the two
+   charts; a sixth series is a table row, never a sixth colour.
 3. For a chart, use the five series colours in model order (`--color-series-1` … `-5`); they are validated for
    colour-vision and normal-vision separation against both sheet colours (`#ffffff`, `#161d2e`). A new chart colour
    needs the same validation before it lands: with the validator of the `dataviz` skill where your agent has that
