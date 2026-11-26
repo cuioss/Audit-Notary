@@ -1,18 +1,22 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import { uniqueId } from './uniqueId';
 
   /**
-   * Free text with its label, an optional hint and its field error: a comment, a narrative fragment. For a field marked
-   * `x-free-text` the caller passes the hint "no personal details" (AUN-WEB-4); the schema-driven form will do so
-   * for every such field once it exists.
+   * Free text with its label, optional hints and its field error: a comment, a narrative fragment. For a field marked
+   * `x-free-text` the schema-driven form passes the hint "no personal details" (AUN-WEB-4).
    */
   interface Props {
     /** The label. */
     label: string;
     /** The value, bindable. */
     value?: string;
-    /** The hint under the label. */
-    hint?: string;
+    /** One or more hints under the label. */
+    hint?: string | string[];
+    /** The word after the label that says the text is mandatory (the schema's `required`). */
+    mark?: string;
+    /** Content below the text: the preview of what it renders to. */
+    after?: Snippet;
     /** The field error. */
     error?: string | null;
     /** Visible rows. */
@@ -29,6 +33,8 @@
     label,
     value = $bindable(''),
     hint,
+    mark,
+    after,
     error = null,
     rows = 3,
     readonly = false,
@@ -37,17 +43,23 @@
   }: Props = $props();
 
   const id = uniqueId('area');
+  let hints = $derived(
+    (Array.isArray(hint) ? hint : [hint]).filter((line): line is string => !!line),
+  );
   let described = $derived(
-    [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(' ') ||
-      undefined,
+    [...hints.map((_, index) => `${id}-hint-${index}`), error ? `${id}-error` : null]
+      .filter(Boolean)
+      .join(' ') || undefined,
   );
 </script>
 
 <div class="area">
-  <label class="area__label" for={id}>{label}</label>
-  {#if hint}
-    <p class="area__hint" id="{id}-hint">{hint}</p>
-  {/if}
+  <label class="area__label" for={id}
+    >{label}{#if mark}<span class="area__mark">{mark}</span>{/if}</label
+  >
+  {#each hints as line, index (index)}
+    <p class="area__hint" id="{id}-hint-{index}">{line}</p>
+  {/each}
   <textarea
     {id}
     class="area__input"
@@ -59,6 +71,9 @@
     oninput={() => oninput?.(value)}
     data-testid={testId}
   ></textarea>
+  {#if after}
+    <div class="area__after">{@render after()}</div>
+  {/if}
   {#if error}
     <p class="area__error" id="{id}-error">{error}</p>
   {/if}
@@ -75,6 +90,17 @@
     font-size: var(--text-sm);
     font-weight: var(--weight-medium);
     color: var(--color-text-secondary);
+  }
+
+  .area__mark {
+    margin-inline-start: var(--space-2);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-regular);
+    color: var(--color-text-muted);
+  }
+
+  .area__after {
+    font-size: var(--text-sm);
   }
 
   .area__hint {

@@ -77,10 +77,11 @@ export interface DirectoryPrefill {
   informationText: string;
 }
 
-/** One entry of a catalog. */
+/** One entry of a catalog; `retired` is absent for an entry that is not retired (AUN-DIR-4). */
 export interface CatalogEntry {
   id: string;
   name: string;
+  retired?: boolean;
 }
 
 /** `GET /api/v1/catalogs/{catalog}`. */
@@ -375,4 +376,69 @@ export interface Released {
   outcome: 'RELEASED';
   tag: string;
   at: string;
+}
+
+/** A JSON Schema as the form kit reads it (Draft 2020-12, with the `x-` keywords of AUN-WEB-4); the keywords are open. */
+export interface JsonSchema {
+  [keyword: string]: unknown;
+}
+
+/** One document type of a category with its repository and its schema (`GET /api/v1/categories/{category}/schema`). */
+export interface KindSchema {
+  id: string;
+  repository: string;
+  schema: JsonSchema;
+}
+
+/** `GET /api/v1/categories/{category}/schema` (PROVISIONAL): every document type of the category. */
+export interface CategorySchema {
+  category: string;
+  kinds: KindSchema[];
+}
+
+/** `POST /api/v1/render/asciidoc`: the sanitised HTML of the source (PROVISIONAL). */
+export interface RenderedAsciiDoc {
+  html: string;
+}
+
+/** The state of a person entry: bound to a login, prefilled and not yet bound, or erased (a former member). */
+export type PersonState = 'bound' | 'unbound' | 'former';
+
+/** The team and the role of a membership, both catalog references (`team:payments`). */
+export interface Membership {
+  team: string;
+  role: string;
+}
+
+/** One person of `GET /api/v1/directory/persons` (PROVISIONAL); the name is `null` for a former member. */
+export interface PersonSummary {
+  pseudonym: string;
+  name: string | null;
+  state: PersonState;
+  memberships: Membership[];
+}
+
+/** `GET /api/v1/directory/persons`: at most 100 entries, `truncated` when more matched. */
+export interface PersonList {
+  persons: PersonSummary[];
+  truncated: boolean;
+}
+
+/** `GET /api/v1/directory/persons/{pseudonym}`: one person as the form shows them. */
+export interface PersonDetail extends PersonSummary {
+  erasedOn: string | null;
+}
+
+/** One answer of `GET /api/v1/references/resolve` (PROVISIONAL). */
+export interface ReferenceAnswer {
+  ref: string;
+  found: boolean;
+  title: string | null;
+  address: string | null;
+  retired: boolean;
+}
+
+/** `GET /api/v1/references/resolve`: one entry per reference asked, in the order asked. */
+export interface ReferenceList {
+  references: ReferenceAnswer[];
 }

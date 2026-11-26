@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { bodyOf, scenarioFetch } from './scenarioFetch';
+import fs from 'node:fs';
+import path from 'node:path';
+import {
+  bodyOf,
+  HANDLERS,
+  mockMessages,
+  renderAsciiDocLikeTheMock,
+  scenarioFetch,
+  SCENARIO_DIR,
+} from './scenarioFetch';
 
 /**
  * The scenario fetch of the unit tests follows the rules of the mock's `ScenarioLoader` and `MockEngine`.
@@ -105,5 +114,119 @@ describe('scenarioFetch', () => {
       login: '/api/v1/auth/login',
     });
     expect((await scenario.fetch('/api/v1/status')).status).toBe(200);
+  });
+
+  it('has exactly the handlers of the mock engine, each with its own answer', () => {
+    // The enum of the mock is the single definition (web-mock `Handler`): its names are read, not copied.
+    const source = fs.readFileSync(
+      path.resolve(SCENARIO_DIR, '../../java/de/cuioss/notary/audit/mock/scenario/Handler.java'),
+      'utf8',
+    );
+    const names = [...source.matchAll(/^\s+[A-Z_]+\("([a-z-]+)"\)[,;]/gm)].map((match) => match[1]);
+    expect(names.length).toBeGreaterThan(0);
+    expect([...HANDLERS.keys()].sort()).toEqual(names.sort());
+  });
+
+  describe('the preview handler of the mock (render-asciidoc)', () => {
+    const render = async (scenario: ReturnType<typeof scenarioFetch>, body: unknown) => {
+      const answer = await scenario.fetch('/api/v1/render/asciidoc', {
+        method: 'POST',
+        body: typeof body === 'string' ? body : JSON.stringify(body),
+      });
+      return { status: answer.status, body: await answer.json() };
+    };
+
+    it('renders the example of the register', async () => {
+      expect(
+        await render(scenarioFetch('workshop'), {
+          source: '== Decision\n\nWe *agree* to rotate the keys, see `ops/keys`.',
+        }),
+      ).toEqual({
+        status: 200,
+        body: {
+          html: '<h2>Decision</h2><div><p>We <strong>agree</strong> to rotate the keys, see <code>ops/keys</code>.</p></div>',
+        },
+      });
+    });
+
+    it('answers an empty source with no html, and escapes what is no markup of the source', async () => {
+      expect((await render(scenarioFetch('read-only'), { source: '' })).body).toEqual({ html: '' });
+      expect(renderAsciiDocLikeTheMock('<script>alert("x")</script> & \'y\'')).toBe(
+        '<div><p>&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; &#39;y&#39;</p></div>',
+      );
+    });
+
+    it('renders lists, headings of every level, emphasis and lines of a paragraph', () => {
+      expect(renderAsciiDocLikeTheMock('* one\n* _two_')).toBe(
+        '<ul><li>one</li><li><em>two</em></li></ul>',
+      );
+      expect(renderAsciiDocLikeTheMock('====== six\n\nline 1\r\nline 2\n\n\n* not\nlist')).toBe(
+        '<h6>six</h6><div><p>line 1<br>line 2</p></div><div><p>* not<br>list</p></div>',
+      );
+    });
+
+    it('refuses a body without source, a source that is no string, and one over 65,536 bytes', async () => {
+      const scenario = scenarioFetch('workshop');
+      const required = {
+        status: 422,
+        body: { outcome: 'VALIDATION', errors: [{ pointer: '/source', code: 'REQUIRED' }] },
+      };
+      expect(await render(scenario, {})).toEqual(required);
+      expect(await render(scenario, 'not json')).toEqual(required);
+      expect(await render(scenario, [1])).toEqual(required);
+      expect(await render(scenario, { source: 5 })).toEqual({
+        status: 422,
+        body: { outcome: 'VALIDATION', errors: [{ pointer: '/source', code: 'TYPE' }] },
+      });
+      expect((await render(scenario, { source: 'a'.repeat(65_536) })).status).toBe(200);
+      expect(await render(scenario, { source: 'a'.repeat(65_537) })).toEqual({
+        status: 413,
+        body: { outcome: 'TOO_LARGE', limit: 65_536 },
+      });
+    });
+
+    it('reads the body of a Request, and answers by the state: hostile, or unavailable', async () => {
+      const scenario = scenarioFetch('workshop');
+      const answer = await scenario.fetch(
+        new Request('http://localhost/api/v1/render/asciidoc', {
+          method: 'POST',
+          body: JSON.stringify({ source: 'x' }),
+        }),
+      );
+      expect(await answer.json()).toEqual({ html: '<div><p>x</p></div>' });
+      scenario.goto('preview-hostile');
+      expect(
+        (
+          (await (await scenario.fetch('/api/v1/render/asciidoc', { method: 'POST' })).json()) as {
+            html: string;
+          }
+        ).html,
+      ).toContain('<script>');
+      scenario.goto('preview-unavailable');
+      const down = await scenario.fetch('/api/v1/render/asciidoc', { method: 'POST' });
+      expect(down.status).toBe(503);
+      expect(await down.json()).toEqual({ outcome: 'RENDER_UNAVAILABLE' });
+    });
+  });
+
+  describe('the catalogue the mock serves', () => {
+    it('merges the labels of the fixture categories into the catalogue, in both languages', async () => {
+      const scenario = scenarioFetch('workshop');
+      const english = (await (await scenario.fetch('/api/v1/messages?lang=en')).json()) as Record<
+        string,
+        string
+      >;
+      const german = (await (await scenario.fetch('/api/v1/messages?lang=de')).json()) as Record<
+        string,
+        string
+      >;
+      expect(english['category.test-note.note.field.title']).toBe('Title');
+      expect(german['category.test-note.note.field.title']).toBe('Titel');
+      expect(english['form.hint.no-personal-notes']).toBeTruthy();
+      expect(Object.keys(german).sort()).toEqual(Object.keys(english).sort());
+      expect(
+        Object.keys(mockMessages('en')).filter((key) => key.startsWith('category.')).length,
+      ).toBeGreaterThan(50);
+    });
   });
 });

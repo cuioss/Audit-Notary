@@ -1,11 +1,14 @@
-<script lang="ts">
-  import { uniqueId } from './uniqueId';
-
+<script lang="ts" module>
   /** One option of a select. */
   export interface SelectOption {
     value: string;
     label: string;
   }
+</script>
+
+<script lang="ts">
+  import type { Snippet } from 'svelte';
+  import { uniqueId } from './uniqueId';
 
   /**
    * A pick from a closed list, with its label and its field error.
@@ -23,6 +26,14 @@
     error?: string | null;
     /** Whether a choice is required. */
     required?: boolean;
+    /** The word after the label that says the choice is mandatory (the schema's `required`); no native validation. */
+    mark?: string;
+    /** One or more lines of help under the label. */
+    hint?: string | string[];
+    /** Called with the chosen value after a change. */
+    onchange?: (value: string) => void;
+    /** Content below the choice: the marks and the notes of what is chosen. */
+    after?: Snippet;
     /** A test id. */
     testId?: string;
   }
@@ -34,21 +45,39 @@
     placeholder,
     error = null,
     required = false,
+    mark,
+    hint,
+    onchange,
+    after,
     testId,
   }: Props = $props();
 
   const id = uniqueId('select');
+  let hints = $derived(
+    (Array.isArray(hint) ? hint : [hint]).filter((line): line is string => !!line),
+  );
+  let described = $derived(
+    [...hints.map((_, index) => `${id}-hint-${index}`), error ? `${id}-error` : null]
+      .filter(Boolean)
+      .join(' ') || undefined,
+  );
 </script>
 
 <div class="field">
-  <label class="field__label" for={id}>{label}</label>
+  <label class="field__label" for={id}
+    >{label}{#if mark}<span class="field__mark">{mark}</span>{/if}</label
+  >
+  {#each hints as line, index (index)}
+    <p class="field__hint" id="{id}-hint-{index}">{line}</p>
+  {/each}
   <select
     {id}
     class="field__select"
     bind:value
     {required}
     aria-invalid={error ? 'true' : undefined}
-    aria-describedby={error ? `${id}-error` : undefined}
+    aria-describedby={described}
+    onchange={() => onchange?.(value)}
     data-testid={testId}
   >
     <option value="">{placeholder}</option>
@@ -56,6 +85,9 @@
       <option value={option.value}>{option.label}</option>
     {/each}
   </select>
+  {#if after}
+    <div class="field__after">{@render after()}</div>
+  {/if}
   {#if error}
     <p class="field__error" id="{id}-error">{error}</p>
   {/if}
@@ -70,6 +102,23 @@
 
   .field__label {
     font-weight: var(--weight-medium);
+  }
+
+  .field__mark {
+    margin-inline-start: var(--space-2);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-regular);
+    color: var(--color-text-muted);
+  }
+
+  .field__hint {
+    font-size: var(--text-xs);
+    line-height: var(--line-height-xs);
+    color: var(--color-text-muted);
+  }
+
+  .field__after {
+    font-size: var(--text-sm);
   }
 
   .field__select {

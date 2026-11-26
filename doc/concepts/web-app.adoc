@@ -208,6 +208,16 @@ each one:
   web app builds its elements from the answer by the same allow-list and renders no raw HTML.
 . A person who has not logged in yet is offered and shown as *not yet bound*, an erased one as *former*, and a retired
   catalog entry as *retired*; the person list and a reference lookup are requests of their own.
+. The pickers are built, decided provisionally (UI, `web-app/src/lib/forms/`): a catalog and a person are chosen from a
+  list control (no combobox); a list of eight or more people, or one the server cut off at 100, adds a field that
+  narrows it by name (with a cut-off list the server narrows it with `?q=`); the mark *not yet bound* is worded "Not yet
+  bound" ("Noch nicht verknüpft"); a row is removed only after a confirmation; the first four scalar properties are the
+  columns, and the minimum of a list hides the removal instead of disabling it with a reason on every row; the hints of
+  a field, the one of a free text included, stay in the reading.
+. The AsciiDoc preview keeps no `id` (the allow-list of the server and the web app names none), so a link to a fragment
+  of the same document has no target in the preview. Decided provisionally: no ids. Keeping them needs a matching change
+  of the specification (xref:../specification/web-app.adoc#AUN-WEB-4[AUN-WEB-4], AsciiDoc Preview) and of the server's
+  allow-list.
 
 
 == Related

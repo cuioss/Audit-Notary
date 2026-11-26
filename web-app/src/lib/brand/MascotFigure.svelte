@@ -22,7 +22,11 @@
   let { pose }: Props = $props();
 
   /** The delivered images per pose; one accepted image for all of them so far. */
-  const DELIVERED: Partial<Record<MascotPose, string>> = { welcome: notary, 'at-work': notary, done: notary };
+  const DELIVERED: Partial<Record<MascotPose, string>> = {
+    welcome: notary,
+    'at-work': notary,
+    done: notary,
+  };
 
   let source = $derived(DELIVERED[pose]);
 </script>

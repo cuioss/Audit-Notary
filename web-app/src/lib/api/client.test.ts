@@ -176,6 +176,86 @@ describe('requests', () => {
   });
 });
 
+describe('the form kit requests (rest-api.adoc, Form Kit Requests)', () => {
+  it('reads the schema of a category, any catalog, the persons and one person with GET', async () => {
+    fetchMock.mockImplementation(async () => json(200, { ok: true }));
+    await client.getCategorySchema('test-note');
+    await client.getCatalog('service');
+    await client.listPersons();
+    await client.listPersons('');
+    await client.listPersons('Mira Haas');
+    await client.getPerson('p-7d52e8');
+    expect(fetchMock.mock.calls.map((call) => [call[0], call[1].method])).toEqual([
+      ['/api/v1/categories/test-note/schema', 'GET'],
+      ['/api/v1/catalogs/service', 'GET'],
+      ['/api/v1/directory/persons', 'GET'],
+      ['/api/v1/directory/persons', 'GET'],
+      ['/api/v1/directory/persons?q=Mira%20Haas', 'GET'],
+      ['/api/v1/directory/persons/p-7d52e8', 'GET'],
+    ]);
+  });
+
+  it('posts the source for the preview with the anti-CSRF header', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json(200, SESSION))
+      .mockResolvedValueOnce(json(200, { html: '<p>x</p>' }));
+    expect(await client.renderAsciiDoc('x')).toEqual({ html: '<p>x</p>' });
+    const call = fetchMock.mock.calls[1];
+    expect(call[0]).toBe('/api/v1/render/asciidoc');
+    expect(call[1].method).toBe('POST');
+    expect(call[1].headers[CSRF_HEADER]).toBe('token-1');
+    expect(JSON.parse(call[1].body)).toEqual({ source: 'x' });
+  });
+
+  it('reports the refusals of the preview and of a missing object by their outcome', async () => {
+    fetchMock.mockResolvedValueOnce(json(200, SESSION));
+    fetchMock.mockResolvedValueOnce(json(413, { outcome: 'TOO_LARGE', limit: 65_536 }));
+    fetchMock.mockResolvedValueOnce(json(503, { outcome: 'RENDER_UNAVAILABLE' }));
+    fetchMock.mockResolvedValueOnce(json(404, { outcome: 'NOT_FOUND' }));
+    await expect(client.renderAsciiDoc('x')).rejects.toMatchObject({
+      outcome: 'TOO_LARGE',
+      details: { limit: 65_536 },
+    });
+    await expect(client.renderAsciiDoc('x')).rejects.toMatchObject({
+      outcome: 'RENDER_UNAVAILABLE',
+    });
+    await expect(client.getPerson('p-3b9d00')).rejects.toMatchObject({
+      outcome: 'NOT_FOUND',
+      status: 404,
+    });
+  });
+
+  it('resolves references with one encoded ref each, and splits more than fifty into several requests', async () => {
+    fetchMock.mockImplementation(async (path: string) => {
+      const refs = new URL(path, 'http://localhost').searchParams.getAll('ref');
+      return json(200, {
+        references: refs.map((ref) => ({
+          ref,
+          found: true,
+          title: ref,
+          address: null,
+          retired: false,
+        })),
+      });
+    });
+    const answers = await client.resolveReferences(['isms-register:risk/R-1#a b', 'service:x']);
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      '/api/v1/references/resolve?ref=isms-register%3Arisk%2FR-1%23a%20b&ref=service%3Ax',
+    );
+    expect(answers.map((answer) => answer.ref)).toEqual([
+      'isms-register:risk/R-1#a b',
+      'service:x',
+    ]);
+    fetchMock.mockClear();
+    const many = Array.from({ length: 120 }, (_, index) => `service:s-${index}`);
+    expect(await client.resolveReferences(many)).toHaveLength(120);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    fetchMock.mockClear();
+    expect(await client.resolveReferences([])).toEqual([]);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
 describe('the event stream', () => {
   it('parses frames, comments and multi-line data', () => {
     expect(parseSseChunk('event: status\ndata: {"a":1}')).toEqual({

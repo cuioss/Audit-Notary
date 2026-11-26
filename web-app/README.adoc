@@ -39,6 +39,12 @@ handler (`StepUpHandler`, `StepUpDialog`) through which every request that can a
 |The shell (rail, top bar, bottom bar, command palette), the page templates and the closed vocabulary
 of components
 
+|`src/lib/forms/`
+|The form kit (AUN-WEB-4): `SchemaForm` and its fields (`DateTimeField`, `DataTable` with its row editor,
+`CatalogPicker`, `PersonPicker`, `AsciiDocField`, `DocumentRefField`), the choice of the component (`schema.ts`), the
+browser validation without a validator library (`validate.ts`), the allow-list of the preview (`sanitize.ts`) and the
+reading services (`services.ts`). Its tests read the `workshop` and `read-only` profiles of `web-mock`
+
 |`src/lib/views/`, `src/routes/`
 |The views and the router; one catch-all route stub renders `AppRouter`. `src/lib/views/access/` holds the pages outside
 the shell (`/login`, `/signed-out`, `/login-problem`) and the empty state of a session without rights
@@ -60,7 +66,7 @@ Maven runs all of them (`frontend-maven-plugin`) and packages `build/` under `ME
 == Rules the Build Enforces
 
 * No colour literal outside `tokens.css` (stylelint, `tokens.test.ts`).
-* No literal text in markup and no raw controls in views (`scripts/text-literal-lint.mjs`); every text is a catalogue
+* No literal text in markup and no raw controls in views and in the form kit (`scripts/text-literal-lint.mjs`); every text is a catalogue
   key, and both languages hold the same keys (`catalogue.test.ts`).
 * No `style` attribute in markup: `style-src 'self'` (AUN-WEB-8) admits styles set through the CSSOM (`style:`)
   only.

@@ -160,6 +160,19 @@ vocabulary of components with no raw control in a view, the tag grammar (a box m
 information"), one primary act per screen, a disabled control that stays focusable and says why, the column window,
 the focus moved to a new object and announced, light, dark and system themes.
 
+== The Forms
+
+The form of a document is generated from its schema (`SchemaForm`, xref:../specification/web-app.adoc#AUN-WEB-4[AUN-WEB-4])
+and stays in the register's voice: labels above full field boundaries in the interface face, the word *required* after
+the label of a mandatory field, help in a muted line under it. Sections come from the nesting of the schema and are divided
+by a hairline and a serif heading, never by a box. A list is a table; its rows are edited in a dialog over a copy, so a
+cancelled row changes nothing, and on a narrow column each row stands as a block of its columns. Read, the same form
+shows every value typeset in the serif under its label: a date localised, an option by its text, a person by name.
+What a reference stands for is said in words: a dot for information (*retired*, *not yet bound*, *former member* with
+team and role, never a name), a box for what needs the person (*not found*, *unknown person*, a row with an error).
+The AsciiDoc preview sits under its source behind a hairline margin; it is the server's rendering, cut to an allow-list
+and drawn with the app's own elements.
+
 == The Access Pages
 
 Three pages stand outside the shell, because there is no session to show a shell for: `/login` (the form of local test
