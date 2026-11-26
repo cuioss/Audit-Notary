@@ -716,7 +716,7 @@ class ProfilesTest {
 
         @ParameterizedTest
         @ValueSource(strings = {"workshop", "read-only"})
-        @DisplayName("hold a retired entry in the service catalog and none in the team catalog")
+        @DisplayName("hold the retired entries of the catalogs: the ledger in the services, the legacy billing in the teams")
         void shouldServeTheServiceCatalog(String profile) {
             try (var client = MockClient.start(profile).login()) {
                 var service = json(client.get("/api/v1/catalogs/service")).path("entries");
@@ -727,10 +727,17 @@ class ProfilesTest {
                         retired.add(entry.path("id").asText());
                     }
                 });
+                List<String> retiredTeams = new ArrayList<>();
+                team.forEach(entry -> {
+                    if (entry.path("retired").asBoolean()) {
+                        retiredTeams.add(entry.path("id").asText());
+                    }
+                });
                 assertAll(
-                        () -> assertEquals(5, service.size()),
+                        () -> assertEquals(8, service.size()),
                         () -> assertEquals(List.of("ledger"), retired),
-                        () -> team.forEach(entry -> assertFalse(entry.has("retired"))));
+                        () -> assertEquals(5, team.size()),
+                        () -> assertEquals(List.of("legacy-billing"), retiredTeams));
             }
         }
 
@@ -843,15 +850,18 @@ class ProfilesTest {
         }
 
         @Test
-        @DisplayName("stay out of the other profiles: degraded, empty and release answer no route")
+        @DisplayName("stay out of the other profiles: degraded, empty and release answer no route; empty has no persons")
         void shouldNotExtendTheOtherProfiles() {
             for (String profile : List.of("degraded", "empty", "release")) {
                 try (var client = MockClient.start(profile).login()) {
-                    assertAll(profile,
-                            () -> assertEquals("MOCK_NO_ROUTE", json(client.get("/api/v1/categories/test-note/schema"))
-                                    .path("outcome").asText()),
-                            () -> assertEquals("MOCK_NO_ROUTE", json(client.get("/api/v1/directory/persons"))
-                                    .path("outcome").asText()));
+                    assertEquals("MOCK_NO_ROUTE", json(client.get("/api/v1/categories/test-note/schema"))
+                            .path("outcome").asText(), profile);
+                }
+            }
+            for (String profile : List.of("degraded", "release")) {
+                try (var client = MockClient.start(profile).login()) {
+                    assertEquals("MOCK_NO_ROUTE", json(client.get("/api/v1/directory/persons"))
+                            .path("outcome").asText(), profile);
                 }
             }
         }

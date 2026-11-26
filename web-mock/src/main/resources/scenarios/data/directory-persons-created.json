@@ -1,0 +1,27 @@
+{
+  "outcome": "CREATED",
+  "persons": [
+    {
+      "pseudonym": "p-5c2d19",
+      "name": "Nadia Kovac",
+      "state": "unbound",
+      "memberships": [
+        {
+          "team": "team:payments",
+          "role": "role:developer"
+        }
+      ]
+    },
+    {
+      "pseudonym": "p-a7e341",
+      "name": "Omar Haddad",
+      "state": "unbound",
+      "memberships": [
+        {
+          "team": "team:mobile",
+          "role": "role:developer"
+        }
+      ]
+    }
+  ]
+}

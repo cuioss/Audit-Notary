@@ -1,0 +1,704 @@
+{
+  "catalog": "service",
+  "entries": [
+    {
+      "id": "payment-api",
+      "name": "Payment API",
+      "retired": false,
+      "value": {
+        "id": "payment-api",
+        "name": "Payment API",
+        "description": "Takes payments for the web shop and talks to the payment provider.",
+        "system": "system:webshop",
+        "lifecycle": "active",
+        "owner": {
+          "team": "team:payments",
+          "role": "role:service-owner"
+        },
+        "repositories": [
+          "https://git.example/payments/payment-api"
+        ],
+        "dependsOn": [
+          "service:customer-db",
+          "service:identity-provider",
+          "external:psp-provider"
+        ],
+        "protection-needs": {
+          "confidentiality": "high",
+          "integrity": "high",
+          "availability": "high"
+        },
+        "data-classes": [
+          "personal",
+          "payment"
+        ]
+      },
+      "effective": {
+        "protectionNeeds": {
+          "confidentiality": "very-high",
+          "integrity": "very-high",
+          "availability": "high"
+        },
+        "decidedBy": {
+          "confidentiality": "service:customer-db",
+          "integrity": "service:identity-provider",
+          "availability": "service:payment-api"
+        },
+        "dependencies": [
+          {
+            "ref": "external:psp-provider",
+            "name": "Payment service provider",
+            "depth": 1,
+            "via": "service:payment-api",
+            "retired": false,
+            "counts": false,
+            "protectionNeeds": null
+          },
+          {
+            "ref": "service:customer-db",
+            "name": "Customer database",
+            "depth": 1,
+            "via": "service:payment-api",
+            "retired": false,
+            "counts": true,
+            "protectionNeeds": {
+              "confidentiality": "very-high",
+              "integrity": "high",
+              "availability": "normal"
+            }
+          },
+          {
+            "ref": "service:identity-provider",
+            "name": "Identity Provider",
+            "depth": 1,
+            "via": "service:payment-api",
+            "retired": false,
+            "counts": true,
+            "protectionNeeds": {
+              "confidentiality": "very-high",
+              "integrity": "very-high",
+              "availability": "high"
+            }
+          },
+          {
+            "ref": "external:cloud-hosting",
+            "name": "Cloud hosting",
+            "depth": 2,
+            "via": "service:customer-db",
+            "retired": false,
+            "counts": false,
+            "protectionNeeds": null
+          }
+        ],
+        "cycle": null
+      },
+      "at": "2026-10-02T09:12:00Z",
+      "history": [
+        {
+          "kind": "save",
+          "at": "2026-10-02T09:12:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        },
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:40:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "customer-portal",
+      "name": "Customer Portal",
+      "retired": false,
+      "value": {
+        "id": "customer-portal",
+        "name": "Customer Portal",
+        "description": "The place where customers see their orders and their account.",
+        "system": "system:webshop",
+        "lifecycle": "active",
+        "owner": {
+          "team": "team:mobile",
+          "role": "role:service-owner"
+        },
+        "repositories": [
+          "https://git.example/mobile/customer-portal"
+        ],
+        "dependsOn": [
+          "service:payment-api",
+          "service:identity-provider"
+        ],
+        "protection-needs": {
+          "confidentiality": "normal",
+          "integrity": "normal",
+          "availability": "high"
+        },
+        "data-classes": [
+          "personal"
+        ]
+      },
+      "effective": {
+        "protectionNeeds": {
+          "confidentiality": "very-high",
+          "integrity": "very-high",
+          "availability": "high"
+        },
+        "decidedBy": {
+          "confidentiality": "service:identity-provider",
+          "integrity": "service:identity-provider",
+          "availability": "service:customer-portal"
+        },
+        "dependencies": [
+          {
+            "ref": "service:identity-provider",
+            "name": "Identity Provider",
+            "depth": 1,
+            "via": "service:customer-portal",
+            "retired": false,
+            "counts": true,
+            "protectionNeeds": {
+              "confidentiality": "very-high",
+              "integrity": "very-high",
+              "availability": "high"
+            }
+          },
+          {
+            "ref": "service:payment-api",
+            "name": "Payment API",
+            "depth": 1,
+            "via": "service:customer-portal",
+            "retired": false,
+            "counts": true,
+            "protectionNeeds": {
+              "confidentiality": "high",
+              "integrity": "high",
+              "availability": "high"
+            }
+          },
+          {
+            "ref": "external:cloud-hosting",
+            "name": "Cloud hosting",
+            "depth": 2,
+            "via": "service:identity-provider",
+            "retired": false,
+            "counts": false,
+            "protectionNeeds": null
+          },
+          {
+            "ref": "external:psp-provider",
+            "name": "Payment service provider",
+            "depth": 2,
+            "via": "service:payment-api",
+            "retired": false,
+            "counts": false,
+            "protectionNeeds": null
+          },
+          {
+            "ref": "service:customer-db",
+            "name": "Customer database",
+            "depth": 2,
+            "via": "service:payment-api",
+            "retired": false,
+            "counts": true,
+            "protectionNeeds": {
+              "confidentiality": "very-high",
+              "integrity": "high",
+              "availability": "normal"
+            }
+          }
+        ],
+        "cycle": null
+      },
+      "at": "2026-02-12T08:15:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-02-12T08:15:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "identity-provider",
+      "name": "Identity Provider",
+      "retired": false,
+      "value": {
+        "id": "identity-provider",
+        "name": "Identity Provider",
+        "description": "Signs customers and staff in and issues the proof of it.",
+        "system": "system:core-platform",
+        "lifecycle": "active",
+        "owner": {
+          "team": "team:identity",
+          "role": "role:service-owner"
+        },
+        "repositories": [
+          "https://git.example/identity/identity-provider"
+        ],
+        "dependsOn": [
+          "external:cloud-hosting"
+        ],
+        "protection-needs": {
+          "confidentiality": "very-high",
+          "integrity": "very-high",
+          "availability": "high"
+        },
+        "data-classes": [
+          "personal",
+          "credentials"
+        ]
+      },
+      "effective": {
+        "protectionNeeds": {
+          "confidentiality": "very-high",
+          "integrity": "very-high",
+          "availability": "high"
+        },
+        "decidedBy": {
+          "confidentiality": "service:identity-provider",
+          "integrity": "service:identity-provider",
+          "availability": "service:identity-provider"
+        },
+        "dependencies": [
+          {
+            "ref": "external:cloud-hosting",
+            "name": "Cloud hosting",
+            "depth": 1,
+            "via": "service:identity-provider",
+            "retired": false,
+            "counts": false,
+            "protectionNeeds": null
+          }
+        ],
+        "cycle": null
+      },
+      "at": "2026-09-14T15:25:00Z",
+      "history": [
+        {
+          "kind": "save",
+          "at": "2026-09-14T15:25:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        },
+        {
+          "kind": "create",
+          "at": "2026-02-11T14:05:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "customer-db",
+      "name": "Customer database",
+      "retired": false,
+      "value": {
+        "id": "customer-db",
+        "name": "Customer database",
+        "description": "Holds the master data of every customer.",
+        "system": "system:core-platform",
+        "lifecycle": "active",
+        "owner": {
+          "team": "team:identity",
+          "role": "role:service-owner"
+        },
+        "repositories": [
+          "https://git.example/identity/customer-db"
+        ],
+        "dependsOn": [
+          "external:cloud-hosting"
+        ],
+        "protection-needs": {
+          "confidentiality": "very-high",
+          "integrity": "high",
+          "availability": "normal"
+        },
+        "data-classes": [
+          "personal"
+        ]
+      },
+      "effective": {
+        "protectionNeeds": {
+          "confidentiality": "very-high",
+          "integrity": "high",
+          "availability": "normal"
+        },
+        "decidedBy": {
+          "confidentiality": "service:customer-db",
+          "integrity": "service:customer-db",
+          "availability": "service:customer-db"
+        },
+        "dependencies": [
+          {
+            "ref": "external:cloud-hosting",
+            "name": "Cloud hosting",
+            "depth": 1,
+            "via": "service:customer-db",
+            "retired": false,
+            "counts": false,
+            "protectionNeeds": null
+          }
+        ],
+        "cycle": null
+      },
+      "at": "2026-02-11T14:20:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-02-11T14:20:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "reporting",
+      "name": "Reporting Service",
+      "retired": false,
+      "value": {
+        "id": "reporting",
+        "name": "Reporting Service",
+        "description": "Builds the monthly reports for management.",
+        "system": "system:core-platform",
+        "lifecycle": "active",
+        "owner": {
+          "team": "team:security-office",
+          "role": "role:service-owner"
+        },
+        "repositories": [
+          "https://git.example/security-office/reporting"
+        ],
+        "dependsOn": [
+          "service:report-scheduler",
+          "service:ledger"
+        ],
+        "protection-needs": {
+          "confidentiality": "normal",
+          "integrity": "normal",
+          "availability": "normal"
+        }
+      },
+      "effective": {
+        "protectionNeeds": {
+          "confidentiality": "normal",
+          "integrity": "normal",
+          "availability": "normal"
+        },
+        "decidedBy": {
+          "confidentiality": "service:reporting",
+          "integrity": "service:reporting",
+          "availability": "service:reporting"
+        },
+        "dependencies": [
+          {
+            "ref": "service:ledger",
+            "name": "Ledger",
+            "depth": 1,
+            "via": "service:reporting",
+            "retired": true,
+            "counts": false,
+            "protectionNeeds": {
+              "confidentiality": "high",
+              "integrity": "very-high",
+              "availability": "normal"
+            }
+          },
+          {
+            "ref": "service:report-scheduler",
+            "name": "Report scheduler",
+            "depth": 1,
+            "via": "service:reporting",
+            "retired": false,
+            "counts": true,
+            "protectionNeeds": {
+              "confidentiality": "normal",
+              "integrity": "normal",
+              "availability": "normal"
+            }
+          }
+        ],
+        "cycle": [
+          "service:reporting",
+          "service:report-scheduler"
+        ]
+      },
+      "at": "2026-03-02T10:30:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-03-02T10:30:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "report-scheduler",
+      "name": "Report scheduler",
+      "retired": false,
+      "value": {
+        "id": "report-scheduler",
+        "name": "Report scheduler",
+        "description": "Decides when each report is built.",
+        "system": "system:core-platform",
+        "lifecycle": "active",
+        "owner": {
+          "team": "team:security-office",
+          "role": "role:service-owner"
+        },
+        "repositories": [
+          "https://git.example/security-office/report-scheduler"
+        ],
+        "dependsOn": [
+          "service:reporting"
+        ],
+        "protection-needs": {
+          "confidentiality": "normal",
+          "integrity": "normal",
+          "availability": "normal"
+        }
+      },
+      "effective": {
+        "protectionNeeds": {
+          "confidentiality": "normal",
+          "integrity": "normal",
+          "availability": "normal"
+        },
+        "decidedBy": {
+          "confidentiality": "service:report-scheduler",
+          "integrity": "service:report-scheduler",
+          "availability": "service:report-scheduler"
+        },
+        "dependencies": [
+          {
+            "ref": "service:reporting",
+            "name": "Reporting Service",
+            "depth": 1,
+            "via": "service:report-scheduler",
+            "retired": false,
+            "counts": true,
+            "protectionNeeds": {
+              "confidentiality": "normal",
+              "integrity": "normal",
+              "availability": "normal"
+            }
+          },
+          {
+            "ref": "service:ledger",
+            "name": "Ledger",
+            "depth": 2,
+            "via": "service:reporting",
+            "retired": true,
+            "counts": false,
+            "protectionNeeds": {
+              "confidentiality": "high",
+              "integrity": "very-high",
+              "availability": "normal"
+            }
+          }
+        ],
+        "cycle": [
+          "service:report-scheduler",
+          "service:reporting"
+        ]
+      },
+      "at": "2026-03-02T10:45:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-03-02T10:45:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ledger",
+      "name": "Ledger",
+      "retired": true,
+      "value": {
+        "id": "ledger",
+        "name": "Ledger",
+        "description": "The general ledger of the old business system.",
+        "system": "system:legacy-erp",
+        "lifecycle": "deprecated",
+        "owner": {
+          "team": "team:payments",
+          "role": "role:service-owner"
+        },
+        "repositories": [
+          "https://git.example/payments/ledger"
+        ],
+        "dependsOn": [],
+        "protection-needs": {
+          "confidentiality": "high",
+          "integrity": "very-high",
+          "availability": "normal"
+        },
+        "data-classes": [
+          "financial"
+        ]
+      },
+      "effective": {
+        "protectionNeeds": {
+          "confidentiality": "high",
+          "integrity": "very-high",
+          "availability": "normal"
+        },
+        "decidedBy": {
+          "confidentiality": "service:ledger",
+          "integrity": "service:ledger",
+          "availability": "service:ledger"
+        },
+        "dependencies": [],
+        "cycle": null
+      },
+      "at": "2026-08-31T16:00:00Z",
+      "history": [
+        {
+          "kind": "retire",
+          "at": "2026-08-31T16:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        },
+        {
+          "kind": "create",
+          "at": "2026-02-11T14:50:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "notification-service",
+      "name": "Notification service",
+      "retired": false,
+      "value": {
+        "id": "notification-service",
+        "name": "Notification service",
+        "description": "Will send messages to customers on every channel.",
+        "lifecycle": "planned",
+        "owner": {
+          "team": "team:mobile",
+          "role": "role:service-owner"
+        },
+        "dependsOn": [],
+        "protection-needs": {
+          "confidentiality": "normal",
+          "integrity": "normal",
+          "availability": "normal"
+        }
+      },
+      "effective": {
+        "protectionNeeds": {
+          "confidentiality": "normal",
+          "integrity": "normal",
+          "availability": "normal"
+        },
+        "decidedBy": {
+          "confidentiality": "service:notification-service",
+          "integrity": "service:notification-service",
+          "availability": "service:notification-service"
+        },
+        "dependencies": [],
+        "cycle": null
+      },
+      "at": "2026-11-20T11:00:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-11-20T11:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "notification-gateway",
+      "name": "Notification gateway",
+      "retired": false,
+      "value": {
+        "id": "notification-gateway",
+        "name": "Notification gateway",
+        "description": "The entry point of the planned notification service.",
+        "system": "system:core-platform",
+        "lifecycle": "planned",
+        "owner": {
+          "team": "team:mobile",
+          "role": "role:service-owner"
+        },
+        "dependsOn": [
+          "service:notification-service"
+        ],
+        "protection-needs": {
+          "confidentiality": "normal",
+          "integrity": "normal",
+          "availability": "normal"
+        }
+      },
+      "effective": {
+        "protectionNeeds": {
+          "confidentiality": "normal",
+          "integrity": "normal",
+          "availability": "normal"
+        },
+        "decidedBy": {
+          "confidentiality": "service:notification-gateway",
+          "integrity": "service:notification-gateway",
+          "availability": "service:notification-gateway"
+        },
+        "dependencies": [
+          {
+            "ref": "service:notification-service",
+            "name": "Notification service",
+            "depth": 1,
+            "via": "service:notification-gateway",
+            "retired": false,
+            "counts": true,
+            "protectionNeeds": {
+              "confidentiality": "normal",
+              "integrity": "normal",
+              "availability": "normal"
+            }
+          }
+        ],
+        "cycle": null
+      },
+      "at": "2026-11-26T09:30:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-11-26T09:30:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    }
+  ]
+}

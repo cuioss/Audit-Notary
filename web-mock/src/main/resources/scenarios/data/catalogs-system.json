@@ -1,0 +1,17 @@
+{
+  "entries": [
+    {
+      "id": "webshop",
+      "name": "Web shop"
+    },
+    {
+      "id": "core-platform",
+      "name": "Core platform"
+    },
+    {
+      "id": "legacy-erp",
+      "name": "Legacy ERP",
+      "retired": true
+    }
+  ]
+}

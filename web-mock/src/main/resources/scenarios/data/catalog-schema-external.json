@@ -1,0 +1,34 @@
+{
+  "catalog": "external",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "required": [
+      "id",
+      "name"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^(?!(?:new|schema)$)[a-z0-9][a-z0-9-]{0,63}$"
+      },
+      "name": {
+        "type": "string",
+        "maxLength": 120
+      },
+      "description": {
+        "type": "string",
+        "maxLength": 500,
+        "x-free-text": true
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "supplier",
+          "provider",
+          "other"
+        ]
+      }
+    }
+  }
+}

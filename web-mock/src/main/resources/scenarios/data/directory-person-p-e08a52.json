@@ -1,0 +1,12 @@
+{
+  "pseudonym": "p-e08a52",
+  "name": "Tomas Ferreira",
+  "state": "unbound",
+  "memberships": [
+    {
+      "team": "team:identity",
+      "role": "role:security-champion"
+    }
+  ],
+  "erasedOn": null
+}

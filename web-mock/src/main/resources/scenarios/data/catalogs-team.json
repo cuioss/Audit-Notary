@@ -1,0 +1,25 @@
+{
+  "entries": [
+    {
+      "id": "payments",
+      "name": "Payments"
+    },
+    {
+      "id": "identity",
+      "name": "Identity Platform"
+    },
+    {
+      "id": "mobile",
+      "name": "Mobile Apps"
+    },
+    {
+      "id": "security-office",
+      "name": "Security Office"
+    },
+    {
+      "id": "legacy-billing",
+      "name": "Legacy Billing",
+      "retired": true
+    }
+  ]
+}

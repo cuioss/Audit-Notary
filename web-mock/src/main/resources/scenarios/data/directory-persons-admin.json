@@ -1,0 +1,93 @@
+{
+  "persons": [
+    {
+      "pseudonym": "p-4c1a9e",
+      "name": "Alex Example",
+      "state": "bound",
+      "memberships": [
+        {
+          "team": "team:payments",
+          "role": "role:security-champion"
+        }
+      ]
+    },
+    {
+      "pseudonym": "p-2b7f10",
+      "name": "Jordan Weber",
+      "state": "bound",
+      "memberships": [
+        {
+          "team": "team:payments",
+          "role": "role:developer"
+        }
+      ]
+    },
+    {
+      "pseudonym": "p-61c0d4",
+      "name": "Lea Brandt",
+      "state": "bound",
+      "memberships": [
+        {
+          "team": "team:identity",
+          "role": "role:product-owner"
+        }
+      ]
+    },
+    {
+      "pseudonym": "p-7d52e8",
+      "name": "Mira Haas",
+      "state": "unbound",
+      "memberships": [
+        {
+          "team": "team:mobile",
+          "role": "role:developer"
+        }
+      ]
+    },
+    {
+      "pseudonym": "p-9e33a1",
+      "name": "Sam Okafor",
+      "state": "bound",
+      "memberships": [
+        {
+          "team": "team:payments",
+          "role": "role:developer"
+        }
+      ]
+    },
+    {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad",
+      "state": "bound",
+      "memberships": [
+        {
+          "team": "team:security-office",
+          "role": "role:ciso"
+        }
+      ]
+    },
+    {
+      "pseudonym": "p-b3f1c7",
+      "name": "Priya Raman",
+      "state": "unbound",
+      "memberships": [
+        {
+          "team": "team:mobile",
+          "role": "role:developer"
+        }
+      ]
+    },
+    {
+      "pseudonym": "p-e08a52",
+      "name": "Tomas Ferreira",
+      "state": "unbound",
+      "memberships": [
+        {
+          "team": "team:identity",
+          "role": "role:security-champion"
+        }
+      ]
+    }
+  ],
+  "truncated": false
+}

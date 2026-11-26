@@ -1,0 +1,12 @@
+{
+  "pseudonym": "p-b3f1c7",
+  "name": "Priya Raman",
+  "state": "unbound",
+  "memberships": [
+    {
+      "team": "team:mobile",
+      "role": "role:developer"
+    }
+  ],
+  "erasedOn": null
+}

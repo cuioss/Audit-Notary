@@ -61,7 +61,8 @@ Without the scripts: `java -cp … de.cuioss.notary.audit.mock.cli.WebMockCli --
 
 |`workshop` (default)
 |`ready`, `saved-by-other`, `conflict`, `forbidden`, `session-replaced`, `session-ended`, `preview-hostile`,
-`preview-unavailable`, and the `note-*` and `category-*` states of _Document Lifecycle_
+`preview-unavailable`, `confirmation-due`, `confirmation-done`, `entry-invalid`, `entry-git-unavailable`, and the
+`note-*` and `category-*` states of _Document Lifecycle_
 |An assessor in a populated installation: Due list with every kind, catalogs, and the SAMM lens — four scopes, the
 open workshop *Payments 2026 Q4* (draft, eleven practices answered) and released assessments to compare with; a draft
 and a save for everyone succeed. `saved-by-other` pushes a `document-saved` event and serves the assessment with
@@ -74,20 +75,29 @@ the plan, because UC-ACC-6 needs it); `preview-hostile` makes the renderer answe
 (_Fixture Categories_) and the document lifecycle of the test category (_Document Lifecycle_) for the repository
 `test-notes` (rights `read`, `edit` and `approve`): ten notes in every state, their revisions, the search, create, draft,
 save, submit and release, and three more items in the Due list (a review, a review with a release request, a
-release request)
+release request). The five catalogs, their schemas and entries and the person directory are readable; the user does not
+hold `administer-catalogs`, so every catalog and directory write answers `403 FORBIDDEN`; the own entry is read and saved
+(_Directory and Catalogs_). `confirmation-due`: the session says `directoryConfirmationDue: true` and the own entry is
+older than the interval, confirming it or saving it moves to `confirmation-done`; `entry-invalid` refuses saving the own
+entry with `422`, `entry-git-unavailable` answers saving and confirming `503 GIT_UNAVAILABLE`
 
 |`first-login`
-|`form`, `invalid-team`, `registered`
-|A user without directory entry: everything outside the first-login allow-list answers `FIRST_LOGIN_REQUIRED`;
-`PUT /api/v1/directory/me` saves the entry (`registered`) or is refused with `REFERENCE_NOT_FOUND`
-(`invalid-team`)
+|`form`, `invalid-team`, `registered`, `candidates`, `candidates-chosen`, `candidates-not-bindable`, `candidates-refused`
+|A user without directory entry (`GET /api/v1/directory/me` answers `"entry": null`): everything outside the first-login
+allow-list answers `FIRST_LOGIN_REQUIRED`; `PUT /api/v1/directory/me` saves the entry (`registered`) or is refused with
+`REFERENCE_NOT_FOUND` (`invalid-team`). `candidates`: the first save answers `409 BINDING_CANDIDATES` with Robin Newcomer
+(`p-3d7a15`) and Rowan Newman (`p-8e2b40`), the second one binds `p-3d7a15` (`registered`); `candidates-not-bindable`:
+the same first answer, then `409 NOT_BINDABLE`, then `200` (the mock does not read the `binding` member, the sequence of
+the requests decides)
 
 |`read-only`
 |`ready`, `preview-hostile`, `preview-unavailable`
 |The right `read` only (also on `test-notes`), with the SAMM data and the form kit requests of `workshop` (the two
 preview states included) and the reads of the document lifecycle (list, notes, revisions, diffs, search; the search index
-holds the SAMM assessments too); the one edit the mock models, `PUT /api/v1/directory/me`, answers `FORBIDDEN`, and so
-does every write on `test-notes` (draft, save, submit, release, create)
+holds the SAMM assessments too); the writes of the own entry (`PUT /api/v1/directory/me`, `POST …/confirmation`) answer
+`FORBIDDEN`, and so does every write on `test-notes` (draft, save, submit, release, create). It reads the five catalogs
+and the person directory as `workshop` does (_Directory and Catalogs_); every catalog and directory write answers
+`403 FORBIDDEN` (`requires`, no right `administer-catalogs`)
 
 |`degraded`
 |`unreachable`, `recovered`
@@ -97,7 +107,9 @@ does every write on `test-notes` (draft, save, submit, release, create)
 |`empty`
 |`ready`
 |A fresh installation: nothing due; `GET /api/v1/categories` lists no category, so the rail has no *Documents* entry
-(as in `degraded`, `release`, `local` and `login-trouble`)
+(as in `degraded`, `release`, `local` and `login-trouble`). The user holds `administer-catalogs`: the lists of `service`,
+`system` and `external` and the person list are empty, every entry read answers `404`, and the catalog and directory
+writes answer as in `catalog-admin` `ready` (_Directory and Catalogs_)
 
 |`no-rights`
 |`ready`
@@ -131,6 +143,14 @@ stays the one of the identity provider; `changed` answers `CHANGED_SINCE_REVIEW`
 and `POST /j_security_check` with the user `alex` and the password `local-password` signs in (`Origin` required); the
 status names `loginProvider: local` and `stepUp: off`. The data and the user are those of `workshop`
 
+|`catalog-admin`
+|`ready`, `service-created`, `service-retired`, `catalog-invalid`, `catalog-id-taken`, `catalog-rejected`,
+`catalog-changed-elsewhere`, `import-invalid`, `import-too-large`, `import-nothing-new`, `persons-invalid`,
+`persons-added`, `person-erased`, `erase-managed-by-source`, `git-unavailable`
+|The administrator of the catalogs: Noor Haddad (`p-7d2e58`) holds `read`, `edit`, `approve` and `administer-catalogs` on
+`directory` and `read` on `samm-assessments`; nothing is due and the profile answers no document request. Every catalog
+and directory write works; the states show what its answers do (_Directory and Catalogs_, the table of the states)
+
 |`login-trouble`
 |`idp-unavailable` (start), `too-many-logins`, `unknown-transaction`, `recovered`
 |The login cannot start or complete. `idp-unavailable` answers the login start `502 IDENTITY_PROVIDER_UNAVAILABLE`,
@@ -159,7 +179,9 @@ navigate to the callback, which answers `400 UNKNOWN_TRANSACTION`; a browser nav
   `/login-problem?reason=idp-unavailable|too-many-logins|unknown-transaction` without body; every other client gets the
   JSON. A `503` with the outcome `TOO_MANY_LOGINS` carries `Retry-After: 60`, whichever request it answers.
 * *No rights:* with `"rights": []` and no first login, every `/api/v1` request outside the shell answers
-  `403 FORBIDDEN` before the routes are looked at.
+  `403 FORBIDDEN` before the routes are looked at; the shell includes `POST /api/v1/directory/me/confirmation`.
+* *Requires:* a route or link with `requires` the user's rights do not hold answers `403 FORBIDDEN` (_Path Templates and
+  requires_).
 * *Session changes:* a state with `"session_replaced": true` closes every open event stream on entry and replaces the
   anti-CSRF token of every session (the cookie stays valid; a request with the old token answers `403 CSRF_REJECTED`);
   a state with `"session_ended": true` closes the streams and drops every session.
@@ -188,7 +210,7 @@ No login; the Vite dev server forwards `/mock` for loopback clients only.
 |Request |Effect
 
 |`GET /mock/state`
-|`{"scenario", "state", "description", "first_login_required", "timing", "links": [{name, method, path, next}]}`
+|`{"scenario", "state", "description", "first_login_required", "directory_confirmation_due", "timing", "links": [{name, method, path, next}]}`
 
 |`GET /mock/scenarios`
 |`{"primary": [...]}`
@@ -224,12 +246,14 @@ No login; the Vite dev server forwards `/mock` for loopback clients only.
   "user": { "pseudonym": "p-4c1a9e", "name": "Alex Example", "groups": ["samm-assessors"] },
   "rights": [ { "repository": "samm-assessments", "actions": ["read", "edit"] } ],
   "first_login_required": false,
+  "directory_confirmation_due": false,
   "start": "ready",
   "routes": { "GET /api/v1/status": { "status": 200, "body": { } } },
   "states": {
     "ready": {
       "description": "…",
       "first_login_required": false,
+      "directory_confirmation_due": false,
       "session_replaced": false,
       "session_ended": false,
       "routes": { "GET /api/v1/due": { "status": 200, "body": { } } },
@@ -254,10 +278,14 @@ No login; the Vite dev server forwards `/mock` for loopback clients only.
   `src/main/resources/scenarios/data/` (`"body_file": "samm-scopes.json"`). Large or shared answers live there once
   instead of inline in every profile. The file name matches `[a-z0-9][a-z0-9.-]*.json`; a name that resolves to no
   file, a file that is no JSON, or `body` and `body_file` together fail the load.
-* A route (not a link) may instead name a built-in engine answer, `"handler": "render-asciidoc"` or
-  `"handler": "search-documents"`; it then carries no `body`, `body_file` or `status`, and an unknown handler name fails
-  the load (see _Fixture Categories_ and _Document Lifecycle_). The handler `search-documents` needs a `data_file`, the
-  data file of its index, read like a `body_file`; no other handler has one.
+* A route (not a link) may instead name a built-in engine answer, `"handler": "render-asciidoc"`,
+  `"handler": "search-documents"` or `"handler": "catalog-entry"`; it then carries no `body`, `body_file` or `status`, and an unknown handler name fails
+  the load (see _Fixture Categories_, _Document Lifecycle_ and _Directory and Catalogs_). The handlers
+  `search-documents` and `catalog-entry` need a `data_file`, the data file of their index or catalog, read like a
+  `body_file`; no other handler has one.
+* `directory_confirmation_due` (a boolean, default `false`) is a member of the scenario and, as an override like
+  `first_login_required`, of a state: the answer of `GET /api/v1/session` carries it as `directoryConfirmationDue`.
+* A path may hold `{name}` segments (_Path Templates and requires_); a route or link may carry `requires`.
 
 === Data Files
 
@@ -296,15 +324,38 @@ of the search and the Due list of `workshop`; `-n2-step-up` (N2 with a submit th
 |The second generic category, _Meeting minutes_ (_Document Lifecycle_): its schema, list, two documents with their
 revisions, the category lists of the states `category-*` and the search index with its two documents
 
-|`categories-*-schema.json`, `catalogs-service.json`, `directory-person*.json`, `references-resolve.json`,
+|`categories-*-schema.json`, `directory-person-p-4c1a9e.json` and the six other old reads, `references-resolve.json`,
 `render-asciidoc-hostile.json`
-|The form kit fixtures (_Fixture Categories_), generated once and consistent with each other (the persons, catalogs and references
+|The form kit fixtures (_Fixture Categories_), generated once and consistent with each other (the persons and references
 of the schemas and the samples of the unit tests)
+
+|`catalogs-<catalog>.json`, `catalogs-service-created.json`, `catalogs-service-retired.json`
+|The lists of the five catalogs (_Directory and Catalogs_) and the two lists of the states `service-created` and
+`service-retired`; the list of `service` holds the eight entries of the table without `notification-gateway`
+
+|`catalog-schema-<catalog>.json`, `catalog-<catalog>-entries.json`, `catalog-<catalog>-empty.json`
+|The schema, the entries (the data file of the handler `catalog-entry`, with `value`, `effective` and `history`) and the
+empty data file (`empty`) of each catalog
+
+|`catalog-service-customer-portal-retired.json`, `catalog-service-payment-api-changed.json`
+|The entry reads of the states `service-retired` and `catalog-changed-elsewhere`
+
+|`catalog-import-preview.json`, `catalog-import-result.json`, `catalog-import-repeat.json`, `catalog-import-repeat-preview.json`
+|The Backstage import: the preview and the result of the example of the register (3 created, 2 updated, 4 unchanged,
+5 left out) and the repeated import of `import-nothing-new`
+
+|`directory-persons-admin*.json`, `directory-persons-created.json`, `directory-person-<pseudonym>.json`,
+`directory-person-p-2b7f10-former.json`
+|The person list of `catalog-admin` (also `-added` and `-erased` for the states), the answer of the prefill, the reads of
+the new persons and the erased Jordan Weber
+
+|`directory-me-<user>.json`
+|`GET /api/v1/directory/me` of Alex (`alex`, `alex-due`, `alex-confirmed`), Noor, Kim and Sam
 |===
 
 The answers are generated once from the model and are consistent with each other: the comparison holds the scores the
 answers give (`web-app` checks this in `scores.test.ts`).
-* Checked on load: format version `1`; the login provider `oidc` or `local`, users with `local` only; name, user name and start present; every `next` names a state; methods `GET`,
+* Checked on load (the templates and `requires` as in _Path Templates and requires_): format version `1`; the login provider `oidc` or `local`, users with `local` only; name, user name and start present; every `next` names a state; methods `GET`,
   `POST`, `PUT`, `DELETE`; paths below `/api/v1/`, each optionally with a query of names and values that are not empty, no `#`, no name twice; status 100 to 599; actions `read`, `edit`,
   `approve`, `administer-catalogs`; no negative delay. A violation names file, location and rule.
 
@@ -324,12 +375,13 @@ the requests are in `doc/specification/rest-api.adoc`, _Form Kit Requests_.
 as one-column tables, a `$ref`, plain data) and `form-validation` (kind `validation`: every constraint once):
 `categories-<category>-schema.json`. `unknown-category` answers `404 NOT_FOUND`; any other category `404 MOCK_NO_ROUTE`
 
-|`GET /api/v1/catalogs/service`
-|`catalogs-service.json`: five entries, `ledger` is `"retired": true` (`team` and `role` have no `retired` member)
+|`GET /api/v1/catalogs/<catalog>`
+|`catalogs-<catalog>.json` for the five catalogs (_Directory and Catalogs_): `ledger`, `legacy-billing`, `release-manager`,
+`legacy-erp` and `old-sms-gateway` are `"retired": true`
 
 |`GET /api/v1/directory/persons`
 |`directory-persons.json`: five persons, `p-7d52e8` is `unbound`, `truncated: false`; the mock ignores `?q=`, the client
-filters
+filters (`catalog-admin` lists eight persons)
 
 |`GET /api/v1/directory/persons/<pseudonym>`
 |`directory-person-<pseudonym>.json`: `p-4c1a9e`, `p-2b7f10`, `p-61c0d4`, `p-9e33a1` bound, `p-7d52e8` unbound,
@@ -368,6 +420,163 @@ path. The states `preview-hostile` (`render-asciidoc-hostile.json`: script, hand
 replace the handler. A source over the limit needs no state: it answers `413` by itself. The HTTP adapter reads a request body at most up to 1 MiB (`MockEngine.MAX_BODY_BYTES`, far above
 any source within the limit); a larger body is answered with the same `413` before it is buffered, whatever the
 request.
+
+== Path Templates and requires
+
+*Path templates.* A route or link key may hold a segment `{name}` (name `[a-z][a-z0-9]*`) that stands for exactly one
+non-empty segment of the request path: `"PUT /api/v1/catalogs/service/{id}"`. The loader refuses an empty name, a name
+twice in one path, and `{` or `}` inside a segment, naming file, location and rule. The order of choice extends the
+rule of the _Scenario Format_: a link of the state, a route of the state, a route of the scenario; within one level an
+exact path comes before a templated one, then the key with more literal segments, then the one with more listed query
+parameters, then (routes) the text of the key. A template never beats an exact key of the same level, and a template of
+a state beats an exact key of the scenario. The segments a template stood for are passed to a handler; `/mock/acts`
+records the request as sent.
+
+*The handler `catalog-entry`* answers the entry requests of one catalog from its `data_file`
+(`{"catalog": "service", "entries": [{"id", "name", "retired", "value", "effective", "at", "history"}]}`; the loader
+checks that the file has `catalog` and `entries` and that the route key holds `{id}`). The method decides:
+
+[cols="2,3"]
+|===
+|Request |Answer
+
+|`GET /api/v1/catalogs/<catalog>/{id}`
+|`200` the entry as the register shows it (`catalog`, `id`, `name`, `retired`, `value`, `effective`, `at`, `history`);
+an unknown id `404 NOT_FOUND`
+
+|`PUT /api/v1/catalogs/<catalog>/{id}`
+|`200 {"outcome": "SAVED", "catalog", "id", "at": "2026-11-26T09:30:00Z"}`; an unknown id `404 NOT_FOUND`, a retired entry
+`409 RETIRED`
+
+|`POST /api/v1/catalogs/<catalog>/{id}/retirement`
+|`200 {"outcome": "RETIRED", "catalog", "id", "at": "2026-11-26T09:35:00Z"}`, also for a retired entry; an unknown id
+`404 NOT_FOUND`
+|===
+
+The mock stores nothing: a state decides what the next read shows (`service-retired`, `catalog-changed-elsewhere`).
+
+*`requires`.* A route or link may carry `"requires": {"repository": "directory", "action": "administer-catalogs"}`.
+When the `rights` of the scenario do not hold the action on that repository the engine answers `403 {"outcome":
+"FORBIDDEN"}` before the route or link is used: a link does not move on. Every catalog and directory write of the
+profiles carries it, so `workshop`, `read-only` and the others refuse it without a route of their own.
+
+== Directory and Catalogs
+
+The requests of UC-ACC-4, UC-ACC-5 and UC-CAT-1 to UC-CAT-5 (`doc/specification/rest-api.adoc`, _Directory and Catalog
+Requests_; everything PROVISIONAL unless the register says otherwise). `workshop`, `read-only`, `catalog-admin` and
+`empty` carry the lens *Catalogs*: the lists, the schemas and the entry reads of the five catalogs `team`, `role`,
+`service`, `system` and `external`, the person directory and the own entry. The lists are the same set in `workshop`,
+`read-only` and `catalog-admin`; `empty` lists no `service`, `system` or `external` entry and no person.
+
+*The entries.* `*` is retired. The first four teams and the first four roles keep their order, the new ones come after.
+
+[cols="1,3"]
+|===
+|Catalog |Entries (id: name)
+
+|`team`
+|`payments`: Payments, `identity`: Identity Platform, `mobile`: Mobile Apps, `security-office`: Security Office,
+`legacy-billing`*: Legacy Billing (`parent: team:payments`)
+
+|`role`
+|`developer`, `product-owner`, `security-champion`, `ciso`, `service-owner`, `release-manager`*
+
+|`system`
+|`webshop`: Web shop, `core-platform`: Core platform, `legacy-erp`*: Legacy ERP
+
+|`external`
+|`psp-provider`: Payment service provider (`provider`), `cloud-hosting`: Cloud hosting (`provider`), `kyc-vendor`: Identity
+verification supplier (`supplier`), `old-sms-gateway`*: SMS gateway (old) (`supplier`)
+
+|`service`
+|`payment-api`, `customer-portal`, `identity-provider`, `customer-db`, `reporting`, `report-scheduler`, `ledger`*,
+`notification-service`; `notification-gateway` is what the create flow adds (in the data file, not in the list)
+|===
+
+*The effective protection needs* of a service are computed by the generator, not by the engine, with the rules of
+AUN-DIR-5: `dependencies` are every `service:` and `external:` reference reachable through `dependsOn`, each once, breadth
+first (depth 1 first, sorted by `ref`, then depth 2 in the order of discovery, each parent's children sorted by `ref`); `via`
+is the reference it was first reached from; a dependency `counts` when it is a service that is not retired (an external
+party has no protection needs, a retired service is listed and does not count); the needs of the service are, per dimension,
+the highest of itself and every dependency that counts, and `decidedBy` names the first of itself and then the
+dependencies that holds it. `reporting` and `report-scheduler` depend on each other: the one cycle; `ledger` (retired) is a
+dependency of `reporting` and does not count. `payment-api`, `customer-portal`, `identity-provider`, `reporting` and
+`notification-gateway` are the examples the tests pin.
+
+*The write answers.* Every write needs `administer-catalogs` on `directory` (`requires`): in `workshop` and `read-only`
+it answers `403 FORBIDDEN`. In `catalog-admin` and `empty`:
+
+* `POST /api/v1/catalogs/<catalog>` answers `201 CREATED` with a fixed id: `notification-gateway` (`service`), `platform`
+(`team`), `auditor` (`role`), `mobile-apps` (`system`), `audit-firm` (`external`); the address is
+`/catalogs/<catalog>/<id>`. *Limit of the fixed ids:* only `notification-gateway` is in the data (and, in `catalog-admin`,
+read after the create); a read of the others is `404`, and a second create answers `201` again unless a state says otherwise.
+* `PUT /api/v1/catalogs/<catalog>/{id}` and `POST …/{id}/retirement` are the handler `catalog-entry`; in
+`catalog-admin` `ready` the exact link `POST /api/v1/catalogs/service/customer-portal/retirement` moves to `service-retired`.
+* `POST /api/v1/catalogs/import/backstage/preview` answers `PREVIEW`, `POST /api/v1/catalogs/import/backstage` answers
+`IMPORTED`: 3 created, 2 updated, 4 unchanged and five items left out with every reason of the register.
+* `POST /api/v1/directory/persons` answers `201` with Nadia Kovac (`p-5c2d19`) and Omar Haddad (`p-a7e341`), both unbound;
+`POST /api/v1/directory/erasures` answers `200 ERASED` for `p-2b7f10`. The mock ignores the request body.
+
+*The states of `catalog-admin`* (the start state is `ready`; `goto` states are reached with `POST /mock/goto/<state>`):
+
+[cols="1,3"]
+|===
+|State |What changes
+
+|`ready`
+|The links `POST /api/v1/catalogs/service` (`service-created`), `POST …/service/customer-portal/retirement`
+(`service-retired`), `POST /api/v1/directory/persons` (`persons-added`) and `POST /api/v1/directory/erasures`
+(`person-erased`)
+
+|`service-created`
+|The list of `service` holds `notification-gateway`; the event `catalog-changed` (`catalog`, `id`, `by`) is pushed
+
+|`service-retired`
+|The list and the entry show `customer-portal` retired (history with `retire`); `PUT` of it answers `409 RETIRED`; the event
+`catalog-changed` is pushed
+
+|`catalog-invalid`
+|`POST /api/v1/catalogs/service` and `PUT …/service/payment-api` answer `422 VALIDATION` with `/owner/team` and `/dependsOn/1`
+(`REFERENCE_NOT_FOUND`) and `/name` (`REQUIRED`)
+
+|`catalog-id-taken`
+|`POST /api/v1/catalogs/service` answers `409 ID_TAKEN`
+
+|`catalog-rejected`
+|The create, `PUT …/service/payment-api` and the retirement of `customer-portal` answer `502 REJECTED`
+
+|`catalog-changed-elsewhere`
+|`GET …/service/payment-api` shows the description Jordan Weber saved (one more history line); the event `catalog-changed`
+(by Jordan Weber) is pushed after 300 ms
+
+|`import-invalid`, `import-too-large`
+|The preview and the import answer `422` (`/documents/0/content`, `FORMAT`) or `413 TOO_LARGE` (`limit` 2097152)
+
+|`import-nothing-new`
+|The preview and the import answer `created: []`, `updated: []`, `unchanged: 11` and the first three items left out
+
+|`persons-invalid`
+|The prefill answers `422` with `/persons/1/memberships/0/team`
+
+|`persons-added`
+|The person list holds Nadia Kovac and Omar Haddad too
+
+|`person-erased`
+|The person list lacks Jordan Weber; `GET …/persons/p-2b7f10` answers the former person (`name: null`, `erasedOn`)
+
+|`erase-managed-by-source`
+|The erasure and the prefill answer `409 MANAGED_BY_SOURCE` (`type: managed-by-source`)
+
+|`git-unavailable`
+|The status is `degraded` with `directory` `DOWN`; every write (the creates, `PUT`, the retirements, the import, the
+prefill, the erasure, the confirmation, `PUT /api/v1/directory/me`) answers `503 GIT_UNAVAILABLE`; the reads, the lists and
+the import preview stay `200`
+|===
+
+*The own entry.* `GET /api/v1/directory/me` answers `{name, teams, informationText, entry}`: `entry` is `null` in
+`first-login`, an entry with `confirmedAt` and `confirmationDue` in the other profiles (Alex `p-4c1a9e`, Noor `p-7d2e58`,
+Kim `p-71d0c3`, Sam `p-0a11ce`). `PUT` answers `200 SAVED` with `confirmedAt` 2026-11-26, `POST …/confirmation` answers `200
+CONFIRMED`; both are in the requests a session without a right still makes.
 
 == Query-Keyed Routes
 

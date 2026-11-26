@@ -1,0 +1,29 @@
+{
+  "entries": [
+    {
+      "id": "developer",
+      "name": "Developer"
+    },
+    {
+      "id": "product-owner",
+      "name": "Product Owner"
+    },
+    {
+      "id": "security-champion",
+      "name": "Security Champion"
+    },
+    {
+      "id": "ciso",
+      "name": "Chief Information Security Officer"
+    },
+    {
+      "id": "service-owner",
+      "name": "Service Owner"
+    },
+    {
+      "id": "release-manager",
+      "name": "Release Manager",
+      "retired": true
+    }
+  ]
+}

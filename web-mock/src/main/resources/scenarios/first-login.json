@@ -104,7 +104,8 @@
         "teams": [
           "payments"
         ],
-        "informationText": "Audit Notary stores your name, team and role in the person directory of your organisation so that documents can name who worked on them. Documents carry only a pseudonym; the directory maps it to your entry. Controller: the security office of your organisation. Legal basis: Art. 6(1)(b) and (f) GDPR. You can change your entry at any time in Settings; erasure is done by the catalog administrators. (Information under Art. 13 GDPR.)"
+        "informationText": "Audit Notary stores your name, team and role in the person directory of your organisation so that documents can name who worked on them. Documents carry only a pseudonym; the directory maps it to your entry. Controller: the security office of your organisation. Legal basis: Art. 6(1)(b) and (f) GDPR. You can change your entry at any time in Settings; erasure is done by the catalog administrators. (Information under Art. 13 GDPR.)",
+        "entry": null
       }
     }
   },
@@ -160,6 +161,107 @@
                 "due": "2026-11-27"
               }
             ]
+          }
+        }
+      }
+    },
+    "candidates": {
+      "description": "The first save finds prefilled entries with the same team and role: it is refused with the candidates, nothing is saved; the repeated save with a choice creates or binds the entry.",
+      "links": {
+        "save-entry": {
+          "method": "PUT",
+          "path": "/api/v1/directory/me",
+          "next": "candidates-chosen",
+          "status": 409,
+          "body": {
+            "outcome": "BINDING_CANDIDATES",
+            "candidates": [
+              {
+                "pseudonym": "p-3d7a15",
+                "name": "Robin Newcomer",
+                "memberships": [
+                  {
+                    "team": "team:payments",
+                    "role": "role:developer"
+                  }
+                ]
+              },
+              {
+                "pseudonym": "p-8e2b40",
+                "name": "Rowan Newman",
+                "memberships": [
+                  {
+                    "team": "team:payments",
+                    "role": "role:developer"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "candidates-chosen": {
+      "description": "The user chose a candidate or a new entry: the save binds the entry p-3d7a15.",
+      "links": {
+        "save-entry": {
+          "method": "PUT",
+          "path": "/api/v1/directory/me",
+          "next": "registered",
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "pseudonym": "p-3d7a15"
+          }
+        }
+      }
+    },
+    "candidates-not-bindable": {
+      "description": "As candidates, but the first choice is refused (NOT_BINDABLE) and the form shows the candidates again.",
+      "links": {
+        "save-entry": {
+          "method": "PUT",
+          "path": "/api/v1/directory/me",
+          "next": "candidates-refused",
+          "status": 409,
+          "body": {
+            "outcome": "BINDING_CANDIDATES",
+            "candidates": [
+              {
+                "pseudonym": "p-3d7a15",
+                "name": "Robin Newcomer",
+                "memberships": [
+                  {
+                    "team": "team:payments",
+                    "role": "role:developer"
+                  }
+                ]
+              },
+              {
+                "pseudonym": "p-8e2b40",
+                "name": "Rowan Newman",
+                "memberships": [
+                  {
+                    "team": "team:payments",
+                    "role": "role:developer"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "candidates-refused": {
+      "description": "The chosen entry cannot be bound (NOT_BINDABLE, for example it was bound meanwhile); the next save with another choice succeeds.",
+      "links": {
+        "save-entry": {
+          "method": "PUT",
+          "path": "/api/v1/directory/me",
+          "next": "candidates-chosen",
+          "status": 409,
+          "body": {
+            "outcome": "NOT_BINDABLE"
           }
         }
       }

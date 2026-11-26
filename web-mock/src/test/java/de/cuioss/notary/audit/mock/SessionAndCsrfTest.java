@@ -113,7 +113,7 @@ class SessionAndCsrfTest {
         @Test
         @DisplayName("passes with the token and without Origin")
         void shouldPassWithToken() {
-            assertEquals(404, client.change("PUT", DIRECTORY, BODY).statusCode());
+            assertEquals(200, client.change("PUT", DIRECTORY, BODY).statusCode());
         }
 
         @Test
@@ -146,7 +146,7 @@ class SessionAndCsrfTest {
         void shouldPassOwnHostOrigin() {
             var response = client.send("PUT", DIRECTORY, BODY,
                     Map.of(MockEngine.CSRF_HEADER, client.csrfToken(), "Origin", client.mock().baseUrl()));
-            assertEquals(404, response.statusCode());
+            assertEquals(200, response.statusCode());
         }
 
         @Test
@@ -155,7 +155,7 @@ class SessionAndCsrfTest {
             var response = client.send("PUT", DIRECTORY, BODY, Map.of(MockEngine.CSRF_HEADER, client.csrfToken(),
                     "Origin", "http://localhost:5173", "X-Forwarded-Host", "localhost:5173",
                     "X-Forwarded-Proto", "http"));
-            assertEquals(404, response.statusCode());
+            assertEquals(200, response.statusCode());
         }
 
         @Test

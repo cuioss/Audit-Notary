@@ -1,0 +1,105 @@
+{
+  "catalog": "external",
+  "entries": [
+    {
+      "id": "psp-provider",
+      "name": "Payment service provider",
+      "retired": false,
+      "value": {
+        "id": "psp-provider",
+        "name": "Payment service provider",
+        "description": "Processes card and wallet payments for the shop.",
+        "kind": "provider"
+      },
+      "effective": null,
+      "at": "2026-02-11T13:00:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cloud-hosting",
+      "name": "Cloud hosting",
+      "retired": false,
+      "value": {
+        "id": "cloud-hosting",
+        "name": "Cloud hosting",
+        "description": "Runs the servers of the core platform.",
+        "kind": "provider"
+      },
+      "effective": null,
+      "at": "2026-02-11T13:00:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "kyc-vendor",
+      "name": "Identity verification supplier",
+      "retired": false,
+      "value": {
+        "id": "kyc-vendor",
+        "name": "Identity verification supplier",
+        "description": "Checks the identity of new business customers.",
+        "kind": "supplier"
+      },
+      "effective": null,
+      "at": "2026-02-11T13:00:00Z",
+      "history": [
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "old-sms-gateway",
+      "name": "SMS gateway (old)",
+      "retired": true,
+      "value": {
+        "id": "old-sms-gateway",
+        "name": "SMS gateway (old)",
+        "description": "Sent text messages before the notification service existed.",
+        "kind": "supplier"
+      },
+      "effective": null,
+      "at": "2026-05-20T12:00:00Z",
+      "history": [
+        {
+          "kind": "retire",
+          "at": "2026-05-20T12:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        },
+        {
+          "kind": "create",
+          "at": "2026-02-11T13:00:00Z",
+          "by": {
+            "pseudonym": "p-7d2e58",
+            "name": "Noor Haddad"
+          }
+        }
+      ]
+    }
+  ]
+}

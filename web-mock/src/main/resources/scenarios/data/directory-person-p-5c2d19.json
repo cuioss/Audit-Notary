@@ -1,0 +1,12 @@
+{
+  "pseudonym": "p-5c2d19",
+  "name": "Nadia Kovac",
+  "state": "unbound",
+  "memberships": [
+    {
+      "team": "team:payments",
+      "role": "role:developer"
+    }
+  ],
+  "erasedOn": null
+}

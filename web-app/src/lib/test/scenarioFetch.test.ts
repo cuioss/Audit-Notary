@@ -214,6 +214,127 @@ describe('scenarioFetch', () => {
     });
   });
 
+  describe('the path templates, requires, the catalog-entry handler and the confirmation flag of the mock', () => {
+    const CATALOG = '/api/v1/catalogs';
+    const post = { method: 'POST', body: '{}' };
+
+    it('answers a {name} segment with the handler, and an exact path before it', async () => {
+      const scenario = scenarioFetch('workshop');
+      const entry = await scenario.fetch(`${CATALOG}/service/payment-api`);
+      expect(entry.status).toBe(200);
+      expect(await entry.json()).toMatchObject({
+        catalog: 'service',
+        id: 'payment-api',
+        retired: false,
+        effective: { cycle: null },
+      });
+      const schema = await (await scenario.fetch(`${CATALOG}/service/schema`)).json();
+      expect(schema.schema.required).toContain('protection-needs');
+      const unknown = await scenario.fetch(`${CATALOG}/service/no-such`);
+      expect(unknown.status).toBe(404);
+      expect(await unknown.json()).toEqual({ outcome: 'NOT_FOUND' });
+      const none = await scenario.fetch(`${CATALOG}/service/`);
+      expect((await none.json()).outcome).toBe('MOCK_NO_ROUTE');
+    });
+
+    it('computes the effective needs of the cycle and the retired dependency like the mock data', async () => {
+      const scenario = scenarioFetch('workshop');
+      const reporting = await (await scenario.fetch(`${CATALOG}/service/reporting`)).json();
+      expect(reporting.effective.cycle).toEqual(['service:reporting', 'service:report-scheduler']);
+      expect(reporting.effective.dependencies[0]).toMatchObject({
+        ref: 'service:ledger',
+        retired: true,
+        counts: false,
+      });
+      expect(reporting.effective.decidedBy.integrity).toBe('service:reporting');
+    });
+
+    it('refuses a write without the right administer-catalogs with 403 FORBIDDEN, and answers it with the right', async () => {
+      const workshop = scenarioFetch('workshop');
+      for (const [method, address] of [
+        ['POST', `${CATALOG}/service`],
+        ['PUT', `${CATALOG}/service/payment-api`],
+        ['POST', `${CATALOG}/service/payment-api/retirement`],
+        ['POST', `${CATALOG}/import/backstage/preview`],
+        ['POST', '/api/v1/directory/erasures'],
+      ]) {
+        const answer = await workshop.fetch(address, { method, body: '{}' });
+        expect(answer.status, address).toBe(403);
+        expect(await answer.json(), address).toEqual({ outcome: 'FORBIDDEN' });
+      }
+      // With the right the link answers and moves on.
+      const admin = scenarioFetch('catalog-admin');
+      expect((await admin.fetch(`${CATALOG}/service`, post)).status).toBe(201);
+      expect(admin.state()).toBe('service-created');
+    });
+
+    it('chooses the exact link before the template and moves on', async () => {
+      const scenario = scenarioFetch('catalog-admin');
+      const other = await scenario.fetch(`${CATALOG}/service/payment-api/retirement`, post);
+      expect(await other.json()).toMatchObject({ outcome: 'RETIRED', id: 'payment-api' });
+      expect(scenario.state()).toBe('ready');
+      await scenario.fetch(`${CATALOG}/service/customer-portal/retirement`, post);
+      expect(scenario.state()).toBe('service-retired');
+      const save = await scenario.fetch(`${CATALOG}/service/customer-portal`, {
+        method: 'PUT',
+        body: '{}',
+      });
+      expect(save.status).toBe(409);
+    });
+
+    it('answers a save SAVED, a retired entry RETIRED and a retirement RETIRED, with the times of the mock', async () => {
+      const scenario = scenarioFetch('catalog-admin');
+      const saved = await (
+        await scenario.fetch(`${CATALOG}/team/payments`, { method: 'PUT', body: '{}' })
+      ).json();
+      expect(saved).toEqual({
+        outcome: 'SAVED',
+        catalog: 'team',
+        id: 'payments',
+        at: '2026-11-26T09:30:00Z',
+      });
+      const retired = await scenario.fetch(`${CATALOG}/team/legacy-billing`, {
+        method: 'PUT',
+        body: '{}',
+      });
+      expect(retired.status).toBe(409);
+      const retirement = await (
+        await scenario.fetch(`${CATALOG}/role/developer/retirement`, post)
+      ).json();
+      expect(retirement).toEqual({
+        outcome: 'RETIRED',
+        catalog: 'role',
+        id: 'developer',
+        at: '2026-11-26T09:35:00Z',
+      });
+      const wrong = await scenario.fetch(`${CATALOG}/role/developer`, { method: 'DELETE' });
+      expect((await wrong.json()).outcome).toBe('MOCK_NO_ROUTE');
+    });
+
+    it('carries directoryConfirmationDue in the session, by scenario and by state', async () => {
+      const scenario = scenarioFetch('workshop');
+      const due = async () =>
+        (await (await scenario.fetch('/api/v1/session')).json()).directoryConfirmationDue;
+      expect(await due()).toBe(false);
+      scenario.goto('confirmation-due');
+      expect(await due()).toBe(true);
+      await scenario.fetch('/api/v1/directory/me/confirmation', post);
+      expect(scenario.state()).toBe('confirmation-done');
+      expect(await due()).toBe(false);
+      for (const name of ['no-rights', 'first-login', 'catalog-admin', 'read-only']) {
+        const session = await (await scenarioFetch(name).fetch('/api/v1/session')).json();
+        expect(session.directoryConfirmationDue, name).toBe(false);
+      }
+    });
+
+    it('lets a session without a right ask for the confirmation, as the shell does', async () => {
+      const scenario = scenarioFetch('no-rights');
+      const answer = await scenario.fetch('/api/v1/directory/me/confirmation', post);
+      expect(answer.status).toBe(404);
+      expect((await answer.json()).outcome).toBe('MOCK_NO_ROUTE');
+    });
+  });
+
   describe('the preview handler of the mock (render-asciidoc)', () => {
     const render = async (scenario: ReturnType<typeof scenarioFetch>, body: unknown) => {
       const answer = await scenario.fetch('/api/v1/render/asciidoc', {

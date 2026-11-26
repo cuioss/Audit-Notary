@@ -1,0 +1,73 @@
+{
+  "outcome": "PREVIEW",
+  "created": [
+    {
+      "catalog": "service",
+      "id": "checkout-ui",
+      "name": "Checkout UI"
+    },
+    {
+      "catalog": "system",
+      "id": "storefront",
+      "name": "Storefront"
+    },
+    {
+      "catalog": "team",
+      "id": "storefront",
+      "name": "Storefront"
+    }
+  ],
+  "updated": [
+    {
+      "catalog": "service",
+      "id": "payment-api",
+      "name": "Payment API",
+      "changed": [
+        "lifecycle",
+        "owner.team",
+        "dependsOn"
+      ]
+    },
+    {
+      "catalog": "team",
+      "id": "payments",
+      "name": "Payments",
+      "changed": [
+        "parent"
+      ]
+    }
+  ],
+  "unchanged": 4,
+  "leftOut": [
+    {
+      "entity": "component:default/billing-batch",
+      "field": "spec.lifecycle",
+      "reason": "LIFECYCLE_UNMAPPED",
+      "detail": "experimental"
+    },
+    {
+      "entity": "component:default/search-index",
+      "field": null,
+      "reason": "DEFAULTS_MISSING",
+      "detail": "owner.role, protection-needs"
+    },
+    {
+      "entity": "component:ops/legacy-export",
+      "field": null,
+      "reason": "NAMESPACE_NOT_DEFAULT",
+      "detail": "ops"
+    },
+    {
+      "entity": "component:default/payment-api",
+      "field": "spec.dependsOn[2]",
+      "reason": "REFERENCE_KIND_NOT_SUPPORTED",
+      "detail": "resource:default/payments-db"
+    },
+    {
+      "entity": "api:default/payments-openapi",
+      "field": null,
+      "reason": "KIND_NOT_SUPPORTED",
+      "detail": "API"
+    }
+  ]
+}

@@ -46,6 +46,12 @@ import java.util.regex.Pattern;
  * a link) may instead name a built-in {@code handler} of the engine ({@link Handler}); it then has no
  * {@code body}, {@code body_file} or {@code status}, and a handler that reads data (the search) names its
  * {@code data_file}, read like a {@code body_file}.
+ * <p>
+ * A path may hold segments {@code {name}} (name {@code [a-z][a-z0-9]*}, once per path, no {@code {} or {@code }} inside a
+ * segment) that stand for one path segment of a request; the handler {@code catalog-entry} needs one named {@code id}.
+ * A route or a link may carry {@code requires} ({@code {"repository": ..., "action": ...}}, both non-empty): when the
+ * rights of the scenario do not hold it, the engine answers {@code 403 FORBIDDEN}. The scenario and a state may carry the
+ * boolean {@code directory_confirmation_due}.
  */
 public final class ScenarioLoader {
 
@@ -65,8 +71,11 @@ public final class ScenarioLoader {
     private static final String STATUS = "status";
     private static final String BODY = "body";
     private static final String BODY_FILE = "body_file";
+    private static final String DIRECTORY_CONFIRMATION_DUE = "directory_confirmation_due";
+    private static final String REQUIRES = "requires";
     private static final String HANDLER = "handler";
     private static final String DATA_FILE_MEMBER = "data_file";
+    private static final String ID_SEGMENT = "id";
     private static final Pattern DATA_FILE = Pattern.compile("[a-z0-9][a-z0-9.-]*\\.json");
 
     private final ObjectMapper mapper;
@@ -133,6 +142,7 @@ public final class ScenarioLoader {
         var user = readUser(context, root.path("user"));
         var rights = readRights(context, root.path("rights"));
         boolean firstLogin = readBoolean(context, root, "first_login_required", false);
+        boolean confirmationDue = readBoolean(context, root, DIRECTORY_CONFIRMATION_DUE, false);
         String start = requiredText(context, root, "start");
         var routes = readRoutes(context, ROUTES, root.path(ROUTES));
         var statesNode = root.path(STATES);
@@ -148,7 +158,7 @@ public final class ScenarioLoader {
         for (var state : states.values()) {
             checkTargets(context, state, states);
         }
-        return new Scenario(name, description, login, user, rights, firstLogin, start, routes, states);
+        return new Scenario(name, description, login, user, rights, firstLogin, confirmationDue, start, routes, states);
     }
 
     private static ScenarioLogin readLogin(Context context, JsonNode node) {
@@ -232,6 +242,14 @@ public final class ScenarioLoader {
             }
             firstLogin = firstLoginNode.asBoolean();
         }
+        Boolean confirmationDue = null;
+        var dueNode = node.path(DIRECTORY_CONFIRMATION_DUE);
+        if (!dueNode.isMissingNode()) {
+            if (!dueNode.isBoolean()) {
+                throw context.fail(location + "." + DIRECTORY_CONFIRMATION_DUE, "must be a boolean");
+            }
+            confirmationDue = dueNode.asBoolean();
+        }
         var routes = readRoutes(context, location + "." + ROUTES, node.path(ROUTES));
         Map<String, Link> links = new LinkedHashMap<>();
         node.path("links").properties().forEach(entry -> links.put(entry.getKey(),
@@ -252,7 +270,7 @@ public final class ScenarioLoader {
                     requiredText(context.at(autoLocation), autoNode, "next"));
         }
         var at = context.at(location);
-        return new ScenarioState(id, node.path("description").asText(""), firstLogin, routes, links, events, auto,
+        return new ScenarioState(id, node.path("description").asText(""), firstLogin, confirmationDue, routes, links, events, auto,
                 readBoolean(at, node, "session_replaced", false), readBoolean(at, node, "session_ended", false));
     }
 
@@ -263,7 +281,7 @@ public final class ScenarioLoader {
         var key = checkTarget(context, location + ".path", method, target);
         String next = requiredText(context.at(location), node, "next");
         return new Link(name, method, key.path(), key.query(), next, status(context, location, node),
-                answerBody(context, location, node));
+                answerBody(context, location, node), requires(context, location, node));
     }
 
     private Map<String, Route> readRoutes(Context context, String location, JsonNode node) {
@@ -282,17 +300,18 @@ public final class ScenarioLoader {
                 throw context.fail(routeLocation, "a route key must be \"METHOD /path\"");
             }
             checkMethod(context, routeLocation, matcher.group(1));
-            checkTarget(context, routeLocation, matcher.group(1), matcher.group(2));
-            routes.put(key, readRoute(context, routeLocation, entry.getValue()));
+            var routeKey = checkTarget(context, routeLocation, matcher.group(1), matcher.group(2));
+            routes.put(key, readRoute(context, routeLocation, routeKey, entry.getValue()));
         });
         return routes;
     }
 
     /** A route answers a static body, or names a built-in handler of the engine and then carries nothing else. */
-    private Route readRoute(Context context, String location, JsonNode node) {
+    private Route readRoute(Context context, String location, RouteKey key, JsonNode node) {
         var handler = node.path(HANDLER);
+        var requires = requires(context, location, node);
         if (handler.isMissingNode()) {
-            return new Route(status(context, location, node), answerBody(context, location, node));
+            return new Route(status(context, location, node), answerBody(context, location, node), null, requires);
         }
         String handlerLocation = location + "." + HANDLER;
         String name = handler.asText("");
@@ -311,12 +330,41 @@ public final class ScenarioLoader {
                 throw context.fail(location + "." + DATA_FILE_MEMBER, "only a handler that reads data has a data_file: "
                         + name);
             }
-            return new Route(200, JsonNodeFactory.instance.objectNode(), named.get());
+            return new Route(200, JsonNodeFactory.instance.objectNode(), named.get(), requires);
         }
         if (dataNode.isMissingNode()) {
             throw context.fail(handlerLocation, "the handler " + name + " needs a " + DATA_FILE_MEMBER);
         }
-        return new Route(200, dataFile(context, location + "." + DATA_FILE_MEMBER, dataNode), named.get());
+        var data = dataFile(context, location + "." + DATA_FILE_MEMBER, dataNode);
+        if (named.get() == Handler.CATALOG_ENTRY) {
+            checkCatalogEntry(context, location, key, data);
+        }
+        return new Route(200, data, named.get(), requires);
+    }
+
+    /** The handler {@code catalog-entry} needs a template with {@code {id}} in its key and a data file of one catalog. */
+    private static void checkCatalogEntry(Context context, String location, RouteKey key, JsonNode data) {
+        if (!key.path().contains("/{" + ID_SEGMENT + "}")) {
+            throw context.fail(location, "the handler catalog-entry needs a route key with the segment {" + ID_SEGMENT
+                    + "}: " + key.path());
+        }
+        if (!data.path("catalog").isTextual() || !data.path("entries").isArray()) {
+            throw context.fail(location + "." + DATA_FILE_MEMBER,
+                    "a catalog-entry data file is {\"catalog\": text, \"entries\": [...]}");
+        }
+    }
+
+    /** The member {@code requires}: {@code {"repository": ..., "action": ...}}, both non-empty strings. */
+    private static @Nullable Requirement requires(Context context, String location, JsonNode node) {
+        var requires = node.path(REQUIRES);
+        if (requires.isMissingNode()) {
+            return null;
+        }
+        if (!requires.isObject()) {
+            throw context.fail(location + "." + REQUIRES, "must be an object with repository and action");
+        }
+        var at = context.at(location + "." + REQUIRES);
+        return new Requirement(requiredText(at, requires, "repository"), requiredText(at, requires, "action"));
     }
 
     private static void checkTargets(Context context, ScenarioState state, Map<String, ScenarioState> states) {
@@ -345,6 +393,9 @@ public final class ScenarioLoader {
         if (!path.startsWith(API_PREFIX)) {
             throw context.fail(location, "path must start with " + API_PREFIX + ": " + target);
         }
+        RouteKey.templateRefusal(path).ifPresent(refusal -> {
+            throw context.fail(location, refusal + " (" + target + ")");
+        });
         return RouteKey.of(method, target).orElseThrow(() -> context.fail(location,
                 "a query is name=value[&name=value], names and values non-empty, no #, no name twice: " + target));
     }
