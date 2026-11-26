@@ -258,6 +258,18 @@ describe('the draft and the save', () => {
     );
   });
 
+  it('shows the own side of a conflict as the page holds it now, when the field is changed again', async () => {
+    await open('workshop#note-conflict', N2);
+    await type('Rotate every 90 days.');
+    await fireEvent.change(screen.getByLabelText(/^Status/), { target: { value: 'agreed' } });
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    const conflict = await screen.findByTestId('conflict-/summary');
+    expect(conflict).toHaveTextContent('Rotate every 90 days.');
+    await type('Rotate every 30 days.');
+    expect(screen.getByTestId('conflict-/summary')).toHaveTextContent('Rotate every 30 days.');
+    expect(screen.getByTestId('conflict-/summary')).not.toHaveTextContent('Rotate every 90 days.');
+  });
+
   it('marks the errors of a refused save at the fields and keeps the text on the page', async () => {
     await open('workshop#note-invalid', N2);
     await type('Rotate every 90 days.');

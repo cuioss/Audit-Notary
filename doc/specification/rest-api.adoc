@@ -293,7 +293,8 @@ ISMS). The web app shows the lens *Documents* in the rail only when one category
 of its repository and its JSON Schema as the file `<kind>/schema.json` holds it, markers included
 (xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4]). The same for every user; the request asks no more than a right on one of the
 category's repositories. The exact body is in <<_form_kit_requests>>
-|`404 NOT_FOUND` for an unknown category or one that is switched off; `403 FORBIDDEN`
+|`404 NOT_FOUND` for an unknown category, or for one that is switched off and holds no documents; a switched-off category
+that still holds documents is answered like any other, so that its read-only sheets have a form to show; `403 FORBIDDEN`
 |xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4], xref:architecture-and-modules.adoc#AUN-GEN-1[AUN-GEN-1]
 |`PROVISIONAL`
 
@@ -1431,8 +1432,10 @@ blocked; the owner may change each one. The bodies are in <<_document_lifecycle_
   through references and the search. `GET /api/v1/categories` therefore lists a switched-off category that still holds
   documents with `"enabled": false` and its document types, so that the web app finds the repository of an address; the
   generic document and revision addresses of it are read-only (no save, no act, no release; the writes answer
-  `403 FORBIDDEN`), `new` is not offered, and neither the rail entry nor the lens counts the category. The mock has
-  no such category yet; the web app builds this with the administration of categories (step 10).
+  `403 FORBIDDEN`), `new` is not offered, and neither the rail entry nor the lens counts the category. The schema
+  request (`GET /api/v1/categories/{category}/schema`) answers such a category like any other, because the read-only
+  sheet draws its form from it (decided provisionally; the alternative is a read-only sheet that needs no schema). The mock has no such category yet; the web app builds this
+  with the administration of categories (step 10).
 . *The test category `test-note`* has one document type, `note`, released more than once, with the transitions
   `test-note.submit` and `test-note.release`, the collection `notes` and the tag `notes/<id>/v<n>`; a save is possible
   in every state.

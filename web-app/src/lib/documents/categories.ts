@@ -33,9 +33,20 @@ export const hasDocumentsLens = derived(categoryList, (list) =>
  * @returns the categories
  */
 export async function loadCategories(client: ApiClient = apiClient): Promise<CategoryList> {
+  const read = ++latestRead;
   const list = await client.listCategories();
-  categoryList.set(list);
+  // A read that was overtaken by a newer one or by `clearCategories` (the session lost its rights meanwhile) is not kept.
+  if (read === latestRead) categoryList.set(list);
   return list;
+}
+
+/** The number of the latest read of the categories (or of the last clearing); the answer of an older read is dropped. */
+let latestRead = 0;
+
+/** Forgets the categories, and with them every read that is still under way (the session has no rights for them now). */
+export function clearCategories(): void {
+  latestRead += 1;
+  categoryList.set(null);
 }
 
 /**
@@ -53,7 +64,7 @@ export async function refreshCategories(client: ApiClient = apiClient): Promise<
       isApiError(error) &&
       (error.outcome === 'FORBIDDEN' || error.outcome === 'UNAUTHENTICATED')
     ) {
-      categoryList.set(null);
+      clearCategories();
     }
   }
 }

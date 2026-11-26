@@ -209,6 +209,49 @@ describe('the document list', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('The Git server cannot be reached');
   });
 
+  it('lists the readable repositories when another one of the category refuses', async () => {
+    await useProfile('workshop', 'en', {
+      'GET /api/v1/categories': categories({
+        ...TEST_NOTE,
+        kinds: [...TEST_NOTE.kinds, { id: 'memo', repository: 'closed' }],
+      }),
+      'GET /api/v1/documents/closed': Response.json({ outcome: 'FORBIDDEN' }, { status: 403 }),
+    });
+    render(DocumentsView, { ...CATEGORY, onnavigate: vi.fn() });
+    const list = await screen.findByTestId('document-list');
+    expect(within(list).getAllByRole('link').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('shows the readable repositories and the failure when another one cannot be read', async () => {
+    await useProfile('workshop', 'en', {
+      'GET /api/v1/categories': categories({
+        ...TEST_NOTE,
+        kinds: [...TEST_NOTE.kinds, { id: 'memo', repository: 'broken' }],
+      }),
+      'GET /api/v1/documents/broken': Response.json(
+        { outcome: 'GIT_UNAVAILABLE' },
+        { status: 503 },
+      ),
+    });
+    render(DocumentsView, { ...CATEGORY, onnavigate: vi.fn() });
+    expect(await screen.findByRole('alert')).toHaveTextContent('The Git server cannot be reached');
+    expect(
+      within(await screen.findByTestId('document-list')).getAllByRole('link').length,
+    ).toBeGreaterThan(0);
+  });
+
+  it('lists the documents of the own document types only, also when a repository is shared', async () => {
+    await useProfile('workshop', 'en', {
+      'GET /api/v1/categories': categories({
+        ...TEST_NOTE,
+        kinds: [{ id: 'memo', repository: REPOSITORY }],
+      }),
+    });
+    render(DocumentsView, { ...CATEGORY, onnavigate: vi.fn() });
+    expect(await screen.findByText('No documents yet')).toBeInTheDocument();
+  });
+
   it('reads the list again when the event stream names a document of the category', async () => {
     const kit = await useProfile();
     render(DocumentsView, { ...CATEGORY, onnavigate: vi.fn() });
@@ -429,6 +472,25 @@ describe('moving between addresses without leaving the lens', () => {
   it('drops the failure of a document read when the address moves to the list', async () => {
     await useProfile('workshop', 'en', {
       [`GET /api/v1/documents/${REPOSITORY}/${N2}`]: Response.json(
+        { outcome: 'GIT_UNAVAILABLE' },
+        { status: 503 },
+      ),
+    });
+    const view = render(DocumentsView, {
+      route: 'categories.document',
+      params: { category: 'test-note', document: N2 },
+      onnavigate: vi.fn(),
+    });
+    expect(await screen.findByRole('alert')).toHaveTextContent('The Git server cannot be reached');
+    await view.rerender({ ...CATEGORY });
+    await vi.waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
+  });
+});
+
+describe('the failure of the schema', () => {
+  it('does not stay over the list when the address moves away from the document', async () => {
+    await useProfile('workshop', 'en', {
+      'GET /api/v1/categories/test-note/schema': Response.json(
         { outcome: 'GIT_UNAVAILABLE' },
         { status: 503 },
       ),

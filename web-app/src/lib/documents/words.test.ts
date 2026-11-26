@@ -2,7 +2,7 @@ import { get } from 'svelte/store';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiClient } from '../api/client';
 import { ApiError } from '../api/errors';
-import type { Category, HistoryLine, Revision, Session } from '../api/types';
+import type { Category, CategoryList, HistoryLine, Revision, Session } from '../api/types';
 import { formatString, messagesStore } from '../i18n';
 import { mockMessages, scenarioFetch } from '../test/scenarioFetch';
 import {
@@ -14,6 +14,7 @@ import {
   hasDocumentsLens,
   isShown,
   kindName,
+  clearCategories,
   loadCategories,
   refreshCategories,
   repositoriesOf,
@@ -66,6 +67,18 @@ describe('the categories', () => {
     const list = await loadCategories(new ApiClient(() => {}));
     expect(list.categories.map((category) => category.id)).toEqual(['test-note']);
     expect(get(categoryList)).toEqual(list);
+  });
+
+  it('drops a read that completes after the categories were cleared', async () => {
+    let answer: (list: CategoryList) => void = () => {};
+    const slow = {
+      listCategories: () => new Promise<CategoryList>((resolve) => (answer = resolve)),
+    } as unknown as ApiClient;
+    const reading = loadCategories(slow);
+    clearCategories();
+    answer({ categories: [NOTE] });
+    await reading;
+    expect(get(categoryList)).toBeNull();
   });
 
   it('keeps quiet when the categories cannot be read: a refusal ends the lens, a failure to reach the server does not', async () => {
@@ -177,8 +190,19 @@ describe('a value as one line', () => {
     expect(show('/summary', '')).toBe('No value');
     expect(show('/pinned', true)).toBe('Yes');
     expect(show('/pinned', false)).toBe('No');
-    expect(show('/actions', [{}, {}])).toBe('2 entries');
-    expect(show('/section', { a: 1 })).toBe('one field');
+    expect(show('/actions', [])).toBe('0 entries');
+    expect(show('/actions', [{}, {}])).toBe('2 entries: 0 fields; 0 fields');
+    expect(show('/section', { a: 1 })).toBe('one field: a: 1');
+  });
+
+  it('spells a list out, so that two lists of the same size read differently', () => {
+    const own = [{ what: 'Rotate keys' }, { what: 'Review logs' }];
+    const other = [{ what: 'Rotate keys' }, { what: 'Archive logs' }];
+    expect(show('/actions', own)).toBe(
+      '2 entries: one field: What: Rotate keys; one field: What: Review logs',
+    );
+    expect(show('/actions', other)).not.toBe(show('/actions', own));
+    expect(show('/tags', ['a', 'b'])).toBe('2 entries: a; b');
   });
 
   it('shows an option by its text and any other text or number as it is', () => {

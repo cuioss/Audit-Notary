@@ -144,6 +144,20 @@
     })),
   );
   let open = $derived(controller.open);
+  /**
+   * The conflicts with the own side as the page holds it now: a field changed again while it waits for the decision shows
+   * the value that "keep my version" would save, never the value of the refused save.
+   */
+  let shownConflicts = $derived(
+    Object.fromEntries(
+      Object.entries(controller.conflicts).map(([pointer, conflict]) => [
+        pointer,
+        Object.hasOwn(controller.edits, pointer)
+          ? { ...conflict, own: controller.edits[pointer] }
+          : conflict,
+      ]),
+    ),
+  );
   let saveWaits = $derived(
     controller.dirty ||
       open > 0 ||
@@ -179,7 +193,16 @@
       : transitionName($messagesStore, category.id, transition.id);
   }
 
+  /**
+   * Saves for everyone. The confirmation names the save, so it belongs to this request alone: while a step runs, the button
+   * is out of reach and `persist` is only entered from the step's own "save first".
+   */
   async function save() {
+    if (busy !== null) return;
+    await persist();
+  }
+
+  async function persist() {
     confirming = {
       act: $t('documents.save'),
       lede: $t('stepup.lede.save', { title: doc.title }),
@@ -224,7 +247,13 @@
   async function saveFirst() {
     const transition = askSave;
     if (!transition || busy !== null) return;
-    await save();
+    // Held for the save: no other step can be chosen meanwhile, so the step that runs is the one that asked.
+    busy = transition.id;
+    try {
+      await persist();
+    } finally {
+      busy = null;
+    }
     if (controller.dirty || controller.saveState !== 'saved') return;
     askSave = null;
     await run(transition);
@@ -381,7 +410,7 @@
   {/if}
 
   <ConflictPanel
-    conflicts={controller.conflicts}
+    conflicts={shownConflicts}
     category={category.id}
     kind={doc.kind}
     locked={controller.locked}
@@ -435,9 +464,11 @@
           onclick={() => void save()}
           disabledReason={open > 0
             ? $t('documents.save.resolve-first', { count: open })
-            : controller.dirty
-              ? null
-              : $t('documents.save.nothing')}
+            : busy !== null && controller.saveState !== 'saving'
+              ? $t('documents.save.step-running')
+              : controller.dirty
+                ? null
+                : $t('documents.save.nothing')}
           data-testid="save-everyone"
         >
           {$t('documents.save')}

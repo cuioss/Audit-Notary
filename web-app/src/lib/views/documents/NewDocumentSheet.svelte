@@ -15,6 +15,7 @@
   import { guardLeaving } from '../../documents/leave';
   import SchemaForm from '../../forms/SchemaForm.svelte';
   import { messagesStore, t } from '../../i18n';
+  import { onDestroy } from 'svelte';
   import { formatAddress } from '../../routes';
 
   /**
@@ -47,6 +48,11 @@
   let errors = $state<FieldError[] | null>(null);
   let failure = $state<string | null>(null);
   let saving = $state(false);
+  /** Whether the form is gone: a creation that returns later navigates nowhere. */
+  let destroyed = false;
+  onDestroy(() => {
+    destroyed = true;
+  });
   let created = $state(false);
   let asking = $state(false);
   let proceed: (() => void) | null = null;
@@ -86,7 +92,8 @@
         parts: { [PART]: { fields: diffFields({}, value) } },
       });
       created = true;
-      onnavigate(answer.address, { replace: true });
+      // The person may have left while the request ran: the page they went to is not replaced then.
+      if (!destroyed) onnavigate(answer.address, { replace: true });
     } catch (error) {
       if (isApiError(error) && error.outcome === 'VALIDATION') {
         errors = validationOf(error, PART);

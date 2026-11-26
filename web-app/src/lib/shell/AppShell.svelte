@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { hasNoRights } from '../access/access';
-  import { categoryList, hasDocumentsLens, refreshCategories } from '../documents/categories';
+  import { clearCategories, hasDocumentsLens, refreshCategories } from '../documents/categories';
   import { t } from '../i18n';
   import { lensAddress, type Lens } from '../routes';
   import { session, streamState } from '../stores/app';
@@ -45,7 +45,7 @@
     if (entitled) {
       void refreshCategories();
     } else {
-      categoryList.set(null);
+      clearCategories();
     }
   });
 

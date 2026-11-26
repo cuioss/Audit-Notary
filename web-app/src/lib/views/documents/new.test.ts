@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const navigation = vi.hoisted(() => ({
@@ -14,6 +14,7 @@ vi.mock('$app/navigation', () => ({
   goto: navigation.goto,
 }));
 
+import { apiClient } from '../../api/client';
 import DocumentsView from './DocumentsView.svelte';
 import { REPOSITORY, resetKit, useProfile, type Kit } from './testkit';
 
@@ -93,6 +94,22 @@ describe('the form of a new document', () => {
     const leaving = { cancel: vi.fn(), willUnload: false, to: { url: new URL('http://x/y') } };
     navigation.callback!(leaving);
     expect(leaving.cancel).not.toHaveBeenCalled();
+  });
+
+  it('does not navigate when the form is gone before the creation returns', async () => {
+    let answer: (value: { address: string }) => void = () => {};
+    const kit = await open();
+    vi.spyOn(apiClient, 'createDocument').mockImplementation(
+      () => new Promise((resolve) => (answer = resolve as typeof answer)),
+    );
+    await screen.findByTestId('new-document-sheet');
+    await fireEvent.input(title(), { target: { value: 'Phishing drill notes' } });
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    await vi.waitFor(() => expect(apiClient.createDocument).toHaveBeenCalled());
+    cleanup();
+    answer({ address: ADDRESS });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(kit.onnavigate).not.toHaveBeenCalled();
   });
 
   it('shows the errors of the server at the fields and keeps the text on the page', async () => {

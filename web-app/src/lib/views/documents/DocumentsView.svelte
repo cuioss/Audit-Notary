@@ -107,8 +107,11 @@
     if (!category) return null;
     const repositories = repositoriesOf(category);
     if (!repositories.every((repository) => documents[repository])) return null;
+    // Two categories may share a repository: the list holds the documents of the category's own document types.
+    const kinds = new Set(category.kinds.map((entry) => entry.id));
     return repositories
       .flatMap((repository) => documents[repository].list)
+      .filter((document) => kinds.has(document.kind))
       .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : a.updatedAt > b.updatedAt ? -1 : 0));
   });
   let truncated = $derived(
@@ -148,19 +151,30 @@
 
   async function readLists(current: Category) {
     const read = ++latestLists;
-    try {
-      const answers = await Promise.all(
-        repositoriesOf(current).map(async (repository) => {
-          const answer = await apiClient.listDocuments(repository);
-          return [repository, { list: answer.documents, truncated: answer.truncated }] as const;
-        }),
-      );
-      if (read !== latestLists) return;
-      documents = Object.fromEntries(answers);
-      succeed('documents');
-    } catch (error) {
-      if (read === latestLists) fail('documents', error);
-    }
+    // Each repository is read for itself: one the person may not read (the category names every repository of its
+    // document types) leaves an empty list and never hides the documents of another.
+    const answers = await Promise.allSettled(
+      repositoriesOf(current).map(async (repository) => {
+        const answer = await apiClient.listDocuments(repository);
+        return [repository, { list: answer.documents, truncated: answer.truncated }] as const;
+      }),
+    );
+    if (read !== latestLists) return;
+    const entries: [string, { list: DocumentSummary[]; truncated: boolean }][] = [];
+    let failed: unknown = null;
+    answers.forEach((answer, index) => {
+      if (answer.status === 'fulfilled') {
+        entries.push([...answer.value]);
+        return;
+      }
+      entries.push([repositoriesOf(current)[index], { list: [], truncated: false }]);
+      if (!(isApiError(answer.reason) && answer.reason.outcome === 'FORBIDDEN')) {
+        failed ??= answer.reason;
+      }
+    });
+    documents = Object.fromEntries(entries);
+    if (failed === null) succeed('documents');
+    else fail('documents', failed);
   }
 
   // The lists of the category of the address; another category drops the lists of the last at once.
@@ -176,7 +190,11 @@
   // The schema of the category, for the form of a document or of a new one.
   $effect(() => {
     const current = category;
-    if (!current || (route !== 'categories.document' && route !== 'categories.new')) return;
+    if (!current || (route !== 'categories.document' && route !== 'categories.new')) {
+      // The failure of the schema belongs to the address that needed it: the list does not show it.
+      untrack(() => succeed('schema'));
+      return;
+    }
     if (untrack(() => loadedSchemas)?.category === current.id) return;
     let live = true;
     apiClient
@@ -235,6 +253,11 @@
     const id = params.document;
     const at = query.at;
     const current = category;
+    // A read or a list of revisions still under way belongs to the address left: its answer is dropped.
+    untrack(() => {
+      latestRevisions += 1;
+      if (route !== 'categories.document' || !id || !current) latestRead += 1;
+    });
     if (route !== 'categories.document' || !id || !current) {
       doc = null;
       revisions = null;
