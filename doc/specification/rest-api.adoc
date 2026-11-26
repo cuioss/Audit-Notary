@@ -1492,6 +1492,12 @@ a step that declares `stepUp`.
   it (decided provisionally with the release flow; the release flow re-reads the document and shows it as released, and
   writes nothing). The mock has the states `note-release-released-meanwhile` and `note-release-incomplete`
   (`MANDATORY_FIELDS_MISSING` from the server's own check at the release).
+. *The pattern of a document request is written twice in the mock,* in `MockEngine.DOCUMENT_REQUEST` and in the unit-test
+  fallback `web-app/src/lib/test/scenarioFetch.ts`, which answer an unknown document of a repository of the rights with
+  `404 NOT_FOUND` and everything else with `404 MOCK_NO_ROUTE` (decided provisionally; the alternative is one shared
+  definition in the scenario files, which needs a new scenario field and a reader in both languages for one line). Each
+  copy is pinned by a test of the same behaviour (`DocumentLifecycleTest` and `scenarioFetch.test.ts`); a change of the
+  pattern changes both.
 
 For the owner: whether the rail may gain a ninth lens, and whether `/categories/{category}` may list documents, given
 that the use cases of the categories name it for the definition (1); whether a refused draft is right, or the draft

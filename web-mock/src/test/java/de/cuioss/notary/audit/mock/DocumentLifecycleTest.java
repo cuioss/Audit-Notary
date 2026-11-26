@@ -1409,6 +1409,11 @@ class DocumentLifecycleTest {
                 var read = body(client, doc(N5));
                 var revisions = body(client, doc(N5) + "/revisions").path("revisions");
                 var dueAfter = body(client, "/api/v1/due").path("items");
+                var documents = body(client, "/api/v1/documents/test-notes").path("documents");
+                var listed = documents.get(0);
+                var indexed = body(client, "/api/v1/search?q=access").path("results");
+                var atTag = body(client, doc(N5) + "?at=v2");
+                var atCommit = body(client, doc(N5) + "?at=e5f6a7b");
                 assertAll(
                         () -> assertEquals("notes/" + N5 + "/v1", diff.path("from").asText()),
                         () -> assertEquals(1, requestsOf(dueBefore, N5)),
@@ -1424,6 +1429,18 @@ class DocumentLifecycleTest {
                         () -> assertTrue(read.path("releaseRequest").isNull()),
                         () -> assertEquals(0, read.path("transitions").size()),
                         () -> assertEquals(List.of("v2", "b6c7d8e", "d0e1f2a", "v1"), texts(refsOf(revisions)).subList(0, 4)),
+                        () -> assertEquals(N5, listed.path("id").asText()),
+                        () -> assertEquals("released", listed.path("state").asText()),
+                        () -> assertEquals(2, listed.path("version").asInt()),
+                        () -> assertEquals("notes/" + N5 + "/v2", listed.path("release").path("tag").asText()),
+                        () -> assertFalse(listed.path("requested").asBoolean()),
+                        () -> assertEquals("released", indexed.get(0).path("state").asText()),
+                        () -> assertTrue(atTag.path("frozen").asBoolean()),
+                        () -> assertEquals("v2", atTag.path("at").path("ref").asText()),
+                        () -> assertEquals("e5f6a7b", atTag.path("at").path("commit").asText()),
+                        () -> assertTrue(atCommit.path("frozen").asBoolean()),
+                        () -> assertEquals("e5f6a7b", atCommit.path("at").path("ref").asText()),
+                        () -> assertFalse(read.path("frozen").asBoolean()),
                         () -> assertEquals(0, requestsOf(dueAfter, N5)),
                         () -> assertEquals(dueBefore.size() - 1, dueAfter.size()),
                         () -> assertEquals(1, requestsOf(dueAfter, N2)),
@@ -1524,11 +1541,17 @@ class DocumentLifecycleTest {
         void shouldRefuseAWrongPassword() {
             try (var client = MockClient.start("workshop").login()) {
                 goTo(client, "note-save-wrong-password");
+                var asked = client.change("POST", save(N2), "{\"password\":\"\"}");
+                String next = stateOf(client);
                 var save = client.change("POST", save(N2), "{\"password\":\"nope\"}");
                 var saveStatus = status(client);
                 goTo(client, "note-submit-wrong-password");
                 var submit = client.change("POST", submit(N2), "{\"password\":\"nope\"}");
                 assertAll(
+                        () -> assertEquals(403, asked.statusCode()),
+                        () -> assertEquals("STEP_UP_REQUIRED", json(asked).path("outcome").asText()),
+                        () -> assertFalse(json(asked).has("stepUp"), "no address with local users"),
+                        () -> assertEquals("note-save-wrong-password-retry", next),
                         () -> assertEquals(401, save.statusCode()),
                         () -> assertEquals("INVALID_CREDENTIALS", json(save).path("outcome").asText()),
                         () -> assertEquals("password", saveStatus.path("stepUp").asText()),
@@ -1571,6 +1594,7 @@ class DocumentLifecycleTest {
                 var list = body(client, MINUTES);
                 var draftNote = body(client, MINUTES + "/" + M1);
                 var frozen = body(client, MINUTES + "/" + M2);
+                var savedFrozen = client.change("POST", MINUTES + "/" + M2 + "/save", "{}");
                 var schema = body(client, "/api/v1/categories/meeting-minutes/schema");
                 var found = body(client, "/api/v1/search?q=architecture").path("results");
                 assertAll(
@@ -1596,7 +1620,10 @@ class DocumentLifecycleTest {
                         () -> assertEquals("TRANSITIONED", json(client.change("POST", minutesSubmit(M1), "{}"))
                                 .path("outcome").asText()),
                         () -> assertEquals("DRAFT_SAVED", json(client.change("PUT",
-                                "/api/v1/drafts/meeting-minutes/" + M1, "{}")).path("outcome").asText()));
+                                "/api/v1/drafts/meeting-minutes/" + M1, "{}")).path("outcome").asText()),
+                        () -> assertEquals(409, savedFrozen.statusCode()),
+                        () -> assertEquals("DOCUMENT_RELEASED", json(savedFrozen).path("outcome").asText()),
+                        () -> assertEquals("minutes/" + M2 + "/v1", json(savedFrozen).path("tag").asText()));
             }
         }
 
@@ -1635,6 +1662,30 @@ class DocumentLifecycleTest {
                         () -> assertEquals("meeting-minutes", categories.get(0).path("id").asText()),
                         () -> assertFalse(categories.get(0).path("enabled").asBoolean(true)));
                 assertMinutesReadableAndReadOnly(client);
+            }
+        }
+
+        @Test
+        @DisplayName("both switched-off states refuse every write route of the minutes that the scenario level names")
+        void shouldRefuseEveryMinutesWriteInTheSwitchedOffStates() throws IOException {
+            JsonNode workshop;
+            try (var stream = CLASS_LOADER.getResourceAsStream("scenarios/workshop.json")) {
+                workshop = MockClient.MAPPER.readTree(Objects.requireNonNull(stream));
+            }
+            List<String> writes = new ArrayList<>();
+            workshop.path("routes").fieldNames().forEachRemaining(key -> {
+                if (!key.startsWith("GET ") && key.contains("/meeting-minutes")) {
+                    writes.add(key);
+                }
+            });
+            assertFalse(writes.isEmpty(), "the scenario level names write routes of the minutes");
+            for (var state : List.of("category-switched-off", "category-only-switched-off")) {
+                var routes = workshop.path("states").path(state).path("routes");
+                for (var write : writes) {
+                    assertEquals(403, routes.path(write).path("status").asInt(),
+                            state + " refuses " + write + " with 403 FORBIDDEN");
+                    assertEquals("FORBIDDEN", routes.path(write).path("body").path("outcome").asText(), state + " " + write);
+                }
             }
         }
 

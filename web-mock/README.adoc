@@ -537,8 +537,9 @@ with Jordan's text, its revisions listing the release `v1` on top
 
 |`note-release-request`, `note-release-request-done`
 |The release request of N5 (Jordan Weber): the release answers `RELEASED` with the tag `v2` and moves on; N5 then reads
-released (version 2, no request, no transitions), its revisions list `v2` on top, the Due list no longer holds the
-request, and the event `document-transitioned` follows
+released (version 2, no request, no transitions), its revisions list `v2` on top, `?at=v2` and `?at=e5f6a7b` read the
+frozen release (with the member `at`), the list and the search show it released with the tag `v2` and no request, the
+Due list no longer holds the request, and the event `document-transitioned` follows
 
 |`note-save-password`, `note-save-password-done`
 |Local users (the status says `loginProvider: local`, `stepUp: password`): the first save of N2 answers
@@ -552,7 +553,9 @@ request, and the event `document-transitioned` follows
 which answers `TRANSITIONED`
 
 |`note-save-wrong-password`, `note-submit-wrong-password`
-|A save, or the submit of N2 (which declares the confirmation), answers `401 INVALID_CREDENTIALS`
+|The first save of N2 answers `403 STEP_UP_REQUIRED` without an address (which opens the password dialog) and moves on to
+`note-save-wrong-password-retry`, where every save answers `401 INVALID_CREDENTIALS`; the submit of N2, which declares the
+confirmation, answers `401 INVALID_CREDENTIALS` at once
 
 |`note-save-too-many-logins`, `note-submit-too-many-logins`
 |A save, or the submit of N2, answers `503 TOO_MANY_LOGINS` with `Retry-After: 60`
@@ -573,11 +576,14 @@ revisions, the schema, `PUT` draft, `save` and the submit of M1; no create), but
 
 |`category-two`
 |Two generic categories, `test-note` and `meeting-minutes` (the ids M1 `01JZ9B6K8N0Q2S4V6X8Z0B2D4F`, "Architecture review of
-19 November", draft; M2 `01JZ9C9M1P3R5T7W9Y1A3C5E7G`, "Security board, third quarter", released once and frozen)
+19 November", draft; M2 `01JZ9C9M1P3R5T7W9Y1A3C5E7G`, "Security board, third quarter", released once and frozen, so a save
+of it answers `409 DOCUMENT_RELEASED` with the tag `v1`)
 
 |`category-switched-off`
 |`meeting-minutes` is listed with `"enabled": false` (and `test-note` stays on): its documents, revisions, schema and the
-search stay readable; every write of it (draft, save, submit, create) answers `403 FORBIDDEN`
+search stay readable; every write of it (draft, save, submit, create) answers `403 FORBIDDEN`. The refusals are listed by hand in
+both disabled states; a test (`DocumentLifecycleTest`) fails when a write route of the category at scenario level has
+no refusal there, so a new write route adds its `403 FORBIDDEN` to both states in the same change
 
 |`category-only-switched-off`
 |The same, with `meeting-minutes` as the only category listed: the rail has no entry, the addresses of its documents read

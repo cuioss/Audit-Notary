@@ -763,21 +763,10 @@
       }
     },
     "POST /api/v1/documents/meeting-minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G/save": {
-      "status": 200,
+      "status": 409,
       "body": {
-        "outcome": "SAVED",
-        "at": "2026-11-26T09:45:00Z",
-        "parts": {
-          "data": {
-            "blob": "b8c0d42",
-            "savedAt": "2026-11-26T09:45:00Z",
-            "savedBy": {
-              "pseudonym": "p-4c1a9e",
-              "name": "Alex Example",
-              "role": "Security Champion"
-            }
-          }
-        }
+        "outcome": "DOCUMENT_RELEASED",
+        "tag": "minutes/01JZ9C9M1P3R5T7W9Y1A3C5E7G/v1"
       }
     },
     "POST /api/v1/documents/meeting-minutes/01JZ9B6K8N0Q2S4V6X8Z0B2D4F/transitions/meeting-minutes.submit": {
@@ -1696,6 +1685,19 @@
         "GET /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/revisions": {
           "body_file": "document-test-note-n5-released-revisions.json"
         },
+        "GET /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A?at=v2": {
+          "body_file": "document-test-note-n5-released-at-v2.json"
+        },
+        "GET /api/v1/documents/test-notes/01JZ8V8D0F2H4K6N8Q0S2W4Y6A?at=e5f6a7b": {
+          "body_file": "document-test-note-n5-released-at-e5f6a7b.json"
+        },
+        "GET /api/v1/documents/test-notes": {
+          "body_file": "documents-test-notes-n5-released.json"
+        },
+        "GET /api/v1/search": {
+          "handler": "search-documents",
+          "data_file": "documents-index-n5-released.json"
+        },
         "GET /api/v1/due": {
           "status": 200,
           "body_file": "due-workshop-lifecycle-n5-released.json"
@@ -1993,7 +1995,58 @@
       }
     },
     "note-save-wrong-password": {
-      "description": "Local users: a save of the Retention schedule gets a wrong password; nothing is saved.",
+      "description": "Local users: the first save of the Retention schedule asks for the password (STEP_UP_REQUIRED without an address), the repeated one gets a wrong password; nothing is saved.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": false,
+            "loginProvider": "local",
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              },
+              {
+                "alias": "test-notes",
+                "fetch": "UP"
+              }
+            ],
+            "stepUp": "password"
+          }
+        }
+      },
+      "links": {
+        "save-n2": {
+          "method": "POST",
+          "path": "/api/v1/documents/test-notes/01JZ8R7A9C1E3G5J7M9P1S3V5X/save",
+          "next": "note-save-wrong-password-retry",
+          "status": 403,
+          "body": {
+            "outcome": "STEP_UP_REQUIRED"
+          }
+        }
+      }
+    },
+    "note-save-wrong-password-retry": {
+      "description": "Local users: the password of the save was wrong; the Retention schedule is not saved and every further save with a password answers INVALID_CREDENTIALS.",
       "routes": {
         "GET /api/v1/status": {
           "status": 200,
