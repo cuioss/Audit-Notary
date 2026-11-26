@@ -30,6 +30,7 @@
 
 <style>
   .icon-btn {
+    flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
     justify-content: center;

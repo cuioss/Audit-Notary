@@ -89,6 +89,15 @@ describe('EmptyState and Notice', () => {
   });
 });
 
+describe('Notice title', () => {
+  it('reads as text where it is the whole notice, and as a heading where a sentence follows', () => {
+    const { container } = render(Notice, { title: 'Alone' });
+    expect(container.querySelector('.notice__title')).toHaveClass('notice__title--lone');
+    const other = render(Notice, { title: 'Head', body: 'Sentence' });
+    expect(other.container.querySelector('.notice__title')).not.toHaveClass('notice__title--lone');
+  });
+});
+
 describe('fields', () => {
   it('binds a text field to its label and shows the field error', () => {
     render(TextField, { label: 'Name', value: 'Alex', error: 'Fill in', testId: 'name' });

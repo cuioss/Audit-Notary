@@ -58,4 +58,11 @@
   .empty__actions {
     margin-block-start: var(--space-4);
   }
+
+  /* A link as the act of an empty state is a target like a button. */
+  .empty__actions :global(a.link:not(.link--button)) {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 44px;
+  }
 </style>

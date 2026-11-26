@@ -3,7 +3,7 @@
   import Icon from '../components/Icon.svelte';
   import { t } from '../i18n';
   import type { Lens } from '../routes';
-  import { BOTTOM_ITEMS, MORE_ITEMS } from './nav';
+  import { bottomItems, moreItems } from './nav';
 
   /**
    * The phone's navigation below 768 px: four lenses and "More" with the rest.
@@ -11,16 +11,20 @@
   interface Props {
     /** The lens of the current view, or `null`. */
     activeLens: Lens | null;
+    /** Whether the generic documents lens exists; it stands behind "More". */
+    documents?: boolean;
   }
 
-  let { activeLens }: Props = $props();
+  let { activeLens, documents = false }: Props = $props();
 
   let moreOpen = $state(false);
-  let moreActive = $derived(MORE_ITEMS.some((item) => item.lens === activeLens));
+  let bottom = $derived(bottomItems(documents));
+  let more = $derived(moreItems(documents));
+  let moreActive = $derived(more.some((item) => item.lens === activeLens));
 </script>
 
 <nav class="bottom-bar" aria-label={$t('shell.bottom.label')}>
-  {#each BOTTOM_ITEMS as item (item.lens)}
+  {#each bottom as item (item.lens)}
     <a
       class="bottom-bar__item"
       class:bottom-bar__item--active={item.lens === activeLens}
@@ -46,7 +50,7 @@
 
 <Dialog bind:open={moreOpen} title={$t('shell.more')} closeLabel={$t('common.close')}>
   <ul class="more">
-    {#each MORE_ITEMS as item (item.lens)}
+    {#each more as item (item.lens)}
       <li>
         <a
           class="more__item"

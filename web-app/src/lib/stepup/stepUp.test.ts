@@ -138,10 +138,51 @@ describe('the method off', () => {
 });
 
 describe('the method password', () => {
+  it('sends a step that is not known to need the password without asking, and never asks when it passes', async () => {
+    const handler = new StepUpHandler(apiClient, () => 'password');
+    const request = vi.fn((password?: string) => Promise.resolve(password ?? 'none'));
+    expect(await handler.run(request)).toEqual({ status: 'done', value: 'none' });
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(get(handler.state)).toMatchObject({ asking: false, working: false });
+  });
+
+  it('asks when the server demands the confirmation, and sends the same request again with the password', async () => {
+    const handler = new StepUpHandler(apiClient, () => 'password');
+    const request = vi
+      .fn<(password?: string) => Promise<string>>()
+      .mockRejectedValueOnce(new ApiError('STEP_UP_REQUIRED', 403))
+      .mockImplementation((password) => Promise.resolve(`sent with ${password}`));
+    const run = handler.run(request);
+    await vi.waitFor(() => expect(get(handler.state).asking).toBe(true));
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(get(handler.state).working).toBe(false);
+    await handler.submit('secret');
+    expect(await run).toEqual({ status: 'done', value: 'sent with secret' });
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(get(handler.state)).toMatchObject({ asking: false, sending: false });
+  });
+
+  it('sends nothing more when the question the server asked is cancelled', async () => {
+    const handler = new StepUpHandler(apiClient, () => 'password');
+    const request = vi.fn(() => Promise.reject(new ApiError('STEP_UP_REQUIRED', 403)));
+    const run = handler.run(request);
+    await vi.waitFor(() => expect(get(handler.state).asking).toBe(true));
+    handler.cancel();
+    expect(await run).toEqual({ status: 'handled' });
+    expect(request).toHaveBeenCalledTimes(1);
+  });
+
+  it('hands another refusal of a step that was sent without the password back to the view', async () => {
+    const handler = new StepUpHandler(apiClient, () => 'password');
+    const result = await handler.run(() => Promise.reject(new ApiError('REJECTED', 502)));
+    expect(result).toMatchObject({ status: 'refused', error: { outcome: 'REJECTED' } });
+    expect(get(handler.state).asking).toBe(false);
+  });
+
   it('asks first, sends the password with the request and closes the dialog', async () => {
     const scenario = await prepare('release#password');
     const handler = new StepUpHandler();
-    const run = handler.run(release);
+    const run = handler.run(release, { asks: true });
     expect(get(handler.state)).toMatchObject({ asking: true, sending: false });
     expect(scenario.state()).toBe('password');
     await handler.submit('secret');
@@ -156,7 +197,7 @@ describe('the method password', () => {
   it('keeps the dialog open on a wrong password (401), which is no lost session', async () => {
     const scenario = await prepare('release#wrong-password');
     const handler = new StepUpHandler();
-    const run = handler.run(release);
+    const run = handler.run(release, { asks: true });
     await handler.submit('wrong');
     expect(get(handler.state)).toMatchObject({
       asking: true,
@@ -170,7 +211,9 @@ describe('the method password', () => {
 
   it('closes on a refusal that belongs to the view and hands it back', async () => {
     const handler = new StepUpHandler(apiClient, () => 'password');
-    const run = handler.run(() => Promise.reject(new ApiError('CHANGED_SINCE_REVIEW', 409)));
+    const run = handler.run(() => Promise.reject(new ApiError('CHANGED_SINCE_REVIEW', 409)), {
+      asks: true,
+    });
     await handler.submit('secret');
     expect(await run).toMatchObject({
       status: 'refused',
@@ -181,7 +224,9 @@ describe('the method password', () => {
 
   it('stays open and says so when the server asks again without an address', async () => {
     const handler = new StepUpHandler(apiClient, () => 'password');
-    const run = handler.run(() => Promise.reject(new ApiError('STEP_UP_REQUIRED', 403)));
+    const run = handler.run(() => Promise.reject(new ApiError('STEP_UP_REQUIRED', 403)), {
+      asks: true,
+    });
     await handler.submit('secret');
     expect(get(handler.state)).toMatchObject({
       asking: true,
@@ -194,7 +239,9 @@ describe('the method password', () => {
 
   it('closes on a refusal of too many logins, with the notice', async () => {
     const handler = new StepUpHandler(apiClient, () => 'password');
-    const run = handler.run(() => Promise.reject(new ApiError('TOO_MANY_LOGINS', 503)));
+    const run = handler.run(() => Promise.reject(new ApiError('TOO_MANY_LOGINS', 503)), {
+      asks: true,
+    });
     await handler.submit('secret');
     expect(await run).toEqual({ status: 'handled' });
     expect(get(handler.state)).toMatchObject({
@@ -207,8 +254,8 @@ describe('the method password', () => {
     const handler = new StepUpHandler(apiClient, () => 'password');
     await handler.submit('nobody asked');
     handler.cancel();
-    const first = handler.run(() => Promise.resolve(1));
-    const second = handler.run(() => Promise.resolve(2));
+    const first = handler.run(() => Promise.resolve(1), { asks: true });
+    const second = handler.run(() => Promise.resolve(2), { asks: true });
     expect(await first).toEqual({ status: 'handled' });
     await handler.submit('secret');
     expect(await second).toEqual({ status: 'done', value: 2 });
@@ -218,7 +265,7 @@ describe('the method password', () => {
     const handler = new StepUpHandler(apiClient, () => 'password');
     let finish: (value: number) => void = () => {};
     const request = vi.fn(() => new Promise<number>((resolve) => (finish = resolve)));
-    const run = handler.run(request);
+    const run = handler.run(request, { asks: true });
     const first = handler.submit('secret');
     await handler.submit('secret');
     expect(request).toHaveBeenCalledTimes(1);
@@ -230,11 +277,13 @@ describe('the method password', () => {
   it('does not let a request that was replaced resolve or change the one that replaced it', async () => {
     const handler = new StepUpHandler(apiClient, () => 'password');
     let finishFirst: (value: number) => void = () => {};
-    const first = handler.run(() => new Promise<number>((resolve) => (finishFirst = resolve)));
+    const first = handler.run(() => new Promise<number>((resolve) => (finishFirst = resolve)), {
+      asks: true,
+    });
     const sending = handler.submit('secret');
     handler.cancel();
     expect(await first).toEqual({ status: 'handled' });
-    const second = handler.run(() => Promise.resolve(2));
+    const second = handler.run(() => Promise.resolve(2), { asks: true });
     finishFirst(1);
     await sending;
     // The late value of the first request is dropped; the dialog of the second stays as it was asked.
@@ -247,11 +296,13 @@ describe('the method password', () => {
     const leave = vi.spyOn(apiClient, 'stepUp').mockImplementation(() => {});
     const handler = new StepUpHandler(apiClient, () => 'password');
     let refuse: (error: unknown) => void = () => {};
-    const first = handler.run(() => new Promise<number>((_, reject) => (refuse = reject)));
+    const first = handler.run(() => new Promise<number>((_, reject) => (refuse = reject)), {
+      asks: true,
+    });
     const sending = handler.submit('secret');
     handler.cancel();
     await first;
-    const second = handler.run(() => Promise.resolve(2));
+    const second = handler.run(() => Promise.resolve(2), { asks: true });
     refuse(new ApiError('STEP_UP_REQUIRED', 403, [], { stepUp: '/api/v1/auth/login?step-up=mfa' }));
     await sending;
     expect(leave).not.toHaveBeenCalled();

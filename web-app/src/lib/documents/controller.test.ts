@@ -1,3 +1,4 @@
+import { get } from 'svelte/store';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiClient } from '../api/client';
 import { ApiError } from '../api/errors';
@@ -648,23 +649,95 @@ describe('the refusals of the server', () => {
 });
 
 describe('the step-up of a save and a transition (UC-ACC-3)', () => {
-  it('asks a local user for the password and sends it with the save', async () => {
+  /** A save the server answers with the demand for the confirmation first, as the step needing it does. */
+  function demandOnce(client: ApiClient, method: 'saveDocument' | 'transition') {
+    const real = client[method].bind(client) as (...args: unknown[]) => Promise<unknown>;
+    let demanded = false;
+    return vi.spyOn(client, method).mockImplementation(((...args: unknown[]) => {
+      if (!demanded) {
+        demanded = true;
+        return Promise.reject(new ApiError('STEP_UP_REQUIRED', 403));
+      }
+      return real(...args);
+    }) as never);
+  }
+
+  it('sends the save of a local user without asking, and asks for the password only when the server demands it', async () => {
+    const { controller, client } = await open('workshop#note-release-password');
+    status.set(await client.getStatus());
+    const save = demandOnce(client, 'saveDocument');
+    controller.change('/status', 'agreed');
+    const running = controller.save();
+    await vi.waitFor(() => expect(get(controller.stepUp.state).asking).toBe(true));
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0][3]).toBeUndefined();
+    await controller.stepUp.submit('local-password');
+    await running;
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(save.mock.calls[1][3]).toBe('local-password');
+    expect(controller.saveState).toBe('saved');
+  });
+
+  it('does not ask a local user for the password for a save the server accepts', async () => {
     const { controller, client } = await open('workshop#note-release-password');
     status.set(await client.getStatus());
     const save = vi.spyOn(client, 'saveDocument');
     controller.change('/status', 'agreed');
-    const running = controller.save();
-    await controller.stepUp.submit('local-password');
-    await running;
-    expect(save.mock.calls[0][3]).toBe('local-password');
+    await controller.save();
+    expect(get(controller.stepUp.state).asking).toBe(false);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0][3]).toBeUndefined();
     expect(controller.saveState).toBe('saved');
+  });
+
+  it('asks a local user for the password before a transition that declares step-up, and not before one that does not', async () => {
+    const { controller, client, document } = await open(
+      'workshop#note-release-password',
+      N2,
+      {},
+      { draft: null },
+    );
+    status.set(await client.getStatus());
+    const send = vi.spyOn(client, 'transition');
+    const running = controller.transition({ ...document.transitions[0], stepUp: true });
+    expect(get(controller.stepUp.state).asking).toBe(true);
+    expect(send).not.toHaveBeenCalled();
+    await controller.stepUp.submit('local-password');
+    expect(await running).toMatchObject({ kind: 'transitioned' });
+    expect(send).toHaveBeenCalledWith(REPOSITORY, N2, 'test-note.submit', 'local-password');
+    const plain = await open('workshop#note-release-password', N2, {}, { draft: null });
+    status.set(await plain.client.getStatus());
+    const sendPlain = vi.spyOn(plain.client, 'transition');
+    const done = await plain.controller.transition(plain.document.transitions[0]);
+    expect(done).toMatchObject({ kind: 'transitioned' });
+    expect(get(plain.controller.stepUp.state).asking).toBe(false);
+    expect(sendPlain).toHaveBeenCalledWith(REPOSITORY, N2, 'test-note.submit', undefined);
+  });
+
+  it('asks a local user for the password when the server demands it for a transition that did not declare it', async () => {
+    const { controller, client, document } = await open(
+      'workshop#note-release-password',
+      N2,
+      {},
+      { draft: null },
+    );
+    status.set(await client.getStatus());
+    const send = demandOnce(client, 'transition');
+    const running = controller.transition(document.transitions[0]);
+    await vi.waitFor(() => expect(get(controller.stepUp.state).asking).toBe(true));
+    await controller.stepUp.submit('local-password');
+    expect(await running).toMatchObject({ kind: 'transitioned' });
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(send.mock.calls[1][3]).toBe('local-password');
   });
 
   it('keeps the changes as the own and as a draft when the password is not given', async () => {
     const { controller, client } = await open('workshop#note-release-password');
     status.set(await client.getStatus());
+    demandOnce(client, 'saveDocument');
     controller.change('/status', 'agreed');
     const running = controller.save();
+    await vi.waitFor(() => expect(get(controller.stepUp.state).asking).toBe(true));
     controller.stepUp.cancel();
     await running;
     expect(controller.saveState).toBe('changed');
@@ -1064,9 +1137,15 @@ describe('answers that belong to an earlier moment', () => {
 describe('a transition and the changes or the document that moved on', () => {
   it('sends nothing when changes were made while the step-up dialog was open', async () => {
     const stepUp = new StepUpHandler(undefined, () => 'password');
-    const { controller, client } = await open('workshop', N2, { stepUp }, { draft: null });
+    const { controller, client, document } = await open(
+      'workshop',
+      N2,
+      { stepUp },
+      { draft: null },
+    );
+    const asking = { ...document.transitions[0], stepUp: true };
     const send = vi.spyOn(client, 'transition');
-    const running = controller.transition('test-note.submit');
+    const running = controller.transition(asking);
     controller.change('/status', 'agreed');
     await stepUp.submit('a password');
     expect(await running).toEqual({ kind: 'unsaved' });
@@ -1075,9 +1154,15 @@ describe('a transition and the changes or the document that moved on', () => {
 
   it('sends the request of a clean document after the step-up dialog', async () => {
     const stepUp = new StepUpHandler(undefined, () => 'password');
-    const { controller, client } = await open('workshop', N2, { stepUp }, { draft: null });
+    const { controller, client, document } = await open(
+      'workshop',
+      N2,
+      { stepUp },
+      { draft: null },
+    );
+    const asking = { ...document.transitions[0], stepUp: true };
     const send = vi.spyOn(client, 'transition');
-    const running = controller.transition('test-note.submit');
+    const running = controller.transition(asking);
     await stepUp.submit('a password');
     expect(await running).toMatchObject({ kind: 'transitioned' });
     expect(send).toHaveBeenCalledWith(REPOSITORY, N2, 'test-note.submit', 'a password');
@@ -1085,9 +1170,15 @@ describe('a transition and the changes or the document that moved on', () => {
 
   it('sends nothing for a document that is no longer shown when the dialog is confirmed', async () => {
     const stepUp = new StepUpHandler(undefined, () => 'password');
-    const { controller, client } = await open('workshop', N2, { stepUp }, { draft: null });
+    const { controller, client, document } = await open(
+      'workshop',
+      N2,
+      { stepUp },
+      { draft: null },
+    );
+    const asking = { ...document.transitions[0], stepUp: true };
     const send = vi.spyOn(client, 'transition');
-    const running = controller.transition('test-note.submit');
+    const running = controller.transition(asking);
     controller.sync(snapshotOf(await client.getDocument(REPOSITORY, N3), { draft: null }));
     await stepUp.submit('a password');
     expect(await running).toEqual({ kind: 'handled' });

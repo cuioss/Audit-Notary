@@ -18,7 +18,10 @@ Read the concept first, then the component you are about to change.
 2. Find the existing piece. `web-app/src/lib/forms/` is the form kit (`SchemaForm`, `DateTimeField`, `DataTable`,
    `CatalogPicker`, `PersonPicker`, `AsciiDocField`, `DocumentRefField`); its tests sit beside it and read the mock's
    `workshop` profile. `web-app/src/lib/components/` is a closed vocabulary: extend a component before adding
-   one, and add one only with its test in `components.test.ts` or a test file beside it.
+   one, and add one only with its test in `components.test.ts` or a test file beside it. `web-app/src/lib/views/documents/`
+   is the generic documents lens (`DocumentSheet`, `TransitionBar`, `ConflictPanel`, `RevisionPicker`,
+   `NewDocumentSheet`, `DocumentListColumn`); a lens that edits a document uses the document controller
+   (`web-app/src/lib/documents/`) and builds its sheet the same way.
 3. For a chart, use the five series colours in model order (`--color-series-1` … `-5`); they are validated for
    colour-vision and normal-vision separation against both sheet colours (`#ffffff`, `#161d2e`). A new chart colour
    needs the same validation before it lands: with the validator of the `dataviz` skill where your agent has that
@@ -71,6 +74,8 @@ Read the concept first, then the component you are about to change.
   only the transition's own refusals.
 - An act that cannot be taken now stays focusable and says why (`Button disabledReason`).
 - Navigation that is the screen's act is a `Link look="primary"`.
+- A step of a workflow acts on the saved document: with unsaved changes the sheet says so and offers "Save for everyone,
+  then <step>"; a step is never sent over changes only the person has. The step that is the release reads "Release".
 - Destructive acts live behind a confirmation.
 
 **Motion**

@@ -87,9 +87,7 @@
   }
 
   .area__label {
-    font-size: var(--text-sm);
     font-weight: var(--weight-medium);
-    color: var(--color-text-secondary);
   }
 
   .area__mark {

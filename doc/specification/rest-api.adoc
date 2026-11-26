@@ -293,7 +293,8 @@ ISMS). The web app shows the lens *Documents* in the rail only when one category
 of its repository and its JSON Schema as the file `<kind>/schema.json` holds it, markers included
 (xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4]). The same for every user; the request asks no more than a right on one of the
 category's repositories. The exact body is in <<_form_kit_requests>>
-|`404 NOT_FOUND` for an unknown category or one that is switched off; `403 FORBIDDEN`
+|`404 NOT_FOUND` for an unknown category, or for one that is switched off and holds no documents; a switched-off category
+that still holds documents is answered like any other, so that its read-only sheets have a form to show; `403 FORBIDDEN`
 |xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4], xref:architecture-and-modules.adoc#AUN-GEN-1[AUN-GEN-1]
 |`PROVISIONAL`
 
@@ -1140,10 +1141,14 @@ was cancelled or failed at the provider, or was met by another user, comes back 
 request answers `STEP_UP_REQUIRED` again; the handler has no page for it
 
 |`password`
-|Asks first, in a dialog titled "Confirm your identity", and sends the password as the member `password` of the JSON
-body of the request (PROVISIONAL generalisation: the release's `{"password"}` is the body member of any request that
-can ask; the other members stay). `401 INVALID_CREDENTIALS` keeps the dialog open with the error and writes nothing; any
-other answer closes the dialog and is the view's. The password is never kept, logged or shown
+|Asks, in a dialog titled "Confirm your identity", only where the server requires the confirmation for that step, and
+sends the password as the member `password` of the JSON body of the request (PROVISIONAL generalisation: the release's
+`{"password"}` is the body member of any request that can ask; the other members stay). The dialog opens before the
+request when the caller knows the step to need it (the release; a transition whose entry in `transitions` says
+`"stepUp": true`), and otherwise after `403 STEP_UP_REQUIRED`, which the handler answers by asking and sending the same
+request again with the password: a save, and a step that declares no step-up, go out without a question when the server
+asks for none. `401 INVALID_CREDENTIALS` keeps the dialog open with the error and writes nothing; any other answer closes
+the dialog and is the view's. The password is never kept, logged or shown
 
 |`off`
 |Sends the request; there is no dialog and no line in the margin
@@ -1167,8 +1172,9 @@ rows of stage completion, configuration save and category activation use it when
 
 |`403` (PROVISIONAL)
 |`STEP_UP_REQUIRED`
-|As above. With `stepUp: "password"` the status has already told the web app to ask; a server that answers it without
-an address is answered by opening the dialog
+|As above. With `stepUp: "password"` a server that answers it, with or without an address, is answered by opening the
+dialog (when the dialog was opened already and the server asks again without an address, it stays open with the
+error)
 
 |`401`
 |`INVALID_CREDENTIALS`
@@ -1426,8 +1432,10 @@ blocked; the owner may change each one. The bodies are in <<_document_lifecycle_
   through references and the search. `GET /api/v1/categories` therefore lists a switched-off category that still holds
   documents with `"enabled": false` and its document types, so that the web app finds the repository of an address; the
   generic document and revision addresses of it are read-only (no save, no act, no release; the writes answer
-  `403 FORBIDDEN`), `new` is not offered, and neither the rail entry nor the lens counts the category. The mock has
-  no such category yet; the web app builds this with the administration of categories (step 10).
+  `403 FORBIDDEN`), `new` is not offered, and neither the rail entry nor the lens counts the category. The schema
+  request (`GET /api/v1/categories/{category}/schema`) answers such a category like any other, because the read-only
+  sheet draws its form from it (decided provisionally; the alternative is a read-only sheet that needs no schema). The mock has no such category yet; the web app builds this
+  with the administration of categories (step 10).
 . *The test category `test-note`* has one document type, `note`, released more than once, with the transitions
   `test-note.submit` and `test-note.release`, the collection `notes` and the tag `notes/<id>/v<n>`; a save is possible
   in every state.
@@ -1455,6 +1463,29 @@ blocked; the owner may change each one. The bodies are in <<_document_lifecycle_
   the moment it is sent, also after the confirmation of the step-up; and any event of the lifecycle that names the open
   document (`document-saved`, `document-created`, `document-transitioned`, `release-requested`) makes the sheet read it
   again.
+
+. *The generic lens in the web app* (`web-app/src/lib/views/documents/`) takes these readings of the contract, decided
+  provisionally with its construction (none adds a request):
+  `/categories` with exactly one category that is shown is replaced by the address of that category (the history keeps no
+  `/categories` entry), and the column of categories stands beside the documents only with more than one; the rail entry
+  is read with `GET /api/v1/categories` at the start and again whenever the rights of the session change, and on the
+  phone it stands behind "More", because the bar keeps its four lenses; the list of a category merges the documents of
+  every repository of its document types, newest change first, and the filters by state and by title are the browser's;
+  a document is looked for in the repositories of the category in order, and `NOT_FOUND` from all of them, or `VALIDATION`
+  of `at`, is the not-found view; the person's own draft is restored only into a sheet they can edit, so a reader, a
+  frozen document, an earlier state and a switched-off category show the saved value; a step acts on the saved document,
+  so with unsaved changes the sheet offers "Save for everyone, then <step>", and a refused save sends no step; the step
+  that is the release is a link to `…/release`, which stays the placeholder view until the release flow is built; a new
+  document of a category with several document types without `kind` asks which one, and without the right `edit` the
+  address says that creating needs it; the address of a document type whose schema the server does not serve is the
+  not-found view.
++
+The confirmation of a local user is asked for only where the server requires it for that step (decided by the owner,
+final): the password dialog opens before a step whose transition declares `"stepUp": true` and before the release, and
+otherwise only when the server answers `STEP_UP_REQUIRED`, after which the same request is sent again with the password
+(<<_the_step_up_handler>>). A save of a document and a step without `stepUp` therefore ask nothing of a local user when
+the server asks nothing, and the sheet's line "You confirm your identity once more before this step" is shown only for
+a step that declares `stepUp`.
 
 For the owner: whether the rail may gain a ninth lens, and whether `/categories/{category}` may list documents, given
 that the use cases of the categories name it for the definition (1); whether a refused draft is right, or the draft

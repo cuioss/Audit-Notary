@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import { apiClient } from '../api/client';
+import type { Action } from '../api/types';
 import { session, streamState } from '../stores/app';
 import { breadcrumb } from '../stores/breadcrumb';
 import { textSnippet } from '../test/snippets';
@@ -9,11 +10,16 @@ import BottomBar from './BottomBar.svelte';
 import CommandPalette from './CommandPalette.svelte';
 import NavRail from './NavRail.svelte';
 import TopBar from './TopBar.svelte';
+import { categoryList } from '../documents/categories';
 import {
   ALL_ITEMS,
   BOTTOM_ITEMS,
   MORE_ITEMS,
   RAIL_COLLAPSED_KEY,
+  allItems,
+  bottomItems,
+  moreItems,
+  railGroups,
   readRailCollapsed,
   writeRailCollapsed,
 } from './nav';
@@ -32,6 +38,31 @@ describe('nav', () => {
     ]);
     expect(BOTTOM_ITEMS).toHaveLength(4);
     expect([...BOTTOM_ITEMS, ...MORE_ITEMS]).toEqual(ALL_ITEMS);
+  });
+
+  it('adds the documents lens as the ninth entry, between ISMS and Catalogs, where a generic category exists', () => {
+    expect(allItems(true).map((item) => item.lens)).toEqual([
+      'due',
+      'samm',
+      'threat-models',
+      'incidents',
+      'isms',
+      'categories',
+      'catalogs',
+      'reports',
+      'settings',
+    ]);
+    expect(railGroups(true)[0].items.at(-1)?.lens).toBe('categories');
+    expect(railGroups(false)).toEqual(railGroups(false));
+    expect(allItems(false)).toEqual(ALL_ITEMS);
+    expect(bottomItems(true)).toEqual(BOTTOM_ITEMS);
+    expect(moreItems(true).map((item) => item.lens)).toEqual([
+      'isms',
+      'categories',
+      'catalogs',
+      'reports',
+      'settings',
+    ]);
   });
 
   it('remembers the collapsed rail', () => {
@@ -58,6 +89,23 @@ describe('NavRail', () => {
     render(NavRail, { activeLens: null, collapsed: true, onToggle: () => {} });
     expect(screen.getByRole('link', { name: 'Open the start page' })).toBeInTheDocument();
     expect(screen.getByTestId('nav-isms')).toHaveAttribute('title', 'ISMS');
+  });
+});
+
+describe('NavRail with the documents lens', () => {
+  it('shows Documents only when it is offered, and marks it as the current lens', () => {
+    const { unmount } = render(NavRail, { activeLens: null, collapsed: false, onToggle: () => {} });
+    expect(screen.queryByTestId('nav-categories')).toBeNull();
+    unmount();
+    render(NavRail, {
+      activeLens: 'categories',
+      collapsed: false,
+      onToggle: () => {},
+      documents: true,
+    });
+    expect(screen.getByTestId('nav-categories')).toHaveTextContent('Documents');
+    expect(screen.getByTestId('nav-categories')).toHaveAttribute('href', '/categories');
+    expect(screen.getByTestId('nav-categories')).toHaveAttribute('aria-current', 'page');
   });
 });
 
@@ -127,6 +175,16 @@ describe('BottomBar', () => {
   });
 });
 
+describe('BottomBar with the documents lens', () => {
+  it('holds Documents behind "More"', async () => {
+    render(BottomBar, { activeLens: 'categories', documents: true });
+    expect(screen.queryByTestId('bottom-nav-categories')).toBeNull();
+    expect(screen.getByTestId('bottom-more')).toHaveClass('bottom-bar__item--active');
+    await fireEvent.click(screen.getByTestId('bottom-more'));
+    expect(screen.getByRole('link', { name: /Documents/ })).toHaveAttribute('href', '/categories');
+  });
+});
+
 describe('CommandPalette', () => {
   it('filters the views as the user types and opens the first match on Enter', async () => {
     const onnavigate = vi.fn();
@@ -150,6 +208,18 @@ describe('CommandPalette', () => {
     expect(onnavigate).not.toHaveBeenCalled();
   });
 
+  it('offers Documents while the lens exists', async () => {
+    categoryList.set({
+      categories: [{ id: 'test-note', generic: true, kinds: [{ id: 'note', repository: 'x' }] }],
+    });
+    const onnavigate = vi.fn();
+    render(CommandPalette, { open: true, onnavigate });
+    await fireEvent.input(screen.getByTestId('search-input'), { target: { value: 'docu' } });
+    await fireEvent.keyDown(screen.getByTestId('search-input'), { key: 'Enter' });
+    expect(onnavigate).toHaveBeenCalledWith('/categories');
+    categoryList.set(null);
+  });
+
   it('opens a clicked result', async () => {
     const onnavigate = vi.fn();
     render(CommandPalette, { open: true, onnavigate });
@@ -159,6 +229,62 @@ describe('CommandPalette', () => {
 });
 
 describe('AppShell', () => {
+  it('reads the categories and offers the documents lens in the rail only while one is generic', async () => {
+    const list = vi.spyOn(apiClient, 'listCategories').mockResolvedValue({
+      categories: [{ id: 'test-note', generic: true, kinds: [{ id: 'note', repository: 'x' }] }],
+    });
+    const signedIn = (rights: { repository: string; actions: Action[] }[], first = false) => ({
+      user: { pseudonym: 'p', name: 'Alex Example' },
+      rights,
+      csrfToken: 't',
+      firstLoginRequired: first,
+    });
+    session.set(signedIn([{ repository: 'x', actions: ['read'] }]));
+    render(AppShell, {
+      activeLens: 'categories',
+      titleKey: 'lens.categories',
+      onnavigate: () => {},
+      content: textSnippet('content'),
+    });
+    expect(await screen.findByTestId('nav-categories')).toBeInTheDocument();
+    expect(list).toHaveBeenCalledTimes(1);
+    list.mockResolvedValue({ categories: [] });
+    session.set(signedIn([{ repository: 'x', actions: ['read', 'edit'] }]));
+    await vi.waitFor(() => expect(screen.queryByTestId('nav-categories')).toBeNull());
+    expect(list).toHaveBeenCalledTimes(2);
+    session.set(null);
+    categoryList.set(null);
+  });
+
+  it('asks for no category where the server would refuse it: a session without a right, a first login', async () => {
+    const list = vi.spyOn(apiClient, 'listCategories').mockResolvedValue({ categories: [] });
+    categoryList.set({
+      categories: [{ id: 'test-note', generic: true, kinds: [{ id: 'note', repository: 'x' }] }],
+    });
+    session.set({
+      user: { pseudonym: 'p', name: 'Alex Example' },
+      rights: [],
+      csrfToken: 't',
+      firstLoginRequired: false,
+    });
+    render(AppShell, {
+      activeLens: 'due',
+      titleKey: 'lens.due',
+      onnavigate: () => {},
+      content: textSnippet('content'),
+    });
+    await vi.waitFor(() => expect(screen.queryByTestId('nav-categories')).toBeNull());
+    session.set({
+      user: { pseudonym: 'p', name: 'Alex Example' },
+      rights: [{ repository: 'x', actions: ['read'] }],
+      csrfToken: 't',
+      firstLoginRequired: true,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(list).not.toHaveBeenCalled();
+    session.set(null);
+  });
+
   it('frames the view with notices, a skip link and a toggleable rail', async () => {
     render(AppShell, {
       activeLens: 'due',

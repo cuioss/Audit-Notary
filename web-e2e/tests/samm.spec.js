@@ -49,6 +49,39 @@ test('a workshop answers with the number keys, keeps a draft and saves for every
   });
 });
 
+test('a local user saves for everyone without a password question, and is asked only when the server demands it', async ({
+  page,
+  request,
+}) => {
+  await useScenario(request, 'workshop#note-release-password');
+  await clearActs(request);
+  await login(page, PRACTICE);
+  await page.getByTestId('answer-sm-a-1-0').check({ force: true });
+  await page.getByTestId('save-everyone').click();
+  await expect(page.getByTestId('save-state')).toContainText('Saved for everyone');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  const bodies = [];
+  let demanded = false;
+  await page.route(`**${SAVE}`, (route) => {
+    bodies.push(route.request().postDataJSON());
+    if (demanded) return route.continue();
+    demanded = true;
+    return route.fulfill({
+      status: 403,
+      contentType: 'application/json',
+      body: JSON.stringify({ outcome: 'STEP_UP_REQUIRED' }),
+    });
+  });
+  await page.getByTestId('answer-sm-a-2-1').check({ force: true });
+  await page.getByTestId('save-everyone').click();
+  await expect(page.getByRole('dialog')).toContainText('Confirm your identity');
+  await page.getByTestId('practice-password').fill('local-password');
+  await page.getByTestId('practice-confirm').click();
+  await expect(page.getByTestId('save-state')).toContainText('Saved for everyone');
+  expect(bodies.map((body) => body.password)).toEqual([undefined, 'local-password']);
+  expect(JSON.stringify(await acts(request))).not.toContain('local-password');
+});
+
 test('a conflict shows both answers and lets the person decide', async ({ page, request }) => {
   await useScenario(request, 'workshop#conflict');
   await login(page, PRACTICE);

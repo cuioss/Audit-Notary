@@ -121,6 +121,11 @@
     font-size: var(--text-sm);
   }
 
+  /* A picker hands over a holder that has nothing to say yet (no mark): it must not leave a blank line. */
+  .field__after:has(> :global(:only-child:empty)) {
+    display: none;
+  }
+
   .field__select {
     min-height: var(--control-height);
     padding: 0 var(--space-3);

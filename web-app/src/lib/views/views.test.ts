@@ -194,15 +194,24 @@ describe('AppRouter', () => {
     ['/settings/appearance', 'settings-view'],
     ['/samm/payments/2026-q4/sm', 'samm-view'],
     ['/threat-models/payment-gateway', 'lens-view'],
+    ['/categories', 'documents-view'],
+    ['/categories/test-note', 'documents-view'],
+    ['/categories/test-note/new?kind=note', 'documents-view'],
+    ['/categories/test-note/01JZ8W1E3G5J7M9P1R3T5X7Z9B', 'documents-view'],
+    ['/categories/test-note/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=v1', 'documents-view'],
+    // The release of a document is the release flow's, a later stage.
+    ['/categories/test-note/01JZ8W1E3G5J7M9P1R3T5X7Z9B/release', 'lens-view'],
     ['/nowhere/at/all/here/x', 'not-found-view'],
   ])('renders %s as %s', async (pathname, testId) => {
+    vi.spyOn(apiClient, 'listCategories').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'getDue').mockResolvedValue({ items: [] });
     vi.spyOn(apiClient, 'getDirectoryMe').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'getCatalog').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'getSammScopes').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'getSammScope').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'subscribeEvents').mockReturnValue(() => {});
-    render(AppRouter, { pathname, onnavigate: () => {} });
+    const [path, search = ''] = pathname.split('?');
+    render(AppRouter, { pathname: path, search: search ? `?${search}` : '', onnavigate: () => {} });
     expect(await screen.findByTestId(testId)).toBeInTheDocument();
   });
 

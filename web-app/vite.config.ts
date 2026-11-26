@@ -118,6 +118,9 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    // The expectations name local times ("9:30 AM" for 08:30Z); the zone is pinned, so a run in UTC (CI) or anywhere
+    // else reads the same as a run in the maintainers' zone.
+    env: { TZ: 'Europe/Berlin' },
     testTimeout: 20_000,
     setupFiles: ['./src/setupTests.ts'],
     include: ['src/**/*.test.ts', 'scripts/**/*.test.ts'],

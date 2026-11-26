@@ -9,5 +9,6 @@
 <AppRouter
   pathname={page.url.pathname}
   search={page.url.search}
-  onnavigate={(href: string) => void goto(href)}
+  onnavigate={(href: string, options?: { replace?: boolean }) =>
+    void goto(href, { replaceState: options?.replace })}
 />

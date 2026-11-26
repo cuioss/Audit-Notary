@@ -41,6 +41,10 @@ stream)
 
 |`tests/helpers/a11y.js`
 |The axe-core audit; it fails on violations of impact `serious` or `critical`
+
+|`tests/helpers/documents.js`
+|The notes of the test category, the paths of their writes at the mock, the choice of the language and the locator of a
+field of the generated form
 |===
 
 == Specs
@@ -71,14 +75,21 @@ recovery clears the notice, without a reload
 |`i18n.spec.js`
 |Switching to German shows every text in German and keeps the choice; the catalogue refuses another language
 
+|`documents.spec.js`
+|The documents lens against the `test-note` category of `workshop` and `read-only` (UC-DOC-1 to UC-DOC-4, UC-DOC-6): the
+list and its filters, a note and its earlier states, the form kit through the sheet in English and German, the draft and
+the save, the conflict decided per field, every refusal of a save, the steps with save-first and the empty mandatory
+fields, the password and the fresh login, a new document and the question before leaving it, the read-only paths
+
 |`theme-readability.spec.js`
-|The axe-core audit of every view in both themes
+|The axe-core audit of every view in both themes, and of the states of the documents lens
 
 |`fonts.spec.js`
 |Every request stays on the own origin, and Inter is loaded
 
 |`mobile.spec.js`
-|On a narrow screen the bottom bar replaces the rail, and "More" holds the other lenses
+|On a narrow screen the bottom bar replaces the rail, and "More" holds the other lenses; the pages outside the shell,
+the notices and the documents lens at 390 px: nothing scrolls sideways, the acts are in reach, axe
 |===
 
 A new view gets its address in `navigation.spec.js` and its audit in `theme-readability.spec.js`; a new profile of

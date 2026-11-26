@@ -45,9 +45,16 @@ of components
 browser validation without a validator library (`validate.ts`), the allow-list of the preview (`sanitize.ts`) and the
 reading services (`services.ts`). Its tests read the `workshop` and `read-only` profiles of `web-mock`
 
+|`src/lib/documents/`
+|What every document sheet shares: the document controller (draft, save, conflict, step-up, refresh), the lookups of the
+generic lens (`categories.ts`), the words of a document's history and of a conflict (`history.ts`, `display.ts`) and the
+question before a page with typed content is left (`leave.ts`)
+
 |`src/lib/views/`, `src/routes/`
 |The views and the router; one catch-all route stub renders `AppRouter`. `src/lib/views/access/` holds the pages outside
-the shell (`/login`, `/signed-out`, `/login-problem`) and the empty state of a session without rights
+the shell (`/login`, `/signed-out`, `/login-problem`) and the empty state of a session without rights;
+`src/lib/views/documents/` the generic documents lens (the list of a category, the document sheet with its steps,
+conflicts and earlier states, a new document); its tests read the `workshop` and `read-only` profiles of `web-mock`
 |===
 
 == Commands

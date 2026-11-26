@@ -2,7 +2,8 @@
   import Dialog from '../components/Dialog.svelte';
   import Icon from '../components/Icon.svelte';
   import { t } from '../i18n';
-  import { ALL_ITEMS, type NavItem } from './nav';
+  import { hasDocumentsLens } from '../documents/categories';
+  import { allItems, type NavItem } from './nav';
 
   /**
    * The search of the top bar: filter-as-you-type over the views; Enter opens the first match.
@@ -22,7 +23,9 @@
 
   let matches: NavItem[] = $derived.by(() => {
     const needle = query.trim().toLowerCase();
-    return ALL_ITEMS.filter((item) => $t(item.labelKey).toLowerCase().includes(needle));
+    return allItems($hasDocumentsLens).filter((item) =>
+      $t(item.labelKey).toLowerCase().includes(needle),
+    );
   });
 
   $effect(() => {

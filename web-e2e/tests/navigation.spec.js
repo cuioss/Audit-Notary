@@ -3,7 +3,7 @@ import { useScenario } from './helpers/mock.js';
 import { login, loginLocal } from './helpers/login.js';
 
 /**
- * AUN-WEB-3: the eight lenses on the rail, one canonical address per view, and a reload restores it.
+ * AUN-WEB-3: the lenses on the rail (the ninth, Documents, where a generic category exists), one canonical address per view, and a reload restores it.
  */
 const NOTE = '01JZ8W1E3G5J7M9P1R3T5X7Z9B';
 
@@ -17,12 +17,12 @@ const ADDRESSES = [
   ['/incidents/2026/inc-0007', 'lens-view', 'Incidents', 'Incidents'],
   ['/isms/risks/r-012', 'lens-view', 'ISMS', 'ISMS'],
   ['/isms/documents/policy-access', 'lens-view', 'ISMS', 'ISMS'],
-  // The generic documents lens (rest-api.adoc, The Generic Documents Lens): routed, its views are a later stage.
-  ['/categories', 'lens-view', 'Documents', 'Documents'],
-  ['/categories/test-note', 'lens-view', 'Documents', 'Documents'],
-  ['/categories/test-note/new?kind=note', 'lens-view', 'Documents', 'Documents'],
-  [`/categories/test-note/${NOTE}`, 'lens-view', 'Documents', 'Documents'],
-  [`/categories/test-note/${NOTE}?at=v1`, 'lens-view', 'Documents', 'Documents'],
+  // The generic documents lens (rest-api.adoc, The Generic Documents Lens). `/categories` is no entry here: with one
+  // category the lens opens it in place of this address (the test below). The release is the next stage's.
+  ['/categories/test-note', 'documents-view', 'Documents', 'Documents'],
+  ['/categories/test-note/new?kind=note', 'documents-view', 'Documents', 'Documents'],
+  [`/categories/test-note/${NOTE}`, 'documents-view', 'Documents', 'Documents'],
+  [`/categories/test-note/${NOTE}?at=v1`, 'documents-view', 'Documents', 'Documents'],
   [`/categories/test-note/${NOTE}/release`, 'lens-view', 'Release', 'Release'],
   ['/catalogs/team/payments', 'lens-view', 'Catalogs', 'Catalogs'],
   ['/reports/trends', 'lens-view', 'Reports', 'Reports'],
@@ -45,7 +45,13 @@ for (const [address, view, lens, title] of ADDRESSES) {
   });
 }
 
-test('the rail offers the eight lenses and marks the current one', async ({ page }) => {
+test('the documents lens opens its only category in place of /categories', async ({ page }) => {
+  await page.goto(`/api/v1/auth/login?return=${encodeURIComponent('/categories')}`);
+  await expect(page).toHaveURL('/categories/test-note');
+  await expect(page.getByTestId('document-list')).toBeVisible();
+});
+
+test('the rail offers the nine lenses and marks the current one', async ({ page }) => {
   await login(page, '/');
   const rail = page.getByRole('navigation', { name: 'Main navigation' });
   await expect(rail.getByRole('link')).toHaveText([
@@ -55,6 +61,7 @@ test('the rail offers the eight lenses and marks the current one', async ({ page
     'Threat models',
     'Incidents',
     'ISMS',
+    'Documents',
     'Catalogs',
     'Reports',
     'Settings',
@@ -95,7 +102,7 @@ test('a name an address does not admit is ignored, a bad value of one it admits 
 }) => {
   await login(page, '/');
   await page.goto(`/categories/test-note/${NOTE}?at=v1&utm_source=mail`);
-  await expect(page.getByTestId('lens-view')).toBeVisible();
+  await expect(page.getByTestId('document-sheet')).toBeVisible();
   await page.goto(`/categories/test-note/${NOTE}?at=latest`);
   await expect(page.getByTestId('not-found-view')).toBeVisible();
   await page.goto(`/categories/test-note/${NOTE}?at=v1&at=v2`);
@@ -108,7 +115,7 @@ test('a login with the identity provider returns to the address with its query',
   const address = `/categories/test-note/${NOTE}?at=v1`;
   await page.goto(`/api/v1/auth/login?return=${encodeURIComponent(address)}`);
   await expect(page).toHaveURL(address);
-  await expect(page.getByTestId('lens-view')).toBeVisible();
+  await expect(page.getByTestId('document-sheet')).toBeVisible();
 });
 
 test('a login with a query the address does not admit returns to the start page', async ({
@@ -128,8 +135,9 @@ test('the login page of local test accounts returns to the address with its quer
   await useScenario(request, 'local');
   const address = `/categories/test-note/${NOTE}?at=4be0c3a`;
   await loginLocal(page, address);
-  await expect(page.getByTestId('lens-view')).toBeVisible();
+  // The profile `local` has no category, so the address is kept and the lens says it is not found.
+  await expect(page.getByTestId('not-found-view')).toBeVisible();
   await page.reload();
   await expect(page).toHaveURL(address);
-  await expect(page.getByTestId('lens-view')).toBeVisible();
+  await expect(page.getByTestId('not-found-view')).toBeVisible();
 });
