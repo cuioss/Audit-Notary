@@ -18,6 +18,8 @@ export default defineConfig({
   globalSetup: './global-setup.js',
   use: {
     baseURL: BASE_URL,
+    // Dates and times are shown in the zone of the browser; pinned, a run reads the same on every machine and in CI.
+    timezoneId: 'Europe/Berlin',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
