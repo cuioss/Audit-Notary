@@ -46,9 +46,15 @@ import {
   refreshesDocument,
   releasedTagOf,
   validationOf,
+  withoutRestored,
   withoutSent,
   type FieldKeys,
 } from './fields';
+
+/** @returns the key under which the changes of one part of one document are parked */
+function parkKey(document: string, part: string): string {
+  return `${document}\u0000${part}`;
+}
 
 /** How long after the last change the draft is kept: well inside the 5 seconds of AUN-WEB-5. */
 export const DRAFT_DELAY_MS = 1200;
@@ -163,6 +169,26 @@ export class DocumentController {
   private generation = 0;
   /** Whether a save for everyone is on its way: a second one is not started. */
   private saving = false;
+  /**
+   * What the save on its way sends. The changes are told against it as well as against the loaded version, so that a
+   * field changed back to its loaded value while the save runs stays an edit of the next save (the save may make the
+   * other value the saved one).
+   */
+  private pendingSent = $state.raw<Record<string, unknown> | null>(null);
+  /** Counts the changes of `edits`: a draft's answer only counts for the revision it was sent for. */
+  private revision = 0;
+  /** Counts the drafts started: only the answer of the latest is applied. */
+  private draftAttempt = 0;
+  /** The generation of the action (a save, a transition) that may leave for the identity provider; `-1` for none. */
+  private leavingFor = -1;
+  /**
+   * The unsaved changes of documents and parts the page left whose draft could not be kept, by `document/part`: they
+   * are tried again with the next switch and restored when the part is shown again.
+   */
+  private readonly parked = new Map<
+    string,
+    { document: string; part: string; request: SaveRequest; failure: string | null }
+  >();
 
   /** The handler of the step-up of a save and of a transition; the view mounts its dialog. */
   readonly stepUp: StepUpHandler;
@@ -190,11 +216,16 @@ export class DocumentController {
     this.stepUp =
       options.stepUp ??
       new StepUpHandler(this.client, undefined, async () => {
+        // The refusal belongs to the action that asked: if the page shows another document by now, the app neither locks
+        // that one nor leaves for it (the changes of the one asked were kept as its draft when the page switched).
+        const owner = this.leavingFor;
+        if (owner !== this.generation) throw new Error('step-up of a document no longer shown');
         this.leaving = true;
         try {
           await this.keepDraft(true);
+          if (owner !== this.generation) throw new Error('step-up of a document no longer shown');
         } catch (error) {
-          this.leaving = false;
+          if (owner === this.generation) this.leaving = false;
           throw error;
         }
       });
@@ -240,7 +271,8 @@ export class DocumentController {
   /** The loaded value with the overlay of what was saved for everyone and not yet read back. */
   private get baseline(): JsonObject {
     const loaded = this.snapshot?.value ?? {};
-    return this.committed ? applyFields(loaded, this.committed.values) : loaded;
+    const saved = this.committed ? applyFields(loaded, this.committed.values) : loaded;
+    return this.pendingSent ? applyFields(saved, this.pendingSent) : saved;
   }
 
   /**
@@ -280,6 +312,8 @@ export class DocumentController {
       this.snapshot = next;
       this.noteBlob(next);
       if (next?.draft) this.restore(next, next.draft);
+      this.restoreParked(next);
+      this.retryParked();
       return;
     }
     this.snapshot = next;
@@ -293,9 +327,63 @@ export class DocumentController {
     this.timer = null;
     if (!previous || !this.dirty) return;
     const pending: Record<string, unknown> = $state.snapshot(this.edits);
+    const request = this.requestFor(previous.part, pending);
+    // The changes are kept in the controller until the write succeeds: a draft that could not be written must not take
+    // them away, they come back when the part is shown again.
+    const key = parkKey(previous.document, previous.part);
+    this.parked.set(key, {
+      document: previous.document,
+      part: previous.part,
+      request,
+      failure: null,
+    });
+    this.writeParked(key);
+  }
+
+  /** Writes a parked draft; it stays parked, with the reason, when the write fails. */
+  private writeParked(key: string): void {
+    const entry = this.parked.get(key);
+    if (!entry) return;
     void this.client
-      .saveDraft(this.repository, previous.document, this.requestFor(previous.part, pending))
-      .catch(() => {});
+      .saveDraft(this.repository, entry.document, entry.request)
+      .then(() => {
+        if (this.parked.get(key) === entry) this.parked.delete(key);
+      })
+      .catch((error: unknown) => {
+        if (this.parked.get(key) === entry) entry.failure = errorMessageKey(error);
+      });
+  }
+
+  /** Tries again the drafts the page left that could not be written, but not the one just shown. */
+  private retryParked(): void {
+    for (const key of [...this.parked.keys()]) {
+      const entry = this.parked.get(key);
+      if (entry?.failure && key !== parkKey(this.owner.document, this.owner.part)) {
+        entry.failure = null;
+        this.writeParked(key);
+      }
+    }
+  }
+
+  /**
+   * Gives back the unsaved changes of this part whose draft could not be written when the page left it: they are newer
+   * than the draft the server holds, and they are tried again as the draft.
+   */
+  private restoreParked(next: DocumentSnapshot | null): void {
+    if (!next) return;
+    const key = parkKey(next.document, next.part);
+    const entry = this.parked.get(key);
+    if (!entry) return;
+    this.parked.delete(key);
+    const own = entry.request.parts[next.part];
+    if (!own || Object.keys(own.fields).length === 0) return;
+    this.edits = { ...this.edits, ...own.fields };
+    this.editBase = own.blob;
+    this.draftStale = own.blob !== next.blob;
+    this.revision++;
+    this.failure = entry.failure;
+    this.saveState = 'changed';
+    this.schedule();
   }
 
   private reset(): void {
@@ -305,6 +393,8 @@ export class DocumentController {
     this.conflictBlob = '';
     this.editBase = '';
     this.afterSave = null;
+    this.pendingSent = null;
+    this.leaving = false;
     this.errors = null;
     this.draftRefused = false;
     this.draftStale = false;
@@ -367,11 +457,12 @@ export class DocumentController {
     if (jsonEqual(edits, this.edits)) return;
     if (!this.dirty) this.editBase = this.currentBlob();
     this.edits = edits;
+    this.revision++;
     this.failure = null;
     // While a save for everyone runs, it stays the state: the act stays busy, and the save keeps this change for the
-    // next one when it returns.
+    // next one when it returns. Conflicts still to decide stay the state, too.
     if (this.saveState === 'saving') return;
-    this.saveState = 'changed';
+    this.saveState = this.open > 0 ? 'conflict' : 'changed';
     this.schedule();
   }
 
@@ -420,30 +511,37 @@ export class DocumentController {
       if (this.saveState === 'changed') this.saveState = 'clean';
       return;
     }
-    this.saveState = 'drafting';
+    // A conflict still to decide keeps its status: the draft is written, and says nothing over it.
+    const held = this.open > 0;
+    if (!held) this.saveState = 'drafting';
     const generation = this.generation;
+    const attempt = ++this.draftAttempt;
+    const revision = this.revision;
+    // The answer is about this attempt and these edits only: another document, a later attempt, or a later change
+    // makes it no news for the page.
+    const current = (): boolean =>
+      generation === this.generation && attempt === this.draftAttempt && revision === this.revision;
     try {
       const answer = await this.client.saveDraft(
         this.repository,
         snapshot.document,
         this.requestFor(snapshot.part, $state.snapshot(this.edits)),
       );
-      // The page shows another document by now: the answer is not about it.
-      if (generation !== this.generation) return;
+      if (!current()) return;
       this.errors = null;
       this.draftRefused = false;
-      if (this.saveState === 'drafting') {
+      if (!held && this.saveState === 'drafting') {
         this.saveState = 'draft';
         this.stampAt = answer.at ? new Date(answer.at) : new Date();
       }
     } catch (error) {
-      if (generation !== this.generation) {
+      if (!current()) {
         if (rethrow) throw error;
         return;
       }
       // A save for everyone started meanwhile keeps its own state.
-      if (this.saveState === 'drafting') {
-        this.saveState = 'failed';
+      if (held || this.saveState === 'drafting') {
+        if (!held) this.saveState = 'failed';
         if (isApiError(error) && error.outcome === 'VALIDATION') {
           // Nothing was written: what was typed stays in the page, with the errors at its fields.
           this.errors = validationOf(error, snapshot.part);
@@ -458,9 +556,10 @@ export class DocumentController {
   /** Saves for everyone: one signed commit with the blob id the changes stand on. */
   async save(): Promise<void> {
     const snapshot = this.snapshot;
-    // A second press while one save runs, or while a conflict is undecided, sends nothing: the first would be written
-    // twice, and the other's value would be overwritten without the person's decision.
-    if (!snapshot || !this.dirty || this.saving || this.open > 0) return;
+    // A second press while one save runs, while a conflict is undecided, or while the sheet cannot be edited (frozen, no
+    // right, leaving) sends nothing: the first would be written twice, and the other's value would be overwritten
+    // without the person's decision. The changes stay for recovery.
+    if (!snapshot || this.locked || !this.dirty || this.saving || this.open > 0) return;
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
     this.saving = true;
@@ -471,6 +570,8 @@ export class DocumentController {
     const request = this.requestFor(snapshot.part, sent, true);
     const loadedAtStart = snapshot.blob;
     const generation = this.generation;
+    this.pendingSent = sent;
+    this.leavingFor = generation;
     try {
       const result = await this.stepUp.run((password) =>
         this.client.saveDocument(this.repository, snapshot.document, request, password),
@@ -496,7 +597,23 @@ export class DocumentController {
       if (generation === this.generation) this.refused(error, snapshot.part);
     } finally {
       this.saving = false;
+      if (generation === this.generation) {
+        this.pendingSent = null;
+        this.dropRestored();
+      }
     }
+  }
+
+  /**
+   * Drops the changes that equal what the page now stands on: a field changed back while a save ran is an edit of the
+   * next save when that save succeeds, and none when it was refused.
+   */
+  private dropRestored(): void {
+    const kept = withoutRestored(this.baseline, this.edits);
+    if (Object.keys(kept).length === Object.keys(this.edits).length) return;
+    this.edits = kept;
+    this.revision++;
+    if (!this.dirty && this.saveState === 'changed') this.saveState = 'clean';
   }
 
   private saved(
@@ -514,7 +631,10 @@ export class DocumentController {
     const blob = answer.parts?.[snapshot.part]?.blob;
     this.afterSave = blob ? { from: loadedAtStart, blob } : null;
     this.edits = withoutSent(this.edits, sent);
-    this.editBase = '';
+    this.revision++;
+    // What was changed while the save ran stands on the version that holds the save, not on whatever a read brought
+    // meanwhile: a field another person changed in between then still shows as a conflict.
+    this.editBase = this.dirty ? (blob ?? this.editBase) : '';
     this.conflicts = {};
     this.conflictBlob = '';
     this.errors = null;
@@ -550,6 +670,9 @@ export class DocumentController {
         this.conflicts = found.fields;
         this.conflictBlob = found.blob;
         this.saveState = 'conflict';
+        // The press of Save cancelled the draft timer: the changes are kept as the draft meanwhile (on the base they were
+        // made on, not on the blob of the conflict), with the conflicts and their status left as they are.
+        this.schedule();
         return;
       }
       case 'VALIDATION':
@@ -590,6 +713,7 @@ export class DocumentController {
     if (keep === 'other') {
       const value = this.keys.adopt ? this.keys.adopt(key, field.other) : field.other;
       this.edits = { ...this.edits, [key]: value };
+      this.revision++;
     }
     const rest = { ...this.conflicts };
     delete rest[key];
@@ -615,20 +739,38 @@ export class DocumentController {
     if (this.dirty) return { kind: 'unsaved' };
     this.failure = null;
     this.missing = [];
-    const result = await this.stepUp.run<Transitioned>((password) =>
-      this.client.transition(this.repository, snapshot.document, id, password),
-    );
+    const generation = this.generation;
+    this.leavingFor = generation;
+    // The check is made again when the request is sent: the step-up dialog may have been open, and the sheet accepts
+    // edits meanwhile. A transition never goes out while the controller holds unsaved changes.
+    // The page may also show another document by now: the confirmation was for the one asked, so nothing is sent.
+    let unsaved = false;
+    let moved = false;
+    const result = await this.stepUp.run<Transitioned>((password) => {
+      moved = this.generation !== generation;
+      unsaved = !moved && this.dirty;
+      if (moved || unsaved) return Promise.reject(new Error('transition not sent'));
+      return this.client.transition(this.repository, snapshot.document, id, password);
+    });
+    if (moved) return { kind: 'handled' };
+    if (unsaved) return { kind: 'unsaved' };
     if (result.status === 'handled') return { kind: 'handled' };
+    // The answer belongs to the document asked: if the page shows another one by now, nothing of it is applied to it.
+    const shown = generation === this.generation;
     if (result.status === 'refused') {
       const error = result.error;
-      this.failure = errorMessageKey(error);
       if (error.outcome === 'MANDATORY_FIELDS_MISSING') {
-        this.missing = missingOf(error);
-        return { kind: 'missing', pointers: this.missing };
+        const pointers = missingOf(error);
+        if (shown) {
+          this.failure = errorMessageKey(error);
+          this.missing = pointers;
+        }
+        return { kind: 'missing', pointers };
       }
+      if (shown) this.failure = errorMessageKey(error);
       return { kind: 'refused', outcome: error.outcome };
     }
-    this.options.onrefresh?.();
+    if (shown) this.options.onrefresh?.();
     return {
       kind: 'transitioned',
       state: result.value.state,

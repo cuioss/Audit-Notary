@@ -9,7 +9,12 @@
  * that a refusal carries.
  */
 import type { ApiError, FieldError } from '../api/errors';
-import type { ConflictField, JsonObject, JsonValue } from '../api/types';
+import {
+  LIFECYCLE_EVENTS,
+  type ConflictField,
+  type JsonObject,
+  type JsonValue,
+} from '../api/types';
 import { jsonEqual, setAt } from '../forms/schema';
 
 /** How the keys of a document type's fields relate to the pointers of the server's refusals. */
@@ -44,6 +49,29 @@ export function withoutSent(
   const rest: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(edits)) {
     if (!Object.hasOwn(sent, key) || !jsonEqual(value, sent[key])) rest[key] = value;
+  }
+  return rest;
+}
+
+/**
+ * @param base the value the edits stand on
+ * @param edits the changes made, by key
+ * @returns the changes that differ from the base: a change of a top-level property (a key `/<name>`) back to the value
+ * the base holds is none; every other key is kept as it is
+ */
+export function withoutRestored(
+  base: JsonObject,
+  edits: Record<string, unknown>,
+): Record<string, unknown> {
+  const rest: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(edits)) {
+    const top = /^\/([^/]*)$/.exec(key);
+    if (top) {
+      const name = top[1].replaceAll('~1', '/').replaceAll('~0', '~');
+      const before = Object.hasOwn(base, name) ? base[name] : undefined;
+      if (jsonEqual(before, value ?? undefined)) continue;
+    }
+    rest[key] = value;
   }
   return rest;
 }
@@ -135,12 +163,10 @@ export function releasedTagOf(error: ApiError): string {
   return typeof error.details.tag === 'string' ? error.details.tag : '';
 }
 
-/** The events that make an open document read again. */
-const REFRESHING_EVENTS = new Set(['document-saved', 'document-transitioned']);
-
 /**
- * Whether an event of the stream concerns a document: a save or a transition of that very document (rest-api.adoc,
- * Events of the Lifecycle). The open sheet then reads it again and refreshes the fields not edited locally.
+ * Whether an event of the stream concerns a document: any event of the lifecycle ({@link LIFECYCLE_EVENTS}: a save, a
+ * transition, a release request, a creation) naming that very document (rest-api.adoc, Events of the Lifecycle). The open
+ * sheet then reads it again and refreshes the fields not edited locally.
  *
  * @param event the event name
  * @param data its data
@@ -154,7 +180,12 @@ export function refreshesDocument(
   repository: string,
   id: string,
 ): boolean {
-  if (!REFRESHING_EVENTS.has(event) || typeof data !== 'object' || data === null) return false;
+  if (
+    !(LIFECYCLE_EVENTS as readonly string[]).includes(event) ||
+    typeof data !== 'object' ||
+    data === null
+  )
+    return false;
   const record = data as { repository?: unknown; id?: unknown };
   return record.repository === repository && record.id === id;
 }

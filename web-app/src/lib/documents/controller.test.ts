@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiClient } from '../api/client';
 import { ApiError } from '../api/errors';
-import type { DocumentRead, Person, Saved } from '../api/types';
+import type { DocumentRead, DraftSaved, Person, Saved } from '../api/types';
 import { SAMM_KEYS } from '../samm/fieldKeys';
+import { StepUpHandler } from '../stepup/stepUp';
 import { scenarioFetch } from '../test/scenarioFetch';
 import { session, status } from '../stores/app';
 import {
@@ -457,7 +458,7 @@ describe('conflicts (AUN-WEB-5)', () => {
   });
 
   it('keeps a draft written during a conflict on the blob the form loaded, so a reload cannot overwrite the other value', async () => {
-    const { controller, client } = await open('workshop#note-conflict');
+    const { controller, client, document } = await open('workshop#note-conflict');
     const draft = vi.spyOn(client, 'saveDraft');
     controller.change('/summary', 'Rotate every 90 days.');
     await controller.save();
@@ -465,7 +466,22 @@ describe('conflicts (AUN-WEB-5)', () => {
     controller.change('/status', 'agreed');
     await vi.advanceTimersByTimeAsync(DRAFT_DELAY_MS + 10);
     expect(draft).toHaveBeenCalledTimes(1);
+    expect(draft.mock.calls[0][2].parts.data.blob).toBe(document.parts.data.blob);
     expect(draft.mock.calls[0][2].parts.data.blob).not.toBe('5d1e9a0');
+  });
+
+  it('keeps the changes as the draft after a refused save, without hiding the conflicts', async () => {
+    const { controller, client, document } = await open('workshop#note-conflict');
+    const draft = vi.spyOn(client, 'saveDraft');
+    controller.change('/summary', 'Rotate every 90 days.');
+    await controller.save();
+    // The press of Save cancelled the timer; the refusal starts it again, and the person decides nothing meanwhile.
+    expect(controller.saveState).toBe('conflict');
+    await vi.advanceTimersByTimeAsync(DRAFT_DELAY_MS + 10);
+    expect(draft).toHaveBeenCalledTimes(1);
+    expect(draft.mock.calls[0][2].parts.data.blob).toBe(document.parts.data.blob);
+    expect(controller.saveState).toBe('conflict');
+    expect(controller.open).toBe(2);
   });
 
   it('keeps the changes as the draft once the last conflict is decided, and takes no decision while locked', async () => {
@@ -490,7 +506,12 @@ describe('conflicts (AUN-WEB-5)', () => {
     controller.change('/summary', 'Rotate every 90 days.');
     await controller.save();
     controller.resolve('/summary', 'other');
+    controller.resolve('/status', 'own');
+    expect(controller.open).toBe(0);
     await controller.save();
+    // The second save went through: the changes are saved, and the page shows the committed overlay.
+    expect(controller.saveState).toBe('saved');
+    expect(controller.dirty).toBe(false);
     expect(controller.fieldValue('/summary', 'old')).toBe('Rotate every 60 days.');
   });
 
@@ -657,15 +678,26 @@ describe('the step-up of a save and a transition (UC-ACC-3)', () => {
     vi.spyOn(client, 'saveDocument').mockRejectedValue(
       new ApiError('STEP_UP_REQUIRED', 403, [], { stepUp: '/api/v1/auth/login?step-up=mfa' }),
     );
-    const draft = vi.spyOn(client, 'saveDraft');
+    let release: () => void = () => {};
+    const draft = vi.spyOn(client, 'saveDraft').mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = () => resolve({ outcome: 'DRAFT_SAVED', at: '2026-11-26T09:00:00Z' });
+        }),
+    );
     controller.change('/summary', 'Kept for the return.');
-    await controller.save();
+    const saving = controller.save();
+    await vi.advanceTimersByTimeAsync(10);
+    // The draft is under way: the app has not left, and no edit is accepted.
     expect(draft).toHaveBeenCalledWith(REPOSITORY, N3, expect.anything());
-    expect(navigate).toHaveBeenCalledWith(expect.stringContaining('step-up=mfa'));
+    expect(navigate).not.toHaveBeenCalled();
     expect(controller.leaving).toBe(true);
-    expect(controller.locked).toBe(true);
     controller.change('/status', 'open');
     expect(controller.edits['/status']).toBeUndefined();
+    release();
+    await saving;
+    expect(navigate).toHaveBeenCalledWith(expect.stringContaining('step-up=mfa'));
+    expect(controller.locked).toBe(true);
   });
 
   it('stays on the page, with the failure shown, when the draft cannot be kept before the departure', async () => {
@@ -792,7 +824,7 @@ describe('frozen, read-only and revisions', () => {
 });
 
 describe('the live refresh', () => {
-  it('asks the view to read the document again when a save or a transition of it is announced', async () => {
+  it('asks the view to read the document again when a save, a transition or a release request of it is announced', async () => {
     const onrefresh = vi.fn();
     const { controller, client } = await open('workshop', N2, { onrefresh });
     let listener: (event: string, data: unknown) => void = () => {};
@@ -804,10 +836,12 @@ describe('the live refresh', () => {
     const unsubscribe = controller.watch();
     listener('document-saved', { repository: REPOSITORY, id: N2, fields: ['/summary'] });
     listener('document-transitioned', { repository: REPOSITORY, id: N2, state: 'in-review' });
-    expect(onrefresh).toHaveBeenCalledTimes(2);
+    listener('release-requested', { repository: REPOSITORY, id: N2, requestId: 'r1' });
+    expect(onrefresh).toHaveBeenCalledTimes(3);
     listener('document-saved', { repository: REPOSITORY, id: N3 });
-    listener('document-created', { repository: REPOSITORY, id: N2 });
-    expect(onrefresh).toHaveBeenCalledTimes(2);
+    listener('release-requested', { repository: 'samm-assessments', id: N2 });
+    listener('note', { repository: REPOSITORY, id: N2 });
+    expect(onrefresh).toHaveBeenCalledTimes(3);
     unsubscribe();
     expect(stop).toHaveBeenCalledOnce();
   });
@@ -844,5 +878,235 @@ describe('a form that edits one JSON value', () => {
     const { controller, document } = await open('workshop', N3);
     expect(controller.value).toEqual(document.parts.data.value);
     expect(new DocumentController({ repository: REPOSITORY }).value).toEqual({});
+  });
+});
+
+/** @returns a promise and the way to settle it, for a request the test holds open */
+function deferred<T>(): {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+  reject: (error: unknown) => void;
+} {
+  let resolve: (value: T) => void = () => {};
+  let reject: (error: unknown) => void = () => {};
+  const promise = new Promise<T>((done, fail) => {
+    resolve = done;
+    reject = fail;
+  });
+  return { promise, resolve, reject };
+}
+
+const SAVED_AT = '2026-11-26T10:00:00Z';
+
+describe('answers that belong to an earlier moment', () => {
+  it('does not lock or leave for the document the page shows now when the step-up asks for an earlier one', async () => {
+    const { controller, client, navigate } = await open('workshop', N3);
+    const request = deferred<Saved>();
+    vi.spyOn(client, 'saveDocument').mockImplementation(() => request.promise);
+    const draft = vi.spyOn(client, 'saveDraft');
+    controller.change('/summary', 'Asked on N3.');
+    const saving = controller.save();
+    controller.sync(snapshotOf(await client.getDocument(REPOSITORY, N1)));
+    draft.mockClear();
+    request.reject(
+      new ApiError('STEP_UP_REQUIRED', 403, [], { stepUp: '/api/v1/auth/login?step-up=mfa' }),
+    );
+    await saving;
+    expect(navigate).not.toHaveBeenCalled();
+    expect(controller.leaving).toBe(false);
+    expect(draft).not.toHaveBeenCalled();
+    expect(controller.locked).toBe(false);
+  });
+
+  it('keeps the changes of a part that could not be kept as its draft, and gives them back when it is shown again', async () => {
+    const { controller, client } = await open('workshop', N3, {}, { draft: null });
+    const draft = vi.spyOn(client, 'saveDraft').mockRejectedValueOnce(new ApiError('NETWORK', 0));
+    controller.change('/summary', 'Not kept.');
+    controller.sync(snapshotOf(await client.getDocument(REPOSITORY, N1), { draft: null }));
+    await vi.advanceTimersByTimeAsync(10);
+    expect(controller.edits).toEqual({});
+    controller.sync(snapshotOf(await client.getDocument(REPOSITORY, N3), { draft: null }));
+    expect(controller.edits).toEqual({ '/summary': 'Not kept.' });
+    expect(controller.failure).toBe('error.network');
+    expect(controller.saveState).toBe('changed');
+    await vi.advanceTimersByTimeAsync(DRAFT_DELAY_MS + 10);
+    expect(draft).toHaveBeenLastCalledWith(REPOSITORY, N3, expect.anything());
+    expect(controller.saveState).toBe('draft');
+  });
+
+  it('tries a draft again that could not be kept, at the next switch, and gives nothing back once it was written', async () => {
+    const { controller, client } = await open('workshop', N3, {}, { draft: null });
+    const draft = vi.spyOn(client, 'saveDraft').mockRejectedValueOnce(new ApiError('NETWORK', 0));
+    controller.change('/summary', 'Kept late.');
+    controller.sync(snapshotOf(await client.getDocument(REPOSITORY, N1), { draft: null }));
+    await vi.advanceTimersByTimeAsync(10);
+    controller.sync(snapshotOf(await client.getDocument(REPOSITORY, N2), { draft: null }));
+    await vi.advanceTimersByTimeAsync(10);
+    expect(draft).toHaveBeenCalledTimes(2);
+    controller.sync(snapshotOf(await client.getDocument(REPOSITORY, N3), { draft: null }));
+    expect(controller.edits).toEqual({});
+  });
+
+  it('applies the answer of the latest draft only, for the latest changes', async () => {
+    const { controller, client } = await open('workshop', N3, {}, { draft: null });
+    const requests: ReturnType<typeof deferred<DraftSaved>>[] = [];
+    vi.spyOn(client, 'saveDraft').mockImplementation(() => {
+      const request = deferred<DraftSaved>();
+      requests.push(request);
+      return request.promise;
+    });
+    controller.change('/status', 'a');
+    await vi.advanceTimersByTimeAsync(DRAFT_DELAY_MS + 10);
+    controller.change('/status', 'b');
+    await vi.advanceTimersByTimeAsync(DRAFT_DELAY_MS + 10);
+    expect(requests).toHaveLength(2);
+    expect(controller.saveState).toBe('drafting');
+    requests[0].resolve({ outcome: 'DRAFT_SAVED', at: SAVED_AT });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(controller.saveState).toBe('drafting');
+    requests[1].reject(new ApiError('NETWORK', 0));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(controller.saveState).toBe('failed');
+    expect(controller.failure).toBe('error.network');
+  });
+
+  it('applies the answer of a draft to the changes it carried, not to later ones', async () => {
+    const { controller, client } = await open('workshop', N3, {}, { draft: null });
+    const request = deferred<DraftSaved>();
+    vi.spyOn(client, 'saveDraft').mockImplementation(() => request.promise);
+    controller.change('/status', 'a');
+    await vi.advanceTimersByTimeAsync(DRAFT_DELAY_MS + 10);
+    controller.change('/status', 'b');
+    request.resolve({ outcome: 'DRAFT_SAVED', at: SAVED_AT });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(controller.saveState).toBe('changed');
+    expect(controller.stampAt).toBeNull();
+  });
+
+  it('sends no save while the sheet is locked, and keeps the changes', async () => {
+    const { controller, client, document } = await open('workshop', N3);
+    const save = vi.spyOn(client, 'saveDocument');
+    controller.change('/status', 'open');
+    controller.sync(snapshotOf(document, { canEdit: false }));
+    await controller.save();
+    expect(save).not.toHaveBeenCalled();
+    expect(controller.dirty).toBe(true);
+    controller.sync(snapshotOf(document));
+    controller.leaving = true;
+    await controller.save();
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it('keeps a value changed back to the loaded one while a save of another value runs', async () => {
+    const { controller, client } = await open('workshop', N3, {}, { draft: null });
+    const base = controller.value;
+    const request = deferred<Saved>();
+    vi.spyOn(client, 'saveDocument').mockImplementation(() => request.promise);
+    controller.setValue({ ...base, summary: 'B' });
+    const saving = controller.save();
+    controller.setValue({ ...base });
+    expect(controller.edits).toEqual({ '/summary': base.summary });
+    request.resolve({ outcome: 'SAVED', at: SAVED_AT, parts: {} });
+    await saving;
+    expect(controller.edits).toEqual({ '/summary': base.summary });
+    expect(controller.value.summary).toBe(base.summary);
+    expect(controller.dirty).toBe(true);
+  });
+
+  it('drops a value changed back to the loaded one when the save that ran was refused', async () => {
+    const { controller, client } = await open('workshop', N3, {}, { draft: null });
+    const base = controller.value;
+    const request = deferred<Saved>();
+    vi.spyOn(client, 'saveDocument').mockImplementation(() => request.promise);
+    controller.setValue({ ...base, summary: 'B' });
+    const saving = controller.save();
+    controller.setValue({ ...base });
+    request.reject(new ApiError('REJECTED', 502));
+    await saving;
+    expect(controller.edits).toEqual({});
+    expect(controller.dirty).toBe(false);
+  });
+
+  it('shows the value saved while nothing was changed back', async () => {
+    const { controller, client } = await open('workshop', N3, {}, { draft: null });
+    const base = controller.value;
+    const request = deferred<Saved>();
+    vi.spyOn(client, 'saveDocument').mockImplementation(() => request.promise);
+    controller.setValue({ ...base, summary: 'B' });
+    const saving = controller.save();
+    request.resolve({ outcome: 'SAVED', at: SAVED_AT, parts: {} });
+    await saving;
+    expect(controller.value.summary).toBe('B');
+    expect(controller.saveState).toBe('saved');
+  });
+
+  it('sends the changes made while a save ran on the blob that holds the save, not on one a read brought meanwhile', async () => {
+    const { controller, client, document } = await open('workshop', N3, {}, { draft: null });
+    const request = deferred<Saved>();
+    vi.spyOn(client, 'saveDocument').mockImplementation(() => request.promise);
+    const draft = vi.spyOn(client, 'saveDraft');
+    controller.change('/summary', 'First.');
+    const saving = controller.save();
+    controller.change('/status', 'open');
+    controller.sync(snapshotOf(document, { blob: 'cccc001' }));
+    request.resolve({
+      outcome: 'SAVED',
+      at: SAVED_AT,
+      parts: { data: { blob: 'bbbb002', savedAt: SAVED_AT, savedBy: person(ALEX, 'Alex') } },
+    });
+    await saving;
+    await vi.advanceTimersByTimeAsync(DRAFT_DELAY_MS + 10);
+    expect(draft).toHaveBeenCalledTimes(1);
+    expect(draft.mock.calls[0][2].parts.data.blob).toBe('bbbb002');
+  });
+});
+
+describe('a transition and the changes or the document that moved on', () => {
+  it('sends nothing when changes were made while the step-up dialog was open', async () => {
+    const stepUp = new StepUpHandler(undefined, () => 'password');
+    const { controller, client } = await open('workshop', N2, { stepUp }, { draft: null });
+    const send = vi.spyOn(client, 'transition');
+    const running = controller.transition('test-note.submit');
+    controller.change('/status', 'agreed');
+    await stepUp.submit('a password');
+    expect(await running).toEqual({ kind: 'unsaved' });
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('sends the request of a clean document after the step-up dialog', async () => {
+    const stepUp = new StepUpHandler(undefined, () => 'password');
+    const { controller, client } = await open('workshop', N2, { stepUp }, { draft: null });
+    const send = vi.spyOn(client, 'transition');
+    const running = controller.transition('test-note.submit');
+    await stepUp.submit('a password');
+    expect(await running).toMatchObject({ kind: 'transitioned' });
+    expect(send).toHaveBeenCalledWith(REPOSITORY, N2, 'test-note.submit', 'a password');
+  });
+
+  it('sends nothing for a document that is no longer shown when the dialog is confirmed', async () => {
+    const stepUp = new StepUpHandler(undefined, () => 'password');
+    const { controller, client } = await open('workshop', N2, { stepUp }, { draft: null });
+    const send = vi.spyOn(client, 'transition');
+    const running = controller.transition('test-note.submit');
+    controller.sync(snapshotOf(await client.getDocument(REPOSITORY, N3), { draft: null }));
+    await stepUp.submit('a password');
+    expect(await running).toEqual({ kind: 'handled' });
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('shows no refusal of another document, and asks no refresh for it', async () => {
+    const onrefresh = vi.fn();
+    const { controller, client } = await open('workshop', N3, { onrefresh }, { draft: null });
+    const request = deferred<never>();
+    vi.spyOn(client, 'transition').mockImplementation(() => request.promise);
+    const running = controller.transition('test-note.submit');
+    controller.sync(snapshotOf(await client.getDocument(REPOSITORY, N1), { draft: null }));
+    request.reject(
+      new ApiError('MANDATORY_FIELDS_MISSING', 422, [], { missing: ['/noted', '/status'] }),
+    );
+    expect(await running).toEqual({ kind: 'missing', pointers: ['/noted', '/status'] });
+    expect(controller.missing).toEqual([]);
+    expect(controller.failure).toBeNull();
+    expect(onrefresh).not.toHaveBeenCalled();
   });
 });

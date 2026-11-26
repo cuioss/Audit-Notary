@@ -10,6 +10,7 @@ import {
   refreshesDocument,
   releasedTagOf,
   validationOf,
+  withoutRestored,
   withoutSent,
 } from './fields';
 
@@ -126,13 +127,42 @@ describe('refreshesDocument', () => {
   it('is true for a save or a transition of that very document', () => {
     expect(refreshesDocument('document-saved', data, 'test-notes', 'N2')).toBe(true);
     expect(refreshesDocument('document-transitioned', data, 'test-notes', 'N2')).toBe(true);
+    expect(refreshesDocument('release-requested', data, 'test-notes', 'N2')).toBe(true);
+    expect(refreshesDocument('document-created', data, 'test-notes', 'N2')).toBe(true);
   });
 
   it('is false for another document, another repository, another event or no data', () => {
     expect(refreshesDocument('document-saved', data, 'test-notes', 'N3')).toBe(false);
     expect(refreshesDocument('document-saved', data, 'samm-assessments', 'N2')).toBe(false);
-    expect(refreshesDocument('document-created', data, 'test-notes', 'N2')).toBe(false);
+    expect(refreshesDocument('document-created', data, 'test-notes', 'N3')).toBe(false);
+    expect(refreshesDocument('note', data, 'test-notes', 'N2')).toBe(false);
     expect(refreshesDocument('document-saved', 'text', 'test-notes', 'N2')).toBe(false);
     expect(refreshesDocument('document-saved', null, 'test-notes', 'N2')).toBe(false);
+  });
+});
+
+describe('withoutRestored', () => {
+  const base = { title: 'A', list: [1], 'a/b': 'x' };
+
+  it('drops a change of a top-level property back to the value the base holds', () => {
+    expect(withoutRestored(base, { '/title': 'A', '/list': [1], '/~1x': 'y' })).toEqual({
+      '/~1x': 'y',
+    });
+    expect(withoutRestored(base, { '/a~1b': 'x' })).toEqual({});
+  });
+
+  it('keeps a change of another value, a removal of a property that is there, and every other key', () => {
+    expect(
+      withoutRestored(base, { '/title': 'B', '/list': null, '/list/0': 1, 'q/answer': 1 }),
+    ).toEqual({
+      '/title': 'B',
+      '/list': null,
+      '/list/0': 1,
+      'q/answer': 1,
+    });
+  });
+
+  it('drops the removal of a property the base does not hold', () => {
+    expect(withoutRestored(base, { '/gone': null })).toEqual({});
   });
 });

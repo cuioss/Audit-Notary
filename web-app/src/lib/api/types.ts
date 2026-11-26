@@ -136,6 +136,17 @@ export interface DocumentSavedEvent {
   by?: { pseudonym: string; name: string };
 }
 
+/**
+ * The events of the document lifecycle on the stream (rest-api.adoc, Events of the Lifecycle): the open sheet of a document
+ * reads it again on any of them.
+ */
+export const LIFECYCLE_EVENTS = [
+  'document-saved',
+  'document-created',
+  'document-transitioned',
+  'release-requested',
+] as const;
+
 /** `document-created` on the event stream (PROVISIONAL): the lists refresh. */
 export interface DocumentCreatedEvent {
   repository: string;

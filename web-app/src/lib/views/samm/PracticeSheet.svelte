@@ -21,6 +21,7 @@
     SammScope,
   } from '../../api/types';
   import { DocumentController, type DocumentSnapshot } from '../../documents/controller.svelte';
+  import { errorKey } from '../../forms/fieldErrors';
   import { saveLabel } from '../../documents/saveLabel';
   import { currentLocale, t } from '../../i18n';
   import { historyEntries } from '../../samm/history';
@@ -52,9 +53,11 @@
     practiceId: string;
     /** Called after a save for everyone, so the view reads the assessment again. */
     onsaved?: () => void;
+    /** Called when the view should read the assessment again: a save answered that the assessment was released. */
+    onrefresh?: () => void;
   }
 
-  let { scope, assessment, model, practiceId, onsaved }: Props = $props();
+  let { scope, assessment, model, practiceId, onsaved, onrefresh }: Props = $props();
 
   const HINTS_KEY = 'audit_notary_key_hints';
 
@@ -85,6 +88,7 @@
     // A SAMM assessment is released once: `DOCUMENT_RELEASED` means frozen for good.
     releasedOnce: true,
     onsaved: () => onsaved?.(),
+    onrefresh: () => onrefresh?.(),
     onremote: ({ by, edited }) => {
       // Another assessor saved the practice: the questions nobody changed here are marked, and the change is said.
       const marks: Record<string, string> = {};
@@ -196,6 +200,16 @@
   }
 
   let open = $derived(controller.open);
+
+  // The errors of a refused save or draft, at the control of the answer or the comment they name. An error that names
+  // no control of this sheet is the notice's: it already says that entries are not valid.
+  let fieldErrors = $derived.by(() => {
+    const byKey: Record<string, string> = {};
+    for (const entry of controller.errors ?? []) {
+      byKey[SAMM_KEYS.keyOf(entry.pointer)] ??= $t(errorKey(entry.code));
+    }
+    return byKey;
+  });
 
   function answerText(question: SammQuestion, value: unknown): string {
     return (
@@ -354,6 +368,7 @@
                     onchange={(value) => setAnswer(question.id, value)}
                     readonly={locked}
                     hints={hints && active === index}
+                    error={fieldErrors[`${question.id}/answer`] ?? null}
                     testId="answer-{question.id}"
                   />
                   {#each questionConflicts as { key, testKey, field, conflict } (key)}
@@ -377,10 +392,16 @@
                         )}
                       </p>
                       <div class="conflict__acts">
-                        <Button onclick={() => controller.resolve(key, 'own')}>
+                        <Button
+                          onclick={() => controller.resolve(key, 'own')}
+                          disabledReason={controller.locked ? $t('practice.conflict.locked') : null}
+                        >
                           {$t('practice.conflict.keep-own')}
                         </Button>
-                        <Button onclick={() => controller.resolve(key, 'other')}>
+                        <Button
+                          onclick={() => controller.resolve(key, 'other')}
+                          disabledReason={controller.locked ? $t('practice.conflict.locked') : null}
+                        >
                           {$t(
                             field === 'comment'
                               ? 'practice.conflict.take-other-comment'
@@ -409,6 +430,7 @@
                         hint={$t('field.free-text.hint')}
                         value={commentOf(question.id)}
                         readonly={locked}
+                        error={fieldErrors[`${question.id}/comment`] ?? null}
                         oninput={(value) => setComment(question.id, value)}
                         testId="comment-{question.id}"
                       />
