@@ -50,6 +50,15 @@ describe('errors', () => {
     expect(errorMessageKey(new ApiError('MODEL_VERSIONS_DIFFER', 422))).toBe(
       'error.model-versions-differ',
     );
+    expect(errorMessageKey(new ApiError('STAGE_NOT_COMPLETABLE', 422))).toBe(
+      'error.stage-not-completable',
+    );
+    expect(errorMessageKey(new ApiError('STAGE_NOT_APPLICABLE', 409))).toBe(
+      'error.stage-not-applicable',
+    );
+    expect(errorMessageKey(new ApiError('STAGE_STATE', 409))).toBe('error.stage-state');
+    expect(errorMessageKey(new ApiError('STAGE_LOCKED', 409))).toBe('error.stage-locked');
+    expect(errorMessageKey(new ApiError('STAGES_OPEN', 422))).toBe('error.stages-open');
     expect(errorMessageKey(new Error('x'))).toBe('error.unexpected');
     expect(isApiError(new ApiError('VALIDATION', 422))).toBe(true);
   });

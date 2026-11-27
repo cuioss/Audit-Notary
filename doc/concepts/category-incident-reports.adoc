@@ -238,6 +238,19 @@ xref:../specification/rest-api.adoc#_decided_incidents[REST API Register, Open Q
   recorded in the release commit, so that the report stays reproducible when the catalog changes; the
   report is generated from the saved state as a preview and committed with the release.
 
+Decided provisionally with the lens *Incidents* (the web app, part A: years, year, sheet, stages, clock, notices, report),
+recorded in xref:../specification/rest-api.adoc#_decided_incidents[REST API Register, Open Questions], points 32 to 45; the
+owner may change each one:
+
+. The form of each stage is of the kind `incident.<part>`, so the texts of a field are `category.incident-reports.incident.<part>.field.<path>`;
+  a form never offers the `completion`, and the title is a form of its own at the top of the triage.
+. A completed stage is read-only until it is reopened; the acts *Complete stage* and *Reopen stage* act on the saved part and ask to
+  save first; a refusal lists the missing fields and the stages to complete first.
+. The deadline clock is sober: the state of each deadline in words, a missed deadline that was never sent as a box (it needs the
+  person), one sent late as information, the time left or overdue told against the page's own clock while the incident is worked on
+  and against the time of the release afterwards.
+. The notices are a table over the form of the part `notifications`; the report is read on demand, by section, in English only.
+
 == Related
 
 * xref:staged-documents.adoc[Staged Documents] — stages, tabs and sign-offs of the incident file

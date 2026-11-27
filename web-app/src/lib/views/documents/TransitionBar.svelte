@@ -37,6 +37,11 @@
     ongo: (pointer: string) => void;
     /** The person goes back to editing: the list of missing fields closes and the first one is shown. */
     onback: () => void;
+    /**
+     * Why a step cannot be taken although the person holds its right, `null` when it can: the lens adds the reasons only it
+     * knows (an incident cannot be submitted while a stage is not completed). The act stays focusable and says why.
+     */
+    reasonFor?: (transition: DocumentTransition) => string | null;
   }
 
   let {
@@ -52,6 +57,7 @@
     onsavefirst,
     ongo,
     onback,
+    reasonFor,
   }: Props = $props();
 
   /** @returns the words of a step: "Release" for the release, the category's own text for the others */
@@ -64,7 +70,7 @@
   /** @returns why the person cannot take the step, `null` when they can */
   function reasonOf(transition: DocumentTransition): string | null {
     return rights.includes(transition.right)
-      ? null
+      ? (reasonFor?.(transition) ?? null)
       : $t('documents.transition.no-right', { right: transition.right });
   }
 </script>
@@ -152,6 +158,15 @@
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-3);
+  }
+
+  /* A step that is disabled and its reason stand at the start of the line, like the enabled step. */
+  .bar__acts :global(.btn-with-reason) {
+    align-items: flex-start;
+  }
+
+  .bar__acts :global(.btn__reason) {
+    text-align: start;
   }
 
   .missing__acts {

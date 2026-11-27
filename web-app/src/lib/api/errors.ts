@@ -29,6 +29,11 @@ export const OUTCOMES = [
   'ID_TAKEN',
   'RETIRED',
   'SERVICE_RETIRED',
+  'STAGE_NOT_COMPLETABLE',
+  'STAGE_NOT_APPLICABLE',
+  'STAGE_STATE',
+  'STAGE_LOCKED',
+  'STAGES_OPEN',
 ] as const;
 
 /** An outcome of a refusal of the server. */
@@ -146,6 +151,16 @@ export function errorMessageKey(error: unknown): string {
       return 'error.assessment-open';
     case 'MODEL_VERSIONS_DIFFER':
       return 'error.model-versions-differ';
+    case 'STAGE_NOT_COMPLETABLE':
+      return 'error.stage-not-completable';
+    case 'STAGE_NOT_APPLICABLE':
+      return 'error.stage-not-applicable';
+    case 'STAGE_STATE':
+      return 'error.stage-state';
+    case 'STAGE_LOCKED':
+      return 'error.stage-locked';
+    case 'STAGES_OPEN':
+      return 'error.stages-open';
     case 'VALIDATION':
       return 'error.validation';
     case 'TIMEOUT':

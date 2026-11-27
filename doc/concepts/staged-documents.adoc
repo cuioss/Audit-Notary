@@ -284,6 +284,9 @@ xref:../specification/rest-api.adoc#_decided_incidents[REST API Register, Open Q
   mark for a completed stage whose predecessor was reopened; a stage that does not apply because its condition field is
   still empty says so (`unanswered`).
 . Completing a stage needs the right to edit the repository (open question 3 stays open for a role of its own).
+. In the web app the stages are tabs (`StageTabs`: the status of each in words, a stage that does not apply greyed with its condition,
+  a marker for a stage signed off before an earlier one was reopened); the tab is the query `stage`, and the first stage that is open
+  and not waiting is shown when the address names none. A stage that does not apply stays a tab so that its kept data can be read.
 
 == Related
 

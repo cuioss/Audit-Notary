@@ -1353,7 +1353,8 @@ No hit is an empty `results`.
   `fields` as in a save.
 * `frozen` is `true` for a document that refuses every save (a released SAMM assessment, a revision).
 * `releaseRequest` is `{"id", "by", "at", "comment"}` or `null`.
-* `history` is the newest lines of the signed history, at most 20, the kinds `create`, `save`, `submit`, `release`.
+* `history` is the newest lines of the signed history, at most 20, the kinds `create`, `save`, `submit`, `release`, and for a staged
+  document `complete` and `reopen` (with the `stage`, <<_incident_stages_requests>>).
 
 *A revision*, `GET /api/v1/documents/test-notes/01JZ8W1E3G5J7M9P1R3T5X7Z9B?at=v1`: the same shape, as the document was
 then, with the member `at`, and `frozen: true`, `draft: null`, `transitions: []`, `releaseRequest: null`:
@@ -5151,6 +5152,58 @@ change each one. The bodies and addresses are in <<_incident_requests>>:
 . *Reading while the Git server is unreachable* serves the years, the lists, the incidents and the reports from the last
   fetched state; the writes answer `503 GIT_UNAVAILABLE` and keep the draft, as everywhere.
 
+*Decided provisionally* with the lens *Incidents*, part A (the web app of the years, the year, the sheet, the stages, the
+clock, the notices and the report), so that no screen is blocked; the owner may change each one (the numbering goes on):
+
+[start=32]
+. *The labels of a stage's form are of the kind `incident.<part>`:* the key of a field is
+  `category.incident-reports.incident.<part>.field.<path>` (`…incident.triage.field.severity`,
+  `…incident.notifications.field.supervisory-authority.channel.option.email`), and the title is
+  `…incident.data.field.title`. This replaces the pattern `category.incident-reports.incident.field.<part>.<path>` of point 27: each
+  form edits the value of one part, so its pointers have no part in them, and a stage that names a field like another
+  (`data-subjects` of the privacy assessment and of the notices) keeps its own words. The form kit needs no change.
+. *The form of a stage leaves out `completion`,* which only *complete* and *reopen* write; the title (the part `data`) is a form
+  of its own at the top of the triage tab, not a stage, and stays editable until the release.
+. *A part that was never saved is saved with `"blob": ""`.* The register says nothing about the blob of a part that has none
+  (`"blob": null` in the read); the web app sends the empty string, which the controller of the document already does for a
+  part without a blob. A sign-off of such a part (`…/complete`) sends no `blob` at all.
+. *A sign-off names the blob of the part as the person last saw it:* the blob of the read, or, right after the person's own
+  save, the one that save answered, so that *Save for everyone, then Complete stage* does not meet `CHANGED_SINCE_REVIEW`. A
+  `CHANGED_SINCE_REVIEW` answer to a completion is read as "someone saved the stage since you opened it": the incident is read
+  again and nothing is signed off. `STAGE_STATE`, `STAGE_NOT_APPLICABLE` and `DOCUMENT_RELEASED` also read it again.
+. *A completed stage is read-only until it is reopened,* a stage that does not apply stays editable (its data are kept, never
+  checked), and a save that is refused with `STAGE_LOCKED` keeps the changes on the page, says why and reads the incident
+  again, so that the stage shows as completed.
+. *The act of a stage acts on the saved part,* like every step of a workflow: with changes only the person has, the bar offers
+  *Save for everyone, then Complete stage*. The act is disabled, with the reason, while a stage before it is open or a conflict of
+  the part is undecided. The stage that asks for step-up says in a line, in domain words, that the person confirms their identity
+  once more. *Save for everyone* saves the parts that changed one after the other (the title first, then the stages in their
+  order), each as its own signed commit; a conflict or a refusal of one part does not hold back the others, and a confirmation
+  that was not answered stops the rest, which wait for the next press instead of asking again.
+. *The tab is the query `stage`.* A change of tab replaces the address (`replace`, no entry of the history for each tab), and
+  an address without a stage, or with one the incident does not declare, opens the first stage that is open and does not wait
+  for another, then the first that is open, then the first that applies. That tab is found once, when the sheet opens: a
+  completion, or a read that brings the work of someone else, never moves the person to another tab; only the query does.
+. *The clock is told against the page's own time while the incident is worked on, and against `asOf` once it is frozen or a
+  revision.* An `OPEN` deadline without a notice whose due time has passed on the page's clock reads *Missed* ("Overdue by …") and needs the
+  person until the next read says so; a deadline that is missed and was never sent is a box, one that was sent late is
+  information (a dot and the words "Sent …, … late"). The server's status stays the truth: the page never writes a status.
+. *The notices are a table over the form.* The tab *Notifications* lists every named member that has a time, and every entry of
+  `nis2-intermediate-reports` and `others`, with the deadline each meets (by the `metBy` pointer of the deadline); the form of the
+  part stands under it as *Record a notice*. The form kit marks the inner mandatory fields of each member as required, so each
+  member carries the hint that it is filled in only when the notice was sent.
+. *The report is read on demand,* with the act *Show the report*; it is rendered by level-2 section, with the title of the report
+  left out (it is the head of the sheet) and the headings one level lower, and the preview says that it is generated from the
+  saved state (a release: committed) and that it is written in English whatever the language of the app.
+. *A year or an incident the person may not read is the not-found view* (the register answers `404`); a `403 FORBIDDEN` that still
+  arrives, because a right was withdrawn while the page was open, is a notice in place of the column.
+. *`New incident` is offered on the year column* to a person with `edit` on the repository of the current year (`current: true`); the
+  addresses `incidents.new` and `incidents.release` show the lens placeholder until part B builds them.
+. *The Due item of a deadline is worded by the web app:* the rule is read from the member `deadline`, and the title of the incident is
+  the server's `title` without its ending `: <rule>`; a title that does not end so is shown as it is.
+. *The history and the revisions carry the kinds `complete` and `reopen`* (with `stage`), as the mock does; the generic lines
+  `create`, `save`, `submit` and `release` keep theirs, and a `save` of an incident names its `part`.
+
 For the owner: whether the specification may follow the layout of point 1 (the stages as parts, the paths of the
 deadlines in them, which moves AUN-IR-1 to AUN-IR-3 and the deadline inputs of the concept); whether a kind may be bound to
 a repository per year (4); whether `STAGES_OPEN` may replace `MANDATORY_FIELDS_MISSING` for a staged document (9) and
@@ -5166,3 +5219,10 @@ refuse an awareness outside the year of the repository (24) or let an incident m
 should be rendered by section or the limit of the render request raised for it (25); and
 the two statements of <<_incident_sources>> that the tool of this change could not check against EUR-Lex (GDPR Art. 33,
 NIS2 Art. 23(4)), which the owner should verify before the rules are called `SPECIFIED`.
+
+For the owner, from part A of the lens: whether the server should send the title of the incident and the id of the rule as members of
+the Due item, so that the web app need not strip the suffix of the title (point 44); whether the first save of a part without a
+blob should send no `blob` instead of an empty one (point 34); whether the page may call an `OPEN` deadline *Missed* before the
+server does (point 39), or should wait for the next read; and whether the form kit should mark the inner mandatory fields of
+an optional section only once the section is started (the notices show every member's *Sent at*, *Recipient* and *Channel* as
+required, which is true only after the notice is begun, point 40).

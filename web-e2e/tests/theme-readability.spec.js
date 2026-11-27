@@ -53,6 +53,20 @@ import {
   serviceAddress,
 } from './helpers/threats.js';
 import {
+  ARCHIVE,
+  CARD_DATA,
+  CREDENTIAL_STUFFING,
+  OUTAGE,
+  PHISHING,
+  SUSPICIOUS,
+  WRONG_RECIPIENT,
+  incidentAddress,
+  pinClock,
+  readPath,
+  yearAddress,
+  yearPath,
+} from './helpers/incidents.js';
+import {
   addRow,
   addThreat,
   fillName,
@@ -1681,6 +1695,396 @@ for (const theme of ['light', 'dark']) {
       await prepare(page, request);
       await shownInScenario(page, request, after, shown);
       await expectNoSeriousViolations(page, `threat model wizard: ${name} (${scenario}, ${theme})`);
+    });
+  }
+}
+
+/**
+ * The lens Incidents (UC-IR-1, UC-IR-2, UC-IR-3) beside the views above: the years and the years that are not there, the
+ * list of a year, the sheet with its stages (the ones that do not apply, the marker, the refusals), the deadline clock in
+ * each of its states, the notices, the report, the confirmation of the review, the conflict and the refusals of a save, the
+ * incident in review and the released one. Each is reached on the page after the theme is chosen, which reloads it, so what
+ * a state needs (a click, a change, a route) is done by `prepare`. The clock of the page is pinned to the instant the mock
+ * reads at, so a deadline is open or missed the same way on every run.
+ */
+const INCIDENT_STATES = [
+  ['the years', 'workshop', '/incidents', 'incidents-view', 'year-list', async () => {}],
+  [
+    'the years of a repository that is not set up',
+    'workshop#incident-year-missing',
+    '/incidents',
+    'incidents-view',
+    'year-missing',
+    async () => {},
+  ],
+  [
+    'the years of a person without a right',
+    'release',
+    '/incidents',
+    'incidents-view',
+    'years-none',
+    async () => {},
+  ],
+  [
+    'the years of the empty installation',
+    'empty',
+    '/incidents',
+    'incidents-view',
+    'years-none',
+    async () => {},
+  ],
+  [
+    'the incidents of a year',
+    'workshop',
+    yearAddress(2026),
+    'incident-list',
+    'incident-list',
+    async () => {},
+  ],
+  [
+    'the incidents of a year that is over',
+    'workshop',
+    yearAddress(2025),
+    'incident-list',
+    'incident-list',
+    async () => {},
+  ],
+  [
+    'a year the server refuses',
+    'workshop',
+    yearAddress(2026),
+    'incident-list',
+    'incidents-forbidden',
+    async (page) => {
+      await page.route(`**${yearPath(2026)}`, (route) =>
+        route.fulfill({ status: 403, json: { outcome: 'FORBIDDEN' } }),
+      );
+      await page.reload();
+    },
+  ],
+  [
+    'a year without an incident',
+    'workshop',
+    yearAddress(2026),
+    'incident-list',
+    'year-no-incidents',
+    async (page) => {
+      await patchRead(page, `**${yearPath(2026)}`, (body) => ({ ...body, incidents: [] }));
+      await page.reload();
+    },
+  ],
+  [
+    'the sheet with the clock of the card data',
+    'workshop',
+    incidentAddress(CARD_DATA),
+    'incident-sheet',
+    'deadline-clock',
+    async () => {},
+  ],
+  [
+    'the notices of the card data',
+    'workshop',
+    incidentAddress(CARD_DATA, { stage: 'notifications' }),
+    'incident-sheet',
+    'notifications-table',
+    async () => {},
+  ],
+  [
+    'a stage that is completed',
+    'workshop',
+    incidentAddress(CARD_DATA, { stage: 'triage' }),
+    'incident-sheet',
+    'stage-reopen',
+    async () => {},
+  ],
+  [
+    'the triage with its title and protection needs',
+    'workshop',
+    incidentAddress(SUSPICIOUS, { stage: 'triage' }),
+    'incident-sheet',
+    'protection-needs',
+    async () => {},
+  ],
+  [
+    'an incident whose questions are not answered',
+    'workshop',
+    incidentAddress(SUSPICIOUS),
+    'incident-sheet',
+    'clock-none',
+    async () => {},
+  ],
+  [
+    'the refusal of a stage with its missing fields',
+    'workshop',
+    incidentAddress(SUSPICIOUS, { stage: 'triage' }),
+    'incident-sheet',
+    'missing-fields',
+    async (page) => {
+      await page.getByTestId('stage-complete').click();
+    },
+  ],
+  [
+    'the open stages before a stage that is refused',
+    'workshop',
+    incidentAddress(SUSPICIOUS, { stage: 'response' }),
+    'incident-sheet',
+    'stage-open-before',
+    async (page) => {
+      await patchRead(page, `**${readPath(SUSPICIOUS)}`, (body) => ({
+        ...body,
+        stages: body.stages.map((stage) =>
+          stage.id === 'response' ? { ...stage, blockedBy: [] } : stage,
+        ),
+      }));
+      await page.reload();
+      await page.getByTestId('stage-complete').click();
+    },
+  ],
+  [
+    'a stage that waits for another',
+    'workshop',
+    incidentAddress(CARD_DATA, { stage: 'review' }),
+    'incident-sheet',
+    'stage-bar',
+    async () => {},
+  ],
+  [
+    'a stage that does not apply',
+    'workshop',
+    incidentAddress(CREDENTIAL_STUFFING, { stage: 'privacy-assessment' }),
+    'incident-sheet',
+    'stage-not-applicable',
+    async () => {},
+  ],
+  [
+    'the stages signed off before a stage was reopened',
+    'workshop',
+    incidentAddress(WRONG_RECIPIENT, { stage: 'response' }),
+    'incident-sheet',
+    'stage-predecessor-reopened',
+    async () => {},
+  ],
+  [
+    'the review that asks for a confirmation',
+    'workshop',
+    incidentAddress(CREDENTIAL_STUFFING, { stage: 'review' }),
+    'incident-sheet',
+    'stage-step-up-note',
+    async () => {},
+  ],
+  [
+    'the question for the password before the review is completed',
+    'workshop#incident-review-stepped-up',
+    incidentAddress(CREDENTIAL_STUFFING, { stage: 'review' }),
+    'incident-sheet',
+    'document-password',
+    async (page) => {
+      await patchRead(page, '**/api/v1/status', (body) => ({
+        ...body,
+        loginProvider: 'local',
+        stepUp: 'password',
+      }));
+      await page.reload();
+      await page.getByTestId('stage-complete').click();
+      await expect(page.getByRole('dialog')).toContainText('Confirm your identity');
+    },
+  ],
+  [
+    'the question to save before a stage is completed',
+    'workshop',
+    incidentAddress(CARD_DATA, { stage: 'privacy-assessment' }),
+    'incident-sheet',
+    'stage-save-first',
+    async (page) => {
+      await field(page.getByTestId('stage-form'), '/risk')
+        .getByRole('combobox')
+        .selectOption({ label: 'Risk' });
+      await page.getByTestId('stage-complete').click();
+    },
+  ],
+  [
+    'a deadline without a date and a progress report',
+    'workshop',
+    incidentAddress(ARCHIVE, { stage: 'notifications' }),
+    'incident-sheet',
+    'deadline-clock',
+    async () => {},
+  ],
+  [
+    'a deadline the page has overtaken',
+    'workshop',
+    incidentAddress(PHISHING),
+    'incident-sheet',
+    'deadline-clock',
+    async (page) => {
+      await pinClock(page, '2026-11-27T10:00:00Z');
+      await page.reload();
+      // The audit is of the overdue state: wait for the row to stand in it.
+      const row = page.getByTestId('deadline-clock-gdpr-art33-');
+      await expect(row).toHaveAttribute('data-status', 'MISSED');
+      await expect(row).toContainText('Overdue by');
+    },
+  ],
+  [
+    'the deadlines of the next day',
+    'workshop#incident-clock-advanced',
+    incidentAddress(PHISHING),
+    'incident-sheet',
+    'deadline-clock',
+    async (page) => {
+      await pinClock(page, '2026-11-27T10:00:00Z');
+      await page.reload();
+      // The audit is of the overdue state: wait for the row to stand in it.
+      const row = page.getByTestId('deadline-clock-gdpr-art33-');
+      await expect(row).toHaveAttribute('data-status', 'MISSED');
+      await expect(row).toContainText('Overdue by');
+    },
+  ],
+  [
+    'the report preview',
+    'workshop',
+    incidentAddress(CARD_DATA),
+    'incident-sheet',
+    'report-preview',
+    async (page) => {
+      await page.getByTestId('report-toggle').click();
+      await expect(page.getByTestId('report-section')).toHaveCount(8);
+    },
+  ],
+  [
+    'the report that a release committed',
+    'workshop',
+    incidentAddress(OUTAGE),
+    'incident-sheet',
+    'report-preview',
+    async (page) => {
+      await page.getByTestId('report-toggle').click();
+      await expect(page.getByTestId('report-source')).toContainText('committed');
+    },
+  ],
+  [
+    'an incident that was released',
+    'workshop',
+    incidentAddress(OUTAGE),
+    'incident-sheet',
+    'clock-stopped',
+    async () => {},
+  ],
+  [
+    'an earlier state of an incident',
+    'workshop',
+    incidentAddress(OUTAGE, { at: 'v1' }),
+    'incident-sheet',
+    'revision-notice',
+    async () => {},
+  ],
+  [
+    'an incident of a person who may only read',
+    'read-only',
+    incidentAddress(CARD_DATA),
+    'incident-sheet',
+    'save-state',
+    async () => {},
+  ],
+  [
+    'an incident in review',
+    'workshop#incident-submitted',
+    incidentAddress(CREDENTIAL_STUFFING),
+    'incident-sheet',
+    'transition-incident.release',
+    async () => {},
+  ],
+  [
+    'an incident that was released meanwhile',
+    'workshop#incident-released',
+    incidentAddress(CREDENTIAL_STUFFING),
+    'incident-sheet',
+    'released-notice',
+    async () => {},
+  ],
+  [
+    'a conflict of the notices to decide',
+    'workshop#incident-saved-by-other',
+    incidentAddress(CARD_DATA, { stage: 'notifications' }),
+    'incident-sheet',
+    'conflict-panel',
+    async (page) => {
+      const authority = field(page.getByTestId('stage-form'), '/supervisory-authority');
+      await authority.getByLabel('Sent at').fill('2026-11-26T10:45');
+      await authority.getByLabel('Recipient').fill('State data protection authority');
+      await authority.getByLabel('Channel').selectOption({ label: 'Reporting portal' });
+      await page.getByTestId('save-everyone').click();
+    },
+  ],
+  [
+    'a stage that was completed meanwhile',
+    'workshop#incident-stage-locked',
+    incidentAddress(CARD_DATA, { stage: 'privacy-assessment' }),
+    'incident-sheet',
+    'stage-failure',
+    async (page) => {
+      await field(page.getByTestId('stage-form'), '/risk')
+        .getByRole('combobox')
+        .selectOption({ label: 'Risk' });
+      await page.getByTestId('save-everyone').click();
+    },
+  ],
+  [
+    'fields the server refused',
+    'workshop#incident-invalid',
+    incidentAddress(CARD_DATA, { stage: 'notifications' }),
+    'incident-sheet',
+    'save-state',
+    async (page) => {
+      const authority = field(page.getByTestId('stage-form'), '/supervisory-authority');
+      await authority.getByLabel('Sent at').fill('2026-11-26T10:45');
+      await authority.getByLabel('Recipient').fill('State data protection authority');
+      await authority.getByLabel('Channel').selectOption({ label: 'Reporting portal' });
+      await page.getByTestId('save-everyone').click();
+      await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'failed');
+    },
+  ],
+  [
+    'a save while the Git server is down',
+    'workshop#incident-git-unavailable',
+    incidentAddress(CARD_DATA, { stage: 'privacy-assessment' }),
+    'incident-sheet',
+    'stage-failure',
+    async (page) => {
+      await field(page.getByTestId('stage-form'), '/risk')
+        .getByRole('combobox')
+        .selectOption({ label: 'Risk' });
+      await page.getByTestId('save-everyone').click();
+    },
+  ],
+  [
+    'a completion that is read again',
+    'workshop#incident-complete-changed',
+    incidentAddress(PHISHING, { stage: 'privacy-assessment' }),
+    'incident-sheet',
+    'stage-failure',
+    async (page) => {
+      await page.getByTestId('stage-complete').click();
+    },
+  ],
+  ['the deadlines in the Due list', 'workshop', '/', 'due-view', 'due-list', async () => {}],
+];
+
+for (const theme of ['light', 'dark']) {
+  for (const [name, scenario, address, view, shown, prepare] of INCIDENT_STATES) {
+    test(`incidents: ${name} of ${scenario} at ${address} in the ${theme} theme`, async ({
+      page,
+      request,
+    }) => {
+      await useScenario(request, scenario);
+      await pinClock(page);
+      await login(page, address);
+      await useTheme(page, theme);
+      await expect(page.getByTestId(view).first()).toBeVisible();
+      await expectScenario(request, scenario);
+      await prepare(page, request);
+      await shownInScenario(page, request, scenario, shown);
+      await expectNoSeriousViolations(page, `incidents: ${name} (${scenario}, ${theme})`);
     });
   }
 }

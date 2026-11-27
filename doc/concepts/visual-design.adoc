@@ -324,6 +324,44 @@ data URL, with a text alternative made from the names of the components, on its 
 *The release* reads each threat and countermeasure that changed as one change of its own, by its id, with the two states side
 by side, and the review date as a date.
 
+== The Incident Reports
+
+The lens *Incidents* is a chain of columns (`TriagePage`, xref:../specification/rest-api.adoc#_incident_report_requests[REST API Register, Incident Report Requests]):
+the years, the incidents of a year, the incident as a sheet. The first column lists the years the person may read, each with
+its count, the incidents not yet released, a box when an incident has a missed deadline, and how long the year is kept; the
+second lists the incidents newest awareness first, each row with its state, its severity, the status of each of its stages (a
+check, an empty ring, a dash, and always the word for a screen reader), a box for the deadlines that were missed and the next
+open one. *New incident* is a link in the primary look at the top of the column, offered only for the current year.
+
+*The sheet of an incident* stands in the order of the work: the head, the steps of the workflow (*Submit for review*, disabled
+with the stages still open as its reason), the deadline clock, the stages, the report, and in the margin the save state, the
+release, the earlier states and the signed history. The title is a form of its own at the top of the triage tab, since the title is
+no stage.
+
+*Two components are added to the closed vocabulary.*
+
+* `StageTabs`: the stages of a staged document as a tab list (the ARIA pattern: one tab in the tab order, the arrow keys, `Home` and
+  `End` move the focus, `Enter` or `Space` chooses). Each tab carries the name of the stage in the serif, the status in words
+  (a dot with *Open*, *Completed* or *Does not apply*), the marker *Signed off before an earlier stage was reopened* when it applies,
+  and a mark that needs the person (an undecided conflict) as a box. A stage that does not apply stays a tab, greyed, and says
+  under which condition it applies (or that the question is not answered yet), so that its kept data can be read. The selected
+  tab has the ink edge under it (on a phone beside it), never colour alone. On a phone the tabs stand as full-width rows of 44 px.
+* `DeadlineClock`: the notification deadlines as a list of rows: the name of the rule and its legal basis, the state in words
+  (*Open*, *Met*, *Missed*), the due time in the serif with tabular numerals, and the sentence of the time (due in, overdue by, sent,
+  sent late). It is sober on purpose: no mascot, no seal gold, no icon of its own, no motion, no gauge. A deadline that needs the
+  person (missed and never sent, or open and past its time) is a box, every other state a dot and its word, so a missed deadline sent
+  late stays visible and is not an alarm. The clock is told against the page's own time while the incident is worked on, and
+  against the time of the release once it is frozen, which the page says.
+
+*A stage* reads as a panel under the tabs: its name, who signed it off, the guidance for the stage, the notices of the page, the
+form of its part (the form kit; a completed stage is read-only), and at its end the act of the stage. *Complete stage* acts on the
+saved part, so with changes only the person has it asks to save first; a refusal says what is missing, each field as a way to it, and
+which stage comes first. The stage that asks for the confirmation of the identity says so in a line beside the act.
+
+*The notices* are a table over the form: every notice that was sent with its time, recipient and channel and the deadline it
+meets, and under it the form of the part (*Record a notice*), where each notice has its own section. *The report* is read on the page,
+section by section, only when the person asks, with the note that it is a preview from the saved state and written in English.
+
 == The Pages of the Directory
 
 Three pages belong to the lens *Catalogs* and *Settings* but are not a chain of columns, because each is a task, not an
@@ -400,8 +438,7 @@ warning.
 . Whether `pm-web-app` takes the sheet, the seal or the column depth cue over into a shared component package.
 . The poses of the mascot: the notary still holds the tape measure of its first role
   (xref:brand.adoc#_the_mascot[Name and Brand, The Mascot]).
-. The deadline clock of the incident report follows with its lens. The gaps chart of the Reports lens is not built: the
-  gaps stay in the scope sheet.
+. The gaps chart of the Reports lens is not built: the gaps stay in the scope sheet.
 . Whether the trend across scopes of different model versions should be drawn on one scale at all (decided provisionally:
   yes, with a notice naming the versions; rest-api.adoc, Decided Provisionally with the Reports lens).
 

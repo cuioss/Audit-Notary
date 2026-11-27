@@ -189,8 +189,14 @@ export async function patchRead(page, pattern, patch, { times = Infinity } = {})
   await page.route(pattern, async (route) => {
     if (route.request().method() !== 'GET' || left <= 0) return route.continue();
     left -= 1;
-    const response = await route.fetch();
-    const body = await response.json();
-    return route.fulfill({ response, json: patch(body) });
+    try {
+      const response = await route.fetch();
+      const body = await response.json();
+      return await route.fulfill({ response, json: patch(body) });
+    } catch (error) {
+      // The test may end while a read the page started is on its way (a read after a refusal): the answer is no one's then.
+      if (page.isClosed()) return undefined;
+      throw error;
+    }
   });
 }

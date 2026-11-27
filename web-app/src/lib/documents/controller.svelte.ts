@@ -8,7 +8,7 @@
  *   with field errors is refused (`422`, nothing is written): the text stays in the page, and the controller says so.
  * - **A save** writes one signed commit with the blob id the changes stand on. A `CONFLICT` is held per field with the own
  *   and the other value until the person decides; a `VALIDATION` is mapped onto the form's pointers by `part`;
- *   `DOCUMENT_RELEASED`, `REJECTED` and `GIT_UNAVAILABLE` keep the changes as the person's.
+ *   `DOCUMENT_RELEASED`, `STAGE_LOCKED`, `REJECTED` and `GIT_UNAVAILABLE` keep the changes as the person's.
  * - **Step-up** for a save and a transition goes through the shared {@link StepUpHandler}; with the identity provider
  *   the changes are kept as a draft before the app leaves.
  * - **Live refresh**: the host reads the document again when the event stream names it ({@link DocumentController.watch})
@@ -715,6 +715,12 @@ export class DocumentController {
         this.failed(error);
         if (!this.options.releasedOnce) this.failure = 'error.released-meanwhile';
         // The release is read again: the next save starts the next version, or the sheet is frozen for good.
+        this.options.onrefresh?.();
+        return;
+      case 'STAGE_LOCKED':
+        // A stage the changes touch was completed meanwhile (rest-api.adoc, Creating and Saving): nothing was written, the
+        // changes stay the person's, and the document is read again so that the stage shows as completed.
+        this.failed(error);
         this.options.onrefresh?.();
         return;
       default:

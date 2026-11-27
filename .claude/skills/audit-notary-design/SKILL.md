@@ -72,6 +72,21 @@ Read the concept first, then the component you are about to change.
    act is *Next step*, on the last page *Create threat model*; *Back* writes nothing; the draft is kept when the person goes
    on and the status says *Saved for you at …*; leaving with changes that are kept nowhere asks (`LeaveGuard`); the create goes
    through `StepUpHandler`. A text of a recipe is its own data in the language of the interface, never a catalogue key.
+   `web-app/src/lib/views/incidents/` holds the lens Incidents (`IncidentsView`: years › year › incident on `TriagePage`;
+   `YearsColumn`, `YearColumn`; `IncidentSheet`, the sheet) and what it knows is in `web-app/src/lib/incidents/` (addresses, the tabs
+   and the clock rows worded, the notices as rows, the kind of a part's form `incident.<part>`, `stageActs.svelte.ts` for completing and
+   reopening a stage, `history.ts`, `report.ts`). The sheet has one document controller for the title (part `data`) and one for
+   each stage, all through the sheet's one `StepUpHandler`, and "Save for everyone" saves every part that changed; a completed stage
+   is read-only (`frozen` for its controller), the title never is. Two components belong to it: `StageTabs` (the stages as an
+   ARIA tab list: status in words, a stage that does not apply greyed with its condition, the marker of a stage signed off before an
+   earlier one was reopened, a box for a conflict) and `DeadlineClock` (sober: the rule, its basis, the state in words, the due time,
+   how long is left or overdue; a deadline that needs the person, missed and never sent, is the only box; no mascot, no gold, no
+   gauge, no motion). A stage panel is the guidance, who signed it off, the form of its part (`SchemaForm` over `partSchema`, the kind
+   `incident.<part>`, never the `completion`), what only this stage has (the title and the derived protection needs of the triage,
+   `NotificationsTable` over the notices), and `StageActBar`: *Complete stage* / *Reopen stage* act on the saved part, ask to save first,
+   say why they are disabled, and list the missing fields and the stages to complete first on a refusal. The report is `ReportPreview`:
+   read on demand, rendered by level-2 section, with the note that it is a preview and in English. `TransitionBar` takes `reasonFor`
+   for the reasons only a lens knows (the incident is not submitted while a stage is open).
 3. For a chart, use the five series colours in model order (`--color-series-1` … `-5`); they are validated for
    colour-vision and normal-vision separation against both sheet colours (`#ffffff`, `#161d2e`). A new chart colour
    needs the same validation before it lands: with the validator of the `dataviz` skill where your agent has that
