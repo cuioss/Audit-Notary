@@ -10,6 +10,8 @@ describe('errors', () => {
     // The refusals of the catalogs: an id that exists, an entry that is retired.
     expect(isOutcome('ID_TAKEN')).toBe(true);
     expect(isOutcome('RETIRED')).toBe(true);
+    // The refusal of a new threat model of a service that is retired.
+    expect(isOutcome('SERVICE_RETIRED')).toBe(true);
     // The refusals of the directory: the candidates of a first login, a directory kept elsewhere.
     expect(isOutcome('BINDING_CANDIDATES')).toBe(true);
     expect(isOutcome('MANAGED_BY_SOURCE')).toBe(true);
@@ -40,6 +42,7 @@ describe('errors', () => {
     expect(errorMessageKey(new ApiError('VALIDATION', 422))).toBe('error.validation');
     expect(errorMessageKey(new ApiError('ID_TAKEN', 409))).toBe('error.id-taken');
     expect(errorMessageKey(new ApiError('RETIRED', 409))).toBe('error.retired');
+    expect(errorMessageKey(new ApiError('SERVICE_RETIRED', 409))).toBe('error.service-retired');
     expect(errorMessageKey(new ApiError('MANAGED_BY_SOURCE', 409))).toBe('error.managed-by-source');
     expect(errorMessageKey(new ApiError('NOT_BINDABLE', 409))).toBe('error.not-bindable');
     expect(errorMessageKey(new ApiError('TOO_LARGE', 413))).toBe('error.too-large');

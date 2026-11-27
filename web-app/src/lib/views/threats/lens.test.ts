@@ -131,18 +131,12 @@ describe('a service', () => {
     expect(await screen.findByTestId('not-found-view')).toBeInTheDocument();
   });
 
-  it('leads the new address to a placeholder that breaks nothing', async () => {
-    await open(
-      'workshop',
-      'threat-models.new',
-      { service: 'report-scheduler' },
-      { recipe: 'stride' },
+  it('leads the new address to the choice of a recipe, and a recipe to its wizard', async () => {
+    await open('workshop', 'threat-models.new', { service: 'report-scheduler' });
+    expect(await screen.findByTestId('new-threat-model-sheet')).toHaveTextContent(
+      'A threat model of Report scheduler, step by step.',
     );
-    const sheet = await screen.findByTestId('new-threat-model-sheet');
-    await waitFor(() =>
-      expect(sheet).toHaveTextContent('A threat model of Report scheduler, step by step.'),
-    );
-    expect(screen.getByText('Not built yet')).toBeInTheDocument();
+    expect(screen.queryByText('Not built yet')).toBeNull();
   });
 });
 

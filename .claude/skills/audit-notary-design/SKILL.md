@@ -54,15 +54,23 @@ Read the concept first, then the component you are about to change.
    charts; a sixth series is a table row, never a sixth colour.
    `web-app/src/lib/views/threats/` holds the lens Threat models (`ThreatModelsView`: evaluation › service › model on
    `TriagePage`; `EvaluationColumn`, which is `ThreatEvaluationTable` with `offerNew`, and `ServiceColumn`; `NewModelSheet`, the
-   placeholder of `/threat-models/{service}/new` until the recipe wizard; `ThreatModelReleaseView`, the release on
-   `ReleaseFlow`) and what it knows is in `web-app/src/lib/threats/` (addresses, ids, untreated, the review date, errors by row,
-   the diff by threat). The sheet (`ThreatModelSheet`) has two parts and so two document controllers, one for the data of the
+   address `/threat-models/{service}/new`: `RecipeChoice` without a recipe, `RecipeWizardSheet` with one;
+   `ThreatModelReleaseView`, the release on `ReleaseFlow`) and what it knows is in `web-app/src/lib/threats/` (addresses, ids, untreated, the review date, errors by row,
+   the diff by threat; `recipe.ts` and `wizard.svelte.ts` for the wizard). The sheet (`ThreatModelSheet`) has two parts and so two document controllers, one for the data of the
    document (owner, review date) and one for the file of the model; "Save for everyone" saves both, and a list of the file
    (`/threats`, `/mitigations`) is changed and sent as a whole, a conflict decided per list (`ConflictPanel describe`).
    `ThreatTable` and `CountermeasureEditor` are `DataTable` editors with a dialog over a copy (`DataTable` takes `addLabel` and
    `rowName` where a page holds more than one table); a threat that was transferred is shown as a link and never changed
    here (the editor has no control for it), yet its reference is carried back unchanged in the whole `/threats` list that a save
    sends, so that an edit of another field does not drop the link; the diagram is an `<img>` of a checked `data:image/svg+xml;base64,` URL with a text alternative, never markup.
+   The recipe wizard is a sheet in the last column of the lens, not a page of its own: `Stepper` (a component of the closed
+   vocabulary: the steps as a numbered list, the reached ones as acts that go back, the current one `aria-current="step"`, a
+   count and the current step only on a phone) over the steps and one last page, *Review and create*; a step is its heading
+   (it takes the focus, the change is announced politely), the recipe's guidance (`AsciiDocView`, set off by a hairline, never
+   a box) and the form of what it fills (`SchemaForm` cut to the member, `ThreatTable`, `CountermeasureEditor`). The primary
+   act is *Next step*, on the last page *Create threat model*; *Back* writes nothing; the draft is kept when the person goes
+   on and the status says *Saved for you at …*; leaving with changes that are kept nowhere asks (`LeaveGuard`); the create goes
+   through `StepUpHandler`. A text of a recipe is its own data in the language of the interface, never a catalogue key.
 3. For a chart, use the five series colours in model order (`--color-series-1` … `-5`); they are validated for
    colour-vision and normal-vision separation against both sheet colours (`#ffffff`, `#161d2e`). A new chart colour
    needs the same validation before it lands: with the validator of the `dataviz` skill where your agent has that

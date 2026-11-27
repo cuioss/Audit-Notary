@@ -2452,7 +2452,7 @@ the recipes the person has started
 |`threat-models.new`
 |`/threat-models/{service}/new`
 |`recipe`
-|The recipe wizard (`WizardPage`) of a new threat model of the service; `recipe` names the recipe, without it the page offers the
+|The recipe wizard (a sheet of the lens, <<_decided_threat_models>> point 27) of a new threat model of the service; `recipe` names the recipe, without it the page offers the
 recipes. Nothing is stored before the first step is left (the recipe draft), no model before the last. The route comes before
 `threat-models.model` in the file
 
@@ -3789,7 +3789,8 @@ change each one. The bodies and addresses are in <<_threat_model_requests>>:
   `PUT /api/v1/threat-models/{service}/drafts/{recipe}`, read by the matching `GET`, ended by the create. The library keys a draft
   by a document that exists; a draft of a document to come needs the library to key it by the service and the recipe, which is
   open. A draft with field errors is refused like every draft (<<_decided_lifecycle>>, point 10), so a step is left only when it
-  is valid; the create is the last step and carries the `owner` (prefilled with the role of the service's owner in the catalog, `role:service-owner` in the mock) and the `last-review` (prefilled with today).
+  is valid; the create is the last step and carries the `owner` and the `last-review` (prefilled with today; the wizard does not
+  prefill the owner, point 31).
 . *The rights:* reading the lens and the evaluation needs `read` on `threat-models`, creating, saving and submitting `edit`, the
   release `approve`. The mock gives the user of the profile `workshop` the right `approve` on `threat-models` (it had `read` and
   `edit`), so that the release of a review can be walked through; `release` keeps no right on the repository. Without `edit`
@@ -3841,7 +3842,40 @@ change each one. The bodies and addresses are in <<_threat_model_requests>>:
   page makes one change of each entry that is new, gone or changed, by its `id` (`/threats/T-03`), so the approver reads a
   threat, not two lists of nine. A change of any other property is the generic one.
 . *The first column is the table of the report;* a service without a model is offered *New threat model* in its row for a person
-  with `edit`, and `/threat-models/{service}/new` is routed to a placeholder inside the lens until the recipe wizard is built.
+  with `edit`, and `/threat-models/{service}/new` is routed to a placeholder inside the lens until the recipe wizard is built
+  (it is the recipe wizard now, points 27 to 34).
+. *The wizard is a sheet in the last column of the lens,* not a `WizardPage` of its own (this replaces the page of point 17): the
+  person keeps the evaluation and the service beside the steps, as with a new scope. `/threat-models/{service}/new` without
+  `recipe` is the choice of the recipe (`GET …/recipes?lang=`, with the position of a started recipe from `drafts` of the service
+  page); with `recipe` it is the wizard of that recipe. A recipe the server does not know (`404`) is told on the page with the way
+  to the choice, and there is no wizard without a recipe (a model without one is for the REST API and an agent). A person without
+  `edit` and a retired service get no wizard and are told why.
+. *The steps.* A recipe of `n` steps has `n + 1` pages: the steps in the order of the recipe, then *Review and create* at position
+  `n` (the `step` of a draft, zero-based, is the page the person goes on to). The texts of the steps are read with the `lang` of
+  the interface; a change of language reads them again and keeps what was filled in.
+. *The form of a step* is cut from the schema of `GET /api/v1/categories/threat-models/schema` at `fills` (an object or a table of
+  objects of the model file, with the `readOnly` members left out, such as `project.id`, which the server writes); `/threats` and
+  `/mitigations` are the table of the threats and the editor of the countermeasures of the sheet of a model, which send the whole
+  list. A `fills` that names no member of the file is told on the step, which can be passed.
+. *When the draft is written.* `PUT …/drafts/{recipe}` goes when the person goes on from a step (the whole draft, `step` the page
+  they go to, the part `data` once they have been on the last page), not on a change and not on going back. The wizard stays on
+  the step when the server refuses the draft (`422`) and marks the fields; for a refusal of a field of another step it goes to
+  that step. Leaving the page with changes that were not written asks first (`LeaveGuard`).
+. *The last page* lists every step with its name or the number of its entries and an act to change it, and asks for the `owner`
+  and the `last-review`. The review date starts as `today` of the service page; the owner is not prefilled, because the service
+  page names a team and the catalog of roles is not related to the service (this replaces the prefill of point 13). Only the name
+  of the project (`/project/name`) is required before the create.
+. *The create* is `POST /api/v1/threat-models/{service}` with `recipe` and both parts, sent through the shared step-up handler
+  (the register lists no confirmation for it, so it asks nothing in the mock). A `422` names fields: the wizard goes to the step
+  that fills the first one of the part `model`, and stays on the last page for the part `data`. A `409 SERVICE_RETIRED` (a new
+  outcome of the client: "This service is retired and gets no new threat model.") and the other refusals are told above the step
+  and nothing is cleared. After the `201` the page moves to the address of the answer (replacing the wizard in the history), and
+  the evaluation and the service page are read again.
+. *Limits of the mock.* The draft routes exist for `report-scheduler` and `notification-gateway` only (README of `web-mock`), so
+  the wizard of another service fails at the first step with a refused write; the create of `report-scheduler` is the only one
+  that leads to a readable model.
+. *A new piece of the closed vocabulary, `Stepper`* (the steps as a numbered list, the reached ones as acts that go back, the
+  current one marked; on a phone the count and the current step). It is the only component the wizard adds.
 
 For the owner: whether OTM as YAML is the format (4) and whether the treatment may live in `attributes` (5), given that the OTM
 README calls `attributes` a map of strings and that a threat has one status, not one per component; whether a countermeasure may
@@ -3853,4 +3887,6 @@ the library does not offer; whether the person who edits may release in the mock
 models (15); whether a save keeps the stored `transferred` or refuses a changed one (18); how a person enters the issues of a
 countermeasure (19). With the screens of the lens: whether the two parts of the document should be one commit (20); whether the threat table and the
 countermeasure editor should be the form kit's (21), and whether removing a threat should take its countermeasures with it (22); whether the
-start of a review should be offered in every state (24).
+start of a review should be offered in every state (24). With the recipe wizard: whether it is a sheet in the lens and not a
+`WizardPage` (27), whether the owner should be prefilled by the server (31), and whether the create should ask for a
+confirmation (32).

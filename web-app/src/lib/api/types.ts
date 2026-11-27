@@ -1279,6 +1279,86 @@ export interface ThreatModelService {
   drafts: ThreatRecipeDraft[];
 }
 
+/** One recipe of the list `GET /api/v1/categories/threat-models/recipes` (PROVISIONAL): `steps` is the number of steps. */
+export interface ThreatRecipeSummary {
+  id: string;
+  title: string;
+  description: string;
+  steps: number;
+}
+
+/** `GET /api/v1/categories/threat-models/recipes?lang=` (PROVISIONAL). */
+export interface ThreatRecipeList {
+  recipes: ThreatRecipeSummary[];
+}
+
+/** One step of a recipe: its guidance is an AsciiDoc fragment, `fills` a JSON Pointer into the model file. */
+export interface ThreatRecipeStep {
+  id: string;
+  title: string;
+  guidance: string;
+  fills: string;
+}
+
+/** `GET /api/v1/categories/threat-models/recipes/{recipe}?lang=` (PROVISIONAL), the texts in the language asked for. */
+export interface ThreatRecipe {
+  id: string;
+  title: string;
+  description: string;
+  steps: ThreatRecipeStep[];
+}
+
+/** The fields of one part of a recipe draft or a create: a JSON Pointer into the part's value and its new value. */
+export interface PartFields {
+  fields: Record<string, JsonValue>;
+}
+
+/** The parts of a recipe draft and of a create; the part `data` is absent while nothing of it was filled in. */
+export interface RecipeParts {
+  model: PartFields;
+  data?: PartFields;
+}
+
+/** The unfinished recipe of the person for one service. */
+export interface RecipeDraftBody {
+  /** The zero-based step the person goes on to; the number of steps for the final page. */
+  step: number;
+  at: string;
+  parts: Partial<RecipeParts>;
+}
+
+/** `GET /api/v1/threat-models/{service}/drafts/{recipe}` (PROVISIONAL): `draft` is `null` for none. */
+export interface ThreatRecipeDraftRead {
+  service: string;
+  recipe: string;
+  draft: RecipeDraftBody | null;
+}
+
+/** The body of `PUT /api/v1/threat-models/{service}/drafts/{recipe}`: the draft is replaced as a whole. */
+export interface RecipeDraftRequest {
+  step: number;
+  parts: Partial<RecipeParts>;
+}
+
+/** The body of `POST /api/v1/threat-models/{service}` (PROVISIONAL): the first save of a new model. */
+export interface ThreatModelCreate {
+  recipe?: string;
+  parts: RecipeParts;
+}
+
+/** The answer of `POST /api/v1/threat-models/{service}` (`201`). */
+export interface ThreatModelCreated {
+  outcome: 'CREATED';
+  /** The address segment the server derived from the name of the project. */
+  model: string;
+  document: string;
+  address: string;
+  state: WorkflowState;
+  version: number;
+  at: string;
+  parts: Record<string, PartVersion>;
+}
+
 /** What a read of the risk register names: the date or tag it was asked for and the commit it read. */
 export interface RiskRegisterAsOf {
   /** The parameter as given; `null` for the register as of now. */

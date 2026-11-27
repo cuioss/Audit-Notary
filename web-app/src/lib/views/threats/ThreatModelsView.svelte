@@ -37,8 +37,8 @@
    * The lens Threat models (UC-TM-1, UC-TM-2, UC-TM-4): the chain evaluation › service › model as columns
    * (`TriagePage`). The evaluation of every service is always the first level (the table of the report, and the services
    * without a model with the act *New threat model*); the service lists its models; the model is the sheet. The address
-   * `/threat-models/{service}/new` is the place of the recipe wizard (until it is built, a placeholder), and the release
-   * of a model has a page of its own.
+   * `/threat-models/{service}/new` is the recipe wizard (the choice of the recipe, then its steps), and the release of a
+   * model has a page of its own.
    *
    * Data is read per address and again when the event stream names a document of `threat-models`: a save, a step or a
    * creation by someone else refreshes the evaluation, the service and the open model within the 5 seconds of AUN-WEB-5.
@@ -226,9 +226,9 @@
     });
   });
 
-  // The schema of the document type, for the sheet of a model.
+  // The schema of the document type, for the sheet of a model and for the forms of the wizard.
   $effect(() => {
-    if (route !== 'threat-models.model') {
+    if (route !== 'threat-models.model' && route !== 'threat-models.new') {
       untrack(() => succeed('schema'));
       return;
     }
@@ -327,7 +327,18 @@
       {#if level.key === 'evaluation'}
         <EvaluationColumn {evaluation} {forbidden} {canCreate} />
       {:else if level.key === 'new'}
-        <NewModelSheet {service} />
+        <NewModelSheet
+          {service}
+          recipe={query.recipe}
+          {canCreate}
+          {schema}
+          {onnavigate}
+          oncreated={() => {
+            reloadEvaluation();
+            void reloadService();
+          }}
+          onkept={() => void reloadService()}
+        />
       {:else if level.key.startsWith('service:')}
         <ServiceColumn {service} selected={params.model ?? null} {canCreate} />
       {:else if model && schema}
