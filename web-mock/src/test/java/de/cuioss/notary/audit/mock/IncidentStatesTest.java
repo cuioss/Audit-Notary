@@ -560,6 +560,35 @@ class IncidentStatesTest {
     }
 
     @Test
+    @DisplayName("the two diff variants of the release states are the baseline diff with one change each, so a change of the baseline cannot leave them behind")
+    void shouldDeriveTheDiffVariantsFromTheBaselineDiff() {
+        var changed = data("incident-credential-stuffing-diff.json").deepCopy();
+        var reopened = data("incident-credential-stuffing-diff.json").deepCopy();
+        for (var section : changed.path("sections")) {
+            for (var change : section.path("changes")) {
+                if ("triage".equals(section.path("part").asText()) && "/tickets".equals(change.path("pointer").asText())) {
+                    ((com.fasterxml.jackson.databind.node.ArrayNode) change.path("after")).add("SEC-2201");
+                }
+            }
+        }
+        for (var section : reopened.path("sections")) {
+            if ("review".equals(section.path("part").asText())) {
+                var changes = (com.fasterxml.jackson.databind.node.ArrayNode) section.path("changes");
+                for (int i = changes.size() - 1; i >= 0; i--) {
+                    if ("/completion".equals(changes.get(i).path("pointer").asText())) {
+                        changes.remove(i);
+                    }
+                }
+            }
+        }
+        assertAll(
+                () -> assertEquals(changed, data("incident-credential-stuffing-diff-changed.json")),
+                () -> assertEquals(reopened, data("incident-credential-stuffing-diff-reopened.json")),
+                () -> assertNotEquals(data("incident-credential-stuffing-diff.json"), changed),
+                () -> assertNotEquals(data("incident-credential-stuffing-diff.json"), reopened));
+    }
+
+    @Test
     @DisplayName("a release refused because a stage was reopened meanwhile answers STAGES_OPEN with the stage and stays refused")
     void shouldRefuseTheReleaseWithOpenStages() {
         try (var client = start()) {
