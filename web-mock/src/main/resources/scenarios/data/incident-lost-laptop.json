@@ -1,0 +1,468 @@
+{
+  "repository": "isms-incidents-2025",
+  "id": "01JZ2A4C6E8G0J2M4P6R8T0W2Y",
+  "category": "incident-reports",
+  "kind": "incident",
+  "title": "Laptop with customer extracts lost",
+  "state": "released",
+  "version": 1,
+  "frozen": true,
+  "year": 2025,
+  "address": "/incidents/2025/01JZ2A4C6E8G0J2M4P6R8T0W2Y",
+  "asOf": "2025-04-30T09:00:00Z",
+  "parts": {
+    "data": {
+      "blob": "38e4be8",
+      "savedAt": "2025-03-14T09:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Laptop with customer extracts lost"
+      }
+    },
+    "triage": {
+      "blob": "c64a00a",
+      "savedAt": "2025-03-14T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "categories": [
+          "personal-data-breach"
+        ],
+        "severity": "medium",
+        "occurred-at": "2025-03-13T18:30:00Z",
+        "detected-at": "2025-03-14T07:10:00Z",
+        "aware-at": "2025-03-14T08:00:00Z",
+        "personal-data-affected": true,
+        "nis2-significant": false,
+        "affected-services": [
+          "service:customer-db"
+        ],
+        "tickets": [
+          "SEC-1311"
+        ],
+        "completion": {
+          "at": "2025-03-14T10:00:00Z",
+          "by": "p-4c1a9e"
+        }
+      }
+    },
+    "privacy-assessment": {
+      "blob": "2af557c",
+      "savedAt": "2025-03-14T15:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "data-subjects": [
+          {
+            "category": "Customers",
+            "approximate-number": 800
+          }
+        ],
+        "records-approximate": 800,
+        "risk": "risk",
+        "risk-assessment": "The extracts were on a laptop with an encrypted disk, but the recovery key was in the same bag. A read of the data cannot be ruled out.",
+        "notify-authority": true,
+        "inform-data-subjects": false,
+        "completion": {
+          "at": "2025-03-14T15:00:00Z",
+          "by": "p-4c1a9e"
+        }
+      }
+    },
+    "response": {
+      "blob": "a3e2671",
+      "savedAt": "2025-03-17T12:30:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Developer"
+      },
+      "value": {
+        "actions": [
+          {
+            "kind": "containment",
+            "what": "Lock the account of the laptop and revoke its certificates",
+            "role": "role:service-owner",
+            "issues": [
+              "IT-880"
+            ],
+            "done": true
+          },
+          {
+            "kind": "recovery",
+            "what": "Issue a replacement laptop with an encrypted disk and a separate recovery key",
+            "role": "role:developer",
+            "issues": [
+              "IT-881"
+            ],
+            "done": true
+          }
+        ],
+        "timeline": [
+          {
+            "at": "2025-03-14T07:10:00Z",
+            "what": "The loss is reported to the help desk."
+          },
+          {
+            "at": "2025-03-17T12:00:00Z",
+            "what": "The laptop is declared lost; the replacement is in use."
+          }
+        ],
+        "resolved-at": "2025-03-17T12:00:00Z",
+        "completion": {
+          "at": "2025-03-17T12:30:00Z",
+          "by": "p-2b7f10"
+        }
+      }
+    },
+    "notifications": {
+      "blob": "5bbfba9",
+      "savedAt": "2025-03-17T12:40:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Developer"
+      },
+      "value": {
+        "supervisory-authority": {
+          "sent-at": "2025-03-15T10:00:00Z",
+          "recipient": "State data protection authority",
+          "channel": "reporting-portal",
+          "reference": "2025-0315-04"
+        },
+        "completion": {
+          "at": "2025-03-17T12:40:00Z",
+          "by": "p-2b7f10"
+        }
+      }
+    },
+    "review": {
+      "blob": "36d6354",
+      "savedAt": "2025-04-28T14:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "root-causes": [
+          {
+            "category": "process",
+            "description": "The recovery key was kept with the laptop."
+          }
+        ],
+        "measures": [
+          {
+            "what": "Store the recovery key in the key service, never with the device",
+            "role": "role:service-owner",
+            "issues": [
+              "IT-890"
+            ],
+            "due": "2025-05-31"
+          }
+        ],
+        "risks": [
+          "isms-register:risk/R-021"
+        ],
+        "course": "A laptop was left in a train. The disk was encrypted. The recovery key was on a card in the laptop bag.",
+        "root-cause-analysis": "The rules for the handling of recovery keys were known but not checked when a laptop was handed out.",
+        "lessons": "A key kept with the device protects nothing. The handover of a laptop now includes the check of the key.",
+        "completion": {
+          "at": "2025-04-28T14:00:00Z",
+          "by": "p-4c1a9e"
+        }
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2025-04-30T09:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "incidents/01JZ2A4C6E8G0J2M4P6R8T0W2Y/v1"
+    },
+    {
+      "at": "2025-04-29T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-04-28T14:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "complete",
+      "stage": "review"
+    },
+    {
+      "at": "2025-03-25T10:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "review",
+      "count": 5
+    },
+    {
+      "at": "2025-03-17T12:40:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "complete",
+      "stage": "notifications"
+    },
+    {
+      "at": "2025-03-17T12:30:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "complete",
+      "stage": "response"
+    },
+    {
+      "at": "2025-03-17T12:10:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "response",
+      "count": 3
+    },
+    {
+      "at": "2025-03-15T10:10:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "notifications",
+      "count": 1
+    },
+    {
+      "at": "2025-03-14T15:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "complete",
+      "stage": "privacy-assessment"
+    },
+    {
+      "at": "2025-03-14T14:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "privacy-assessment",
+      "count": 3
+    },
+    {
+      "at": "2025-03-14T10:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "complete",
+      "stage": "triage"
+    },
+    {
+      "at": "2025-03-14T09:50:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "triage",
+      "count": 2
+    },
+    {
+      "at": "2025-03-14T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "incidents/01JZ2A4C6E8G0J2M4P6R8T0W2Y/v1",
+    "at": "2025-04-30T09:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "stages": [
+    {
+      "id": "triage",
+      "part": "triage",
+      "after": [],
+      "when": null,
+      "narrative": [],
+      "stepUp": false,
+      "status": "completed",
+      "unanswered": false,
+      "completion": {
+        "at": "2025-03-14T10:00:00Z",
+        "by": {
+          "pseudonym": "p-4c1a9e",
+          "name": "Alex Example"
+        }
+      },
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "privacy-assessment",
+      "part": "privacy-assessment",
+      "after": [
+        "triage"
+      ],
+      "when": {
+        "field": "/triage/personal-data-affected"
+      },
+      "narrative": [],
+      "stepUp": false,
+      "status": "completed",
+      "unanswered": false,
+      "completion": {
+        "at": "2025-03-14T15:00:00Z",
+        "by": {
+          "pseudonym": "p-4c1a9e",
+          "name": "Alex Example"
+        }
+      },
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "response",
+      "part": "response",
+      "after": [
+        "triage"
+      ],
+      "when": null,
+      "narrative": [],
+      "stepUp": false,
+      "status": "completed",
+      "unanswered": false,
+      "completion": {
+        "at": "2025-03-17T12:30:00Z",
+        "by": {
+          "pseudonym": "p-2b7f10",
+          "name": "Jordan Weber"
+        }
+      },
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "notifications",
+      "part": "notifications",
+      "after": [
+        "triage"
+      ],
+      "when": {
+        "any": [
+          {
+            "field": "/triage/personal-data-affected"
+          },
+          {
+            "field": "/triage/nis2-significant"
+          }
+        ]
+      },
+      "narrative": [],
+      "stepUp": false,
+      "status": "completed",
+      "unanswered": false,
+      "completion": {
+        "at": "2025-03-17T12:40:00Z",
+        "by": {
+          "pseudonym": "p-2b7f10",
+          "name": "Jordan Weber"
+        }
+      },
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "review",
+      "part": "review",
+      "after": [
+        "response"
+      ],
+      "when": null,
+      "narrative": [
+        "course",
+        "root-cause-analysis",
+        "lessons"
+      ],
+      "stepUp": true,
+      "status": "completed",
+      "unanswered": false,
+      "completion": {
+        "at": "2025-04-28T14:00:00Z",
+        "by": {
+          "pseudonym": "p-4c1a9e",
+          "name": "Alex Example"
+        }
+      },
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    }
+  ],
+  "deadlines": [
+    {
+      "rule": "gdpr-art33",
+      "element": null,
+      "startedAt": "2025-03-14T08:00:00Z",
+      "due": "2025-03-17T08:00:00Z",
+      "status": "MET",
+      "sentAt": "2025-03-15T10:00:00Z",
+      "metBy": "/notifications/supervisory-authority"
+    }
+  ],
+  "protection": {
+    "needs": {
+      "confidentiality": "very-high",
+      "integrity": "high",
+      "availability": "normal"
+    },
+    "decidedBy": {
+      "confidentiality": "service:customer-db",
+      "integrity": "service:customer-db",
+      "availability": "service:customer-db"
+    }
+  }
+}

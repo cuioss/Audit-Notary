@@ -776,6 +776,23 @@
         "repository": "threat-models",
         "action": "edit"
       }
+    },
+    "GET /api/v1/incidents": {
+      "status": 200,
+      "body": {
+        "today": "2026-11-26",
+        "years": []
+      }
+    },
+    "GET /api/v1/incidents/2026": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      }
+    },
+    "GET /api/v1/categories/incident-reports/schema": {
+      "status": 200,
+      "body_file": "categories-incident-reports-schema.json"
     }
   },
   "states": {

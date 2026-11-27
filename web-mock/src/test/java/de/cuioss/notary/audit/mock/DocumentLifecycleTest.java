@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.StreamSupport;
 
 import static de.cuioss.notary.audit.mock.MockClient.json;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -524,7 +525,7 @@ class DocumentLifecycleTest {
                 var requested = byAddress.get("/categories/test-note/" + N5 + "/release");
                 var release = byAddress.get("/categories/test-note/" + N2);
                 assertAll(
-                        () -> assertEquals(8, items.size()),
+                        () -> assertEquals(10, items.size()),
                         () -> assertEquals("2026-11-22", dates.stream().sorted().findFirst().orElseThrow()),
                         () -> assertEquals("review", review.path("kind").asText()),
                         () -> assertEquals("categories", review.path("lens").asText()),
@@ -1086,7 +1087,7 @@ class DocumentLifecycleTest {
                         () -> assertTrue(status.path("degraded").asBoolean()),
                         () -> assertEquals("DOWN", fetch.get("test-notes")),
                         () -> assertEquals("UP", fetch.get("samm-assessments")),
-                        () -> assertEquals(6, fetch.size()),
+                        () -> assertEquals(7, fetch.size()),
                         () -> assertEquals("DRAFT_SAVED", json(client.change("PUT", draft(N2), "{}")).path("outcome").asText()),
                         () -> assertEquals(200, client.get(LIST).statusCode()),
                         () -> assertEquals(200, client.get(doc(N6) + "/revisions").statusCode()),
@@ -1170,7 +1171,7 @@ class DocumentLifecycleTest {
                 assertAll(
                         () -> assertEquals("local", status.path("loginProvider").asText()),
                         () -> assertEquals("password", status.path("stepUp").asText()),
-                        () -> assertEquals(6, status.path("repositories").size()),
+                        () -> assertEquals(7, status.path("repositories").size()),
                         () -> assertEquals("RELEASED", json(released).path("outcome").asText()),
                         () -> assertEquals("note-release-done", afterRelease),
                         () -> assertEquals("password", wrongStatus.path("stepUp").asText()),
@@ -1297,14 +1298,17 @@ class DocumentLifecycleTest {
         @DisplayName("finds the created note in the search of note-created, and not before")
         void shouldSearchTheCreatedNote() {
             try (var client = MockClient.start("workshop").login()) {
-                var before = body(client, "/api/v1/search?q=phishing").path("results").size();
+                var before = body(client, "/api/v1/search?q=phishing").path("results");
                 goTo(client, "note-created");
                 var after = body(client, "/api/v1/search?q=phishing").path("results");
+                var found = StreamSupport.stream(after.spliterator(), false)
+                        .filter(hit -> N10.equals(hit.path("id").asText())).toList();
                 assertAll(
-                        () -> assertEquals(0, before),
-                        () -> assertEquals(1, after.size()),
-                        () -> assertEquals(N10, after.get(0).path("id").asText()),
-                        () -> assertEquals("draft", after.get(0).path("state").asText()));
+                        () -> assertTrue(StreamSupport.stream(before.spliterator(), false)
+                                .noneMatch(hit -> N10.equals(hit.path("id").asText()))),
+                        () -> assertEquals(before.size() + 1, after.size()),
+                        () -> assertEquals(1, found.size()),
+                        () -> assertEquals("draft", found.get(0).path("state").asText()));
             }
         }
 
@@ -1417,7 +1421,7 @@ class DocumentLifecycleTest {
                 assertAll(
                         () -> assertEquals("notes/" + N5 + "/v1", diff.path("from").asText()),
                         () -> assertEquals(1, requestsOf(dueBefore, N5)),
-                        () -> assertEquals("rr-01JZ8V9C2E4G6J8M0P2R4T6W8Y", dueBefore.get(6).path("requestId").asText()),
+                        () -> assertEquals("rr-01JZ8V9C2E4G6J8M0P2R4T6W8Y", dueBefore.get(8).path("requestId").asText()),
                         () -> assertEquals("RELEASED", json(released).path("outcome").asText()),
                         () -> assertEquals("notes/" + N5 + "/v2", json(released).path("tag").asText()),
                         () -> assertEquals("note-release-request-done", next),

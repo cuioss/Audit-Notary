@@ -1,0 +1,545 @@
+{
+  "repository": "isms-incidents-2026",
+  "id": "01JZ8M3N5P7R9T1V3X5Z7B9D1F",
+  "category": "incident-reports",
+  "kind": "incident",
+  "title": "Notification service down after a failed deployment",
+  "state": "released",
+  "version": 1,
+  "frozen": true,
+  "year": 2026,
+  "address": "/incidents/2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F",
+  "asOf": "2026-11-18T10:00:00Z",
+  "parts": {
+    "data": {
+      "blob": "3e42050",
+      "savedAt": "2026-10-12T12:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Notification service down after a failed deployment"
+      }
+    },
+    "triage": {
+      "blob": "ad242f7",
+      "savedAt": "2026-10-12T13:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "categories": [
+          "security-incident"
+        ],
+        "severity": "high",
+        "occurred-at": "2026-10-12T09:40:00Z",
+        "detected-at": "2026-10-12T10:15:00Z",
+        "aware-at": "2026-10-12T11:00:00Z",
+        "personal-data-affected": false,
+        "nis2-significant": true,
+        "affected-services": [
+          "service:notification-service"
+        ],
+        "tickets": [
+          "SEC-2051",
+          "SEC-2052"
+        ],
+        "completion": {
+          "at": "2026-10-12T13:00:00Z",
+          "by": "p-4c1a9e"
+        }
+      }
+    },
+    "privacy-assessment": {
+      "blob": null,
+      "savedAt": null,
+      "savedBy": null,
+      "value": {}
+    },
+    "response": {
+      "blob": "1242755",
+      "savedAt": "2026-10-14T09:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Developer"
+      },
+      "value": {
+        "actions": [
+          {
+            "kind": "recovery",
+            "what": "Roll back the failed deployment of the notification service",
+            "role": "role:developer",
+            "issues": [
+              "NS-310"
+            ],
+            "done": true
+          },
+          {
+            "kind": "containment",
+            "what": "Pause the sending queue until the service is stable",
+            "role": "role:service-owner",
+            "issues": [
+              "NS-311"
+            ],
+            "done": true
+          },
+          {
+            "kind": "other",
+            "what": "Tell the administrators of the affected customers about the outage",
+            "role": "role:security-champion",
+            "issues": [],
+            "done": true
+          }
+        ],
+        "timeline": [
+          {
+            "at": "2026-10-12T09:40:00Z",
+            "what": "The deployment starts and the service stops answering."
+          },
+          {
+            "at": "2026-10-12T10:15:00Z",
+            "what": "The monitoring reports that no message is sent."
+          },
+          {
+            "at": "2026-10-12T14:00:00Z",
+            "what": "The rollback starts."
+          },
+          {
+            "at": "2026-10-13T20:00:00Z",
+            "what": "The queue is drained and the service runs normally."
+          }
+        ],
+        "resolved-at": "2026-10-13T20:00:00Z",
+        "completion": {
+          "at": "2026-10-14T09:00:00Z",
+          "by": "p-2b7f10"
+        }
+      }
+    },
+    "notifications": {
+      "blob": "d6d71e5",
+      "savedAt": "2026-11-13T10:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Developer"
+      },
+      "value": {
+        "nis2-early-warning": {
+          "sent-at": "2026-10-13T09:30:00Z",
+          "recipient": "Joint reporting office BSI and BBK",
+          "channel": "reporting-portal",
+          "reference": "BSI-2026-3120"
+        },
+        "nis2-notification": {
+          "sent-at": "2026-10-14T16:00:00Z",
+          "recipient": "Joint reporting office BSI and BBK",
+          "channel": "reporting-portal"
+        },
+        "nis2-intermediate-reports": [
+          {
+            "sent-at": "2026-10-29T15:00:00Z",
+            "recipient": "Joint reporting office BSI and BBK",
+            "channel": "email",
+            "reference": "BSI-2026-3120-2",
+            "due": "2026-10-30T12:00:00Z"
+          }
+        ],
+        "nis2-final-report": {
+          "sent-at": "2026-11-13T10:00:00Z",
+          "recipient": "Joint reporting office BSI and BBK",
+          "channel": "reporting-portal"
+        },
+        "others": [
+          {
+            "sent-at": "2026-10-13T10:00:00Z",
+            "recipient": "Affected customers' administrators",
+            "channel": "email",
+            "comment": "Service status and the expected time of recovery."
+          }
+        ],
+        "completion": {
+          "at": "2026-11-13T10:10:00Z",
+          "by": "p-2b7f10"
+        }
+      }
+    },
+    "review": {
+      "blob": "cbc22be",
+      "savedAt": "2026-11-17T15:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "root-causes": [
+          {
+            "category": "process",
+            "description": "The deployment script did not wait for the health check of the new version."
+          },
+          {
+            "category": "configuration",
+            "description": "The sending queue had no limit, so the backlog hit the service at once when it came back."
+          }
+        ],
+        "measures": [
+          {
+            "what": "Make the deployment wait for the health check and roll back by itself",
+            "role": "role:developer",
+            "issues": [
+              "NS-318"
+            ],
+            "due": "2026-11-30"
+          },
+          {
+            "what": "Limit the rate at which the queue is drained",
+            "role": "role:service-owner",
+            "issues": [
+              "NS-319"
+            ],
+            "due": "2026-12-15"
+          }
+        ],
+        "risks": [
+          "isms-register:risk/R-004"
+        ],
+        "course": "A deployment replaced the notification service by a version that did not start properly. No message was sent for about 35 hours until the rollback finished and the backlog was drained.",
+        "root-cause-analysis": "The script switched the traffic before the health check had passed. The queue kept all messages, which is the intended behaviour, but nothing limited the rate when the service came back.",
+        "lessons": "The queue protected the messages. The deployment must protect the service.\n\n* A deployment is finished when the health check has passed.\n* The status page must be updated by the first responder.",
+        "completion": {
+          "at": "2026-11-17T15:00:00Z",
+          "by": "p-4c1a9e"
+        }
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-18T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "incidents/01JZ8M3N5P7R9T1V3X5Z7B9D1F/v1"
+    },
+    {
+      "at": "2026-11-18T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-11-17T15:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "complete",
+      "stage": "review"
+    },
+    {
+      "at": "2026-11-16T11:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "review",
+      "count": 5
+    },
+    {
+      "at": "2026-11-13T10:10:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "complete",
+      "stage": "notifications"
+    },
+    {
+      "at": "2026-11-13T10:05:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "notifications",
+      "count": 1
+    },
+    {
+      "at": "2026-10-29T15:10:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "notifications",
+      "count": 1
+    },
+    {
+      "at": "2026-10-14T16:10:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "notifications",
+      "count": 1
+    },
+    {
+      "at": "2026-10-14T09:00:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "complete",
+      "stage": "response"
+    },
+    {
+      "at": "2026-10-13T20:10:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "response",
+      "count": 3
+    },
+    {
+      "at": "2026-10-13T10:10:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "notifications",
+      "count": 1
+    },
+    {
+      "at": "2026-10-13T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "notifications",
+      "count": 1
+    },
+    {
+      "at": "2026-10-12T13:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "complete",
+      "stage": "triage"
+    },
+    {
+      "at": "2026-10-12T12:50:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "triage",
+      "count": 2
+    },
+    {
+      "at": "2026-10-12T12:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "incidents/01JZ8M3N5P7R9T1V3X5Z7B9D1F/v1",
+    "at": "2026-11-18T10:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "stages": [
+    {
+      "id": "triage",
+      "part": "triage",
+      "after": [],
+      "when": null,
+      "narrative": [],
+      "stepUp": false,
+      "status": "completed",
+      "unanswered": false,
+      "completion": {
+        "at": "2026-10-12T13:00:00Z",
+        "by": {
+          "pseudonym": "p-4c1a9e",
+          "name": "Alex Example"
+        }
+      },
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "privacy-assessment",
+      "part": "privacy-assessment",
+      "after": [
+        "triage"
+      ],
+      "when": {
+        "field": "/triage/personal-data-affected"
+      },
+      "narrative": [],
+      "stepUp": false,
+      "status": "not-applicable",
+      "unanswered": false,
+      "completion": null,
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "response",
+      "part": "response",
+      "after": [
+        "triage"
+      ],
+      "when": null,
+      "narrative": [],
+      "stepUp": false,
+      "status": "completed",
+      "unanswered": false,
+      "completion": {
+        "at": "2026-10-14T09:00:00Z",
+        "by": {
+          "pseudonym": "p-2b7f10",
+          "name": "Jordan Weber"
+        }
+      },
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "notifications",
+      "part": "notifications",
+      "after": [
+        "triage"
+      ],
+      "when": {
+        "any": [
+          {
+            "field": "/triage/personal-data-affected"
+          },
+          {
+            "field": "/triage/nis2-significant"
+          }
+        ]
+      },
+      "narrative": [],
+      "stepUp": false,
+      "status": "completed",
+      "unanswered": false,
+      "completion": {
+        "at": "2026-11-13T10:10:00Z",
+        "by": {
+          "pseudonym": "p-2b7f10",
+          "name": "Jordan Weber"
+        }
+      },
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "review",
+      "part": "review",
+      "after": [
+        "response"
+      ],
+      "when": null,
+      "narrative": [
+        "course",
+        "root-cause-analysis",
+        "lessons"
+      ],
+      "stepUp": true,
+      "status": "completed",
+      "unanswered": false,
+      "completion": {
+        "at": "2026-11-17T15:00:00Z",
+        "by": {
+          "pseudonym": "p-4c1a9e",
+          "name": "Alex Example"
+        }
+      },
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    }
+  ],
+  "deadlines": [
+    {
+      "rule": "nis2-early-warning",
+      "element": null,
+      "startedAt": "2026-10-12T11:00:00Z",
+      "due": "2026-10-13T11:00:00Z",
+      "status": "MET",
+      "sentAt": "2026-10-13T09:30:00Z",
+      "metBy": "/notifications/nis2-early-warning"
+    },
+    {
+      "rule": "nis2-notification",
+      "element": null,
+      "startedAt": "2026-10-12T11:00:00Z",
+      "due": "2026-10-15T11:00:00Z",
+      "status": "MET",
+      "sentAt": "2026-10-14T16:00:00Z",
+      "metBy": "/notifications/nis2-notification"
+    },
+    {
+      "rule": "nis2-intermediate-report",
+      "element": 0,
+      "startedAt": null,
+      "due": "2026-10-30T12:00:00Z",
+      "status": "MET",
+      "sentAt": "2026-10-29T15:00:00Z",
+      "metBy": "/notifications/nis2-intermediate-reports/0"
+    },
+    {
+      "rule": "nis2-final-report",
+      "element": null,
+      "startedAt": "2026-10-14T16:00:00Z",
+      "due": "2026-11-14T16:00:00Z",
+      "status": "MET",
+      "sentAt": "2026-11-13T10:00:00Z",
+      "metBy": "/notifications/nis2-final-report"
+    }
+  ],
+  "protection": {
+    "needs": {
+      "confidentiality": "normal",
+      "integrity": "normal",
+      "availability": "normal"
+    },
+    "decidedBy": {
+      "confidentiality": "service:notification-service",
+      "integrity": "service:notification-service",
+      "availability": "service:notification-service"
+    }
+  }
+}

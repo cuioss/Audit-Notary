@@ -188,6 +188,87 @@
       "title": "Notification service, notification flows",
       "state": "draft",
       "address": "/threat-models/notification-service/notification-flows"
+    },
+    {
+      "repository": "isms-incidents-2026",
+      "id": "01JZ9T4M6Q8S0V2X4B6D8F0H2K",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Card data exposed in the checkout log",
+      "state": "draft",
+      "address": "/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K"
+    },
+    {
+      "repository": "isms-incidents-2026",
+      "id": "01JZ9V7P9S1T3W5Y7A9C1E3G5J",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Credential stuffing against the login form",
+      "state": "draft",
+      "address": "/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J"
+    },
+    {
+      "repository": "isms-incidents-2026",
+      "id": "01JZA2B4D6F8H0K2N4Q6S8V0X2",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Phishing mail with a forged payment link",
+      "state": "draft",
+      "address": "/incidents/2026/01JZA2B4D6F8H0K2N4Q6S8V0X2"
+    },
+    {
+      "repository": "isms-incidents-2026",
+      "id": "01JZ8M3N5P7R9T1V3X5Z7B9D1F",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Notification service down after a failed deployment",
+      "state": "released",
+      "address": "/incidents/2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F"
+    },
+    {
+      "repository": "isms-incidents-2026",
+      "id": "01JZ8K1M3P5R7T9V1X3Z5B7D9F",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Unauthorised access to the report archive",
+      "state": "draft",
+      "address": "/incidents/2026/01JZ8K1M3P5R7T9V1X3Z5B7D9F"
+    },
+    {
+      "repository": "isms-incidents-2026",
+      "id": "01JZ6Q8S0V2X4B6D8F0H2K4M6P",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Customer export sent to the wrong recipient",
+      "state": "draft",
+      "address": "/incidents/2026/01JZ6Q8S0V2X4B6D8F0H2K4M6P"
+    },
+    {
+      "repository": "isms-incidents-2026",
+      "id": "01JZA6D8F0H2K4M6P8R0T2W4Y6",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Suspicious logins from an unknown network",
+      "state": "draft",
+      "address": "/incidents/2026/01JZA6D8F0H2K4M6P8R0T2W4Y6"
+    },
+    {
+      "repository": "isms-incidents-2025",
+      "id": "01JZ2A4C6E8G0J2M4P6R8T0W2Y",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Laptop with customer extracts lost",
+      "state": "released",
+      "address": "/incidents/2025/01JZ2A4C6E8G0J2M4P6R8T0W2Y"
+    },
+    {
+      "repository": "isms-incidents-2025",
+      "id": "01JZ3B5D7F9H1K3N5Q7S9V1X3Z",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Misdirected newsletter exposed the subscriber list",
+      "state": "released",
+      "address": "/incidents/2025/01JZ3B5D7F9H1K3N5Q7S9V1X3Z"
     }
   ]
 }

@@ -1,0 +1,117 @@
+{
+  "today": "2026-11-26",
+  "asOf": "2026-11-26T10:00:00Z",
+  "year": 2025,
+  "repository": "isms-incidents-2025",
+  "incidents": [
+    {
+      "id": "01JZ3B5D7F9H1K3N5Q7S9V1X3Z",
+      "title": "Misdirected newsletter exposed the subscriber list",
+      "address": "/incidents/2025/01JZ3B5D7F9H1K3N5Q7S9V1X3Z",
+      "state": "released",
+      "version": 1,
+      "frozen": true,
+      "severity": "medium",
+      "categories": [
+        "personal-data-breach"
+      ],
+      "personalDataAffected": true,
+      "nis2Significant": false,
+      "awareAt": "2025-09-08T07:30:00Z",
+      "resolvedAt": "2025-09-09T12:00:00Z",
+      "stages": [
+        {
+          "id": "triage",
+          "status": "completed"
+        },
+        {
+          "id": "privacy-assessment",
+          "status": "completed"
+        },
+        {
+          "id": "response",
+          "status": "completed"
+        },
+        {
+          "id": "notifications",
+          "status": "completed"
+        },
+        {
+          "id": "review",
+          "status": "completed"
+        }
+      ],
+      "deadlines": {
+        "open": 0,
+        "met": 0,
+        "missed": 1,
+        "next": null
+      },
+      "requested": false,
+      "updatedAt": "2025-10-20T10:00:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "incidents/01JZ3B5D7F9H1K3N5Q7S9V1X3Z/v1",
+        "at": "2025-10-20T10:00:00Z"
+      }
+    },
+    {
+      "id": "01JZ2A4C6E8G0J2M4P6R8T0W2Y",
+      "title": "Laptop with customer extracts lost",
+      "address": "/incidents/2025/01JZ2A4C6E8G0J2M4P6R8T0W2Y",
+      "state": "released",
+      "version": 1,
+      "frozen": true,
+      "severity": "medium",
+      "categories": [
+        "personal-data-breach"
+      ],
+      "personalDataAffected": true,
+      "nis2Significant": false,
+      "awareAt": "2025-03-14T08:00:00Z",
+      "resolvedAt": "2025-03-17T12:00:00Z",
+      "stages": [
+        {
+          "id": "triage",
+          "status": "completed"
+        },
+        {
+          "id": "privacy-assessment",
+          "status": "completed"
+        },
+        {
+          "id": "response",
+          "status": "completed"
+        },
+        {
+          "id": "notifications",
+          "status": "completed"
+        },
+        {
+          "id": "review",
+          "status": "completed"
+        }
+      ],
+      "deadlines": {
+        "open": 0,
+        "met": 1,
+        "missed": 0,
+        "next": null
+      },
+      "requested": false,
+      "updatedAt": "2025-04-30T09:00:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "incidents/01JZ2A4C6E8G0J2M4P6R8T0W2Y/v1",
+        "at": "2025-04-30T09:00:00Z"
+      }
+    }
+  ],
+  "truncated": false
+}

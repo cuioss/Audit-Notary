@@ -1,0 +1,475 @@
+{
+  "repository": "isms-incidents-2025",
+  "id": "01JZ3B5D7F9H1K3N5Q7S9V1X3Z",
+  "category": "incident-reports",
+  "kind": "incident",
+  "title": "Misdirected newsletter exposed the subscriber list",
+  "state": "released",
+  "version": 1,
+  "frozen": true,
+  "year": 2025,
+  "address": "/incidents/2025/01JZ3B5D7F9H1K3N5Q7S9V1X3Z",
+  "asOf": "2025-10-20T10:00:00Z",
+  "parts": {
+    "data": {
+      "blob": "425a359",
+      "savedAt": "2025-09-08T08:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Misdirected newsletter exposed the subscriber list"
+      }
+    },
+    "triage": {
+      "blob": "c0a4843",
+      "savedAt": "2025-09-08T09:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "categories": [
+          "personal-data-breach"
+        ],
+        "severity": "medium",
+        "occurred-at": "2025-09-07T21:00:00Z",
+        "detected-at": "2025-09-08T06:40:00Z",
+        "aware-at": "2025-09-08T07:30:00Z",
+        "personal-data-affected": true,
+        "nis2-significant": false,
+        "affected-services": [
+          "service:notification-service"
+        ],
+        "tickets": [
+          "SEC-1544"
+        ],
+        "completion": {
+          "at": "2025-09-08T09:00:00Z",
+          "by": "p-4c1a9e"
+        }
+      }
+    },
+    "privacy-assessment": {
+      "blob": "b868353",
+      "savedAt": "2025-09-12T08:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "data-subjects": [
+          {
+            "category": "Subscribers",
+            "approximate-number": 950
+          }
+        ],
+        "records-approximate": 950,
+        "risk": "high-risk",
+        "risk-assessment": "The addresses of all subscribers were visible in the header of one newsletter. Subscribers can be targeted by phishing that refers to the newsletter.",
+        "notify-authority": true,
+        "inform-data-subjects": true,
+        "reasons-for-delay": "The mailing platform reported the misdirected mail only after the first complaint.",
+        "completion": {
+          "at": "2025-09-12T08:00:00Z",
+          "by": "p-4c1a9e"
+        }
+      }
+    },
+    "response": {
+      "blob": "f438814",
+      "savedAt": "2025-09-12T08:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Developer"
+      },
+      "value": {
+        "actions": [
+          {
+            "kind": "containment",
+            "what": "Stop the campaign and ask the mailing platform to recall the queued mails",
+            "role": "role:service-owner",
+            "issues": [
+              "NS-201"
+            ],
+            "done": true
+          },
+          {
+            "kind": "recovery",
+            "what": "Move the recipients to the blind copy field and check every template",
+            "role": "role:developer",
+            "issues": [
+              "NS-202"
+            ],
+            "done": true
+          }
+        ],
+        "timeline": [
+          {
+            "at": "2025-09-08T06:40:00Z",
+            "what": "A subscriber reports that the newsletter shows other addresses."
+          },
+          {
+            "at": "2025-09-09T12:00:00Z",
+            "what": "The templates are corrected and the campaign is sent again."
+          }
+        ],
+        "resolved-at": "2025-09-09T12:00:00Z",
+        "completion": {
+          "at": "2025-09-12T08:10:00Z",
+          "by": "p-2b7f10"
+        }
+      }
+    },
+    "notifications": {
+      "blob": "1614108",
+      "savedAt": "2025-09-12T09:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Developer"
+      },
+      "value": {
+        "supervisory-authority": {
+          "sent-at": "2025-09-12T09:00:00Z",
+          "recipient": "State data protection authority",
+          "channel": "reporting-portal",
+          "reference": "2025-0912-31"
+        },
+        "data-subjects": {
+          "sent-at": "2025-09-12T09:05:00Z",
+          "recipient": "Affected subscribers",
+          "channel": "email"
+        },
+        "completion": {
+          "at": "2025-09-12T09:10:00Z",
+          "by": "p-2b7f10"
+        }
+      }
+    },
+    "review": {
+      "blob": "65214e5",
+      "savedAt": "2025-10-17T14:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "root-causes": [
+          {
+            "category": "software-defect",
+            "description": "The template put the recipients in the visible address field."
+          },
+          {
+            "category": "third-party",
+            "description": "The mailing platform did not warn about more than one visible recipient."
+          }
+        ],
+        "measures": [
+          {
+            "what": "Test every campaign template with two recipients before the first send",
+            "role": "role:developer",
+            "issues": [
+              "NS-210"
+            ],
+            "due": "2025-11-15"
+          }
+        ],
+        "course": "A newsletter went to all subscribers with every address visible. The template was corrected within a day.",
+        "root-cause-analysis": "A change to the template replaced the blind copy field by the normal one. No test sent a mail to more than one recipient.",
+        "lessons": "A deadline is only as good as the first report. The complaint reached the team two days after the mail; the reporting path of the mailing platform must name the security team.",
+        "completion": {
+          "at": "2025-10-17T14:00:00Z",
+          "by": "p-4c1a9e"
+        }
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2025-10-20T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "incidents/01JZ3B5D7F9H1K3N5Q7S9V1X3Z/v1"
+    },
+    {
+      "at": "2025-10-20T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-10-17T14:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "complete",
+      "stage": "review"
+    },
+    {
+      "at": "2025-10-10T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "review",
+      "count": 5
+    },
+    {
+      "at": "2025-09-12T09:10:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "complete",
+      "stage": "notifications"
+    },
+    {
+      "at": "2025-09-12T09:06:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "notifications",
+      "count": 2
+    },
+    {
+      "at": "2025-09-12T08:10:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "complete",
+      "stage": "response"
+    },
+    {
+      "at": "2025-09-12T08:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "complete",
+      "stage": "privacy-assessment"
+    },
+    {
+      "at": "2025-09-12T07:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "privacy-assessment",
+      "count": 4
+    },
+    {
+      "at": "2025-09-09T12:10:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "response",
+      "count": 3
+    },
+    {
+      "at": "2025-09-08T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "complete",
+      "stage": "triage"
+    },
+    {
+      "at": "2025-09-08T08:50:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "triage",
+      "count": 2
+    },
+    {
+      "at": "2025-09-08T08:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "incidents/01JZ3B5D7F9H1K3N5Q7S9V1X3Z/v1",
+    "at": "2025-10-20T10:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "stages": [
+    {
+      "id": "triage",
+      "part": "triage",
+      "after": [],
+      "when": null,
+      "narrative": [],
+      "stepUp": false,
+      "status": "completed",
+      "unanswered": false,
+      "completion": {
+        "at": "2025-09-08T09:00:00Z",
+        "by": {
+          "pseudonym": "p-4c1a9e",
+          "name": "Alex Example"
+        }
+      },
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "privacy-assessment",
+      "part": "privacy-assessment",
+      "after": [
+        "triage"
+      ],
+      "when": {
+        "field": "/triage/personal-data-affected"
+      },
+      "narrative": [],
+      "stepUp": false,
+      "status": "completed",
+      "unanswered": false,
+      "completion": {
+        "at": "2025-09-12T08:00:00Z",
+        "by": {
+          "pseudonym": "p-4c1a9e",
+          "name": "Alex Example"
+        }
+      },
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "response",
+      "part": "response",
+      "after": [
+        "triage"
+      ],
+      "when": null,
+      "narrative": [],
+      "stepUp": false,
+      "status": "completed",
+      "unanswered": false,
+      "completion": {
+        "at": "2025-09-12T08:10:00Z",
+        "by": {
+          "pseudonym": "p-2b7f10",
+          "name": "Jordan Weber"
+        }
+      },
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "notifications",
+      "part": "notifications",
+      "after": [
+        "triage"
+      ],
+      "when": {
+        "any": [
+          {
+            "field": "/triage/personal-data-affected"
+          },
+          {
+            "field": "/triage/nis2-significant"
+          }
+        ]
+      },
+      "narrative": [],
+      "stepUp": false,
+      "status": "completed",
+      "unanswered": false,
+      "completion": {
+        "at": "2025-09-12T09:10:00Z",
+        "by": {
+          "pseudonym": "p-2b7f10",
+          "name": "Jordan Weber"
+        }
+      },
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "review",
+      "part": "review",
+      "after": [
+        "response"
+      ],
+      "when": null,
+      "narrative": [
+        "course",
+        "root-cause-analysis",
+        "lessons"
+      ],
+      "stepUp": true,
+      "status": "completed",
+      "unanswered": false,
+      "completion": {
+        "at": "2025-10-17T14:00:00Z",
+        "by": {
+          "pseudonym": "p-4c1a9e",
+          "name": "Alex Example"
+        }
+      },
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    }
+  ],
+  "deadlines": [
+    {
+      "rule": "gdpr-art33",
+      "element": null,
+      "startedAt": "2025-09-08T07:30:00Z",
+      "due": "2025-09-11T07:30:00Z",
+      "status": "MISSED",
+      "sentAt": "2025-09-12T09:00:00Z",
+      "metBy": "/notifications/supervisory-authority"
+    }
+  ],
+  "protection": {
+    "needs": {
+      "confidentiality": "normal",
+      "integrity": "normal",
+      "availability": "normal"
+    },
+    "decidedBy": {
+      "confidentiality": "service:notification-service",
+      "integrity": "service:notification-service",
+      "availability": "service:notification-service"
+    }
+  }
+}

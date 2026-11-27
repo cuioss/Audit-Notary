@@ -69,6 +69,13 @@
       "title": "Payment API, checkout flow: T-07",
       "address": "/threat-models/payment-api/checkout-flow",
       "retired": false
+    },
+    {
+      "ref": "isms-incidents-2026:incident/01JZ9T4M6Q8S0V2X4B6D8F0H2K",
+      "found": true,
+      "title": "Card data exposed in the checkout log",
+      "address": "/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K",
+      "retired": false
     }
   ]
 }
