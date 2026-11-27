@@ -154,8 +154,8 @@ scope in the trend (then *Mobile Apps* without a point), no threat model, no ris
 catalog: the page of a service and a threat model answer `404 NOT_FOUND`, the list of the threat models is empty, and
 the schema and the recipes are served as in `workshop` (_Threat Models_). There is no incident repository: the years are
 `[]`, the year 2026 answers `404 NOT_FOUND`, the schema is served and no write route exists (_Incident Reports_). The user holds all rights on `isms-register` and `isms-core`: the register and both lists are empty, the schema
-is served and the create of a risk (`create-risk`, state `risk-created`) answers `201` with the first number `R-001`; no other write has a
-route (_ISMS_)
+is served and the create of a risk (`create-risk`, state `risk-created`) answers `201` with the first number `R-001`; in `risk-created` the save (`200 SAVED`) and the draft (`200 DRAFT_SAVED`) of `R-001` answer too, and
+in `ready` no other write has a route (_ISMS_)
 
 |`no-rights`
 |`ready`
@@ -1731,7 +1731,7 @@ the same, `release` those of `isms-register`, `degraded` and `local` the lists, 
 |The release view: `R-018` against `risks/R-018/v1` (three changes), `R-042` and `internal-audit-2026` from nothing (all additions), `secure-development-policy` against `policies/<id>/v1`
 
 |`GET …/isms-core/<policy>/diff?from=v<a>&to=v<b>`
-|The compare page: the information security policy `v1`/`v2`, `v2`/`v3` and `v1`/`v3` (`from` `policies/<id>/v<a>`), the scope of the ISMS `v1`/`v2`; every pointer exists in the value of the version it names and `before` and `after` equal the two reads. `from=v9` is `404 NOT_FOUND`, `from=zzz` `422 FORMAT`, no `from` `422 REQUIRED`; another pair of the information security policy answers that `422 REQUIRED` too (the key without a query matches every query), of the scope `404 MOCK_NO_ROUTE` (`requires` `read` on `isms-core`)
+|The compare page: the information security policy `v1`/`v2`, `v2`/`v3` and `v1`/`v3` (`from` `policies/<id>/v<a>`), the scope of the ISMS `v1`/`v2`; every pointer exists in the value of the version it names and `before` and `after` equal the two reads. `from=v9` is `404 NOT_FOUND`, `from=zzz` `422 FORMAT`, no `from` `422 REQUIRED`; another pair of the information security policy answers that `422 REQUIRED` too (the key without a query matches every query), of the scope `404 NOT_FOUND` (`requires` `read` on `isms-core`; `MOCK_NO_ROUTE` is only for a repository that the rights do not name)
 
 |`GET /api/v1/samm/<scope>/gaps` (`read` on `samm-assessments`)
 |`isms-gaps-payments.json` (15 gaps, `st` carries `R-015`), `-shop` (15), `-organisation` (14, `sb` reaches its target and is none); `identity` (an assessment in review only) answers no assessment and no gap; an unknown scope (`mobile` before `create-scope` too) is `404 NOT_FOUND`
@@ -1756,8 +1756,9 @@ the same, `release` those of `isms-register`, `degraded` and `local` the lists, 
 `POST /api/v1/documents/isms-register` answers one thing in each state. The first save of a new risk numbers it (the library's rule,
 not a counter): `create-risk` of `ready` answers `201` `R-043` (without an origin member), the three origins and the taken number are
 states entered by `POST /mock/goto/<state>` whose link `created-from-gap`, `created-from-threat`, `created-not-recorded` or
-`created-taken` is that same create. A create with an origin carries the member `origin` `{ref, recorded}`; `recorded: true` means that the
-transfer into the threat model was written, `false` that it could not be (point 68, 76). *The transfer is written in
+`created-taken` is that same create. A create with an origin carries the member `origin` `{ref, recorded}`; for a threat, `recorded: true` means that the
+transfer into the threat model was written and `false` that it could not be (point 68, 76); for a gap nothing is written beyond the `origin` of the risk itself, so the
+create from a gap answers `recorded: true` and writes into no threat model. *The transfer is written in
 `risk-created-from-threat` only*: `T-02` carries `attributes.transferred` `isms-register:risk/R-043`, the model is a draft again
 (version 4, the release v3 stays, `threat-model.submit`), the evaluation says `9` threats, `3` open, `1` untreated and `2` transferred and
 the draft of `T-02` answers `ORIGIN_HAS_RISK` with `R-043`; the evaluation row and the service page of that state say `draft` and the version of the last release (`3`), as the
@@ -1819,12 +1820,16 @@ release of `R-042` is not routed. The events `document-saved`, `document-transit
 |`risk-release-step-up`, `risk-release-stepped-up`
 |By `goto`: the release answers `403 STEP_UP_REQUIRED` (`stepUp` `/api/v1/auth/login?step-up=mfa`) and moves to `-stepped-up`, where it answers `200 RELEASED` and moves to `risk-released`
 
-|`risk-release-changed`, `-refused`, `-reviewed`
+|`risk-release-changed`, `-refused`, `-reviewed`, `risk-released-changed`
 |By `goto`: the release answers `409 CHANGED_SINCE_REVIEW` and moves to `-refused`, where it stays refused until the diff is read again; that read is the diff with the
-change saved meanwhile (`isms-diff-r-018-released-changed.json`: a third ticket, `OPS-213`) and moves to `-reviewed`, where the release answers `200 RELEASED`
+change saved meanwhile (`isms-diff-r-018-released-changed.json`: a third ticket, `OPS-213`) and moves to `-reviewed`, where the release answers `200 RELEASED` and moves to
+`risk-released-changed`: as `risk-released`, but `R-018` v2 (the read, `?at=v2` in `risk-r-018-at-v2-changed.json`) lists `OPS-211`, `OPS-212` and `OPS-213` as the diff did,
+and the revisions carry the save of 09:58 (Jordan Weber). The re-review is the read of `diff?from=released` with any `to` too: the key lists `from` only (a documented limit)
 
-|`risk-release-released-meanwhile`
-|By `goto`: `R-018` reads released as in `risk-released`; the release answers `409 DOCUMENT_RELEASED` with the tag `risks/R-018/v2` (a save is not refused: it reopens a released risk)
+|`risk-release-released-meanwhile`, `risk-release-reopened`
+|By `goto`: `R-018` reads released as in `risk-released`; the release answers `409 DOCUMENT_RELEASED` with the tag `risks/R-018/v2` (the outcome of the generic release request, PROVISIONAL;
+a save of a risk is never refused with it). The save (`save-r018`, `200 SAVED`, `draft`, version 3, 10:12) reopens the released risk and moves to `risk-release-reopened`: `R-018` is a draft
+(`risk-r-018-reopened.json`, `isms.submit` offered), the release v2 stays (`?at=v2`, the revisions, the register as of now), the register lists it as a draft. The event `document-saved`
 
 |`risk-saved-by-other`
 |By `goto`: the save of `R-018` answers `409 CONFLICT` for `/description` and `/review-due` with both values, Jordan Weber
@@ -1862,9 +1867,12 @@ The create is the only create that moves, and one thing in each state (the engin
 their text in the states that follow them.
 * *The diffs are for the named pairs only:* the three of the information security policy and the one of the scope; the release view of
 `R-018`, `R-042`, `R-043` (in `risk-release-transfer-pending`), the secure development policy and the audit 2026. Another pair of the scope
-or another entry is `404 MOCK_NO_ROUTE`, another pair of the information security policy `422 REQUIRED` (see the routes), an unknown entry `404 NOT_FOUND`.
-* *`?at=` and `from` of an unlisted value are not refused.* A key cannot say "any value but the listed ones", so that `?at=v8` and the
-`origin` of no key answer the current state (_Query-Keyed Routes_); the explicit keys `v9` and `zzz` show the answers of the real server.
+or another entry is `404 NOT_FOUND` (the repository is named by the rights; `MOCK_NO_ROUTE` is only for one that is not), another pair of the information security policy `422 REQUIRED` (see the routes), an unknown entry `404 NOT_FOUND`.
+* *`?at=` and `from` of an unlisted value are not refused.* A key cannot say "any value but the listed ones", so that `?at=v8` answers the
+current state (_Query-Keyed Routes_); the explicit keys `v9` and `zzz` show the answers of the real server.
+* *`origin` of an unlisted value does not answer the current state.* It reaches the keyless `GET /api/v1/isms/risks/draft` route, which answers `422 VALIDATION` with `/origin` `REQUIRED`.
+* *The key of a link or a route lists the members it needs, not the ones that must be absent.* In `risk-release-changed-refused` the re-review is the read of `diff?from=released`; the
+same read with a `to` is that re-review too, because no key can require that `to` is missing.
 * *`degraded` and `local` do not walk the lifecycle* (no `approve`, no state): `degraded` reads, refuses the save of `R-012` and the
 create of a risk in `unreachable` (`isms-register` and `isms-core` `DOWN`) and answers them statically after `recovered`; `local` has no
 write route, so a write answers `404` for the repository of its rights.

@@ -63,8 +63,12 @@ class IsmsTest {
     private static final Map<String, String> DOCUMENTS = new LinkedHashMap<>();
     private static final Map<String, String> COLLECTIONS = Map.of("policy", "policies", "isms-scope", "scope", "audit-report", "audits",
             "management-review", "management-reviews");
-    /** The risks that exist in a state of the profile only (IsmsStatesTest): the first number of {@code empty}, the next number and the taken one. */
-    static final Set<String> STATE_ONLY_RISKS = Set.of("R-001", "R-043", "R-044");
+    /**
+     * The risks that exist in a state of a profile only (IsmsStatesTest): the plain read of a risk that a state of {@code workshop} or of
+     * {@code empty} routes and no route of the base routes (the first number of {@code empty}, the next number and the taken one), derived
+     * from the scenarios.
+     */
+    static final Set<String> STATE_ONLY_RISKS = stateOnlyRisks();
     private static final List<String> REPORTS = List.of("now", "2026-03", "2026-06", "audit-2026-03", "management-review-2026-06",
             "before-first", "empty");
 
@@ -80,22 +84,70 @@ class IsmsTest {
             releases.sort(null);
             RISKS.put(id, releases);
         });
+        // the documents: the plain reads of isms-core that the scenario-level routes of workshop name (independent of the list of the documents)
         Map<String, String> byId = new java.util.TreeMap<>();
-        Set<String> listed = new HashSet<>();
-        data("isms-documents.json").path("documents").forEach(row -> listed.add(row.path("id").asText()));
-        try (var files = Files.list(DATA_DIRECTORY)) {
-            // the files of the base: the reads that the list of the base names (the variants of the states have a suffix, the new policy is a state)
-            files.map(path -> path.getFileName().toString())
-                    .filter(name -> name.startsWith("isms-doc-") && name.endsWith(".json") && !name.endsWith("-revisions.json") && !name.contains("-at-"))
-                    .filter(name -> listed.contains(data(name).path("id").asText()) && !name.endsWith("-released.json"))
-                    .forEach(name -> {
-                        String slug = name.substring("isms-doc-".length(), name.length() - ".json".length());
-                        byId.put(data(name).path("id").asText(), slug);
-                    });
+        for (var endpoint : endpoints(scenario("workshop"))) {
+            if (endpoint.state().isEmpty() && "GET".equals(endpoint.method()) && endpoint.path().matches("/api/v1/documents/isms-core/[0-9A-Z]{26}")
+                    && endpoint.answer().path("body_file").asText().startsWith("isms-doc-")) {
+                String name = endpoint.answer().path("body_file").asText();
+                byId.put(data(name).path("id").asText(), name.substring("isms-doc-".length(), name.length() - ".json".length()));
+            }
+        }
+        byId.forEach((id, slug) -> DOCUMENTS.put(slug, id));
+    }
+
+    /** A route or a link of a scenario: the state ({@code ""} for the routes of the scenario itself), the method, the path with its query and the answer. */
+    record Endpoint(String state, String method, String path, JsonNode answer) {
+    }
+
+    static JsonNode scenario(String name) {
+        try (var stream = CLASS_LOADER.getResourceAsStream("scenarios/" + name + ".json")) {
+            return MockClient.MAPPER.readTree(java.util.Objects.requireNonNull(stream));
         } catch (IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
-        byId.forEach((id, slug) -> DOCUMENTS.put(slug, id));
+    }
+
+    static List<String> fieldNames(JsonNode node) {
+        List<String> names = new ArrayList<>();
+        node.fieldNames().forEachRemaining(names::add);
+        return names;
+    }
+
+    /** Every route and every link of a scenario: its own routes, then the routes and the links of each state. */
+    static List<Endpoint> endpoints(JsonNode scenario) {
+        List<Endpoint> result = new ArrayList<>();
+        addRoutes(result, "", scenario.path("routes"));
+        for (String state : fieldNames(scenario.path("states"))) {
+            addRoutes(result, state, scenario.path("states").path(state).path("routes"));
+            scenario.path("states").path(state).path("links").forEach(link ->
+                    result.add(new Endpoint(state, link.path("method").asText(), link.path("path").asText(), link)));
+        }
+        return result;
+    }
+
+    private static void addRoutes(List<Endpoint> result, String state, JsonNode routes) {
+        for (String key : fieldNames(routes)) {
+            int space = key.indexOf(' ');
+            result.add(new Endpoint(state, key.substring(0, space), key.substring(space + 1), routes.path(key)));
+        }
+    }
+
+    private static Set<String> stateOnlyRisks() {
+        Pattern plain = Pattern.compile("/api/v1/documents/isms-register/(R-\\d{3})");
+        Set<String> inBase = new HashSet<>();
+        Set<String> inStates = new java.util.TreeSet<>();
+        for (String profile : List.of("workshop", "empty")) {
+            for (var endpoint : endpoints(scenario(profile))) {
+                var matcher = plain.matcher(endpoint.path());
+                String file = endpoint.answer().path("body_file").asText();
+                if ("GET".equals(endpoint.method()) && matcher.matches() && file.matches("risk-r-\\d{3}\\.json")) {
+                    (endpoint.state().isEmpty() ? inBase : inStates).add(matcher.group(1));
+                }
+            }
+        }
+        inStates.removeAll(inBase);
+        return Set.copyOf(inStates);
     }
 
     static JsonNode data(String name) {
@@ -116,6 +168,11 @@ class IsmsTest {
 
     static JsonNode riskAt(String id, int version) {
         return data("risk-" + slugOf(id) + "-at-v" + version + ".json");
+    }
+
+    /** The slug of a document (of the file {@code isms-doc-<slug>.json}) by its id; the documents are those that the base routes of workshop read. */
+    static String slugOfDocument(String id) {
+        return DOCUMENTS.entrySet().stream().filter(entry -> entry.getValue().equals(id)).findFirst().orElseThrow().getKey();
     }
 
     static JsonNode document(String slug) {

@@ -130,7 +130,7 @@ items of the reviews; `workshop` holds `approve` on `isms-register` and `isms-co
 `isms-document-created`), creates a risk from a gap or a threat (`risk-origin-gap`, `risk-origin-threat`, `risk-origin-not-recorded`
 with `risk-release-transfer-pending` and `409 TRANSFER_PENDING`, and the transfer in the threat model), takes the next number
 (`risk-number-taken`), completes, submits and reopens (`risk-completed`, `risk-submitted`, `risk-reopened`), releases a risk and a
-policy with step-up (`risk-released`, `risk-release-step-up`, `-release-changed`, `-release-released-meanwhile`, `isms-document-released`,
+policy with step-up (`risk-released`, `risk-release-step-up`, `-release-changed` with `risk-released-changed`, `-release-released-meanwhile` with `risk-release-reopened`, `isms-document-released`,
 `isms-document-release-step-up`) and refuses (`risk-saved-by-other`, `-invalid`, `-create-invalid`, `-origin-read-only`,
 `isms-document-saved-by-other`, `-invalid`, `isms-git-unavailable`); `read-only` answers every write `403 FORBIDDEN`, `release` (right
 `read` on `isms-register` only) reads the register and the risks and answers every document of `isms-core` `403 FORBIDDEN`, `empty` has no

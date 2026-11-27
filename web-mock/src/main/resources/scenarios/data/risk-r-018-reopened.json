@@ -1,0 +1,130 @@
+{
+  "repository": "isms-register",
+  "id": "R-018",
+  "category": "isms",
+  "kind": "risk",
+  "title": "No tested restore of the customer database",
+  "state": "draft",
+  "version": 3,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "14d6ae2",
+      "savedAt": "2026-11-26T10:12:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "No tested restore of the customer database",
+        "description": "Backups of the customer database are taken every night, but a restore was never tested. It is unknown whether the data can be recovered within the time that the business accepts. The first restore test on a copy of the database is planned for next quarter and must show a recovery time below four hours.",
+        "rating": "high",
+        "treatment": "mitigate",
+        "treatment-notes": "Run a restore test every quarter and write down the time it takes.",
+        "owner": "team:identity",
+        "owner-role": "role:service-owner",
+        "review-due": "2027-05-05",
+        "issues": [
+          "OPS-211",
+          "OPS-212"
+        ],
+        "related": [
+          "service:customer-db"
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-26T10:12:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2026-11-26T10:05:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "risks/R-018/v2"
+    },
+    {
+      "at": "2026-11-25T14:30:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-11-25T14:24:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2026-10-05T15:02:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "risks/R-018/v1"
+    },
+    {
+      "at": "2026-10-05T14:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-10-02T11:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2026-09-28T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "risks/R-018/v2",
+    "at": "2026-11-26T10:05:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "isms.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ]
+}

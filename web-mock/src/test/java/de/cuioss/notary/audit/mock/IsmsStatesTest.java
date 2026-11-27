@@ -12,6 +12,8 @@ package de.cuioss.notary.audit.mock;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import de.cuioss.notary.audit.mock.runtime.CanonicalAddresses;
+import de.cuioss.notary.audit.mock.IsmsTest.Endpoint;
+import de.cuioss.notary.audit.mock.scenario.ScenarioLoader;
 import de.cuioss.notary.audit.mock.scenario.ScenarioRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -26,10 +28,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import static de.cuioss.notary.audit.mock.IsmsTest.data;
+import static de.cuioss.notary.audit.mock.IsmsTest.endpoints;
+import static de.cuioss.notary.audit.mock.IsmsTest.fieldNames;
 import static de.cuioss.notary.audit.mock.IsmsTest.list;
 import static de.cuioss.notary.audit.mock.IsmsTest.reviewStatus;
 import static de.cuioss.notary.audit.mock.IsmsTest.risk;
@@ -69,27 +74,13 @@ class IsmsStatesTest {
     private static final ClassLoader CLASS_LOADER = IsmsStatesTest.class.getClassLoader();
     private static final CanonicalAddresses ADDRESSES = CanonicalAddresses.load(MockClient.MAPPER, CLASS_LOADER);
     private static final JsonNode WORKSHOP = scenario("workshop");
-    /** The states of the ISMS lens in {@code workshop}: the ones that this step adds (by name). */
-    private static final List<String> STATES = List.of("risk-created", "risk-origin-gap", "risk-created-from-gap", "risk-origin-threat",
-            "risk-created-from-threat", "risk-origin-not-recorded", "risk-created-not-recorded", "risk-release-transfer-pending",
-            "risk-number-taken", "risk-created-taken", "risk-create-invalid", "risk-completed", "risk-submitted", "risk-reopened",
-            "risk-released", "risk-release-step-up", "risk-release-stepped-up", "risk-release-changed", "risk-release-changed-refused",
-            "risk-release-changed-reviewed", "risk-release-released-meanwhile", "risk-saved-by-other", "risk-invalid",
-            "risk-origin-read-only", "isms-document-created", "isms-document-released", "isms-document-release-step-up",
-            "isms-document-release-stepped-up", "isms-document-saved-by-other", "isms-document-invalid", "isms-git-unavailable");
+    /** The states of the ISMS lens in {@code workshop}, derived from the scenario: the ones named {@code risk-*} and {@code isms-*}. */
+    private static final List<String> STATES = fieldNames(WORKSHOP.path("states")).stream()
+            .filter(name -> name.startsWith("risk-") || name.startsWith("isms-")).toList();
+    private static final String OUTAGE = "isms-git-unavailable";
 
     private static JsonNode scenario(String name) {
-        try (var stream = CLASS_LOADER.getResourceAsStream("scenarios/" + name + ".json")) {
-            return MockClient.MAPPER.readTree(java.util.Objects.requireNonNull(stream));
-        } catch (java.io.IOException e) {
-            throw new java.io.UncheckedIOException(e);
-        }
-    }
-
-    private static List<String> fieldNames(JsonNode node) {
-        List<String> names = new ArrayList<>();
-        node.fieldNames().forEachRemaining(names::add);
-        return names;
+        return IsmsTest.scenario(name);
     }
 
     private static MockClient start() {
@@ -104,6 +95,11 @@ class IsmsStatesTest {
 
     private static void goTo(MockClient client, String state) {
         assertEquals(200, client.send("POST", "/mock/goto/" + state, null, Map.of()).statusCode(), state);
+    }
+
+    /** A write of the ISMS into Git: a POST on the documents or the releases of {@code isms-register} or {@code isms-core} (a draft PUT is none). */
+    private static boolean isGitWriteOfTheIsms(Endpoint endpoint) {
+        return "POST".equals(endpoint.method()) && Pattern.compile("/api/v1/(documents|releases)/isms-(register|core)(/.*)?").matcher(endpoint.path()).matches();
     }
 
     private static String stateOf(MockClient client) {
@@ -242,18 +238,34 @@ class IsmsStatesTest {
     @DisplayName("Mirrors: the files of the states keep the derivation")
     class Mirrors {
 
-        private final List<String> variants = List.of("risk-r-043.json", "risk-r-043-gap.json", "risk-r-043-threat.json", "risk-r-043-threat-in-review.json",
-                "risk-r-001.json", "risk-r-044.json", "risk-r-042-completed.json", "risk-r-042-in-review.json", "risk-r-012-reopened.json",
-                "risk-r-018-released.json", "risk-r-018-at-v2.json");
+        /**
+         * The reads of a risk that the profiles route, base and states alike: the fixture of each {@code GET .../isms-register/R-nnn} and
+         * {@code ...?at=v<k>} that answers a file; the value says whether the route is the read of a release ({@code ?at=}).
+         */
+        private final Map<String, Boolean> reads = riskReads();
+
+        private Map<String, Boolean> riskReads() {
+            Map<String, Boolean> result = new TreeMap<>();
+            for (String profile : List.of("workshop", "empty")) {
+                for (Endpoint endpoint : endpoints(scenario(profile))) {
+                    if ("GET".equals(endpoint.method()) && endpoint.path().matches("/api/v1/documents/isms-register/R-\\d{3}(\\?at=v\\d+)?")
+                            && endpoint.answer().has("body_file")) {
+                        result.merge(endpoint.answer().path("body_file").asText(), endpoint.path().contains("?at="), (left, right) -> {
+                            assertEquals(left, right, endpoint.path());
+                            return left;
+                        });
+                    }
+                }
+            }
+            return result;
+        }
 
         @Test
         @DisplayName("every read of a risk in a state has the shape of the base: the history, the blob, the state and the transitions of its history")
         void shouldKeepTheInvariantsOfTheReads() {
-            List<String> names = new ArrayList<>(variants);
-            for (String base : List.of("risk-r-004", "risk-r-007", "risk-r-009", "risk-r-012", "risk-r-015", "risk-r-018", "risk-r-021", "risk-r-042")) {
-                names.add(base + ".json");
-            }
-            for (String name : names) {
+            assertTrue(reads.size() >= 30, reads.toString());
+            assertTrue(reads.getOrDefault("risk-r-018-at-v1.json", false) && reads.containsKey("risk-r-018-at-v2.json"), "the reads of the releases are derived too");
+            for (String name : reads.keySet()) {
                 var read = data(name);
                 var history = list(read.path("history"));
                 int releases = (int) history.stream().filter(item -> "release".equals(item.path("kind").asText())).count();
@@ -274,8 +286,8 @@ class IsmsStatesTest {
                                 list(read.path("transitions")).stream().map(item -> item.path("id").asText()).toList()),
                         () -> assertEquals(releases == 0 ? null : "risks/" + id + "/v" + releases,
                                 read.path("release").isNull() ? null : read.path("release").path("tag").asText()),
-                        () -> assertEquals(name.endsWith("-at-v2.json"), read.path("frozen").asBoolean()),
-                        () -> assertEquals(name.endsWith("-at-v2.json"), read.has("at")));
+                        () -> assertEquals(reads.get(name), read.path("frozen").asBoolean()),
+                        () -> assertEquals(reads.get(name), read.has("at")));
             }
         }
 
@@ -299,6 +311,8 @@ class IsmsStatesTest {
             assertListOfState("isms-register-submitted.json", Map.of("R-042", data("risk-r-042-in-review.json")), Set.of());
             assertListOfState("isms-register-reopened.json", Map.of("R-012", data("risk-r-012-reopened.json")), Set.of());
             assertListOfState("isms-register-released.json", Map.of("R-018", data("risk-r-018-released.json")), Set.of());
+            assertListOfState("isms-register-released.json", Map.of("R-018", data("risk-r-018-released-changed.json")), Set.of());
+            assertListOfState("isms-register-released-reopened.json", Map.of("R-018", data("risk-r-018-reopened.json")), Set.of());
             var empty = data("isms-register-empty-created.json");
             assertAll(
                     () -> assertEquals(1, empty.path("risks").size()),
@@ -482,6 +496,49 @@ class IsmsStatesTest {
         }
 
         @Test
+        @DisplayName("R-018 released after the changed review holds the ticket that the re-read diff showed; the reopened R-018 keeps the release v2")
+        void shouldAgreeTheChangedAndTheReopenedR018() {
+            var released = data("risk-r-018-released.json");
+            var changed = data("risk-r-018-released-changed.json");
+            var at = data("risk-r-018-at-v2-changed.json");
+            var diff = data("isms-diff-r-018-released-changed.json");
+            var revisions = list(data("risk-r-018-released-changed-revisions.json").path("revisions"));
+            var reopened = data("risk-r-018-reopened.json");
+            var shown = texts(list(diff.path("sections").path(0).path("changes")).stream()
+                    .filter(change -> "/issues".equals(change.path("pointer").asText())).findFirst().orElseThrow().path("after"));
+            var value = changed.path("parts").path("data").path("value");
+            var withoutIssues = (com.fasterxml.jackson.databind.node.ObjectNode) value.deepCopy();
+            withoutIssues.remove("issues");
+            var releasedWithoutIssues = (com.fasterxml.jackson.databind.node.ObjectNode) released.path("parts").path("data").path("value").deepCopy();
+            releasedWithoutIssues.remove("issues");
+            assertAll(
+                    () -> assertEquals(shown, texts(value.path("issues"))),
+                    () -> assertEquals(List.of("OPS-211", "OPS-212"), texts(released.path("parts").path("data").path("value").path("issues"))),
+                    () -> assertEquals(releasedWithoutIssues, withoutIssues),
+                    () -> assertEquals(value, at.path("parts").path("data").path("value")),
+                    () -> assertEquals(changed.path("history"), at.path("history")),
+                    () -> assertEquals(released.path("release"), changed.path("release")),
+                    () -> assertEquals(released.path("release"), at.path("release")),
+                    () -> assertEquals(data("risk-r-018-at-v2.json").path("at"), at.path("at")),
+                    () -> assertTrue(at.path("frozen").asBoolean()),
+                    () -> assertEquals("save", changed.path("history").get(1).path("kind").asText()),
+                    () -> assertEquals(changed.path("history").get(1).path("at"), changed.path("parts").path("data").path("savedAt")),
+                    () -> assertEquals(changed.path("history").get(1).path("by").path("pseudonym"), changed.path("parts").path("data").path("savedBy").path("pseudonym")),
+                    () -> assertEquals(data("risk-r-018-released-revisions.json").path("revisions").size() + 1, revisions.size()),
+                    () -> assertEquals("v2", revisions.get(0).path("ref").asText()),
+                    () -> assertEquals("save", revisions.get(1).path("kind").asText()),
+                    () -> assertEquals(changed.path("history").get(1).path("at"), revisions.get(1).path("at")),
+                    () -> assertEquals(changed.path("history").get(1).path("by"), revisions.get(1).path("by")),
+                    () -> assertEquals("draft", reopened.path("state").asText()),
+                    () -> assertEquals(3, reopened.path("version").asInt()),
+                    () -> assertEquals(released.path("release"), reopened.path("release")),
+                    () -> assertEquals(released.path("parts").path("data").path("value"), reopened.path("parts").path("data").path("value")),
+                    () -> assertEquals(List.of("isms.submit"), list(reopened.path("transitions")).stream().map(item -> item.path("id").asText()).toList()),
+                    () -> assertEquals("save", reopened.path("history").get(0).path("kind").asText()),
+                    () -> assertEquals("risks/R-018/v2", reopened.path("history").get(1).path("tag").asText()));
+        }
+
+        @Test
         @DisplayName("the policies of the states: the new draft, the released one with its read of the release, and the lists")
         void shouldAgreeThePolicies() {
             var created = data("isms-doc-incident-communication-policy.json");
@@ -536,6 +593,7 @@ class IsmsStatesTest {
             var r43 = data("isms-diff-r-043-released.json");
             var value = data("risk-r-043-threat-in-review.json").path("parts").path("data").path("value");
             var pointers = list(changed.path("sections").path(0).path("changes")).stream().map(change -> change.path("pointer").asText()).toList();
+            var pointersOfR43 = list(r43.path("sections").path(0).path("changes")).stream().map(change -> change.path("pointer").asText()).toList();
             assertAll(
                     () -> assertEquals(list(base.path("sections").path(0).path("changes")).stream().map(change -> change.path("pointer").asText()).toList(), pointers),
                     () -> assertEquals(base.path("from"), changed.path("from")),
@@ -544,6 +602,9 @@ class IsmsStatesTest {
                     () -> assertTrue(r43.path("from").isNull()),
                     () -> assertEquals("working", r43.path("to").asText()),
                     () -> assertEquals(value.size(), r43.path("sections").path(0).path("changes").size()),
+                    () -> assertEquals(pointersOfR43.size(), new HashSet<>(pointersOfR43).size(), "no pointer is repeated: " + pointersOfR43),
+                    () -> assertEquals(fieldNames(value).stream().map(name -> "/" + name).collect(java.util.stream.Collectors.toSet()),
+                            new HashSet<>(pointersOfR43), "one row for each field of the working value"),
                     () -> r43.path("sections").path(0).path("changes").forEach(change -> {
                         assertTrue(change.path("before").isNull());
                         assertEquals(value.at(change.path("pointer").asText()), change.path("after"));
@@ -577,9 +638,17 @@ class IsmsStatesTest {
         @Test
         @DisplayName("workshop has every state of the ISMS lens, each with a description, and every link of ready names its state")
         void shouldHaveTheStates() {
+            assertTrue(STATES.containsAll(List.of("risk-created", "risk-released", "risk-released-changed", "risk-release-reopened", "isms-document-released", OUTAGE)),
+                    STATES.toString());
             for (String name : STATES) {
                 assertTrue(state(name).has("description"), name);
                 assertFalse(state(name).path("description").asText().isBlank(), name);
+            }
+            // every link of ready and of the states names a state that exists
+            for (Endpoint endpoint : endpoints(WORKSHOP)) {
+                if (endpoint.answer().has("next")) {
+                    assertTrue(WORKSHOP.path("states").has(endpoint.answer().path("next").asText()), endpoint.state() + " " + endpoint.path());
+                }
             }
             var ready = state("ready").path("links");
             assertAll(
@@ -884,6 +953,7 @@ class IsmsStatesTest {
                         () -> assertEquals("released", read.path("state").asText()),
                         () -> assertEquals(2, read.path("version").asInt()),
                         () -> assertEquals(0, read.path("transitions").size()),
+                        () -> assertEquals(List.of("OPS-211", "OPS-212"), texts(read.path("parts").path("data").path("value").path("issues"))),
                         () -> assertTrue(at.path("frozen").asBoolean()),
                         () -> assertEquals("v2", at.path("at").path("ref").asText()),
                         () -> assertEquals("v2", revisions.path("revisions").get(0).path("ref").asText()),
@@ -937,14 +1007,31 @@ class IsmsStatesTest {
                         () -> assertEquals("risk-release-changed-reviewed", stateOf(client)),
                         () -> assertEquals(reviewed, get(client, diff)));
                 var done = post(client, RELEASES + "isms-register/R-018", 200, "RELEASED");
+                var diffIssues = texts(list(reviewed.path("sections").path(0).path("changes")).stream()
+                        .filter(change -> "/issues".equals(change.path("pointer").asText())).findFirst().orElseThrow().path("after"));
+                var read = get(client, REGISTER + "R-018");
+                var at = get(client, REGISTER + "R-018?at=v2");
                 assertAll(
                         () -> assertEquals("risks/R-018/v2", done.path("tag").asText()),
-                        () -> assertEquals("risk-released", stateOf(client)));
+                        () -> assertEquals("risk-released-changed", stateOf(client)),
+                        // the release holds what the review read
+                        () -> assertEquals(List.of("OPS-211", "OPS-212", "OPS-213"), diffIssues),
+                        () -> assertEquals(diffIssues, texts(read.path("parts").path("data").path("value").path("issues"))),
+                        () -> assertEquals(diffIssues, texts(at.path("parts").path("data").path("value").path("issues"))),
+                        () -> assertEquals("released", read.path("state").asText()),
+                        () -> assertTrue(at.path("frozen").asBoolean()),
+                        () -> assertEquals("save", get(client, REGISTER + "R-018/revisions").path("revisions").get(1).path("kind").asText()),
+                        () -> assertEquals(data("risk-r-018-at-v1.json"), get(client, REGISTER + "R-018?at=v1")));
+            }
+            // the ordinary release path keeps the two tickets
+            try (var client = start()) {
+                post(client, RELEASES + "isms-register/R-018", 200, "RELEASED");
+                assertEquals(List.of("OPS-211", "OPS-212"), texts(get(client, REGISTER + "R-018").path("parts").path("data").path("value").path("issues")));
             }
         }
 
         @Test
-        @DisplayName("released meanwhile: the release answers DOCUMENT_RELEASED with the tag and the risk reads released; a save is not refused")
+        @DisplayName("released meanwhile: the release answers DOCUMENT_RELEASED with the tag and the risk reads released; a save reopens it as draft v3")
         void shouldAnswerTheReleaseOfSomebodyElse() {
             try (var client = start()) {
                 goTo(client, "risk-release-released-meanwhile");
@@ -955,7 +1042,24 @@ class IsmsStatesTest {
                         () -> assertEquals("risks/R-018/v2", json(response).path("tag").asText()),
                         () -> assertEquals("released", get(client, REGISTER + "R-018").path("state").asText()),
                         () -> assertEquals(data("risk-r-018-at-v2.json"), get(client, REGISTER + "R-018?at=v2")),
-                        () -> assertEquals(200, client.change("POST", REGISTER + "R-018/save", "{}").statusCode()));
+                        () -> assertEquals("risk-release-released-meanwhile", stateOf(client)));
+                var saved = post(client, REGISTER + "R-018/save", 200, "SAVED");
+                var read = get(client, REGISTER + "R-018");
+                var row = list(get(client, "/api/v1/isms/register").path("risks")).stream().filter(item -> "R-018".equals(item.path("id").asText())).findFirst().orElseThrow();
+                assertAll(
+                        () -> assertEquals("risk-release-reopened", stateOf(client)),
+                        () -> assertEquals("draft", saved.path("state").asText()),
+                        () -> assertEquals(3, saved.path("version").asInt()),
+                        () -> assertEquals(read.path("parts").path("data").path("blob"), saved.path("parts").path("data").path("blob")),
+                        () -> assertEquals("draft", read.path("state").asText()),
+                        () -> assertEquals(3, read.path("version").asInt()),
+                        () -> assertEquals("risks/R-018/v2", read.path("release").path("tag").asText()),
+                        () -> assertEquals(List.of("isms.submit"), list(read.path("transitions")).stream().map(item -> item.path("id").asText()).toList()),
+                        () -> assertEquals("draft", row.path("state").asText()),
+                        () -> assertEquals(3, row.path("version").asInt()),
+                        () -> assertEquals(data("risk-r-018-at-v2.json"), get(client, REGISTER + "R-018?at=v2")),
+                        () -> assertEquals(data("risk-r-018-released-revisions.json"), get(client, REGISTER + "R-018/revisions")),
+                        () -> assertEquals(data("reports-risks-released.json"), get(client, "/api/v1/isms/risks")));
             }
         }
 
@@ -1088,26 +1192,25 @@ class IsmsStatesTest {
         }
 
         @Test
-        @DisplayName("every Git write of the ISMS is answered 503 in the outage, derived from the writes of the base and the links of ready; the draft stays out")
+        @DisplayName("every Git write of the ISMS is answered 503 in the outage, derived from the writes of the base, the links of ready and the states; the draft stays out")
         void shouldCoverEveryGitWriteInTheOutage() {
-            var outage = state("isms-git-unavailable").path("routes");
+            var outage = state(OUTAGE).path("routes");
             Set<String> writes = new TreeSet<>();
-            for (String key : fieldNames(WORKSHOP.path("routes"))) {
-                if (key.startsWith("POST ") && (key.contains("/isms-register/") || key.contains("/isms-core/")) && !key.contains("/releases/")) {
-                    writes.add(key);
+            for (Endpoint endpoint : endpoints(WORKSHOP)) {
+                if (!OUTAGE.equals(endpoint.state()) && isGitWriteOfTheIsms(endpoint)) {
+                    writes.add(endpoint.method() + " " + endpoint.path());
                 }
             }
-            for (var link : state("ready").path("links")) {
-                String path = link.path("path").asText();
-                if ("POST".equals(link.path("method").asText()) && (path.contains("isms-register") || path.contains("isms-core"))) {
-                    writes.add("POST " + path);
-                }
-            }
-            assertEquals(13, writes.size(), writes.toString());
+            assertTrue(writes.containsAll(List.of("POST " + REGISTER + "R-015/save", "POST " + REGISTER + "R-043/save", "POST " + RELEASES + "isms-register/R-043",
+                    "POST " + REGISTER + "R-012/save", "POST /api/v1/documents/isms-core")), writes.toString());
             for (String write : writes) {
                 assertEquals(503, outage.path(write).path("status").asInt(), write);
                 assertEquals("GIT_UNAVAILABLE", outage.path(write).path("body").path("outcome").asText(), write);
             }
+            // nothing else: the status and the writes
+            Set<String> expected = new TreeSet<>(writes);
+            expected.add("GET /api/v1/status");
+            assertEquals(expected, new TreeSet<>(fieldNames(outage)));
             for (String key : fieldNames(outage)) {
                 assertFalse(key.startsWith("PUT "), "the draft stays outside the outage: " + key);
             }
@@ -1127,6 +1230,7 @@ class IsmsStatesTest {
                         () -> assertEquals(200, client.change("PUT", "/api/v1/drafts/isms-register/R-018", "{}").statusCode()),
                         () -> assertEquals(503, client.change("POST", REGISTER + "R-018/save", "{}").statusCode()),
                         () -> assertEquals(503, client.change("POST", REGISTER + "R-012/save", "{}").statusCode()),
+                        () -> assertEquals(503, client.change("POST", REGISTER + "R-015/save", "{}").statusCode()),
                         () -> assertEquals(503, client.change("POST", REGISTER + "R-042/transitions/isms.submit", "{}").statusCode()),
                         () -> assertEquals(503, client.change("POST", RELEASES + "isms-register/R-018", "{}").statusCode()),
                         () -> assertEquals(503, client.change("POST", "/api/v1/documents/isms-register", "{}").statusCode()),
@@ -1201,15 +1305,31 @@ class IsmsStatesTest {
         }
 
         @Test
-        @DisplayName("read-only refuses every write of the ISMS lens by its right, including the ones that are links in workshop")
+        @DisplayName("read-only refuses every registered write of the ISMS lens by its right, and has a route for each write that ready links")
         void shouldRefuseEveryWriteInReadOnly() {
+            var readOnly = scenario("read-only");
+            Set<String> registered = new TreeSet<>();
+            for (Endpoint endpoint : endpoints(readOnly)) {
+                if (("POST".equals(endpoint.method()) || "PUT".equals(endpoint.method()))
+                        && endpoint.path().matches("/api/v1/(documents|drafts|releases)/isms-(register|core)(/.*)?")) {
+                    registered.add(endpoint.method() + " " + endpoint.path());
+                }
+            }
+            // every write that workshop offers in ready is protected by a route of read-only
+            for (var link : state("ready").path("links")) {
+                String path = link.path("path").asText();
+                if (path.matches("/api/v1/(documents|releases)/isms-(register|core)(/.*)?")) {
+                    assertTrue(registered.contains(link.path("method").asText() + " " + path), path);
+                    assertTrue(readOnly.path("routes").path(link.path("method").asText() + " " + path).has("requires"), path);
+                }
+            }
+            assertTrue(registered.containsAll(List.of("POST " + REGISTER + "R-018/save", "POST /api/v1/documents/isms-register", "POST /api/v1/documents/isms-core")),
+                    registered.toString());
             try (var client = MockClient.start("read-only").login()) {
-                for (var request : List.of(List.of("POST", "/api/v1/documents/isms-register"), List.of("POST", "/api/v1/documents/isms-core"),
-                        List.of("POST", REGISTER + "R-012/save"), List.of("POST", REGISTER + "R-042/save"), List.of("POST", RELEASES + "isms-register/R-018"),
-                        List.of("POST", RELEASES + "isms-core/" + SDP), List.of("POST", REGISTER + "R-042/transitions/isms.submit"),
-                        List.of("PUT", "/api/v1/drafts/isms-register/R-012"))) {
-                    var response = client.change(request.get(0), request.get(1), "{}");
-                    assertAll(request.toString(), () -> assertEquals(403, response.statusCode()),
+                for (String request : registered) {
+                    String method = request.substring(0, request.indexOf(' '));
+                    var response = client.change(method, request.substring(request.indexOf(' ') + 1), "{}");
+                    assertAll(request, () -> assertEquals(403, response.statusCode()),
                             () -> assertEquals("FORBIDDEN", json(response).path("outcome").asText()));
                 }
             }
@@ -1227,9 +1347,15 @@ class IsmsStatesTest {
         @DisplayName("every release of a document has its read: frozen, no transition, the tag of its collection, the value as it was then")
         void shouldReadEveryRelease() {
             try (var client = start()) {
-                Map<String, List<Integer>> releases = Map.of("information-security-policy", List.of(1, 2, 3), "access-control-policy", List.of(1, 2),
-                        "secure-development-policy", List.of(1), "isms-scope", List.of(1, 2), "internal-audit-2025", List.of(1),
-                        "management-review-2026-h1", List.of(1), "management-review-2025", List.of(1));
+                // the documents of the list of the workshop, and the releases of each in its list of revisions (never from the routes of ?at=)
+                Map<String, List<Integer>> releases = new LinkedHashMap<>();
+                for (var row : list(data("isms-documents.json").path("documents"))) {
+                    String slug = IsmsTest.slugOfDocument(row.path("id").asText());
+                    List<Integer> versions = list(data("isms-doc-" + slug + "-revisions.json").path("revisions")).stream()
+                            .filter(revision -> "release".equals(revision.path("kind").asText())).map(revision -> revision.path("version").asInt()).sorted().toList();
+                    releases.put(slug, versions);
+                }
+                assertTrue(releases.size() >= 8 && releases.get("information-security-policy").size() >= 3, releases.toString());
                 for (var entry : releases.entrySet()) {
                     var current = data("isms-doc-" + entry.getKey() + ".json");
                     String collection = Map.of("policy", "policies", "isms-scope", "scope", "audit-report", "audits", "management-review",
@@ -1252,8 +1378,8 @@ class IsmsStatesTest {
                                 () -> assertEquals(at.path("parts").path("data").path("value").path("title"), at.path("title")),
                                 () -> assertEquals(at.path("release").path("at"), at.path("at").path("at")));
                     }
-                    int latest = entry.getValue().get(entry.getValue().size() - 1);
-                    if ("released".equals(current.path("state").asText())) {
+                    if (!entry.getValue().isEmpty() && "released".equals(current.path("state").asText())) {
+                        int latest = entry.getValue().get(entry.getValue().size() - 1);
                         assertEquals(current.path("parts").path("data").path("value"),
                                 data("isms-doc-" + entry.getKey() + "-at-v" + latest + ".json").path("parts").path("data").path("value"), entry.getKey());
                     }
@@ -1294,6 +1420,7 @@ class IsmsStatesTest {
                         () -> assertEquals("REQUIRED", json(required).path("errors").get(0).path("code").asText()),
                         // a pair that is not named is a documented limit
                         () -> assertEquals(404, client.get(CORE + SCOPE + "/diff?from=v2&to=v1").statusCode()),
+                        () -> assertEquals("NOT_FOUND", json(client.get(CORE + SCOPE + "/diff?from=v2&to=v1")).path("outcome").asText()),
                         () -> assertEquals(200, client.get(CORE + SDP + "/diff?from=released").statusCode()));
             }
         }
@@ -1321,44 +1448,38 @@ class IsmsStatesTest {
         }
     }
 
+    /** Collects the addresses of an answer: every text member {@code address} that starts with a slash, and the {@code origin} that does. */
+    private static void collectAddresses(JsonNode node, Set<String> addresses) {
+        if (node.isObject()) {
+            node.fields().forEachRemaining(member -> {
+                if (("address".equals(member.getKey()) || "origin".equals(member.getKey())) && member.getValue().isTextual()
+                        && member.getValue().asText().startsWith("/")) {
+                    addresses.add(member.getValue().asText());
+                }
+                collectAddresses(member.getValue(), addresses);
+            });
+        } else if (node.isArray()) {
+            node.forEach(item -> collectAddresses(item, addresses));
+        }
+    }
+
     @Test
-    @DisplayName("every address in a file or an answer of a state is a canonical address of the web app")
+    @DisplayName("every address in an answer of a state, a file or a link is a canonical address of the web app")
     void shouldUseCanonicalAddresses() {
         Set<String> addresses = new TreeSet<>();
-        for (String name : List.of("isms-register-created.json", "isms-register-gap.json", "isms-register-threat.json", "isms-register-taken.json",
-                "isms-register-completed.json", "isms-register-submitted.json", "isms-register-reopened.json", "isms-register-released.json",
-                "isms-register-empty-created.json")) {
-            data(name).path("risks").forEach(row -> {
-                addresses.add(row.path("address").asText());
-                if (!row.path("origin").isNull()) {
-                    addresses.add(row.path("origin").path("address").asText());
+        // the answers of every route and link of the states of the lens and of ready, with the file of the answer resolved; and of empty
+        for (var scenario : List.of(WORKSHOP, scenario("empty"))) {
+            for (Endpoint endpoint : endpoints(scenario)) {
+                if (STATES.contains(endpoint.state()) || "ready".equals(endpoint.state())) {
+                    collectAddresses(answer(endpoint.answer()), addresses);
                 }
-            });
-        }
-        for (String name : List.of("isms-documents-created.json", "isms-documents-released.json")) {
-            data(name).path("documents").forEach(row -> addresses.add(row.path("address").asText()));
+            }
         }
         for (String name : List.of("risk-r-043.json", "risk-r-043-gap.json", "risk-r-043-threat.json", "risk-r-001.json", "risk-r-044.json",
                 "isms-doc-incident-communication-policy.json")) {
             var read = data(name);
             addresses.add("isms-register".equals(read.path("repository").asText()) ? "/isms/risks/" + read.path("id").asText().toLowerCase()
                     : "/isms/documents/" + read.path("id").asText());
-        }
-        for (String name : List.of("isms-gaps-payments-risk.json")) {
-            data(name).path("gaps").forEach(gap -> {
-                if (!gap.path("risk").isNull()) {
-                    addresses.add(gap.path("risk").path("address").asText());
-                }
-            });
-        }
-        for (String state : STATES) {
-            for (var link : state(state).path("links")) {
-                for (String key : List.of("address", "origin")) {
-                    if (link.path("body").path(key).isTextual() && link.path("body").path(key).asText().startsWith("/")) {
-                        addresses.add(link.path("body").path(key).asText());
-                    }
-                }
-            }
         }
         for (String reference : List.of(GAP, THREAT)) {
             addresses.add("/isms/risks/new?origin=" + java.net.URLEncoder.encode(reference, StandardCharsets.UTF_8));
@@ -1369,17 +1490,23 @@ class IsmsStatesTest {
         addresses.forEach(address -> assertEquals(address, ADDRESSES.checkReturn(address), address));
     }
 
+    private static final ScenarioRegistry REGISTRY = new ScenarioRegistry(
+            new ScenarioLoader(MockClient.MAPPER, name -> ScenarioRegistry.readDataFile(CLASS_LOADER, name)), CLASS_LOADER);
+
     @Test
-    @DisplayName("the data file of every route of the states exists, and the registry loads the profile")
+    @DisplayName("the registry loads workshop with every state of the lens, and the data file of every route and link of those states exists")
     void shouldLoadTheProfile() {
+        var loaded = REGISTRY.resolve("workshop").orElseThrow().scenario();
         for (String name : STATES) {
-            for (var route : state(name).path("routes")) {
-                if (route.has("body_file")) {
-                    assertTrue(ScenarioRegistry.readDataFile(CLASS_LOADER, route.path("body_file").asText()).isPresent(), name);
-                }
+            assertTrue(loaded.state(name).isPresent(), name);
+            assertEquals(REGISTRY.resolve("workshop#" + name).orElseThrow().state(), name);
+        }
+        assertEquals(WORKSHOP.path("states").size(), loaded.states().size());
+        for (Endpoint endpoint : endpoints(WORKSHOP)) {
+            if (STATES.contains(endpoint.state()) && endpoint.answer().has("body_file")) {
+                assertTrue(ScenarioRegistry.readDataFile(CLASS_LOADER, endpoint.answer().path("body_file").asText()).isPresent(), endpoint.state());
             }
         }
-        assertEquals(31, STATES.size());
-        assertNotEquals(0, fieldNames(WORKSHOP.path("states")).size());
+        assertEquals("workshop", loaded.name());
     }
 }
