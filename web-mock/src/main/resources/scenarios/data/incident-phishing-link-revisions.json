@@ -1,0 +1,67 @@
+{
+  "repository": "isms-incidents-2026",
+  "id": "01JZA2B4D6F8H0K2N4Q6S8V0X2",
+  "revisions": [
+    {
+      "ref": "038f2af",
+      "commit": "038f2af",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-25T16:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "31f09b6",
+      "commit": "31f09b6",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-25T10:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "ed6505b",
+      "commit": "ed6505b",
+      "kind": "complete",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-24T11:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "0189e67",
+      "commit": "0189e67",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-24T10:50:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "fff8d30",
+      "commit": "fff8d30",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-24T10:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

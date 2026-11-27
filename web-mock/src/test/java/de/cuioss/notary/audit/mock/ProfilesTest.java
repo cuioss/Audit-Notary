@@ -79,7 +79,7 @@ class ProfilesTest {
                     () -> assertTrue(json(status).has("degraded")),
                     () -> assertEquals(200, session.statusCode()),
                     () -> assertEquals(200, client.get("/api/v1/messages").statusCode()),
-                    () -> linked.forEach(address -> assertTrue(addresses.isCanonical(address),
+                    () -> linked.forEach(address -> assertEquals(address, addresses.checkReturn(address),
                             name + " links a non-canonical address " + address)));
         }
     }
@@ -1078,6 +1078,191 @@ class ProfilesTest {
                 assertAll(
                         () -> assertEquals(1, acts.size()),
                         () -> assertEquals(RENDER, acts.get(0).path("path").asText()));
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("the Incident reports lens of the other profiles")
+    class IncidentReports {
+
+        private static final String YEAR = "/api/v1/documents/isms-incidents-2026/";
+        private static final String CARD = "01JZ9T4M6Q8S0V2X4B6D8F0H2K";
+        private static final String STUFFING = "01JZ9V7P9S1T3W5Y7A9C1E3G5J";
+
+        private JsonNode file(String name) {
+            return IncidentFixtures.data(name);
+        }
+
+        private List<String> aliases(MockClient client) {
+            List<String> aliases = new ArrayList<>();
+            json(client.get("/api/v1/status")).path("repositories").forEach(repository -> aliases.add(repository.path("alias").asText()));
+            return aliases;
+        }
+
+        private void assertBothRepositories(MockClient client) {
+            var aliases = aliases(client);
+            assertAll(() -> assertTrue(aliases.contains("isms-incidents-2026")), () -> assertTrue(aliases.contains("isms-incidents-2025")),
+                    () -> assertEquals(aliases.indexOf("isms-incidents-2026") + 1, aliases.indexOf("isms-incidents-2025")));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"workshop", "read-only", "degraded#recovered"})
+        @DisplayName("the status lists both incident repositories, next to each other")
+        void shouldListTheRepositories(String profile) {
+            try (var client = MockClient.start(profile).login()) {
+                assertBothRepositories(client);
+            }
+            try (var client = MockClient.start("local").loginLocal("alex", "local-password")) {
+                assertBothRepositories(client);
+            }
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"release", "empty"})
+        @DisplayName("release and empty list what they listed before: the year of today only")
+        void shouldKeepTheRepositoriesOfReleaseAndEmpty(String profile) {
+            try (var client = MockClient.start(profile).login()) {
+                var aliases = aliases(client);
+                assertAll(() -> assertTrue(aliases.contains("isms-incidents-2026")), () -> assertFalse(aliases.contains("isms-incidents-2025")));
+            }
+        }
+
+        @Test
+        @DisplayName("read-only reads the years, the lists, the incidents, the reports, the diff and the search; every write is 403")
+        void shouldReadAndRefuseTheWritesOfReadOnly() {
+            try (var client = MockClient.start("read-only").login()) {
+                assertAll(
+                        () -> assertEquals(file("incidents-years.json"), json(client.get("/api/v1/incidents"))),
+                        () -> assertEquals(file("incidents-year-2026.json"), json(client.get("/api/v1/incidents/2026"))),
+                        () -> assertEquals(file("incidents-year-2025.json"), json(client.get("/api/v1/incidents/2025"))),
+                        () -> assertEquals(file("categories-incident-reports-schema.json"),
+                                json(client.get("/api/v1/categories/incident-reports/schema"))),
+                        () -> assertEquals(file("incident-card-data.json"), json(client.get("/api/v1/incidents/2026/" + CARD))),
+                        () -> assertEquals(file("incident-lost-laptop.json"), json(client.get("/api/v1/documents/isms-incidents-2025/"
+                                + IncidentFixtures.IDS.get("lost-laptop")))),
+                        () -> assertEquals(file("incident-card-data-report.json"), json(client.get("/api/v1/incidents/2026/" + CARD + "/report"))),
+                        () -> assertEquals(file("incident-credential-stuffing-diff.json"),
+                                json(client.get(YEAR + STUFFING + "/diff?from=released"))),
+                        () -> assertEquals(file("incident-notification-outage-at-v1.json"),
+                                json(client.get("/api/v1/incidents/2026/" + IncidentFixtures.IDS.get("notification-outage") + "?at=v1"))),
+                        () -> assertEquals(1, json(client.get("/api/v1/search?q=card")).path("results").size()));
+                List<List<String>> writes = List.of(List.of("POST", YEAR + CARD + "/save"), List.of("PUT", "/api/v1/drafts/isms-incidents-2026/" + CARD),
+                        List.of("POST", YEAR + CARD + "/stages/privacy-assessment/complete"),
+                        List.of("POST", YEAR + STUFFING + "/stages/review/complete"), List.of("POST", YEAR + STUFFING + "/stages/triage/reopen"),
+                        List.of("POST", YEAR + STUFFING + "/transitions/incident.submit"),
+                        List.of("POST", "/api/v1/releases/isms-incidents-2026/" + STUFFING),
+                        List.of("POST", YEAR + IncidentFixtures.IDS.get("phishing-link") + "/save"), List.of("POST", "/api/v1/documents/isms-incidents-2026"));
+                for (var write : writes) {
+                    var response = client.change(write.get(0), write.get(1), "{}");
+                    assertAll(write.toString(), () -> assertEquals(403, response.statusCode()),
+                            () -> assertEquals("FORBIDDEN", json(response).path("outcome").asText()));
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("release has no right on the incidents: no year, the year, the incident and the report are 404, the schema 403")
+        void shouldHaveNoIncidentsInRelease() {
+            try (var client = MockClient.start("release").login()) {
+                assertAll(
+                        () -> assertEquals(0, json(client.get("/api/v1/incidents")).path("years").size()),
+                        () -> assertEquals("2026-11-26", json(client.get("/api/v1/incidents")).path("today").asText()),
+                        () -> assertEquals(404, client.get("/api/v1/incidents/2026").statusCode()),
+                        () -> assertEquals(404, client.get("/api/v1/incidents/2025").statusCode()),
+                        () -> assertEquals(404, client.get("/api/v1/incidents/2026/" + CARD).statusCode()),
+                        () -> assertEquals(404, client.get("/api/v1/incidents/2026/" + CARD + "/report").statusCode()),
+                        () -> assertEquals(403, client.get("/api/v1/categories/incident-reports/schema").statusCode()),
+                        () -> assertEquals("NOT_FOUND", json(client.get("/api/v1/incidents/2026")).path("outcome").asText()),
+                        () -> assertFalse(client.get("/api/v1/incidents/2026/" + CARD).body().contains("Card data")));
+                List<String> repositories = new ArrayList<>();
+                json(client.get("/api/v1/session")).path("rights").forEach(right -> repositories.add(right.path("repository").asText()));
+                assertFalse(repositories.stream().anyMatch(repository -> repository.startsWith("isms-incidents-")));
+            }
+        }
+
+        @Test
+        @DisplayName("empty has no incident repository: no year, an unknown year, and the schema of the installation")
+        void shouldHaveNoIncidentRepositoryInEmpty() {
+            try (var client = MockClient.start("empty").login()) {
+                var years = json(client.get("/api/v1/incidents"));
+                assertAll(
+                        () -> assertEquals(200, client.get("/api/v1/incidents").statusCode()),
+                        () -> assertEquals(0, years.path("years").size()),
+                        () -> assertEquals(404, client.get("/api/v1/incidents/2026").statusCode()),
+                        () -> assertEquals("NOT_FOUND", json(client.get("/api/v1/incidents/2026")).path("outcome").asText()),
+                        () -> assertEquals(file("categories-incident-reports-schema.json"),
+                                json(client.get("/api/v1/categories/incident-reports/schema"))));
+            }
+        }
+
+        @Test
+        @DisplayName("degraded reads, refuses the saves, the completion and the create with GIT_UNAVAILABLE, keeps the draft and recovers")
+        void shouldDegradeTheIncidents() {
+            try (var client = MockClient.start("degraded").login()) {
+                var down = json(client.get("/api/v1/status"));
+                var save = client.change("POST", YEAR + CARD + "/save", "{}");
+                var complete = client.change("POST", YEAR + STUFFING + "/stages/review/complete", "{}");
+                var create = client.change("POST", "/api/v1/documents/isms-incidents-2026", "{}");
+                var draft = client.change("PUT", "/api/v1/drafts/isms-incidents-2026/" + CARD, "{}");
+                var release = client.change("POST", "/api/v1/releases/isms-incidents-2026/" + STUFFING, "{}");
+                assertAll(
+                        () -> assertEquals("DOWN", find(down.path("repositories"), "isms-incidents-2026")),
+                        () -> assertEquals(file("incidents-years.json"), json(client.get("/api/v1/incidents"))),
+                        () -> assertEquals(file("incidents-year-2026.json"), json(client.get("/api/v1/incidents/2026"))),
+                        () -> assertEquals(file("incident-card-data.json"), json(client.get("/api/v1/incidents/2026/" + CARD))),
+                        () -> assertEquals(file("incident-suspicious-logins.json"),
+                                json(client.get(YEAR + IncidentFixtures.IDS.get("suspicious-logins")))),
+                        () -> assertEquals(file("incident-credential-stuffing.json"), json(client.get("/api/v1/incidents/2026/" + STUFFING))),
+                        () -> assertEquals(503, save.statusCode()),
+                        () -> assertEquals("GIT_UNAVAILABLE", json(save).path("outcome").asText()),
+                        () -> assertEquals(503, complete.statusCode()),
+                        () -> assertEquals(503, create.statusCode()),
+                        () -> assertEquals(403, release.statusCode()),
+                        () -> assertEquals("FORBIDDEN", json(release).path("outcome").asText()),
+                        () -> assertEquals(200, draft.statusCode()),
+                        () -> assertEquals("DRAFT_SAVED", json(draft).path("outcome").asText()));
+                client.send("POST", "/mock/goto/recovered", null, Map.of());
+                assertAll(
+                        () -> assertEquals("SAVED", json(client.change("POST", YEAR + CARD + "/save", "{}")).path("outcome").asText()),
+                        () -> assertEquals("COMPLETED", json(client.change("POST", YEAR + STUFFING + "/stages/review/complete", "{}"))
+                                .path("outcome").asText()),
+                        () -> assertEquals(201, client.change("POST", "/api/v1/documents/isms-incidents-2026", "{}").statusCode()));
+            }
+        }
+
+        private String find(JsonNode repositories, String alias) {
+            for (var repository : repositories) {
+                if (alias.equals(repository.path("alias").asText())) {
+                    return repository.path("fetch").asText();
+                }
+            }
+            throw new IllegalStateException(alias);
+        }
+
+        @Test
+        @DisplayName("local reads the years, the list, the incidents and a report, and has no write route of this lens")
+        void shouldReadTheIncidentsLocally() {
+            try (var client = MockClient.start("local").loginLocal("alex", "local-password")) {
+                assertAll(
+                        () -> assertEquals(file("incidents-years.json"), json(client.get("/api/v1/incidents"))),
+                        () -> assertEquals(file("incidents-year-2026.json"), json(client.get("/api/v1/incidents/2026"))),
+                        () -> assertEquals(file("incident-wrong-recipient.json"),
+                                json(client.get("/api/v1/incidents/2026/" + IncidentFixtures.IDS.get("wrong-recipient")))),
+                        () -> assertEquals(file("incident-credential-stuffing-report.json"),
+                                json(client.get("/api/v1/incidents/2026/" + STUFFING + "/report"))),
+                        () -> assertEquals(1, json(client.get("/api/v1/search?q=card")).path("results").size()),
+                        () -> assertEquals(404, client.change("POST", YEAR + CARD + "/save", "{}").statusCode()),
+                        () -> assertEquals(404, client.change("POST", YEAR + STUFFING + "/stages/review/complete", "{}").statusCode()),
+                        () -> assertEquals(404, client.change("POST", "/api/v1/documents/isms-incidents-2026", "{}").statusCode()),
+                        () -> assertEquals("NOT_FOUND", json(client.change("POST", "/api/v1/documents/isms-incidents-2026", "{}")).path("outcome").asText()));
+                List<String> due = new ArrayList<>();
+                json(client.get("/api/v1/due")).path("items").forEach(item -> {
+                    if ("incidents".equals(item.path("lens").asText())) {
+                        due.add(item.path("deadline").path("rule").asText() + ":" + item.path("deadline").path("status").asText());
+                    }
+                });
+                assertEquals(List.of("gdpr-art33:MISSED", "gdpr-art33:OPEN", "nis2-final-report:OPEN"), due);
             }
         }
     }

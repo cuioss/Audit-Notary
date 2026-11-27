@@ -24,9 +24,35 @@
     {
       "kind": "deadline",
       "lens": "incidents",
-      "title": "INC-0007 card data exposure: notification to the authority",
-      "address": "/incidents/2026/inc-0007",
-      "due": "2026-11-22"
+      "title": "Card data exposed in the checkout log: gdpr-art33",
+      "address": "/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K?stage=notifications",
+      "due": "2026-11-22",
+      "deadline": {
+        "rule": "gdpr-art33",
+        "status": "MISSED"
+      }
+    },
+    {
+      "kind": "deadline",
+      "lens": "incidents",
+      "title": "Phishing mail with a forged payment link: gdpr-art33",
+      "address": "/incidents/2026/01JZA2B4D6F8H0K2N4Q6S8V0X2?stage=notifications",
+      "due": "2026-11-27",
+      "deadline": {
+        "rule": "gdpr-art33",
+        "status": "OPEN"
+      }
+    },
+    {
+      "kind": "deadline",
+      "lens": "incidents",
+      "title": "Card data exposed in the checkout log: nis2-final-report",
+      "address": "/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K?stage=notifications",
+      "due": "2026-12-22",
+      "deadline": {
+        "rule": "nis2-final-report",
+        "status": "OPEN"
+      }
     },
     {
       "kind": "review",

@@ -1,0 +1,41 @@
+{
+  "repository": "isms-incidents-2025",
+  "documents": [
+    {
+      "id": "01JZ3B5D7F9H1K3N5Q7S9V1X3Z",
+      "kind": "incident",
+      "title": "Misdirected newsletter exposed the subscriber list",
+      "state": "released",
+      "version": 1,
+      "updatedAt": "2025-10-20T10:00:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "incidents/01JZ3B5D7F9H1K3N5Q7S9V1X3Z/v1",
+        "at": "2025-10-20T10:00:00Z"
+      },
+      "requested": false,
+      "address": "/incidents/2025/01JZ3B5D7F9H1K3N5Q7S9V1X3Z"
+    },
+    {
+      "id": "01JZ2A4C6E8G0J2M4P6R8T0W2Y",
+      "kind": "incident",
+      "title": "Laptop with customer extracts lost",
+      "state": "released",
+      "version": 1,
+      "updatedAt": "2025-04-30T09:00:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "incidents/01JZ2A4C6E8G0J2M4P6R8T0W2Y/v1",
+        "at": "2025-04-30T09:00:00Z"
+      },
+      "requested": false,
+      "address": "/incidents/2025/01JZ2A4C6E8G0J2M4P6R8T0W2Y"
+    }
+  ]
+}

@@ -271,6 +271,20 @@ Because stages are generic, need the workflow and change what a release checks, 
   xref:../specification/mcp-server.adoc#AUN-MCP-6[AUN-MCP-6]) without rules; a stage structures the document with
   rules. Decide whether a recipe's steps may point at stages.
 
+Decided provisionally with the incident reports (UC-IR-1 to UC-IR-3), recorded with the bodies in
+xref:../specification/rest-api.adoc#_decided_incidents[REST API Register, Open Questions]; the owner may change each one:
+
+. Completing and reopening are two requests on the document, `POST …/stages/{stage}/complete` and `…/reopen`, each a save of
+  the part (the commit is the evidence); only the stage that declares `step-up: true` asks for it when completed, a reopening
+  never does. A completion may carry the blob id the form loaded and is then refused if the part changed since.
+. A refused completion names the missing mandatory fields and the predecessors that are not completed (`STAGE_NOT_COMPLETABLE`);
+  a refused submission or release names every applicable stage that is not completed with its missing fields (`STAGES_OPEN`).
+  A write into a completed stage is refused (`STAGE_LOCKED`), a change of `completion` by a save is refused (`READ_ONLY`).
+. The read of the document carries each stage's declaration and status, its `missing` fields, the stages it waits for and a
+  mark for a completed stage whose predecessor was reopened; a stage that does not apply because its condition field is
+  still empty says so (`unanswered`).
+. Completing a stage needs the right to edit the repository (open question 3 stays open for a role of its own).
+
 == Related
 
 * xref:category-incident-reports.adoc[Incident Response Reports] -- the first staged document type

@@ -1,0 +1,374 @@
+{
+  "today": "2026-11-27",
+  "asOf": "2026-11-27T10:00:00Z",
+  "year": 2026,
+  "repository": "isms-incidents-2026",
+  "incidents": [
+    {
+      "id": "01JZA6D8F0H2K4M6P8R0T2W4Y6",
+      "title": "Suspicious logins from an unknown network",
+      "address": "/incidents/2026/01JZA6D8F0H2K4M6P8R0T2W4Y6",
+      "state": "draft",
+      "version": 1,
+      "frozen": false,
+      "severity": null,
+      "categories": [
+        "security-incident"
+      ],
+      "personalDataAffected": null,
+      "nis2Significant": null,
+      "awareAt": "2026-11-26T08:30:00Z",
+      "resolvedAt": null,
+      "stages": [
+        {
+          "id": "triage",
+          "status": "open"
+        },
+        {
+          "id": "privacy-assessment",
+          "status": "not-applicable"
+        },
+        {
+          "id": "response",
+          "status": "open"
+        },
+        {
+          "id": "notifications",
+          "status": "not-applicable"
+        },
+        {
+          "id": "review",
+          "status": "open"
+        }
+      ],
+      "deadlines": {
+        "open": 0,
+        "met": 0,
+        "missed": 0,
+        "next": null
+      },
+      "requested": false,
+      "updatedAt": "2026-11-26T08:40:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null
+    },
+    {
+      "id": "01JZA2B4D6F8H0K2N4Q6S8V0X2",
+      "title": "Phishing mail with a forged payment link",
+      "address": "/incidents/2026/01JZA2B4D6F8H0K2N4Q6S8V0X2",
+      "state": "draft",
+      "version": 1,
+      "frozen": false,
+      "severity": "medium",
+      "categories": [
+        "security-incident",
+        "personal-data-breach"
+      ],
+      "personalDataAffected": true,
+      "nis2Significant": false,
+      "awareAt": "2026-11-24T09:10:00Z",
+      "resolvedAt": null,
+      "stages": [
+        {
+          "id": "triage",
+          "status": "completed"
+        },
+        {
+          "id": "privacy-assessment",
+          "status": "open"
+        },
+        {
+          "id": "response",
+          "status": "open"
+        },
+        {
+          "id": "notifications",
+          "status": "open"
+        },
+        {
+          "id": "review",
+          "status": "open"
+        }
+      ],
+      "deadlines": {
+        "open": 0,
+        "met": 0,
+        "missed": 1,
+        "next": null
+      },
+      "requested": false,
+      "updatedAt": "2026-11-25T16:30:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null
+    },
+    {
+      "id": "01JZ9T4M6Q8S0V2X4B6D8F0H2K",
+      "title": "Card data exposed in the checkout log",
+      "address": "/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K",
+      "state": "draft",
+      "version": 1,
+      "frozen": false,
+      "severity": "high",
+      "categories": [
+        "security-incident",
+        "personal-data-breach"
+      ],
+      "personalDataAffected": true,
+      "nis2Significant": true,
+      "awareAt": "2026-11-19T07:40:00Z",
+      "resolvedAt": "2026-11-20T16:00:00Z",
+      "stages": [
+        {
+          "id": "triage",
+          "status": "completed"
+        },
+        {
+          "id": "privacy-assessment",
+          "status": "open"
+        },
+        {
+          "id": "response",
+          "status": "open"
+        },
+        {
+          "id": "notifications",
+          "status": "open"
+        },
+        {
+          "id": "review",
+          "status": "open"
+        }
+      ],
+      "deadlines": {
+        "open": 1,
+        "met": 1,
+        "missed": 2,
+        "next": {
+          "rule": "nis2-final-report",
+          "due": "2026-12-22T10:20:00Z"
+        }
+      },
+      "requested": false,
+      "updatedAt": "2026-11-22T10:25:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null
+    },
+    {
+      "id": "01JZ9V7P9S1T3W5Y7A9C1E3G5J",
+      "title": "Credential stuffing against the login form",
+      "address": "/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J",
+      "state": "draft",
+      "version": 1,
+      "frozen": false,
+      "severity": "medium",
+      "categories": [
+        "security-incident"
+      ],
+      "personalDataAffected": false,
+      "nis2Significant": false,
+      "awareAt": "2026-11-10T14:05:00Z",
+      "resolvedAt": "2026-11-12T09:00:00Z",
+      "stages": [
+        {
+          "id": "triage",
+          "status": "completed"
+        },
+        {
+          "id": "privacy-assessment",
+          "status": "not-applicable"
+        },
+        {
+          "id": "response",
+          "status": "completed"
+        },
+        {
+          "id": "notifications",
+          "status": "not-applicable"
+        },
+        {
+          "id": "review",
+          "status": "open"
+        }
+      ],
+      "deadlines": {
+        "open": 0,
+        "met": 0,
+        "missed": 0,
+        "next": null
+      },
+      "requested": false,
+      "updatedAt": "2026-11-25T14:00:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null
+    },
+    {
+      "id": "01JZ8M3N5P7R9T1V3X5Z7B9D1F",
+      "title": "Notification service down after a failed deployment",
+      "address": "/incidents/2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F",
+      "state": "released",
+      "version": 1,
+      "frozen": true,
+      "severity": "high",
+      "categories": [
+        "security-incident"
+      ],
+      "personalDataAffected": false,
+      "nis2Significant": true,
+      "awareAt": "2026-10-12T11:00:00Z",
+      "resolvedAt": "2026-10-13T20:00:00Z",
+      "stages": [
+        {
+          "id": "triage",
+          "status": "completed"
+        },
+        {
+          "id": "privacy-assessment",
+          "status": "not-applicable"
+        },
+        {
+          "id": "response",
+          "status": "completed"
+        },
+        {
+          "id": "notifications",
+          "status": "completed"
+        },
+        {
+          "id": "review",
+          "status": "completed"
+        }
+      ],
+      "deadlines": {
+        "open": 0,
+        "met": 4,
+        "missed": 0,
+        "next": null
+      },
+      "requested": false,
+      "updatedAt": "2026-11-18T10:00:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "incidents/01JZ8M3N5P7R9T1V3X5Z7B9D1F/v1",
+        "at": "2026-11-18T10:00:00Z"
+      }
+    },
+    {
+      "id": "01JZ8K1M3P5R7T9V1X3Z5B7D9F",
+      "title": "Unauthorised access to the report archive",
+      "address": "/incidents/2026/01JZ8K1M3P5R7T9V1X3Z5B7D9F",
+      "state": "draft",
+      "version": 1,
+      "frozen": false,
+      "severity": "high",
+      "categories": [
+        "security-incident"
+      ],
+      "personalDataAffected": false,
+      "nis2Significant": true,
+      "awareAt": "2026-10-05T08:00:00Z",
+      "resolvedAt": null,
+      "stages": [
+        {
+          "id": "triage",
+          "status": "completed"
+        },
+        {
+          "id": "privacy-assessment",
+          "status": "not-applicable"
+        },
+        {
+          "id": "response",
+          "status": "open"
+        },
+        {
+          "id": "notifications",
+          "status": "open"
+        },
+        {
+          "id": "review",
+          "status": "open"
+        }
+      ],
+      "deadlines": {
+        "open": 1,
+        "met": 3,
+        "missed": 0,
+        "next": null
+      },
+      "requested": false,
+      "updatedAt": "2026-11-06T10:05:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null
+    },
+    {
+      "id": "01JZ6Q8S0V2X4B6D8F0H2K4M6P",
+      "title": "Customer export sent to the wrong recipient",
+      "address": "/incidents/2026/01JZ6Q8S0V2X4B6D8F0H2K4M6P",
+      "state": "draft",
+      "version": 1,
+      "frozen": false,
+      "severity": "low",
+      "categories": [
+        "personal-data-breach"
+      ],
+      "personalDataAffected": true,
+      "nis2Significant": false,
+      "awareAt": "2026-09-03T13:20:00Z",
+      "resolvedAt": "2026-09-04T18:00:00Z",
+      "stages": [
+        {
+          "id": "triage",
+          "status": "open"
+        },
+        {
+          "id": "privacy-assessment",
+          "status": "completed"
+        },
+        {
+          "id": "response",
+          "status": "completed"
+        },
+        {
+          "id": "notifications",
+          "status": "completed"
+        },
+        {
+          "id": "review",
+          "status": "open"
+        }
+      ],
+      "deadlines": {
+        "open": 0,
+        "met": 1,
+        "missed": 0,
+        "next": null
+      },
+      "requested": false,
+      "updatedAt": "2026-11-25T15:00:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null
+    }
+  ],
+  "truncated": false
+}

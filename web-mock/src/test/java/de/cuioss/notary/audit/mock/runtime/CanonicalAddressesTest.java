@@ -112,6 +112,30 @@ class CanonicalAddressesTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {"/incidents", "/incidents/2026", "/incidents/2026/new",
+            "/incidents/2026/01JZA4N7KQ3V8M2D6X9C1B5T0E", "/incidents/2026/01JZA4N7KQ3V8M2D6X9C1B5T0E?stage=notifications",
+            "/incidents/2026/01JZA4N7KQ3V8M2D6X9C1B5T0E?at=v1", "/incidents/2026/01JZA4N7KQ3V8M2D6X9C1B5T0E?at=v1&stage=review",
+            "/incidents/2026/01JZA4N7KQ3V8M2D6X9C1B5T0E?at=4be0c3a",
+            "/incidents/2026/01JZA4N7KQ3V8M2D6X9C1B5T0E/release", "/incidents/2026/new-2", "/incidents/2026/new-2/release",
+            "/incidents/2026/NEW"})
+    @DisplayName("keeps a return address of the incidents, with its allowed query")
+    void shouldKeepIncidentAddressesWithAllowedQuery(String address) {
+        assertEquals(address, addresses.checkReturn(address));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/incidents/2026/new?stage=review", "/incidents/2026/new#x", "/incidents/2026/new/release",
+            "/incidents/2026/01JZA4N7KQ3V8M2D6X9C1B5T0E?stage=", "/incidents/2026/01JZA4N7KQ3V8M2D6X9C1B5T0E?stage=Review",
+            "/incidents/2026/01JZA4N7KQ3V8M2D6X9C1B5T0E?stage=a&stage=b",
+            "/incidents/2026/01JZA4N7KQ3V8M2D6X9C1B5T0E?recipe=stride", "/incidents/2026/01JZA4N7KQ3V8M2D6X9C1B5T0E?at=zzz",
+            "/incidents/2026/01JZA4N7KQ3V8M2D6X9C1B5T0E/release?stage=review", "/incidents/2026?stage=review",
+            "/incidents?at=v1"})
+    @DisplayName("replaces a return address of the incidents with a name it does not admit or a bad value by /")
+    void shouldReplaceIncidentAddressesWithOtherQueries(String candidate) {
+        assertEquals(CanonicalAddresses.FALLBACK, addresses.checkReturn(candidate));
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"/reports", "/reports/samm-trend", "/reports/samm-trend?scope=payments",
             "/reports/samm-compare", "/reports/samm-compare?scope=payments",
             "/reports/samm-compare?scope=payments&from=2026-q2&to=2026-q4",

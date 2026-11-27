@@ -119,3 +119,23 @@ the JSON Pointers of the missing fields.
 * Affected services must be picked from the service catalog.
 * The application must derive the protection needs of the incident per dimension as the maximum over the effective
   protection needs of the affected services (xref:directory.adoc#AUN-DIR-5[AUN-DIR-5]).
+
+Decided provisionally with the incident reports (UC-IR-1, UC-IR-2, UC-IR-3), recorded with the bodies in
+xref:rest-api.adoc#_decided_incidents[REST API Register, Open Questions]; the owner may change each one:
+
+. *Layout* (AUN-IR-1): the fields are not at the root of `document.yaml` but in one part per stage (`triage.yaml`,
+  `privacy-assessment.yaml`, `response.yaml`, `notifications.yaml`, `review.yaml`), as
+  xref:../concepts/category-incident-reports.adoc#_stages_of_an_incident[Incident Reports, Stages of an Incident] says; the
+  deadline rules of AUN-IR-2 read the paths of the parts (`/triage/aware-at`, `/response/resolved-at`,
+  `/notifications/nis2-notification/sent-at`). The schema is in xref:rest-api.adoc#_incident_data[REST API Register, The Data
+  Shape of an Incident]. The text above is not changed until the owner accepts it.
+. *Deadlines* (AUN-IR-2): the status of a deadline is computed at the time of the read, at the time of the release for a
+  released incident (so that `report.adoc` is reproducible), and a notification sent after the due time leaves the deadline
+  `MISSED` (xref:rest-api.adoc#_incident_deadlines[REST API Register, The Deadlines]).
+. *Mandatory fields* (AUN-IR-3): the transitions into review and into release are refused with `STAGES_OPEN`, the list of
+  the applicable stages that are not completed with their missing fields, because a stage is completed only with its
+  mandatory fields; `MANDATORY_FIELDS_MISSING` stays for a document without stages.
+. *Protection needs* (AUN-IR-4): derived at the read while the incident is open, not stored in a part; the release records the
+  derived values in the release commit (`protection.yaml`) and reads them from there afterwards, so that the committed report
+  stays equal to a fresh generation when the catalog changes (xref:rest-api.adoc#_decided_incidents[REST API Register, point 19]).
+

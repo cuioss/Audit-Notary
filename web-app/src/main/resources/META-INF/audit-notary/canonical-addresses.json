@@ -4,7 +4,8 @@
   "params": {
     "year": "[0-9]{4}",
     "document": "[0-9A-Za-z][0-9A-Za-z._-]{0,127}",
-    "model": "(?!new(?![a-z0-9._-]))[a-z0-9][a-z0-9._-]{0,127}"
+    "model": "(?!new(?![a-z0-9._-]))[a-z0-9][a-z0-9._-]{0,127}",
+    "incident": "(?!new(?![0-9A-Za-z._-]))[0-9A-Za-z][0-9A-Za-z._-]{0,127}"
   },
   "queries": {
     "at": "(v[0-9]{1,4}|[0-9a-f]{7,40})",
@@ -13,6 +14,7 @@
     "from": "[a-z0-9][a-z0-9._-]{0,127}",
     "to": "[a-z0-9][a-z0-9._-]{0,127}",
     "recipe": "[a-z0-9][a-z0-9-]{0,63}",
+    "stage": "[a-z0-9][a-z0-9-]{0,63}",
     "as-of": "[A-Za-z0-9][A-Za-z0-9._/-]{0,127}"
   },
   "addresses": [
@@ -40,7 +42,12 @@
     { "route": "threat-models.release", "pattern": "/threat-models/{service}/{model}/release" },
     { "route": "incidents", "pattern": "/incidents" },
     { "route": "incidents.year", "pattern": "/incidents/{year}" },
-    { "route": "incidents.incident", "pattern": "/incidents/{year}/{incident}" },
+    { "route": "incidents.new", "pattern": "/incidents/{year}/new" },
+    {
+      "route": "incidents.incident",
+      "pattern": "/incidents/{year}/{incident}",
+      "query": ["at", "stage"]
+    },
     { "route": "incidents.release", "pattern": "/incidents/{year}/{incident}/release" },
     { "route": "isms", "pattern": "/isms" },
     { "route": "isms.risks", "pattern": "/isms/risks" },

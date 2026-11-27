@@ -114,7 +114,16 @@ models with their revisions (`?at=`, `404` and `422`), the nine pages of the ser
 `-recipes-none`); `read-only` answers every write `403 FORBIDDEN`, `release` (no right on `threat-models`) answers the
 schema, the recipes, a page and a model `403 FORBIDDEN`, `empty` has no service (`404 NOT_FOUND`) and serves the schema and
 the recipes, `degraded` answers a save, a submit and a create `503 GIT_UNAVAILABLE` until `recovered`, and `local` has no
-write route; a request about a document that no route names answers `404 NOT_FOUND` for a repository of the scenario's
+write route; the lens *Incident reports*: `workshop`, `read-only`, `degraded` and `local` answer the schema, the years, the incidents of a
+year, nine incidents with their revisions and reports and the Due items of the deadlines; `workshop` holds `approve` on the year of
+today, walks the stages (`incident-triage-reopened`, `-triage-recompleted`, `-privacy-completed`, `-review-completed` with
+`-review-step-up`), the submit and the release of one incident (`incident-submitted`, `-released`, `-release-step-up`,
+`-release-changed`, `-release-released-meanwhile`), the clock (`incident-notification-recorded`, `-clock-advanced`), the refusals
+(`incident-saved-by-other`, `-stage-locked`, `-invalid`, `-git-unavailable`, `-complete-changed`) and the create (`incident-created`,
+`-create-invalid`, `-year-missing`); `read-only` answers every write `403 FORBIDDEN`, `release` (no right on the incident
+repositories) answers no year and `403 FORBIDDEN` for the rest, `empty` has no year (`404 NOT_FOUND`) and serves the schema,
+`degraded` answers a save, the completion of a stage and a create `503 GIT_UNAVAILABLE` until `recovered`, and `local` has no write
+route; a request about a document that no route names answers `404 NOT_FOUND` for a repository of the scenario's
 rights
 
 |Control

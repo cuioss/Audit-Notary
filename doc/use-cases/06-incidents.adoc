@@ -56,7 +56,9 @@ xref:../specification/category-incident-reports.adoc#AUN-IR-4[AUN-IR-4] (affecte
 xref:../specification/data-protection.adoc#AUN-DP-5[AUN-DP-5] (no personal details),
 xref:../specification/data-protection.adoc#AUN-DP-1[AUN-DP-1] (repository per year).
 Design:: xref:../concepts/category-incident-reports.adoc#_asciidoc_is_the_output_not_the_truth[Incident Reports,
-AsciiDoc Is the Output, Not the Truth].
+AsciiDoc Is the Output, Not the Truth]. Decided provisionally for the web app: the report is a staged document, one tab per
+stage, created at `/incidents/<year>/new`, the stages are parts and the affected services' protection needs are derived
+(xref:../specification/rest-api.adoc#_decided_incidents[REST API Register, Open Questions]).
 
 [#UC-IR-2]
 == UC-IR-2: Meet the Notification Deadlines
@@ -94,7 +96,10 @@ Open points:: the deadline rules go beyond the forms the library offers
 Documents, Open Questions]).
 Requirements:: xref:../specification/category-incident-reports.adoc#AUN-IR-2[AUN-IR-2] (deadlines as data, shown,
 missed stays visible).
-Design:: xref:../concepts/category-incident-reports.adoc#_the_deadline_clock[Incident Reports, The Deadline Clock].
+Design:: xref:../concepts/category-incident-reports.adoc#_the_deadline_clock[Incident Reports, The Deadline Clock]. Decided
+provisionally for the web app: the deadlines are computed from the parts, shown in the header of the incident and in a
+notifications table, and listed in the Due lens while they are a duty; a deadline sent late stays missed
+(xref:../specification/rest-api.adoc#_decided_incidents[REST API Register, Open Questions]).
 
 [#UC-IR-3]
 == UC-IR-3: Review and Release a Report
@@ -122,4 +127,7 @@ Variations::
 Outcome:: the report is released and immutable, with a generated `report.adoc` from which a PDF can be made.
 Requirements:: xref:../specification/category-incident-reports.adoc#AUN-IR-3[AUN-IR-3] (mandatory fields),
 xref:../specification/category-incident-reports.adoc#AUN-IR-1[AUN-IR-1] (generated output).
-Design:: xref:../specification/web-app.adoc#AUN-WEB-6[AUN-WEB-6].
+Design:: xref:../specification/web-app.adoc#AUN-WEB-6[AUN-WEB-6]. Decided provisionally for the web app: a stage is
+completed with its mandatory fields (the refusal names them), submitting and releasing need every applicable stage completed
+(`STAGES_OPEN`), the review stage asks for step-up, and the release page shows the diff by stage, then section, beside the
+generated report (xref:../specification/rest-api.adoc#_decided_incidents[REST API Register, Open Questions]).

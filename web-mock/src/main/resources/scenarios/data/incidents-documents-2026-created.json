@@ -1,0 +1,128 @@
+{
+  "repository": "isms-incidents-2026",
+  "documents": [
+    {
+      "id": "01JZA8F0H2K4M6P8R0T2W4Y6A8",
+      "kind": "incident",
+      "title": "Suspicious logins from the VPN gateway",
+      "state": "draft",
+      "version": 1,
+      "updatedAt": "2026-11-26T09:41:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null,
+      "requested": false,
+      "address": "/incidents/2026/01JZA8F0H2K4M6P8R0T2W4Y6A8"
+    },
+    {
+      "id": "01JZA6D8F0H2K4M6P8R0T2W4Y6",
+      "kind": "incident",
+      "title": "Suspicious logins from an unknown network",
+      "state": "draft",
+      "version": 1,
+      "updatedAt": "2026-11-26T08:40:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null,
+      "requested": false,
+      "address": "/incidents/2026/01JZA6D8F0H2K4M6P8R0T2W4Y6"
+    },
+    {
+      "id": "01JZA2B4D6F8H0K2N4Q6S8V0X2",
+      "kind": "incident",
+      "title": "Phishing mail with a forged payment link",
+      "state": "draft",
+      "version": 1,
+      "updatedAt": "2026-11-25T16:30:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null,
+      "requested": false,
+      "address": "/incidents/2026/01JZA2B4D6F8H0K2N4Q6S8V0X2"
+    },
+    {
+      "id": "01JZ6Q8S0V2X4B6D8F0H2K4M6P",
+      "kind": "incident",
+      "title": "Customer export sent to the wrong recipient",
+      "state": "draft",
+      "version": 1,
+      "updatedAt": "2026-11-25T15:00:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null,
+      "requested": false,
+      "address": "/incidents/2026/01JZ6Q8S0V2X4B6D8F0H2K4M6P"
+    },
+    {
+      "id": "01JZ9V7P9S1T3W5Y7A9C1E3G5J",
+      "kind": "incident",
+      "title": "Credential stuffing against the login form",
+      "state": "draft",
+      "version": 1,
+      "updatedAt": "2026-11-25T14:00:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null,
+      "requested": false,
+      "address": "/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J"
+    },
+    {
+      "id": "01JZ9T4M6Q8S0V2X4B6D8F0H2K",
+      "kind": "incident",
+      "title": "Card data exposed in the checkout log",
+      "state": "draft",
+      "version": 1,
+      "updatedAt": "2026-11-22T10:25:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null,
+      "requested": false,
+      "address": "/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K"
+    },
+    {
+      "id": "01JZ8M3N5P7R9T1V3X5Z7B9D1F",
+      "kind": "incident",
+      "title": "Notification service down after a failed deployment",
+      "state": "released",
+      "version": 1,
+      "updatedAt": "2026-11-18T10:00:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "incidents/01JZ8M3N5P7R9T1V3X5Z7B9D1F/v1",
+        "at": "2026-11-18T10:00:00Z"
+      },
+      "requested": false,
+      "address": "/incidents/2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F"
+    },
+    {
+      "id": "01JZ8K1M3P5R7T9V1X3Z5B7D9F",
+      "kind": "incident",
+      "title": "Unauthorised access to the report archive",
+      "state": "draft",
+      "version": 1,
+      "updatedAt": "2026-11-06T10:05:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null,
+      "requested": false,
+      "address": "/incidents/2026/01JZ8K1M3P5R7T9V1X3Z5B7D9F"
+    }
+  ]
+}

@@ -1,0 +1,229 @@
+{
+  "repository": "isms-incidents-2026",
+  "id": "01JZA6D8F0H2K4M6P8R0T2W4Y6",
+  "category": "incident-reports",
+  "kind": "incident",
+  "title": "Suspicious logins from an unknown network",
+  "state": "draft",
+  "version": 1,
+  "frozen": false,
+  "year": 2026,
+  "address": "/incidents/2026/01JZA6D8F0H2K4M6P8R0T2W4Y6",
+  "asOf": "2026-11-26T10:00:00Z",
+  "parts": {
+    "data": {
+      "blob": "aba035c",
+      "savedAt": "2026-11-26T08:30:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Suspicious logins from an unknown network"
+      }
+    },
+    "triage": {
+      "blob": "87e9254",
+      "savedAt": "2026-11-26T08:40:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "categories": [
+          "security-incident"
+        ],
+        "detected-at": "2026-11-26T07:50:00Z",
+        "aware-at": "2026-11-26T08:30:00Z",
+        "affected-services": [
+          "service:identity-provider"
+        ],
+        "tickets": [
+          "SEC-2251"
+        ]
+      }
+    },
+    "privacy-assessment": {
+      "blob": null,
+      "savedAt": null,
+      "savedBy": null,
+      "value": {}
+    },
+    "response": {
+      "blob": null,
+      "savedAt": null,
+      "savedBy": null,
+      "value": {}
+    },
+    "notifications": {
+      "blob": null,
+      "savedAt": null,
+      "savedBy": null,
+      "value": {}
+    },
+    "review": {
+      "blob": null,
+      "savedAt": null,
+      "savedBy": null,
+      "value": {}
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-26T08:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "triage",
+      "count": 1
+    },
+    {
+      "at": "2026-11-26T08:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "incident.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ],
+  "stages": [
+    {
+      "id": "triage",
+      "part": "triage",
+      "after": [],
+      "when": null,
+      "narrative": [],
+      "stepUp": false,
+      "status": "open",
+      "unanswered": false,
+      "completion": null,
+      "predecessorReopened": false,
+      "missing": [
+        "/triage/severity",
+        "/triage/personal-data-affected",
+        "/triage/nis2-significant"
+      ],
+      "blockedBy": []
+    },
+    {
+      "id": "privacy-assessment",
+      "part": "privacy-assessment",
+      "after": [
+        "triage"
+      ],
+      "when": {
+        "field": "/triage/personal-data-affected"
+      },
+      "narrative": [],
+      "stepUp": false,
+      "status": "not-applicable",
+      "unanswered": true,
+      "completion": null,
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "response",
+      "part": "response",
+      "after": [
+        "triage"
+      ],
+      "when": null,
+      "narrative": [],
+      "stepUp": false,
+      "status": "open",
+      "unanswered": false,
+      "completion": null,
+      "predecessorReopened": false,
+      "missing": [
+        "/response/actions",
+        "/response/resolved-at"
+      ],
+      "blockedBy": [
+        "triage"
+      ]
+    },
+    {
+      "id": "notifications",
+      "part": "notifications",
+      "after": [
+        "triage"
+      ],
+      "when": {
+        "any": [
+          {
+            "field": "/triage/personal-data-affected"
+          },
+          {
+            "field": "/triage/nis2-significant"
+          }
+        ]
+      },
+      "narrative": [],
+      "stepUp": false,
+      "status": "not-applicable",
+      "unanswered": true,
+      "completion": null,
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "review",
+      "part": "review",
+      "after": [
+        "response"
+      ],
+      "when": null,
+      "narrative": [
+        "course",
+        "root-cause-analysis",
+        "lessons"
+      ],
+      "stepUp": true,
+      "status": "open",
+      "unanswered": false,
+      "completion": null,
+      "predecessorReopened": false,
+      "missing": [
+        "/review/root-causes",
+        "/review/measures",
+        "/review/course",
+        "/review/root-cause-analysis",
+        "/review/lessons"
+      ],
+      "blockedBy": [
+        "response"
+      ]
+    }
+  ],
+  "deadlines": [],
+  "protection": {
+    "needs": {
+      "confidentiality": "very-high",
+      "integrity": "very-high",
+      "availability": "high"
+    },
+    "decidedBy": {
+      "confidentiality": "service:identity-provider",
+      "integrity": "service:identity-provider",
+      "availability": "service:identity-provider"
+    }
+  }
+}

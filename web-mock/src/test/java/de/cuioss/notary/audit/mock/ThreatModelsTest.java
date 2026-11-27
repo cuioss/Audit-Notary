@@ -946,8 +946,8 @@ class ThreatModelsTest {
         @DisplayName("the search finds the checkout flow; T-07 resolves with its title and its address")
         void shouldSearchAndResolve() {
             try (var client = start("workshop")) {
-                var hits = get(client, "/api/v1/search?q=checkout").path("results");
-                var login = get(client, "/api/v1/search?q=login").path("results");
+                var hits = get(client, "/api/v1/search?q=checkout%20flow").path("results");
+                var login = get(client, "/api/v1/search?q=login%20flow").path("results");
                 var resolved = get(client, "/api/v1/references/resolve?ref=threat-models:threat-model/" + CHECKOUT + "%23T-07");
                 var reference = find(resolved.path("references"), "ref", "threat-models:threat-model/" + CHECKOUT + "#T-07");
                 var entry = hits.get(0);
@@ -1401,7 +1401,7 @@ class ThreatModelsTest {
                         () -> assertEquals(data("categories-threat-models-schema.json"), get(client, CATEGORY + "schema")),
                         () -> assertEquals(data("threat-model-recipes-de.json"), get(client, CATEGORY + "recipes?lang=de")),
                         () -> assertEquals(data("threat-models-index.json"), get(client, "/api/v1/documents/threat-models")),
-                        () -> assertEquals("Payment API, checkout flow", get(client, "/api/v1/search?q=checkout").path("results")
+                        () -> assertEquals("Payment API, checkout flow", get(client, "/api/v1/search?q=checkout%20flow").path("results")
                                 .get(0).path("title").asText()),
                         () -> assertEquals(5, get(client, CHECKOUT_ADDRESS + "?at=v1").path("threats").path("total").asInt()));
                 for (var request : List.of(List.of("POST", SAVE), List.of("PUT", "/api/v1/drafts/threat-models/" + CHECKOUT),
@@ -1465,7 +1465,7 @@ class ThreatModelsTest {
                         () -> assertEquals("SAVED", outcome(client, "POST", SAVE)),
                         () -> assertEquals("CREATED", outcome(client, "POST", SCHEDULER)),
                         () -> assertEquals(modelFile(CHECKOUT), get(client, CHECKOUT_ADDRESS)),
-                        () -> assertEquals("Payment API, checkout flow", get(client, "/api/v1/search?q=checkout").path("results")
+                        () -> assertEquals("Payment API, checkout flow", get(client, "/api/v1/search?q=checkout%20flow").path("results")
                                 .get(0).path("title").asText()));
             }
         }

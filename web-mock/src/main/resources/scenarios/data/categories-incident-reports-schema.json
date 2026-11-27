@@ -1,0 +1,712 @@
+{
+  "category": "incident-reports",
+  "kinds": [
+    {
+      "id": "incident",
+      "repository": "isms-incidents-<year>",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "triage": {
+            "type": "object",
+            "gdr-split": true,
+            "required": [
+              "categories",
+              "severity",
+              "detected-at",
+              "aware-at",
+              "personal-data-affected",
+              "nis2-significant"
+            ],
+            "properties": {
+              "categories": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "security-incident",
+                    "personal-data-breach"
+                  ]
+                }
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high",
+                  "critical"
+                ]
+              },
+              "occurred-at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "detected-at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "aware-at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "personal-data-affected": {
+                "type": "boolean"
+              },
+              "nis2-significant": {
+                "type": "boolean"
+              },
+              "affected-services": {
+                "type": "array",
+                "maxItems": 50,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "format": "gdr-link",
+                  "x-catalog": "service"
+                }
+              },
+              "tickets": {
+                "type": "array",
+                "maxItems": 20,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                }
+              },
+              "completion": {
+                "type": "object",
+                "readOnly": true,
+                "required": [
+                  "at",
+                  "by"
+                ],
+                "properties": {
+                  "at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "by": {
+                    "type": "string",
+                    "x-person": true
+                  }
+                }
+              }
+            }
+          },
+          "privacy-assessment": {
+            "type": "object",
+            "gdr-split": true,
+            "required": [
+              "data-subjects",
+              "risk",
+              "risk-assessment",
+              "notify-authority",
+              "inform-data-subjects"
+            ],
+            "properties": {
+              "data-subjects": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "category",
+                    "approximate-number"
+                  ],
+                  "properties": {
+                    "category": {
+                      "type": "string",
+                      "maxLength": 120
+                    },
+                    "approximate-number": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              },
+              "records-approximate": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "risk": {
+                "type": "string",
+                "enum": [
+                  "unlikely",
+                  "risk",
+                  "high-risk"
+                ]
+              },
+              "risk-assessment": {
+                "type": "string",
+                "maxLength": 8000,
+                "x-asciidoc": true,
+                "x-free-text": true
+              },
+              "notify-authority": {
+                "type": "boolean"
+              },
+              "inform-data-subjects": {
+                "type": "boolean"
+              },
+              "reasons-for-delay": {
+                "type": "string",
+                "maxLength": 2000,
+                "x-free-text": true
+              },
+              "completion": {
+                "type": "object",
+                "readOnly": true,
+                "required": [
+                  "at",
+                  "by"
+                ],
+                "properties": {
+                  "at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "by": {
+                    "type": "string",
+                    "x-person": true
+                  }
+                }
+              }
+            }
+          },
+          "response": {
+            "type": "object",
+            "gdr-split": true,
+            "required": [
+              "actions",
+              "resolved-at"
+            ],
+            "properties": {
+              "actions": {
+                "type": "array",
+                "maxItems": 100,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "what"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "containment",
+                        "recovery",
+                        "other"
+                      ]
+                    },
+                    "what": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "role": {
+                      "type": "string",
+                      "format": "gdr-link",
+                      "x-catalog": "role"
+                    },
+                    "issues": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      }
+                    },
+                    "done": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "timeline": {
+                "type": "array",
+                "maxItems": 200,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "at",
+                    "what"
+                  ],
+                  "properties": {
+                    "at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "what": {
+                      "type": "string",
+                      "maxLength": 300,
+                      "x-free-text": true
+                    }
+                  }
+                }
+              },
+              "resolved-at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "completion": {
+                "type": "object",
+                "readOnly": true,
+                "required": [
+                  "at",
+                  "by"
+                ],
+                "properties": {
+                  "at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "by": {
+                    "type": "string",
+                    "x-person": true
+                  }
+                }
+              }
+            }
+          },
+          "notifications": {
+            "type": "object",
+            "gdr-split": true,
+            "required": [],
+            "properties": {
+              "supervisory-authority": {
+                "type": "object",
+                "required": [
+                  "sent-at",
+                  "recipient",
+                  "channel"
+                ],
+                "properties": {
+                  "sent-at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "recipient": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "reporting-portal",
+                      "email",
+                      "phone",
+                      "post",
+                      "other"
+                    ]
+                  },
+                  "reference": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                }
+              },
+              "data-subjects": {
+                "type": "object",
+                "required": [
+                  "sent-at",
+                  "recipient",
+                  "channel"
+                ],
+                "properties": {
+                  "sent-at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "recipient": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "reporting-portal",
+                      "email",
+                      "phone",
+                      "post",
+                      "other"
+                    ]
+                  },
+                  "reference": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                }
+              },
+              "nis2-early-warning": {
+                "type": "object",
+                "required": [
+                  "sent-at",
+                  "recipient",
+                  "channel"
+                ],
+                "properties": {
+                  "sent-at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "recipient": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "reporting-portal",
+                      "email",
+                      "phone",
+                      "post",
+                      "other"
+                    ]
+                  },
+                  "reference": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                }
+              },
+              "nis2-notification": {
+                "type": "object",
+                "required": [
+                  "sent-at",
+                  "recipient",
+                  "channel"
+                ],
+                "properties": {
+                  "sent-at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "recipient": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "reporting-portal",
+                      "email",
+                      "phone",
+                      "post",
+                      "other"
+                    ]
+                  },
+                  "reference": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                }
+              },
+              "nis2-intermediate-reports": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "due",
+                    "sent-at",
+                    "recipient",
+                    "channel"
+                  ],
+                  "properties": {
+                    "sent-at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "recipient": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "channel": {
+                      "type": "string",
+                      "enum": [
+                        "reporting-portal",
+                        "email",
+                        "phone",
+                        "post",
+                        "other"
+                      ]
+                    },
+                    "reference": {
+                      "type": "string",
+                      "maxLength": 100
+                    },
+                    "due": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "nis2-progress-report": {
+                "type": "object",
+                "required": [
+                  "sent-at",
+                  "recipient",
+                  "channel"
+                ],
+                "properties": {
+                  "sent-at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "recipient": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "reporting-portal",
+                      "email",
+                      "phone",
+                      "post",
+                      "other"
+                    ]
+                  },
+                  "reference": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                }
+              },
+              "nis2-final-report": {
+                "type": "object",
+                "required": [
+                  "sent-at",
+                  "recipient",
+                  "channel"
+                ],
+                "properties": {
+                  "sent-at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "recipient": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "reporting-portal",
+                      "email",
+                      "phone",
+                      "post",
+                      "other"
+                    ]
+                  },
+                  "reference": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                }
+              },
+              "others": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "sent-at",
+                    "recipient",
+                    "channel"
+                  ],
+                  "properties": {
+                    "sent-at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "recipient": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "channel": {
+                      "type": "string",
+                      "enum": [
+                        "reporting-portal",
+                        "email",
+                        "phone",
+                        "post",
+                        "other"
+                      ]
+                    },
+                    "reference": {
+                      "type": "string",
+                      "maxLength": 100
+                    },
+                    "comment": {
+                      "type": "string",
+                      "maxLength": 500,
+                      "x-free-text": true
+                    }
+                  }
+                }
+              },
+              "completion": {
+                "type": "object",
+                "readOnly": true,
+                "required": [
+                  "at",
+                  "by"
+                ],
+                "properties": {
+                  "at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "by": {
+                    "type": "string",
+                    "x-person": true
+                  }
+                }
+              }
+            }
+          },
+          "review": {
+            "type": "object",
+            "gdr-split": true,
+            "required": [
+              "root-causes",
+              "measures",
+              "course",
+              "root-cause-analysis",
+              "lessons"
+            ],
+            "properties": {
+              "root-causes": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "category",
+                    "description"
+                  ],
+                  "properties": {
+                    "category": {
+                      "type": "string",
+                      "enum": [
+                        "configuration",
+                        "software-defect",
+                        "process",
+                        "access-control",
+                        "third-party",
+                        "other"
+                      ]
+                    },
+                    "description": {
+                      "type": "string",
+                      "maxLength": 500,
+                      "x-free-text": true
+                    }
+                  }
+                }
+              },
+              "measures": {
+                "type": "array",
+                "maxItems": 50,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "what"
+                  ],
+                  "properties": {
+                    "what": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "role": {
+                      "type": "string",
+                      "format": "gdr-link",
+                      "x-catalog": "role"
+                    },
+                    "issues": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      }
+                    },
+                    "due": {
+                      "type": "string",
+                      "format": "date"
+                    }
+                  }
+                }
+              },
+              "risks": {
+                "type": "array",
+                "maxItems": 20,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "format": "gdr-link"
+                }
+              },
+              "course": {
+                "type": "string",
+                "maxLength": 8000,
+                "x-asciidoc": true,
+                "x-free-text": true
+              },
+              "root-cause-analysis": {
+                "type": "string",
+                "maxLength": 8000,
+                "x-asciidoc": true,
+                "x-free-text": true
+              },
+              "lessons": {
+                "type": "string",
+                "maxLength": 8000,
+                "x-asciidoc": true,
+                "x-free-text": true
+              },
+              "completion": {
+                "type": "object",
+                "readOnly": true,
+                "required": [
+                  "at",
+                  "by"
+                ],
+                "properties": {
+                  "at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "by": {
+                    "type": "string",
+                    "x-person": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

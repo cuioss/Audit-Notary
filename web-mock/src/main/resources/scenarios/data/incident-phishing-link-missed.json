@@ -1,0 +1,325 @@
+{
+  "repository": "isms-incidents-2026",
+  "id": "01JZA2B4D6F8H0K2N4Q6S8V0X2",
+  "category": "incident-reports",
+  "kind": "incident",
+  "title": "Phishing mail with a forged payment link",
+  "state": "draft",
+  "version": 1,
+  "frozen": false,
+  "year": 2026,
+  "address": "/incidents/2026/01JZA2B4D6F8H0K2N4Q6S8V0X2",
+  "asOf": "2026-11-27T10:00:00Z",
+  "parts": {
+    "data": {
+      "blob": "456c4d2",
+      "savedAt": "2026-11-24T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Phishing mail with a forged payment link"
+      }
+    },
+    "triage": {
+      "blob": "3278893",
+      "savedAt": "2026-11-24T11:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "categories": [
+          "security-incident",
+          "personal-data-breach"
+        ],
+        "severity": "medium",
+        "occurred-at": "2026-11-24T06:40:00Z",
+        "detected-at": "2026-11-24T08:20:00Z",
+        "aware-at": "2026-11-24T09:10:00Z",
+        "personal-data-affected": true,
+        "nis2-significant": false,
+        "affected-services": [
+          "service:customer-portal"
+        ],
+        "tickets": [
+          "SEC-2234"
+        ],
+        "completion": {
+          "at": "2026-11-24T11:00:00Z",
+          "by": "p-4c1a9e"
+        }
+      }
+    },
+    "privacy-assessment": {
+      "blob": "1dd4be3",
+      "savedAt": "2026-11-25T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "data-subjects": [
+          {
+            "category": "Customers",
+            "approximate-number": 340
+          }
+        ],
+        "records-approximate": 340,
+        "risk": "risk",
+        "risk-assessment": "Customers who followed the link may have typed their account data into a forged page. The data of a payment card were not asked for.",
+        "notify-authority": true,
+        "inform-data-subjects": false
+      }
+    },
+    "response": {
+      "blob": "0bce399",
+      "savedAt": "2026-11-25T16:30:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "actions": [
+          {
+            "kind": "containment",
+            "what": "Block the link in the mail gateway and have the forged page taken down",
+            "role": "role:developer",
+            "issues": [
+              "WEB-401"
+            ],
+            "done": true
+          },
+          {
+            "kind": "other",
+            "what": "Warn the customers with a notice in the portal",
+            "role": "role:security-champion",
+            "issues": [],
+            "done": false
+          }
+        ],
+        "timeline": [
+          {
+            "at": "2026-11-24T08:20:00Z",
+            "what": "A customer reports the forged mail to the support."
+          },
+          {
+            "at": "2026-11-24T10:30:00Z",
+            "what": "The link is blocked in the mail gateway."
+          }
+        ]
+      }
+    },
+    "notifications": {
+      "blob": null,
+      "savedAt": null,
+      "savedBy": null,
+      "value": {}
+    },
+    "review": {
+      "blob": null,
+      "savedAt": null,
+      "savedBy": null,
+      "value": {}
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-25T16:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "response",
+      "count": 2
+    },
+    {
+      "at": "2026-11-25T10:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "privacy-assessment",
+      "count": 3
+    },
+    {
+      "at": "2026-11-24T11:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "complete",
+      "stage": "triage"
+    },
+    {
+      "at": "2026-11-24T10:50:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "triage",
+      "count": 2
+    },
+    {
+      "at": "2026-11-24T10:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "incident.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ],
+  "stages": [
+    {
+      "id": "triage",
+      "part": "triage",
+      "after": [],
+      "when": null,
+      "narrative": [],
+      "stepUp": false,
+      "status": "completed",
+      "unanswered": false,
+      "completion": {
+        "at": "2026-11-24T11:00:00Z",
+        "by": {
+          "pseudonym": "p-4c1a9e",
+          "name": "Alex Example"
+        }
+      },
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "privacy-assessment",
+      "part": "privacy-assessment",
+      "after": [
+        "triage"
+      ],
+      "when": {
+        "field": "/triage/personal-data-affected"
+      },
+      "narrative": [],
+      "stepUp": false,
+      "status": "open",
+      "unanswered": false,
+      "completion": null,
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "response",
+      "part": "response",
+      "after": [
+        "triage"
+      ],
+      "when": null,
+      "narrative": [],
+      "stepUp": false,
+      "status": "open",
+      "unanswered": false,
+      "completion": null,
+      "predecessorReopened": false,
+      "missing": [
+        "/response/resolved-at"
+      ],
+      "blockedBy": []
+    },
+    {
+      "id": "notifications",
+      "part": "notifications",
+      "after": [
+        "triage"
+      ],
+      "when": {
+        "any": [
+          {
+            "field": "/triage/personal-data-affected"
+          },
+          {
+            "field": "/triage/nis2-significant"
+          }
+        ]
+      },
+      "narrative": [],
+      "stepUp": false,
+      "status": "open",
+      "unanswered": false,
+      "completion": null,
+      "predecessorReopened": false,
+      "missing": [],
+      "blockedBy": []
+    },
+    {
+      "id": "review",
+      "part": "review",
+      "after": [
+        "response"
+      ],
+      "when": null,
+      "narrative": [
+        "course",
+        "root-cause-analysis",
+        "lessons"
+      ],
+      "stepUp": true,
+      "status": "open",
+      "unanswered": false,
+      "completion": null,
+      "predecessorReopened": false,
+      "missing": [
+        "/review/root-causes",
+        "/review/measures",
+        "/review/course",
+        "/review/root-cause-analysis",
+        "/review/lessons"
+      ],
+      "blockedBy": [
+        "response"
+      ]
+    }
+  ],
+  "deadlines": [
+    {
+      "rule": "gdpr-art33",
+      "element": null,
+      "startedAt": "2026-11-24T09:10:00Z",
+      "due": "2026-11-27T09:10:00Z",
+      "status": "MISSED",
+      "sentAt": null,
+      "metBy": "/notifications/supervisory-authority"
+    }
+  ],
+  "protection": {
+    "needs": {
+      "confidentiality": "very-high",
+      "integrity": "very-high",
+      "availability": "high"
+    },
+    "decidedBy": {
+      "confidentiality": "service:customer-portal",
+      "integrity": "service:customer-portal",
+      "availability": "service:customer-portal"
+    }
+  }
+}
