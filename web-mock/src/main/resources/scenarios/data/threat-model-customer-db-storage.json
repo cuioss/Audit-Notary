@@ -1,0 +1,336 @@
+{
+  "repository": "threat-models",
+  "id": "customer-db-storage",
+  "category": "threat-models",
+  "kind": "threat-model",
+  "title": "Customer database, storage",
+  "state": "released",
+  "version": 1,
+  "frozen": false,
+  "service": {
+    "id": "customer-db",
+    "name": "Customer database"
+  },
+  "model": "storage",
+  "address": "/threat-models/customer-db/storage",
+  "parts": {
+    "data": {
+      "blob": "f78387e",
+      "savedAt": "2026-09-29T09:40:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "service": "service:customer-db",
+        "owner": "role:service-owner",
+        "last-review": "2026-09-29",
+        "recipe": "quick-start"
+      }
+    },
+    "model": {
+      "blob": "17cee23",
+      "savedAt": "2026-09-29T09:40:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "otmVersion": "0.2.0",
+        "project": {
+          "id": "storage",
+          "name": "Customer database, storage",
+          "description": "How the master data of the customers is stored, replicated and backed up."
+        },
+        "trustZones": [
+          {
+            "id": "internal",
+            "name": "Internal network",
+            "risk": {
+              "trustRating": 90
+            }
+          },
+          {
+            "id": "backup",
+            "name": "Backup network",
+            "risk": {
+              "trustRating": 70
+            }
+          }
+        ],
+        "components": [
+          {
+            "id": "admin-console",
+            "name": "Admin console",
+            "type": "external-entity",
+            "parent": {
+              "trustZone": "internal"
+            }
+          },
+          {
+            "id": "db-primary",
+            "name": "Primary database",
+            "type": "data-store",
+            "parent": {
+              "trustZone": "internal"
+            }
+          },
+          {
+            "id": "db-replica",
+            "name": "Replica database",
+            "type": "data-store",
+            "parent": {
+              "trustZone": "internal"
+            }
+          },
+          {
+            "id": "backup-job",
+            "name": "Backup job",
+            "type": "process",
+            "parent": {
+              "trustZone": "backup"
+            }
+          }
+        ],
+        "dataflows": [
+          {
+            "id": "administer",
+            "name": "Administer",
+            "source": "admin-console",
+            "destination": "db-primary"
+          },
+          {
+            "id": "replicate",
+            "name": "Replicate",
+            "source": "db-primary",
+            "destination": "db-replica"
+          },
+          {
+            "id": "backup",
+            "name": "Back up",
+            "source": "db-primary",
+            "destination": "backup-job"
+          }
+        ],
+        "threats": [
+          {
+            "id": "T-01",
+            "name": "Backups leave the data centre unencrypted",
+            "description": "A backup medium that is lost or stolen on the way holds the data in plain text.",
+            "categories": [
+              "Information Disclosure"
+            ],
+            "risk": {
+              "likelihood": 40,
+              "impact": 90
+            },
+            "attributes": {
+              "status": "open"
+            }
+          },
+          {
+            "id": "T-02",
+            "name": "A service account of another team reads the tables",
+            "description": "A service account with too wide rights reads tables it has no business with.",
+            "categories": [
+              "Elevation of Privilege"
+            ],
+            "risk": {
+              "likelihood": 40,
+              "impact": 75
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          },
+          {
+            "id": "T-03",
+            "name": "A faulty migration alters rows",
+            "description": "A migration with a mistake changes or deletes rows without anyone noticing.",
+            "categories": [
+              "Tampering"
+            ],
+            "risk": {
+              "likelihood": 30,
+              "impact": 90
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          },
+          {
+            "id": "T-04",
+            "name": "Loss of the primary database",
+            "description": "The primary database fails and the service stands still until a replacement is up.",
+            "categories": [
+              "Denial of Service"
+            ],
+            "risk": {
+              "likelihood": 30,
+              "impact": 90
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          },
+          {
+            "id": "T-05",
+            "name": "Administrators can read personal data in plain text",
+            "description": "An administrator with access to the console can read the personal data of customers.",
+            "categories": [
+              "Information Disclosure"
+            ],
+            "risk": {
+              "likelihood": 25,
+              "impact": 75
+            },
+            "attributes": {
+              "status": "accepted"
+            }
+          }
+        ],
+        "mitigations": [
+          {
+            "id": "M-01",
+            "name": "Encrypt backups before they leave the data centre",
+            "description": "The backup job encrypts with a key held in the key service.",
+            "riskReduction": 90,
+            "attributes": {
+              "threat": "T-01",
+              "status": "planned",
+              "issues": [
+                "DB-512"
+              ]
+            }
+          },
+          {
+            "id": "M-02",
+            "name": "Separate roles per service account",
+            "description": "Each service account reads only the tables of its service.",
+            "riskReduction": 85,
+            "attributes": {
+              "threat": "T-02",
+              "status": "implemented",
+              "issues": [
+                "DB-440"
+              ]
+            }
+          },
+          {
+            "id": "M-03",
+            "name": "Dry run of every migration on a copy",
+            "description": "A migration runs on a copy first and the result is compared.",
+            "riskReduction": 80,
+            "attributes": {
+              "threat": "T-03",
+              "status": "implemented",
+              "issues": [
+                "DB-455"
+              ]
+            }
+          },
+          {
+            "id": "M-04",
+            "name": "Replication to a second node",
+            "description": "A replica takes over within minutes when the primary fails.",
+            "riskReduction": 85,
+            "attributes": {
+              "threat": "T-04",
+              "status": "implemented",
+              "issues": [
+                "DB-431"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-09-30T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "models/customer-db-storage/v1"
+    },
+    {
+      "at": "2026-09-30T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-09-29T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "model",
+      "count": 5
+    },
+    {
+      "at": "2026-09-29T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2026-09-24T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "models/customer-db-storage/v1",
+    "at": "2026-09-30T10:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "review": {
+    "today": "2026-11-26",
+    "protectionNeed": "very-high",
+    "reviewInterval": "P6M",
+    "reviewIntervals": {
+      "very-high": "P6M",
+      "high": "P12M",
+      "normal": "P24M"
+    },
+    "lastReview": "2026-09-29",
+    "daysSinceReview": 58,
+    "reviewDue": "2027-03-29",
+    "dueInDays": 123,
+    "status": "ok"
+  },
+  "threats": {
+    "total": 5,
+    "open": 1,
+    "untreated": 0,
+    "transferred": 0
+  },
+  "diagram": {
+    "mediaType": "image/svg+xml",
+    "width": 520,
+    "height": 314,
+    "dataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MjAiIGhlaWdodD0iMzE0IiB2aWV3Qm94PSIwIDAgNTIwIDMxNCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiPgo8ZGVmcz48bWFya2VyIGlkPSJhcnJvdyIgdmlld0JveD0iMCAwIDEwIDEwIiByZWZYPSI5IiByZWZZPSI1IiBtYXJrZXJXaWR0aD0iNyIgbWFya2VySGVpZ2h0PSI3IiBvcmllbnQ9ImF1dG8tc3RhcnQtcmV2ZXJzZSI+PHBhdGggZD0iTTAgMEwxMCA1TDAgMTB6IiBmaWxsPSIjMzc0MTUxIi8+PC9tYXJrZXI+PC9kZWZzPgo8cmVjdCB3aWR0aD0iNTIwIiBoZWlnaHQ9IjMxNCIgZmlsbD0iI2ZmZmZmZiIvPgo8cmVjdCB4PSI0MCIgeT0iNDAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMjM0IiByeD0iMTAiIGZpbGw9IiNmM2Y0ZjYiIHN0cm9rZT0iIzljYTNhZiIvPgo8dGV4dCB4PSI1MiIgeT0iNTgiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMzc0MTUxIj5JbnRlcm5hbCBuZXR3b3JrPC90ZXh0Pgo8cmVjdCB4PSIyODAiIHk9IjQwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIzNCIgcng9IjEwIiBmaWxsPSIjZjNmNGY2IiBzdHJva2U9IiM5Y2EzYWYiLz4KPHRleHQgeD0iMjkyIiB5PSI1OCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiMzNzQxNTEiPkJhY2t1cCBuZXR3b3JrPC90ZXh0Pgo8cmVjdCB4PSI2MCIgeT0iNzAiIHdpZHRoPSIxNjAiIGhlaWdodD0iNDQiIHJ4PSI0IiBmaWxsPSIjZjlmYWZiIiBzdHJva2U9IiM2YjcyODAiLz4KPHRleHQgeD0iMTQwIiB5PSI5NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzExMTgyNyI+QWRtaW4gY29uc29sZTwvdGV4dD4KPHJlY3QgeD0iNjAiIHk9IjE0MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI0NCIgcng9IjQiIGZpbGw9IiNkMWQ1ZGIiIHN0cm9rZT0iIzZiNzI4MCIvPgo8dGV4dCB4PSIxNDAiIHk9IjE2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzExMTgyNyI+UHJpbWFyeSBkYXRhYmFzZTwvdGV4dD4KPHJlY3QgeD0iNjAiIHk9IjIxMCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI0NCIgcng9IjQiIGZpbGw9IiNkMWQ1ZGIiIHN0cm9rZT0iIzZiNzI4MCIvPgo8dGV4dCB4PSIxNDAiIHk9IjIzNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzExMTgyNyI+UmVwbGljYSBkYXRhYmFzZTwvdGV4dD4KPHJlY3QgeD0iMzAwIiB5PSI3MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI0NCIgcng9IjQiIGZpbGw9IiNkYmU3ZmIiIHN0cm9rZT0iIzJmNWZiMyIvPgo8dGV4dCB4PSIzODAiIHk9Ijk2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMTExODI3Ij5CYWNrdXAgam9iPC90ZXh0Pgo8bGluZSB4MT0iMTMyIiB5MT0iMTE0IiB4Mj0iMTMyIiB5Mj0iMTQwIiBzdHJva2U9IiMzNzQxNTEiIHN0cm9rZS13aWR0aD0iMS41IiBtYXJrZXItZW5kPSJ1cmwoI2Fycm93KSIvPgo8dGV4dCB4PSIxMzciIHk9IjEzMSIgZmlsbD0iIzM3NDE1MSI+QWRtaW5pc3RlcjwvdGV4dD4KPGxpbmUgeDE9IjE0OCIgeTE9IjE4NCIgeDI9IjE0OCIgeTI9IjIxMCIgc3Ryb2tlPSIjMzc0MTUxIiBzdHJva2Utd2lkdGg9IjEuNSIgbWFya2VyLWVuZD0idXJsKCNhcnJvdykiLz4KPHRleHQgeD0iMTUzIiB5PSIyMDEiIGZpbGw9IiMzNzQxNTEiPlJlcGxpY2F0ZTwvdGV4dD4KPGxpbmUgeDE9IjIyMCIgeTE9IjE2MiIgeDI9IjMwMCIgeTI9IjkyIiBzdHJva2U9IiMzNzQxNTEiIHN0cm9rZS13aWR0aD0iMS41IiBtYXJrZXItZW5kPSJ1cmwoI2Fycm93KSIvPgo8dGV4dCB4PSIyNjAiIHk9IjEyMyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzM3NDE1MSI+QmFjayB1cDwvdGV4dD4KPC9zdmc+"
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "repository": "threat-models",
+  "id": "identity-provider-login-flow",
+  "revisions": [
+    {
+      "ref": "v2",
+      "commit": "ec3ffdd",
+      "kind": "release",
+      "tag": "models/identity-provider-login-flow/v2",
+      "version": 2,
+      "at": "2026-04-15T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "6ee1ce1",
+      "commit": "6ee1ce1",
+      "kind": "submit",
+      "tag": null,
+      "version": 2,
+      "at": "2026-04-15T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "368fc5a",
+      "commit": "368fc5a",
+      "kind": "save",
+      "tag": null,
+      "version": 2,
+      "at": "2026-04-14T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "v1",
+      "commit": "236e062",
+      "kind": "release",
+      "tag": "models/identity-provider-login-flow/v1",
+      "version": 1,
+      "at": "2025-10-08T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "e07f091",
+      "commit": "e07f091",
+      "kind": "submit",
+      "tag": null,
+      "version": 1,
+      "at": "2025-10-08T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "683f655",
+      "commit": "683f655",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2025-10-07T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "d0dc39d",
+      "commit": "d0dc39d",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2025-10-02T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

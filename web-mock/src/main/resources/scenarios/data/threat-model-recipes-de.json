@@ -1,0 +1,16 @@
+{
+  "recipes": [
+    {
+      "id": "quick-start",
+      "title": "Schnellstart",
+      "description": "Vier Schritte: der Rahmen, die Zonen, die Teile, die Bedrohungen.",
+      "steps": 4
+    },
+    {
+      "id": "stride",
+      "title": "STRIDE, Schritt für Schritt",
+      "description": "Jede Komponente, jeder Datenfluss, sechs Arten von Bedrohung.",
+      "steps": 6
+    }
+  ]
+}

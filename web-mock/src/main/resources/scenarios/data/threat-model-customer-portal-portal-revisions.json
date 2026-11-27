@@ -1,0 +1,91 @@
+{
+  "repository": "threat-models",
+  "id": "customer-portal-portal",
+  "revisions": [
+    {
+      "ref": "v2",
+      "commit": "a1960e0",
+      "kind": "release",
+      "tag": "models/customer-portal-portal/v2",
+      "version": 2,
+      "at": "2025-12-03T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "65c610d",
+      "commit": "65c610d",
+      "kind": "submit",
+      "tag": null,
+      "version": 2,
+      "at": "2025-12-03T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "8c30982",
+      "commit": "8c30982",
+      "kind": "save",
+      "tag": null,
+      "version": 2,
+      "at": "2025-12-02T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "v1",
+      "commit": "0899538",
+      "kind": "release",
+      "tag": "models/customer-portal-portal/v1",
+      "version": 1,
+      "at": "2025-06-04T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "e7373b1",
+      "commit": "e7373b1",
+      "kind": "submit",
+      "tag": null,
+      "version": 1,
+      "at": "2025-06-04T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "2c4564b",
+      "commit": "2c4564b",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2025-06-03T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "bcc8a8a",
+      "commit": "bcc8a8a",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2025-05-29T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

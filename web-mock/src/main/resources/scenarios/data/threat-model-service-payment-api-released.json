@@ -1,0 +1,45 @@
+{
+  "today": "2026-11-26",
+  "service": {
+    "id": "payment-api",
+    "name": "Payment API",
+    "lifecycle": "active",
+    "retired": false,
+    "owner": {
+      "kind": "team",
+      "id": "payments",
+      "name": "Payments"
+    },
+    "protectionNeed": "very-high",
+    "reviewInterval": "P6M"
+  },
+  "reviewIntervals": {
+    "very-high": "P6M",
+    "high": "P12M",
+    "normal": "P24M"
+  },
+  "models": [
+    {
+      "model": "checkout-flow",
+      "document": "payment-api-checkout-flow",
+      "title": "Payment API, checkout flow",
+      "address": "/threat-models/payment-api/checkout-flow",
+      "state": "released",
+      "version": 4,
+      "lastReview": "2026-11-26",
+      "daysSinceReview": 0,
+      "reviewDue": "2027-05-26",
+      "dueInDays": 181,
+      "status": "ok",
+      "threats": {
+        "total": 9,
+        "open": 2,
+        "untreated": 2,
+        "transferred": 1
+      },
+      "requested": false,
+      "updatedAt": "2026-11-26T10:05:00Z"
+    }
+  ],
+  "drafts": []
+}

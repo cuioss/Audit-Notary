@@ -1,0 +1,31 @@
+{
+  "id": "quick-start",
+  "title": "Schnellstart",
+  "description": "Vier Schritte: der Rahmen, die Zonen, die Teile, die Bedrohungen.",
+  "steps": [
+    {
+      "id": "project",
+      "title": "Der Rahmen",
+      "guidance": "Geben Sie dem Modell einen Namen und sagen Sie in ein bis zwei Sätzen, was es abdeckt.\n\n* Wählen Sie einen Namen, den andere wiederfinden.\n* Nennen Sie, was im Modell liegt und was bewusst fehlt.",
+      "fills": "/project"
+    },
+    {
+      "id": "zones",
+      "title": "Vertrauenszonen",
+      "guidance": "Benennen Sie die Bereiche, die einander vertrauen, zum Beispiel das Internet, eine DMZ und das interne Netz.\n\n* Geben Sie jeder Zone eine Vertrauensbewertung von 0 (niemandem wird vertraut) bis 100 (volles Vertrauen).\n* Teile innerhalb einer Zone dürfen sich aufeinander verlassen; eine Linie zwischen zwei Zonen ist dort, wo sich das Vertrauen ändert.",
+      "fills": "/trustZones"
+    },
+    {
+      "id": "components",
+      "title": "Komponenten",
+      "guidance": "Führen Sie jeden Prozess, jeden Datenspeicher und jede externe Partei auf, die beteiligt ist.\n\n* *Prozess*: Code, der läuft.\n* *Datenspeicher*: ein Ort, an dem Daten liegen.\n* *Externe Partei*: eine Person oder ein System, das nicht Ihnen gehört.\n\nOrdnen Sie jede Komponente der Zone zu, in der sie läuft.",
+      "fills": "/components"
+    },
+    {
+      "id": "threats",
+      "title": "Bedrohungen",
+      "guidance": "Fragen Sie zu jeder Komponente, was schiefgehen kann, und halten Sie es als Bedrohung fest.\n\n* Beschreiben Sie es in einem Satz, dem auch Außenstehende folgen können.\n* Bewerten Sie von 0 bis 100, wie wahrscheinlich es ist und wie schwer es wiegt.\n* Lassen Sie die Bedrohung *offen*, bis darüber entschieden ist.",
+      "fills": "/threats"
+    }
+  ]
+}

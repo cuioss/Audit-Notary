@@ -1,0 +1,31 @@
+{
+  "repository": "threat-models",
+  "id": "notification-service-notification-flows",
+  "revisions": [
+    {
+      "ref": "e1bab32",
+      "commit": "e1bab32",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-20T10:05:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "fd7e801",
+      "commit": "fd7e801",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-20T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

@@ -62,6 +62,13 @@
       "title": null,
       "address": null,
       "retired": false
+    },
+    {
+      "ref": "threat-models:threat-model/payment-api-checkout-flow#T-07",
+      "found": true,
+      "title": "Payment API, checkout flow: T-07",
+      "address": "/threat-models/payment-api/checkout-flow",
+      "retired": false
     }
   ]
 }

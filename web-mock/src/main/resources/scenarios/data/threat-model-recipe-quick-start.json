@@ -1,0 +1,31 @@
+{
+  "id": "quick-start",
+  "title": "Quick start",
+  "description": "Four steps: the frame, the zones, the parts, the threats.",
+  "steps": [
+    {
+      "id": "project",
+      "title": "The frame",
+      "guidance": "Name the model and say in a sentence or two what it covers.\n\n* Use a name that people will find again.\n* Say what is inside the model and what is left out.",
+      "fills": "/project"
+    },
+    {
+      "id": "zones",
+      "title": "Trust zones",
+      "guidance": "Name the areas that trust each other, for example the internet, a DMZ and the internal network.\n\n* Give each zone a trust rating from 0 (nobody is trusted) to 100 (fully trusted).\n* Parts in one zone may rely on each other; a line between two zones is where the trust changes.",
+      "fills": "/trustZones"
+    },
+    {
+      "id": "components",
+      "title": "Components",
+      "guidance": "List every process, data store and outside party that takes part.\n\n* *Process*: code that runs.\n* *Data store*: a place where data rests.\n* *External entity*: a person or a system that is not yours.\n\nPut each component in the zone it runs in.",
+      "fills": "/components"
+    },
+    {
+      "id": "threats",
+      "title": "Threats",
+      "guidance": "For each component ask what could go wrong and write it down as a threat.\n\n* Say it in one sentence that an outsider can follow.\n* Rate how likely it is and how bad it would be, from 0 to 100.\n* Keep the threat *open* until it is decided.",
+      "fills": "/threats"
+    }
+  ]
+}

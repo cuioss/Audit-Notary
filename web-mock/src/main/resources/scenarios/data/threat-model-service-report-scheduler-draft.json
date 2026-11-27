@@ -1,0 +1,29 @@
+{
+  "today": "2026-11-26",
+  "service": {
+    "id": "report-scheduler",
+    "name": "Report scheduler",
+    "lifecycle": "active",
+    "retired": false,
+    "owner": {
+      "kind": "team",
+      "id": "security-office",
+      "name": "Security Office"
+    },
+    "protectionNeed": "normal",
+    "reviewInterval": "P24M"
+  },
+  "reviewIntervals": {
+    "very-high": "P6M",
+    "high": "P12M",
+    "normal": "P24M"
+  },
+  "models": [],
+  "drafts": [
+    {
+      "recipe": "quick-start",
+      "step": 2,
+      "at": "2026-11-26T09:20:00Z"
+    }
+  ]
+}

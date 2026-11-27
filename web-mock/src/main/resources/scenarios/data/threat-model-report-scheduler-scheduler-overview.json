@@ -1,0 +1,119 @@
+{
+  "repository": "threat-models",
+  "id": "report-scheduler-scheduler-overview",
+  "category": "threat-models",
+  "kind": "threat-model",
+  "title": "Scheduler overview",
+  "state": "draft",
+  "version": 1,
+  "frozen": false,
+  "service": {
+    "id": "report-scheduler",
+    "name": "Report scheduler"
+  },
+  "model": "scheduler-overview",
+  "address": "/threat-models/report-scheduler/scheduler-overview",
+  "parts": {
+    "data": {
+      "blob": "2fe521c",
+      "savedAt": "2026-11-26T09:41:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "service": "service:report-scheduler",
+        "owner": "role:service-owner",
+        "last-review": "2026-11-26",
+        "recipe": "quick-start"
+      }
+    },
+    "model": {
+      "blob": "0e45836",
+      "savedAt": "2026-11-26T09:41:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "otmVersion": "0.2.0",
+        "project": {
+          "id": "scheduler-overview",
+          "name": "Scheduler overview",
+          "description": "How a report is scheduled and sent."
+        },
+        "trustZones": [
+          {
+            "id": "internal",
+            "name": "Internal",
+            "risk": {
+              "trustRating": 80
+            }
+          }
+        ],
+        "components": [
+          {
+            "id": "scheduler",
+            "name": "Scheduler",
+            "type": "process",
+            "parent": {
+              "trustZone": "internal"
+            }
+          }
+        ],
+        "threats": [],
+        "mitigations": []
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-26T09:41:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "threat-model.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ],
+  "review": {
+    "today": "2026-11-26",
+    "protectionNeed": "normal",
+    "reviewInterval": "P24M",
+    "reviewIntervals": {
+      "very-high": "P6M",
+      "high": "P12M",
+      "normal": "P24M"
+    },
+    "lastReview": null,
+    "daysSinceReview": null,
+    "reviewDue": null,
+    "dueInDays": null,
+    "status": "unreleased"
+  },
+  "threats": {
+    "total": 0,
+    "open": 0,
+    "untreated": 0,
+    "transferred": 0
+  },
+  "diagram": {
+    "mediaType": "image/svg+xml",
+    "width": 280,
+    "height": 174,
+    "dataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyODAiIGhlaWdodD0iMTc0IiB2aWV3Qm94PSIwIDAgMjgwIDE3NCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiPgo8ZGVmcz48bWFya2VyIGlkPSJhcnJvdyIgdmlld0JveD0iMCAwIDEwIDEwIiByZWZYPSI5IiByZWZZPSI1IiBtYXJrZXJXaWR0aD0iNyIgbWFya2VySGVpZ2h0PSI3IiBvcmllbnQ9ImF1dG8tc3RhcnQtcmV2ZXJzZSI+PHBhdGggZD0iTTAgMEwxMCA1TDAgMTB6IiBmaWxsPSIjMzc0MTUxIi8+PC9tYXJrZXI+PC9kZWZzPgo8cmVjdCB3aWR0aD0iMjgwIiBoZWlnaHQ9IjE3NCIgZmlsbD0iI2ZmZmZmZiIvPgo8cmVjdCB4PSI0MCIgeT0iNDAiIHdpZHRoPSIyMDAiIGhlaWdodD0iOTQiIHJ4PSIxMCIgZmlsbD0iI2YzZjRmNiIgc3Ryb2tlPSIjOWNhM2FmIi8+Cjx0ZXh0IHg9IjUyIiB5PSI1OCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiMzNzQxNTEiPkludGVybmFsPC90ZXh0Pgo8cmVjdCB4PSI2MCIgeT0iNzAiIHdpZHRoPSIxNjAiIGhlaWdodD0iNDQiIHJ4PSI0IiBmaWxsPSIjZGJlN2ZiIiBzdHJva2U9IiMyZjVmYjMiLz4KPHRleHQgeD0iMTQwIiB5PSI5NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzExMTgyNyI+U2NoZWR1bGVyPC90ZXh0Pgo8L3N2Zz4="
+  }
+}

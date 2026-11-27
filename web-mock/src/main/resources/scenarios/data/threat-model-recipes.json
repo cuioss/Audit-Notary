@@ -1,0 +1,16 @@
+{
+  "recipes": [
+    {
+      "id": "quick-start",
+      "title": "Quick start",
+      "description": "Four steps: the frame, the zones, the parts, the threats.",
+      "steps": 4
+    },
+    {
+      "id": "stride",
+      "title": "STRIDE, step by step",
+      "description": "Every component, every data flow, six kinds of threat.",
+      "steps": 6
+    }
+  ]
+}

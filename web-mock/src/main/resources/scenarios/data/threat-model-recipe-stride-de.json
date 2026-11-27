@@ -1,0 +1,43 @@
+{
+  "id": "stride",
+  "title": "STRIDE, Schritt für Schritt",
+  "description": "Jede Komponente, jeder Datenfluss, sechs Arten von Bedrohung.",
+  "steps": [
+    {
+      "id": "project",
+      "title": "Der Dienst",
+      "guidance": "Beschreiben Sie, was das Modell abdeckt: den Teil des Dienstes und die Frage, die das Modell beantwortet.\n\n* Geben Sie dem Modell einen Namen, den andere wiederfinden.\n* Nennen Sie, was im Modell liegt und was bewusst fehlt.",
+      "fills": "/project"
+    },
+    {
+      "id": "zones",
+      "title": "Vertrauenszonen",
+      "guidance": "Benennen Sie die Bereiche, die einander vertrauen, zum Beispiel das Internet, eine DMZ und das interne Netz.\n\n* Geben Sie jeder Zone eine Vertrauensbewertung von 0 (niemandem wird vertraut) bis 100 (volles Vertrauen).\n* Teile innerhalb einer Zone dürfen sich aufeinander verlassen; eine Linie zwischen zwei Zonen ist dort, wo sich das Vertrauen ändert.",
+      "fills": "/trustZones"
+    },
+    {
+      "id": "components",
+      "title": "Komponenten",
+      "guidance": "Führen Sie jeden Prozess, jeden Datenspeicher und jede externe Partei auf, die beteiligt ist.\n\n* *Prozess*: Code, der läuft.\n* *Datenspeicher*: ein Ort, an dem Daten liegen.\n* *Externe Partei*: eine Person oder ein System, das nicht Ihnen gehört.\n\nOrdnen Sie jede Komponente der Zone zu, in der sie läuft.",
+      "fills": "/components"
+    },
+    {
+      "id": "dataflows",
+      "title": "Datenflüsse",
+      "guidance": "Zeichnen Sie jeden Weg zwischen zwei Komponenten ein. Jeder Datenfluss hat eine Quelle und ein Ziel.\n\n* Benennen Sie den Fluss nach dem, was er trägt.\n* Kennzeichnen Sie einen Fluss, der in beide Richtungen läuft, als bidirektional.",
+      "fills": "/dataflows"
+    },
+    {
+      "id": "threats",
+      "title": "Bedrohungen (STRIDE)",
+      "guidance": "Stellen Sie zu jeder Komponente und jedem Datenfluss die sechs STRIDE-Fragen.\n\n* *S*poofing: Kann sich jemand als ein anderer ausgeben?\n* *T*ampering: Können Daten verändert werden?\n* *R*epudiation: Kann jemand abstreiten, was er getan hat?\n* *I*nformation Disclosure: Können Daten abfließen?\n* *D*enial of Service: Kann der Dienst lahmgelegt werden?\n* *E*levation of Privilege: Kann jemand Rechte erlangen, die er nicht hat?",
+      "fills": "/threats"
+    },
+    {
+      "id": "mitigations",
+      "title": "Gegenmaßnahmen",
+      "guidance": "Nennen Sie zu jeder Bedrohung, die Sie nicht hinnehmen, eine Gegenmaßnahme und die Bedrohung, zu der sie gehört.\n\n* Geben Sie von 0 bis 100 an, wie stark sie das Risiko senkt.\n* Tragen Sie die Kennungen der Vorgänge ein, die die Arbeit ausführen.\n* Eine Bedrohung, mit der Sie leben, markieren Sie stattdessen als *akzeptiert*.",
+      "fills": "/mitigations"
+    }
+  ]
+}

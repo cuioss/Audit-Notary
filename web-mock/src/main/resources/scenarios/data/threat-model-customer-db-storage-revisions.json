@@ -1,0 +1,55 @@
+{
+  "repository": "threat-models",
+  "id": "customer-db-storage",
+  "revisions": [
+    {
+      "ref": "v1",
+      "commit": "f1a36cb",
+      "kind": "release",
+      "tag": "models/customer-db-storage/v1",
+      "version": 1,
+      "at": "2026-09-30T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "d27b691",
+      "commit": "d27b691",
+      "kind": "submit",
+      "tag": null,
+      "version": 1,
+      "at": "2026-09-30T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "5331e10",
+      "commit": "5331e10",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-09-29T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "51ad773",
+      "commit": "51ad773",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-09-24T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

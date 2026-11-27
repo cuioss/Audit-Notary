@@ -597,6 +597,185 @@
         "repository": "isms-register",
         "action": "read"
       }
+    },
+    "GET /api/v1/categories/threat-models/schema": {
+      "status": 200,
+      "body_file": "categories-threat-models-schema.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes": {
+      "status": 200,
+      "body_file": "threat-model-recipes.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes?lang=en": {
+      "status": 200,
+      "body_file": "threat-model-recipes.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes?lang=de": {
+      "status": 200,
+      "body_file": "threat-model-recipes-de.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes?lang=fr": {
+      "status": 400,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/lang",
+            "code": "ENUM"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/quick-start": {
+      "status": 200,
+      "body_file": "threat-model-recipe-quick-start.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/quick-start?lang=en": {
+      "status": 200,
+      "body_file": "threat-model-recipe-quick-start.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/quick-start?lang=de": {
+      "status": 200,
+      "body_file": "threat-model-recipe-quick-start-de.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/quick-start?lang=fr": {
+      "status": 400,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/lang",
+            "code": "ENUM"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/stride": {
+      "status": 200,
+      "body_file": "threat-model-recipe-stride.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/stride?lang=en": {
+      "status": 200,
+      "body_file": "threat-model-recipe-stride.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/stride?lang=de": {
+      "status": 200,
+      "body_file": "threat-model-recipe-stride-de.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/stride?lang=fr": {
+      "status": 400,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/lang",
+            "code": "ENUM"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/nope": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/{service}": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/{service}/{model}": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models": {
+      "status": 200,
+      "body": {
+        "repository": "threat-models",
+        "documents": []
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "POST /api/v1/threat-models/{service}": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
     }
   },
   "states": {

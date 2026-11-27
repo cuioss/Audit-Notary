@@ -1,0 +1,547 @@
+{
+  "repository": "threat-models",
+  "id": "payment-api-checkout-flow",
+  "category": "threat-models",
+  "kind": "threat-model",
+  "title": "Payment API, checkout flow",
+  "state": "released",
+  "version": 4,
+  "frozen": true,
+  "service": {
+    "id": "payment-api",
+    "name": "Payment API"
+  },
+  "model": "checkout-flow",
+  "address": "/threat-models/payment-api/checkout-flow",
+  "parts": {
+    "data": {
+      "blob": "9b4469a",
+      "savedAt": "2026-11-26T09:45:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "service": "service:payment-api",
+        "owner": "role:service-owner",
+        "last-review": "2026-11-26",
+        "recipe": "stride"
+      }
+    },
+    "model": {
+      "blob": "1e81610",
+      "savedAt": "2026-11-26T09:45:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "otmVersion": "0.2.0",
+        "project": {
+          "id": "checkout-flow",
+          "name": "Payment API, checkout flow",
+          "description": "The path of a payment from the checkout page to the payment provider."
+        },
+        "trustZones": [
+          {
+            "id": "internet",
+            "name": "Internet",
+            "risk": {
+              "trustRating": 20
+            }
+          },
+          {
+            "id": "payments-zone",
+            "name": "Payments zone",
+            "risk": {
+              "trustRating": 90
+            }
+          },
+          {
+            "id": "provider",
+            "name": "Provider network",
+            "risk": {
+              "trustRating": 60
+            }
+          }
+        ],
+        "components": [
+          {
+            "id": "browser",
+            "name": "Customer browser",
+            "type": "external-entity",
+            "parent": {
+              "trustZone": "internet"
+            }
+          },
+          {
+            "id": "payment-api",
+            "name": "Payment API",
+            "type": "process",
+            "parent": {
+              "trustZone": "payments-zone"
+            }
+          },
+          {
+            "id": "payment-db",
+            "name": "Payment database",
+            "type": "data-store",
+            "parent": {
+              "trustZone": "payments-zone"
+            }
+          },
+          {
+            "id": "psp",
+            "name": "Payment provider",
+            "type": "external-entity",
+            "parent": {
+              "trustZone": "provider"
+            }
+          }
+        ],
+        "dataflows": [
+          {
+            "id": "authorise",
+            "name": "Authorise",
+            "source": "browser",
+            "destination": "payment-api"
+          },
+          {
+            "id": "persist",
+            "name": "Persist",
+            "source": "payment-api",
+            "destination": "payment-db"
+          },
+          {
+            "id": "charge",
+            "name": "Charge card",
+            "source": "payment-api",
+            "destination": "psp"
+          },
+          {
+            "id": "callback",
+            "name": "Callback",
+            "source": "psp",
+            "destination": "payment-api"
+          }
+        ],
+        "threats": [
+          {
+            "id": "T-01",
+            "name": "Tampering with the amount in the checkout request",
+            "description": "An attacker changes the amount in the request and pays less than the order is worth.",
+            "categories": [
+              "Tampering"
+            ],
+            "risk": {
+              "likelihood": 60,
+              "impact": 75
+            },
+            "attributes": {
+              "status": "open"
+            }
+          },
+          {
+            "id": "T-02",
+            "name": "Account takeover by credential stuffing at checkout",
+            "description": "Credentials leaked elsewhere are tried at the checkout login until one works.",
+            "categories": [
+              "Spoofing"
+            ],
+            "risk": {
+              "likelihood": 75,
+              "impact": 75
+            },
+            "attributes": {
+              "status": "open"
+            }
+          },
+          {
+            "id": "T-03",
+            "name": "Card data in the application log",
+            "description": "A card number written to the log can be read by everyone who can read the logs.",
+            "categories": [
+              "Information Disclosure"
+            ],
+            "risk": {
+              "likelihood": 50,
+              "impact": 75
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          },
+          {
+            "id": "T-04",
+            "name": "Payment provider callback is forged",
+            "description": "A third party sends a callback that says an unpaid order was paid.",
+            "categories": [
+              "Spoofing"
+            ],
+            "risk": {
+              "likelihood": 40,
+              "impact": 90
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          },
+          {
+            "id": "T-05",
+            "name": "A payment is submitted twice",
+            "description": "A retry or a double click charges the customer twice.",
+            "categories": [
+              "Tampering"
+            ],
+            "risk": {
+              "likelihood": 50,
+              "impact": 50
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          },
+          {
+            "id": "T-06",
+            "name": "Denial of service on the authorisation endpoint",
+            "description": "A flood of requests keeps customers from paying.",
+            "categories": [
+              "Denial of Service"
+            ],
+            "risk": {
+              "likelihood": 60,
+              "impact": 50
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          },
+          {
+            "id": "T-07",
+            "name": "Replay of a payment authorisation",
+            "description": "A recorded authorisation is sent again and charges the customer twice.",
+            "categories": [
+              "Spoofing",
+              "Tampering"
+            ],
+            "risk": {
+              "likelihood": 50,
+              "impact": 100
+            },
+            "attributes": {
+              "status": "accepted",
+              "transferred": "isms-register:risk/R-009"
+            }
+          },
+          {
+            "id": "T-08",
+            "name": "Stored payment tokens read by an administrator",
+            "description": "An administrator with access to the database reads the tokens and uses them.",
+            "categories": [
+              "Information Disclosure"
+            ],
+            "risk": {
+              "likelihood": 25,
+              "impact": 90
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          },
+          {
+            "id": "T-09",
+            "name": "Repudiation of a refund by a support agent",
+            "description": "A support agent refunds a payment and later denies it, and nothing shows who did it.",
+            "categories": [
+              "Repudiation"
+            ],
+            "risk": {
+              "likelihood": 25,
+              "impact": 50
+            },
+            "attributes": {
+              "status": "accepted"
+            }
+          }
+        ],
+        "mitigations": [
+          {
+            "id": "M-03",
+            "name": "Mask card numbers before logging",
+            "description": "The logging filter keeps the last four digits.",
+            "riskReduction": 75,
+            "attributes": {
+              "threat": "T-03",
+              "status": "implemented",
+              "issues": [
+                "PAY-1423"
+              ]
+            }
+          },
+          {
+            "id": "M-04",
+            "name": "Check the signature of the callback",
+            "description": "Every callback is verified with the key of the provider.",
+            "riskReduction": 90,
+            "attributes": {
+              "threat": "T-04",
+              "status": "implemented",
+              "issues": [
+                "PAY-1301"
+              ]
+            }
+          },
+          {
+            "id": "M-05",
+            "name": "Idempotency key on every payment request",
+            "description": "A repeated request with the same key charges once.",
+            "riskReduction": 85,
+            "attributes": {
+              "threat": "T-05",
+              "status": "implemented",
+              "issues": [
+                "PAY-1288"
+              ]
+            }
+          },
+          {
+            "id": "M-06",
+            "name": "Rate limiting at the gateway",
+            "description": "The gateway limits the requests per client and per minute.",
+            "riskReduction": 70,
+            "attributes": {
+              "threat": "T-06",
+              "status": "implemented",
+              "issues": [
+                "PAY-1355",
+                "PAY-1356"
+              ]
+            }
+          },
+          {
+            "id": "M-08",
+            "name": "Encrypt tokens with a key outside the database",
+            "description": "The key lives in the key service, not next to the data.",
+            "riskReduction": 90,
+            "attributes": {
+              "threat": "T-08",
+              "status": "implemented",
+              "issues": [
+                "PAY-1190"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-26T10:05:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "models/payment-api-checkout-flow/v4"
+    },
+    {
+      "at": "2026-11-26T09:50:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-11-26T09:45:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "model",
+      "count": 2
+    },
+    {
+      "at": "2026-11-26T09:45:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2026-06-02T09:30:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "models/payment-api-checkout-flow/v3"
+    },
+    {
+      "at": "2026-06-02T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-06-01T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "model",
+      "count": 2
+    },
+    {
+      "at": "2026-06-01T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2025-11-26T11:15:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "models/payment-api-checkout-flow/v2"
+    },
+    {
+      "at": "2025-11-26T10:45:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-11-25T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "model",
+      "count": 2
+    },
+    {
+      "at": "2025-11-25T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2025-05-28T09:30:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "models/payment-api-checkout-flow/v1"
+    },
+    {
+      "at": "2025-05-28T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-05-27T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "model",
+      "count": 5
+    },
+    {
+      "at": "2025-05-27T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2025-05-22T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "models/payment-api-checkout-flow/v4",
+    "at": "2026-11-26T10:05:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "review": {
+    "today": "2026-11-26",
+    "protectionNeed": "very-high",
+    "reviewInterval": "P6M",
+    "reviewIntervals": {
+      "very-high": "P6M",
+      "high": "P12M",
+      "normal": "P24M"
+    },
+    "lastReview": "2026-11-26",
+    "daysSinceReview": 0,
+    "reviewDue": "2027-05-26",
+    "dueInDays": 181,
+    "status": "ok"
+  },
+  "threats": {
+    "total": 9,
+    "open": 2,
+    "untreated": 2,
+    "transferred": 1
+  },
+  "diagram": {
+    "mediaType": "image/svg+xml",
+    "width": 760,
+    "height": 244,
+    "dataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3NjAiIGhlaWdodD0iMjQ0IiB2aWV3Qm94PSIwIDAgNzYwIDI0NCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiPgo8ZGVmcz48bWFya2VyIGlkPSJhcnJvdyIgdmlld0JveD0iMCAwIDEwIDEwIiByZWZYPSI5IiByZWZZPSI1IiBtYXJrZXJXaWR0aD0iNyIgbWFya2VySGVpZ2h0PSI3IiBvcmllbnQ9ImF1dG8tc3RhcnQtcmV2ZXJzZSI+PHBhdGggZD0iTTAgMEwxMCA1TDAgMTB6IiBmaWxsPSIjMzc0MTUxIi8+PC9tYXJrZXI+PC9kZWZzPgo8cmVjdCB3aWR0aD0iNzYwIiBoZWlnaHQ9IjI0NCIgZmlsbD0iI2ZmZmZmZiIvPgo8cmVjdCB4PSI0MCIgeT0iNDAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMTY0IiByeD0iMTAiIGZpbGw9IiNmM2Y0ZjYiIHN0cm9rZT0iIzljYTNhZiIvPgo8dGV4dCB4PSI1MiIgeT0iNTgiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMzc0MTUxIj5JbnRlcm5ldDwvdGV4dD4KPHJlY3QgeD0iMjgwIiB5PSI0MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxNjQiIHJ4PSIxMCIgZmlsbD0iI2YzZjRmNiIgc3Ryb2tlPSIjOWNhM2FmIi8+Cjx0ZXh0IHg9IjI5MiIgeT0iNTgiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMzc0MTUxIj5QYXltZW50cyB6b25lPC90ZXh0Pgo8cmVjdCB4PSI1MjAiIHk9IjQwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE2NCIgcng9IjEwIiBmaWxsPSIjZjNmNGY2IiBzdHJva2U9IiM5Y2EzYWYiLz4KPHRleHQgeD0iNTMyIiB5PSI1OCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiMzNzQxNTEiPlByb3ZpZGVyIG5ldHdvcms8L3RleHQ+CjxyZWN0IHg9IjYwIiB5PSI3MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI0NCIgcng9IjQiIGZpbGw9IiNmOWZhZmIiIHN0cm9rZT0iIzZiNzI4MCIvPgo8dGV4dCB4PSIxNDAiIHk9Ijk2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMTExODI3Ij5DdXN0b21lciBicm93c2VyPC90ZXh0Pgo8cmVjdCB4PSIzMDAiIHk9IjcwIiB3aWR0aD0iMTYwIiBoZWlnaHQ9IjQ0IiByeD0iNCIgZmlsbD0iI2RiZTdmYiIgc3Ryb2tlPSIjMmY1ZmIzIi8+Cjx0ZXh0IHg9IjM4MCIgeT0iOTYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMxMTE4MjciPlBheW1lbnQgQVBJPC90ZXh0Pgo8cmVjdCB4PSIzMDAiIHk9IjE0MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI0NCIgcng9IjQiIGZpbGw9IiNkMWQ1ZGIiIHN0cm9rZT0iIzZiNzI4MCIvPgo8dGV4dCB4PSIzODAiIHk9IjE2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzExMTgyNyI+UGF5bWVudCBkYXRhYmFzZTwvdGV4dD4KPHJlY3QgeD0iNTQwIiB5PSI3MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI0NCIgcng9IjQiIGZpbGw9IiNmOWZhZmIiIHN0cm9rZT0iIzZiNzI4MCIvPgo8dGV4dCB4PSI2MjAiIHk9Ijk2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMTExODI3Ij5QYXltZW50IHByb3ZpZGVyPC90ZXh0Pgo8bGluZSB4MT0iMjIwIiB5MT0iOTIiIHgyPSIzMDAiIHkyPSI5MiIgc3Ryb2tlPSIjMzc0MTUxIiBzdHJva2Utd2lkdGg9IjEuNSIgbWFya2VyLWVuZD0idXJsKCNhcnJvdykiLz4KPHRleHQgeD0iMjYwIiB5PSI4OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzM3NDE1MSI+QXV0aG9yaXNlPC90ZXh0Pgo8bGluZSB4MT0iMzgwIiB5MT0iMTE0IiB4Mj0iMzgwIiB5Mj0iMTQwIiBzdHJva2U9IiMzNzQxNTEiIHN0cm9rZS13aWR0aD0iMS41IiBtYXJrZXItZW5kPSJ1cmwoI2Fycm93KSIvPgo8dGV4dCB4PSIzODUiIHk9IjEzMSIgZmlsbD0iIzM3NDE1MSI+UGVyc2lzdDwvdGV4dD4KPGxpbmUgeDE9IjQ2MCIgeTE9Ijg1IiB4Mj0iNTQwIiB5Mj0iODUiIHN0cm9rZT0iIzM3NDE1MSIgc3Ryb2tlLXdpZHRoPSIxLjUiIG1hcmtlci1lbmQ9InVybCgjYXJyb3cpIi8+Cjx0ZXh0IHg9IjUwMCIgeT0iODEiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMzNzQxNTEiPkNoYXJnZSBjYXJkPC90ZXh0Pgo8bGluZSB4MT0iNTQwIiB5MT0iOTkiIHgyPSI0NjAiIHkyPSI5OSIgc3Ryb2tlPSIjMzc0MTUxIiBzdHJva2Utd2lkdGg9IjEuNSIgbWFya2VyLWVuZD0idXJsKCNhcnJvdykiLz4KPHRleHQgeD0iNTAwIiB5PSI5NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzM3NDE1MSI+Q2FsbGJhY2s8L3RleHQ+Cjwvc3ZnPg=="
+  },
+  "at": {
+    "ref": "v4",
+    "kind": "release",
+    "commit": "9841c79",
+    "tag": "models/payment-api-checkout-flow/v4",
+    "at": "2026-11-26T10:05:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  }
+}

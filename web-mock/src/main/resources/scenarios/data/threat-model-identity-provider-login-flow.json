@@ -1,0 +1,411 @@
+{
+  "repository": "threat-models",
+  "id": "identity-provider-login-flow",
+  "category": "threat-models",
+  "kind": "threat-model",
+  "title": "Identity Provider, login flow",
+  "state": "released",
+  "version": 2,
+  "frozen": false,
+  "service": {
+    "id": "identity-provider",
+    "name": "Identity Provider"
+  },
+  "model": "login-flow",
+  "address": "/threat-models/identity-provider/login-flow",
+  "parts": {
+    "data": {
+      "blob": "ff226fb",
+      "savedAt": "2026-04-14T09:40:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "service": "service:identity-provider",
+        "owner": "role:service-owner",
+        "last-review": "2026-04-14",
+        "recipe": "stride"
+      }
+    },
+    "model": {
+      "blob": "b54e0f3",
+      "savedAt": "2026-04-14T09:40:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "otmVersion": "0.2.0",
+        "project": {
+          "id": "login-flow",
+          "name": "Identity Provider, login flow",
+          "description": "How a customer or a member of staff signs in and receives a token."
+        },
+        "trustZones": [
+          {
+            "id": "internet",
+            "name": "Internet",
+            "risk": {
+              "trustRating": 20
+            }
+          },
+          {
+            "id": "dmz",
+            "name": "DMZ",
+            "risk": {
+              "trustRating": 60
+            }
+          },
+          {
+            "id": "internal",
+            "name": "Internal network",
+            "risk": {
+              "trustRating": 90
+            }
+          }
+        ],
+        "components": [
+          {
+            "id": "browser",
+            "name": "Customer browser",
+            "type": "external-entity",
+            "parent": {
+              "trustZone": "internet"
+            }
+          },
+          {
+            "id": "login-ui",
+            "name": "Login page",
+            "type": "process",
+            "parent": {
+              "trustZone": "dmz"
+            }
+          },
+          {
+            "id": "token-service",
+            "name": "Token service",
+            "type": "process",
+            "parent": {
+              "trustZone": "internal"
+            }
+          },
+          {
+            "id": "user-store",
+            "name": "User store",
+            "type": "data-store",
+            "parent": {
+              "trustZone": "internal"
+            }
+          }
+        ],
+        "dataflows": [
+          {
+            "id": "submit-credentials",
+            "name": "Credentials",
+            "source": "browser",
+            "destination": "login-ui"
+          },
+          {
+            "id": "issue-token",
+            "name": "Token",
+            "source": "login-ui",
+            "destination": "token-service"
+          },
+          {
+            "id": "lookup-user",
+            "name": "Look up",
+            "source": "token-service",
+            "destination": "user-store"
+          }
+        ],
+        "threats": [
+          {
+            "id": "T-01",
+            "name": "Credential stuffing against the login form",
+            "description": "Lists of leaked passwords are tried against the login form at scale.",
+            "categories": [
+              "Spoofing"
+            ],
+            "risk": {
+              "likelihood": 60,
+              "impact": 75
+            },
+            "attributes": {
+              "status": "open"
+            }
+          },
+          {
+            "id": "T-02",
+            "name": "Session fixation after login",
+            "description": "The session identifier from before the login stays valid, so an attacker who set it takes over the session.",
+            "categories": [
+              "Spoofing",
+              "Elevation of Privilege"
+            ],
+            "risk": {
+              "likelihood": 40,
+              "impact": 90
+            },
+            "attributes": {
+              "status": "open"
+            }
+          },
+          {
+            "id": "T-03",
+            "name": "Token replay from a leaked refresh token",
+            "description": "A refresh token taken from a log or a device is used again by someone else.",
+            "categories": [
+              "Spoofing"
+            ],
+            "risk": {
+              "likelihood": 40,
+              "impact": 90
+            },
+            "attributes": {
+              "status": "open"
+            }
+          },
+          {
+            "id": "T-04",
+            "name": "Lockout used to lock customers out",
+            "description": "An attacker triggers the lockout on purpose to keep a customer from signing in.",
+            "categories": [
+              "Denial of Service"
+            ],
+            "risk": {
+              "likelihood": 50,
+              "impact": 50
+            },
+            "attributes": {
+              "status": "open"
+            }
+          },
+          {
+            "id": "T-05",
+            "name": "Tampering with the redirect address",
+            "description": "The redirect address after the login is changed to send the customer to a fake site.",
+            "categories": [
+              "Tampering"
+            ],
+            "risk": {
+              "likelihood": 50,
+              "impact": 75
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          },
+          {
+            "id": "T-06",
+            "name": "Phishing of the second factor",
+            "description": "A fake login page asks for the second factor and passes it on in real time.",
+            "categories": [
+              "Spoofing"
+            ],
+            "risk": {
+              "likelihood": 50,
+              "impact": 75
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          },
+          {
+            "id": "T-07",
+            "name": "User names disclosed by different error messages",
+            "description": "Different messages for an unknown user and a wrong password tell an attacker which user names exist.",
+            "categories": [
+              "Information Disclosure"
+            ],
+            "risk": {
+              "likelihood": 60,
+              "impact": 25
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          }
+        ],
+        "mitigations": [
+          {
+            "id": "M-04",
+            "name": "Delay instead of lockout",
+            "description": "Repeated failures slow the next attempt down and lock nothing.",
+            "riskReduction": 60,
+            "attributes": {
+              "threat": "T-04",
+              "status": "planned",
+              "issues": [
+                "ID-812"
+              ]
+            }
+          },
+          {
+            "id": "M-05",
+            "name": "Allow-list for redirect addresses",
+            "description": "Only registered addresses are accepted after the login.",
+            "riskReduction": 90,
+            "attributes": {
+              "threat": "T-05",
+              "status": "implemented",
+              "issues": [
+                "ID-640"
+              ]
+            }
+          },
+          {
+            "id": "M-06",
+            "name": "Phishing-resistant second factor",
+            "description": "The second factor is bound to the address of the page.",
+            "riskReduction": 80,
+            "attributes": {
+              "threat": "T-06",
+              "status": "implemented",
+              "issues": [
+                "ID-702"
+              ]
+            }
+          },
+          {
+            "id": "M-07",
+            "name": "One message for every failed login",
+            "description": "A wrong user and a wrong password look the same.",
+            "riskReduction": 85,
+            "attributes": {
+              "threat": "T-07",
+              "status": "implemented",
+              "issues": [
+                "ID-655"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-04-15T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "models/identity-provider-login-flow/v2"
+    },
+    {
+      "at": "2026-04-15T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-04-14T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "model",
+      "count": 2
+    },
+    {
+      "at": "2026-04-14T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2025-10-08T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "models/identity-provider-login-flow/v1"
+    },
+    {
+      "at": "2025-10-08T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-10-07T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "model",
+      "count": 5
+    },
+    {
+      "at": "2025-10-07T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2025-10-02T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "models/identity-provider-login-flow/v2",
+    "at": "2026-04-15T10:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "review": {
+    "today": "2026-11-26",
+    "protectionNeed": "very-high",
+    "reviewInterval": "P6M",
+    "reviewIntervals": {
+      "very-high": "P6M",
+      "high": "P12M",
+      "normal": "P24M"
+    },
+    "lastReview": "2026-04-14",
+    "daysSinceReview": 226,
+    "reviewDue": "2026-10-14",
+    "dueInDays": -43,
+    "status": "overdue"
+  },
+  "threats": {
+    "total": 7,
+    "open": 4,
+    "untreated": 3,
+    "transferred": 0
+  },
+  "diagram": {
+    "mediaType": "image/svg+xml",
+    "width": 760,
+    "height": 244,
+    "dataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3NjAiIGhlaWdodD0iMjQ0IiB2aWV3Qm94PSIwIDAgNzYwIDI0NCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiPgo8ZGVmcz48bWFya2VyIGlkPSJhcnJvdyIgdmlld0JveD0iMCAwIDEwIDEwIiByZWZYPSI5IiByZWZZPSI1IiBtYXJrZXJXaWR0aD0iNyIgbWFya2VySGVpZ2h0PSI3IiBvcmllbnQ9ImF1dG8tc3RhcnQtcmV2ZXJzZSI+PHBhdGggZD0iTTAgMEwxMCA1TDAgMTB6IiBmaWxsPSIjMzc0MTUxIi8+PC9tYXJrZXI+PC9kZWZzPgo8cmVjdCB3aWR0aD0iNzYwIiBoZWlnaHQ9IjI0NCIgZmlsbD0iI2ZmZmZmZiIvPgo8cmVjdCB4PSI0MCIgeT0iNDAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMTY0IiByeD0iMTAiIGZpbGw9IiNmM2Y0ZjYiIHN0cm9rZT0iIzljYTNhZiIvPgo8dGV4dCB4PSI1MiIgeT0iNTgiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMzc0MTUxIj5JbnRlcm5ldDwvdGV4dD4KPHJlY3QgeD0iMjgwIiB5PSI0MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxNjQiIHJ4PSIxMCIgZmlsbD0iI2YzZjRmNiIgc3Ryb2tlPSIjOWNhM2FmIi8+Cjx0ZXh0IHg9IjI5MiIgeT0iNTgiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMzc0MTUxIj5ETVo8L3RleHQ+CjxyZWN0IHg9IjUyMCIgeT0iNDAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMTY0IiByeD0iMTAiIGZpbGw9IiNmM2Y0ZjYiIHN0cm9rZT0iIzljYTNhZiIvPgo8dGV4dCB4PSI1MzIiIHk9IjU4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iIzM3NDE1MSI+SW50ZXJuYWwgbmV0d29yazwvdGV4dD4KPHJlY3QgeD0iNjAiIHk9IjcwIiB3aWR0aD0iMTYwIiBoZWlnaHQ9IjQ0IiByeD0iNCIgZmlsbD0iI2Y5ZmFmYiIgc3Ryb2tlPSIjNmI3MjgwIi8+Cjx0ZXh0IHg9IjE0MCIgeT0iOTYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMxMTE4MjciPkN1c3RvbWVyIGJyb3dzZXI8L3RleHQ+CjxyZWN0IHg9IjMwMCIgeT0iNzAiIHdpZHRoPSIxNjAiIGhlaWdodD0iNDQiIHJ4PSI0IiBmaWxsPSIjZGJlN2ZiIiBzdHJva2U9IiMyZjVmYjMiLz4KPHRleHQgeD0iMzgwIiB5PSI5NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzExMTgyNyI+TG9naW4gcGFnZTwvdGV4dD4KPHJlY3QgeD0iNTQwIiB5PSI3MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI0NCIgcng9IjQiIGZpbGw9IiNkYmU3ZmIiIHN0cm9rZT0iIzJmNWZiMyIvPgo8dGV4dCB4PSI2MjAiIHk9Ijk2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMTExODI3Ij5Ub2tlbiBzZXJ2aWNlPC90ZXh0Pgo8cmVjdCB4PSI1NDAiIHk9IjE0MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI0NCIgcng9IjQiIGZpbGw9IiNkMWQ1ZGIiIHN0cm9rZT0iIzZiNzI4MCIvPgo8dGV4dCB4PSI2MjAiIHk9IjE2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzExMTgyNyI+VXNlciBzdG9yZTwvdGV4dD4KPGxpbmUgeDE9IjIyMCIgeTE9IjkyIiB4Mj0iMzAwIiB5Mj0iOTIiIHN0cm9rZT0iIzM3NDE1MSIgc3Ryb2tlLXdpZHRoPSIxLjUiIG1hcmtlci1lbmQ9InVybCgjYXJyb3cpIi8+Cjx0ZXh0IHg9IjI2MCIgeT0iODgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMzNzQxNTEiPkNyZWRlbnRpYWxzPC90ZXh0Pgo8bGluZSB4MT0iNDYwIiB5MT0iOTIiIHgyPSI1NDAiIHkyPSI5MiIgc3Ryb2tlPSIjMzc0MTUxIiBzdHJva2Utd2lkdGg9IjEuNSIgbWFya2VyLWVuZD0idXJsKCNhcnJvdykiLz4KPHRleHQgeD0iNTAwIiB5PSI4OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzM3NDE1MSI+VG9rZW48L3RleHQ+CjxsaW5lIHgxPSI2MjAiIHkxPSIxMTQiIHgyPSI2MjAiIHkyPSIxNDAiIHN0cm9rZT0iIzM3NDE1MSIgc3Ryb2tlLXdpZHRoPSIxLjUiIG1hcmtlci1lbmQ9InVybCgjYXJyb3cpIi8+Cjx0ZXh0IHg9IjYyNSIgeT0iMTMxIiBmaWxsPSIjMzc0MTUxIj5Mb29rIHVwPC90ZXh0Pgo8L3N2Zz4="
+  }
+}

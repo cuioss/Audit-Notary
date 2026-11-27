@@ -1,0 +1,382 @@
+{
+  "repository": "threat-models",
+  "id": "customer-portal-portal",
+  "category": "threat-models",
+  "kind": "threat-model",
+  "title": "Customer Portal",
+  "state": "released",
+  "version": 2,
+  "frozen": false,
+  "service": {
+    "id": "customer-portal",
+    "name": "Customer Portal"
+  },
+  "model": "portal",
+  "address": "/threat-models/customer-portal/portal",
+  "parts": {
+    "data": {
+      "blob": "1fa3163",
+      "savedAt": "2025-12-02T09:40:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "service": "service:customer-portal",
+        "owner": "role:service-owner",
+        "last-review": "2025-12-02",
+        "recipe": "quick-start"
+      }
+    },
+    "model": {
+      "blob": "c478385",
+      "savedAt": "2025-12-02T09:40:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "otmVersion": "0.2.0",
+        "project": {
+          "id": "portal",
+          "name": "Customer Portal",
+          "description": "Where customers see their orders and their account."
+        },
+        "trustZones": [
+          {
+            "id": "internet",
+            "name": "Internet",
+            "risk": {
+              "trustRating": 20
+            }
+          },
+          {
+            "id": "dmz",
+            "name": "DMZ",
+            "risk": {
+              "trustRating": 60
+            }
+          },
+          {
+            "id": "internal",
+            "name": "Internal network",
+            "risk": {
+              "trustRating": 90
+            }
+          }
+        ],
+        "components": [
+          {
+            "id": "browser",
+            "name": "Customer browser",
+            "type": "external-entity",
+            "parent": {
+              "trustZone": "internet"
+            }
+          },
+          {
+            "id": "portal-ui",
+            "name": "Portal front end",
+            "type": "process",
+            "parent": {
+              "trustZone": "dmz"
+            }
+          },
+          {
+            "id": "orders-api",
+            "name": "Orders API",
+            "type": "process",
+            "parent": {
+              "trustZone": "internal"
+            }
+          },
+          {
+            "id": "orders-db",
+            "name": "Orders database",
+            "type": "data-store",
+            "parent": {
+              "trustZone": "internal"
+            }
+          }
+        ],
+        "dataflows": [
+          {
+            "id": "browse",
+            "name": "Browse",
+            "source": "browser",
+            "destination": "portal-ui"
+          },
+          {
+            "id": "order",
+            "name": "Order",
+            "source": "portal-ui",
+            "destination": "orders-api"
+          },
+          {
+            "id": "store-order",
+            "name": "Store",
+            "source": "orders-api",
+            "destination": "orders-db"
+          }
+        ],
+        "threats": [
+          {
+            "id": "T-01",
+            "name": "Direct access to another customer's order page",
+            "description": "A customer changes the order number in the address and sees an order that is not theirs.",
+            "categories": [
+              "Information Disclosure"
+            ],
+            "risk": {
+              "likelihood": 60,
+              "impact": 75
+            },
+            "attributes": {
+              "status": "open"
+            }
+          },
+          {
+            "id": "T-02",
+            "name": "Script injected through an order note",
+            "description": "Text typed into an order note is shown to staff without being cleaned and runs as a script.",
+            "categories": [
+              "Tampering"
+            ],
+            "risk": {
+              "likelihood": 50,
+              "impact": 75
+            },
+            "attributes": {
+              "status": "open"
+            }
+          },
+          {
+            "id": "T-03",
+            "name": "Session theft on a shared device",
+            "description": "The next person on a shared device continues the session of the last one.",
+            "categories": [
+              "Spoofing"
+            ],
+            "risk": {
+              "likelihood": 50,
+              "impact": 50
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          },
+          {
+            "id": "T-04",
+            "name": "Clickjacking of the account page",
+            "description": "The account page is framed by another site and the customer is tricked into clicking.",
+            "categories": [
+              "Tampering"
+            ],
+            "risk": {
+              "likelihood": 40,
+              "impact": 50
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          },
+          {
+            "id": "T-05",
+            "name": "Enumeration of customer numbers",
+            "description": "Customer numbers can be counted up and tried, which shows which of them exist.",
+            "categories": [
+              "Information Disclosure"
+            ],
+            "risk": {
+              "likelihood": 50,
+              "impact": 25
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          },
+          {
+            "id": "T-06",
+            "name": "Loss of availability in a sales peak",
+            "description": "A sales peak exceeds the capacity of the portal; a loss of up to an hour is accepted.",
+            "categories": [
+              "Denial of Service"
+            ],
+            "risk": {
+              "likelihood": 50,
+              "impact": 50
+            },
+            "attributes": {
+              "status": "accepted"
+            }
+          }
+        ],
+        "mitigations": [
+          {
+            "id": "M-03",
+            "name": "End the session after ten idle minutes",
+            "description": "An idle session is closed and has to be started again.",
+            "riskReduction": 80,
+            "attributes": {
+              "threat": "T-03",
+              "status": "implemented",
+              "issues": [
+                "WEB-310"
+              ]
+            }
+          },
+          {
+            "id": "M-04",
+            "name": "Forbid the framing of the account page",
+            "description": "The page tells the browser not to show it in a frame.",
+            "riskReduction": 90,
+            "attributes": {
+              "threat": "T-04",
+              "status": "implemented",
+              "issues": [
+                "WEB-298"
+              ]
+            }
+          },
+          {
+            "id": "M-05",
+            "name": "Random customer numbers and a limit on lookups",
+            "description": "A number cannot be guessed and lookups are counted.",
+            "riskReduction": 80,
+            "attributes": {
+              "threat": "T-05",
+              "status": "implemented",
+              "issues": [
+                "WEB-377"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2025-12-03T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "models/customer-portal-portal/v2"
+    },
+    {
+      "at": "2025-12-03T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-12-02T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "model",
+      "count": 2
+    },
+    {
+      "at": "2025-12-02T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2025-06-04T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "models/customer-portal-portal/v1"
+    },
+    {
+      "at": "2025-06-04T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-06-03T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "model",
+      "count": 5
+    },
+    {
+      "at": "2025-06-03T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2025-05-29T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "models/customer-portal-portal/v2",
+    "at": "2025-12-03T10:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "review": {
+    "today": "2026-11-26",
+    "protectionNeed": "very-high",
+    "reviewInterval": "P6M",
+    "reviewIntervals": {
+      "very-high": "P6M",
+      "high": "P12M",
+      "normal": "P24M"
+    },
+    "lastReview": "2025-12-02",
+    "daysSinceReview": 359,
+    "reviewDue": "2026-06-02",
+    "dueInDays": -177,
+    "status": "overdue"
+  },
+  "threats": {
+    "total": 6,
+    "open": 2,
+    "untreated": 2,
+    "transferred": 0
+  },
+  "diagram": {
+    "mediaType": "image/svg+xml",
+    "width": 760,
+    "height": 244,
+    "dataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3NjAiIGhlaWdodD0iMjQ0IiB2aWV3Qm94PSIwIDAgNzYwIDI0NCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiPgo8ZGVmcz48bWFya2VyIGlkPSJhcnJvdyIgdmlld0JveD0iMCAwIDEwIDEwIiByZWZYPSI5IiByZWZZPSI1IiBtYXJrZXJXaWR0aD0iNyIgbWFya2VySGVpZ2h0PSI3IiBvcmllbnQ9ImF1dG8tc3RhcnQtcmV2ZXJzZSI+PHBhdGggZD0iTTAgMEwxMCA1TDAgMTB6IiBmaWxsPSIjMzc0MTUxIi8+PC9tYXJrZXI+PC9kZWZzPgo8cmVjdCB3aWR0aD0iNzYwIiBoZWlnaHQ9IjI0NCIgZmlsbD0iI2ZmZmZmZiIvPgo8cmVjdCB4PSI0MCIgeT0iNDAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMTY0IiByeD0iMTAiIGZpbGw9IiNmM2Y0ZjYiIHN0cm9rZT0iIzljYTNhZiIvPgo8dGV4dCB4PSI1MiIgeT0iNTgiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMzc0MTUxIj5JbnRlcm5ldDwvdGV4dD4KPHJlY3QgeD0iMjgwIiB5PSI0MCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxNjQiIHJ4PSIxMCIgZmlsbD0iI2YzZjRmNiIgc3Ryb2tlPSIjOWNhM2FmIi8+Cjx0ZXh0IHg9IjI5MiIgeT0iNTgiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMzc0MTUxIj5ETVo8L3RleHQ+CjxyZWN0IHg9IjUyMCIgeT0iNDAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMTY0IiByeD0iMTAiIGZpbGw9IiNmM2Y0ZjYiIHN0cm9rZT0iIzljYTNhZiIvPgo8dGV4dCB4PSI1MzIiIHk9IjU4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iIzM3NDE1MSI+SW50ZXJuYWwgbmV0d29yazwvdGV4dD4KPHJlY3QgeD0iNjAiIHk9IjcwIiB3aWR0aD0iMTYwIiBoZWlnaHQ9IjQ0IiByeD0iNCIgZmlsbD0iI2Y5ZmFmYiIgc3Ryb2tlPSIjNmI3MjgwIi8+Cjx0ZXh0IHg9IjE0MCIgeT0iOTYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMxMTE4MjciPkN1c3RvbWVyIGJyb3dzZXI8L3RleHQ+CjxyZWN0IHg9IjMwMCIgeT0iNzAiIHdpZHRoPSIxNjAiIGhlaWdodD0iNDQiIHJ4PSI0IiBmaWxsPSIjZGJlN2ZiIiBzdHJva2U9IiMyZjVmYjMiLz4KPHRleHQgeD0iMzgwIiB5PSI5NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzExMTgyNyI+UG9ydGFsIGZyb250IGVuZDwvdGV4dD4KPHJlY3QgeD0iNTQwIiB5PSI3MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI0NCIgcng9IjQiIGZpbGw9IiNkYmU3ZmIiIHN0cm9rZT0iIzJmNWZiMyIvPgo8dGV4dCB4PSI2MjAiIHk9Ijk2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMTExODI3Ij5PcmRlcnMgQVBJPC90ZXh0Pgo8cmVjdCB4PSI1NDAiIHk9IjE0MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI0NCIgcng9IjQiIGZpbGw9IiNkMWQ1ZGIiIHN0cm9rZT0iIzZiNzI4MCIvPgo8dGV4dCB4PSI2MjAiIHk9IjE2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzExMTgyNyI+T3JkZXJzIGRhdGFiYXNlPC90ZXh0Pgo8bGluZSB4MT0iMjIwIiB5MT0iOTIiIHgyPSIzMDAiIHkyPSI5MiIgc3Ryb2tlPSIjMzc0MTUxIiBzdHJva2Utd2lkdGg9IjEuNSIgbWFya2VyLWVuZD0idXJsKCNhcnJvdykiLz4KPHRleHQgeD0iMjYwIiB5PSI4OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzM3NDE1MSI+QnJvd3NlPC90ZXh0Pgo8bGluZSB4MT0iNDYwIiB5MT0iOTIiIHgyPSI1NDAiIHkyPSI5MiIgc3Ryb2tlPSIjMzc0MTUxIiBzdHJva2Utd2lkdGg9IjEuNSIgbWFya2VyLWVuZD0idXJsKCNhcnJvdykiLz4KPHRleHQgeD0iNTAwIiB5PSI4OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzM3NDE1MSI+T3JkZXI8L3RleHQ+CjxsaW5lIHgxPSI2MjAiIHkxPSIxMTQiIHgyPSI2MjAiIHkyPSIxNDAiIHN0cm9rZT0iIzM3NDE1MSIgc3Ryb2tlLXdpZHRoPSIxLjUiIG1hcmtlci1lbmQ9InVybCgjYXJyb3cpIi8+Cjx0ZXh0IHg9IjYyNSIgeT0iMTMxIiBmaWxsPSIjMzc0MTUxIj5TdG9yZTwvdGV4dD4KPC9zdmc+"
+  }
+}
