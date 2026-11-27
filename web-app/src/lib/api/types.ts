@@ -70,6 +70,11 @@ export interface DueItem {
   address: string;
   due: string;
   /**
+   * The deadline behind a `deadline` item of an incident (rest-api.adoc, The Deadlines; PROVISIONAL): its rule and
+   * whether it is still open or already missed, so that the web app words it without parsing the title.
+   */
+  deadline?: { rule: string; status: 'OPEN' | 'MISSED' };
+  /**
    * The release request behind a `release` item, and behind a `review` item of an approver when one is pending
    * (rest-api.adoc, Release Requests; PROVISIONAL): its id, who asked, when, and the comment. The four members come
    * together.
@@ -414,9 +419,11 @@ export type WorkflowState = 'draft' | 'in-review' | 'released';
 export interface HistoryLine {
   at: string;
   by: Person;
-  kind: 'create' | 'save' | 'submit' | 'release';
+  kind: 'create' | 'save' | 'submit' | 'release' | 'complete' | 'reopen';
   /** The part a save changed, such as a practice id. */
   part?: string;
+  /** The stage a completion or a reopening names (an incident, PROVISIONAL). */
+  stage?: string;
   /** How many fields the save changed. */
   count?: number;
   /** The tag a release wrote. */
@@ -930,7 +937,7 @@ export interface DocumentDraft {
 /** What a revision read says about the revision. */
 export interface RevisionAt {
   ref: string;
-  kind: 'create' | 'save' | 'submit' | 'release';
+  kind: 'create' | 'save' | 'submit' | 'release' | 'complete' | 'reopen';
   commit: string;
   tag: string | null;
   at: string;
@@ -1410,4 +1417,178 @@ export interface RiskRegister {
   /** The newest tags of the register, newest first, at most 20; may be empty. */
   tags: RiskRegisterTag[];
   risks: RiskSummary[];
+}
+
+/*
+ * Incident reports (UC-IR-1, UC-IR-2, UC-IR-3; rest-api.adoc, Incident Report Requests). Every shape is PROVISIONAL.
+ *
+ * An incident is a staged document: one part per stage, each stage with its own completion, and the deadlines and the
+ * protection needs derived by the server from the parts and the clock.
+ */
+
+/** The statuses of a stage (`not-applicable` is derived from the condition, `completed` from the part's completion). */
+export const STAGE_STATUSES = ['not-applicable', 'open', 'completed'] as const;
+
+/** The status of a stage. */
+export type StageStatus = (typeof STAGE_STATUSES)[number];
+
+/** The condition of a stage as data: a field, or any or all of a list of conditions. */
+export type StageCondition =
+  { field: string } | { any: StageCondition[] } | { all: StageCondition[] };
+
+/** Who completed a stage, and when. */
+export interface StageCompletion {
+  at: string;
+  by: Person;
+}
+
+/** One stage of an incident, as the read declares and derives it (rest-api.adoc, The Stages). */
+export interface IncidentStage {
+  id: string;
+  /** The part (file) that holds the stage's data. */
+  part: string;
+  /** The stages that come first, by id. */
+  after: string[];
+  /** The condition under which the stage applies; `null` for a stage that always does. */
+  when: StageCondition | null;
+  /** The narrative fields of the stage. */
+  narrative: string[];
+  /** Whether completing the stage asks for step-up. */
+  stepUp: boolean;
+  status: StageStatus;
+  /** A stage that does not apply only because the field of its condition is not answered yet. */
+  unanswered: boolean;
+  completion: StageCompletion | null;
+  /** A completed stage that has an open stage among its predecessors: it was signed off before the reopening. */
+  predecessorReopened: boolean;
+  /** The JSON Pointers (`/<part>/<field>`) of the empty mandatory fields of an open stage. */
+  missing: string[];
+  /** The predecessors that are still open. */
+  blockedBy: string[];
+}
+
+/** The status of a deadline at the time it was computed. */
+export type DeadlineStatus = 'OPEN' | 'MET' | 'MISSED';
+
+/** One deadline of an incident, computed from the parts and the clock (rest-api.adoc, The Deadlines). */
+export interface IncidentDeadline {
+  /** The rule: `gdpr-art33`, `nis2-early-warning`, … */
+  rule: string;
+  /** The index of the entry of a list rule, else `null`. */
+  element: number | null;
+  /** The instant the clock started from; `null` while the field that starts it is empty. */
+  startedAt: string | null;
+  /** The due time; `null` while its date field is empty. */
+  due: string | null;
+  status: DeadlineStatus;
+  /** When the notification that meets it was sent; a late one keeps the deadline `MISSED`. */
+  sentAt: string | null;
+  /** The pointer of the record that meets it. */
+  metBy: string;
+}
+
+/** The protection needs derived from the affected services, and the service that decides each. */
+export interface IncidentProtection {
+  needs: ProtectionNeeds;
+  decidedBy: Record<ProtectionDimension, string>;
+}
+
+/** `GET /api/v1/incidents/{year}/{incident}`: the generic document read with the members of an incident. */
+export interface IncidentRead extends DocumentRead {
+  year: number;
+  address: string;
+  /** The instant the deadlines were computed at. */
+  asOf: string;
+  stages: IncidentStage[];
+  deadlines: IncidentDeadline[];
+  /** `null` for an incident without an affected service. */
+  protection: IncidentProtection | null;
+}
+
+/** One year of `GET /api/v1/incidents`. */
+export interface IncidentYear {
+  year: number;
+  repository: string;
+  /** Whether it is the year of today. */
+  current: boolean;
+  incidents: number;
+  open: number;
+  withMissedDeadline: number;
+  /** The last day the year's repository is kept. */
+  retentionEnd: string;
+  address: string;
+}
+
+/** `GET /api/v1/incidents`. */
+export interface IncidentYears {
+  today?: string;
+  years: IncidentYear[];
+}
+
+/** The count of the deadlines of an incident by status, and the next open one. */
+export interface IncidentDeadlineCounts {
+  open: number;
+  met: number;
+  missed: number;
+  next: { rule: string; due: string } | null;
+}
+
+/** One incident of a year's list. */
+export interface IncidentRow {
+  id: string;
+  title: string;
+  address: string;
+  state: WorkflowState;
+  version: number;
+  frozen: boolean;
+  severity: string | null;
+  categories: string[];
+  personalDataAffected: boolean | null;
+  nis2Significant: boolean | null;
+  awareAt: string | null;
+  resolvedAt: string | null;
+  stages: { id: string; status: StageStatus }[];
+  deadlines: IncidentDeadlineCounts;
+  requested: boolean;
+  updatedAt: string;
+  updatedBy: Person;
+  release: { tag: string; at: string } | null;
+}
+
+/** `GET /api/v1/incidents/{year}`. */
+export interface IncidentYearList {
+  today?: string;
+  asOf: string;
+  year: number;
+  repository: string;
+  incidents: IncidentRow[];
+  truncated: boolean;
+}
+
+/** `GET /api/v1/incidents/{year}/{incident}/report`: the AsciiDoc of the generated or the committed report. */
+export interface IncidentReport {
+  repository: string;
+  id: string;
+  title: string;
+  /** `generated` for the working state (a preview), `committed` for a release. */
+  source: 'generated' | 'committed';
+  asOf: string;
+  adoc: string;
+}
+
+/** The body of the completion or the reopening of a stage. */
+export interface StageRequest {
+  /** The blob id of the part the form loaded; without it nothing is compared. */
+  blob?: string;
+}
+
+/** `200` of `POST …/stages/{stage}/complete` and `…/reopen`. */
+export interface StageActed {
+  outcome: 'COMPLETED' | 'REOPENED';
+  stage: string;
+  status: StageStatus;
+  at: string;
+  completion?: StageCompletion;
+  parts: Record<string, PartVersion>;
+  stages: { id: string; status: StageStatus }[];
 }

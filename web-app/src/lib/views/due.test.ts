@@ -104,6 +104,57 @@ describe('the items of the generic documents lens', () => {
   });
 });
 
+describe('the deadlines of an incident', () => {
+  const CARD = '01JZ9T4M6Q8S0V2X4B6D8F0H2K';
+
+  it('words the deadline in the language of the person and opens the notifications of the incident', async () => {
+    await useProfile('workshop');
+    render(DueView);
+    await screen.findByTestId('due-list');
+    const missed = entryOf(
+      'Card data exposed in the checkout log: Notice to the supervisory authority',
+    );
+    expect(missed).toHaveAttribute('data-kind', 'deadline');
+    expect(missed).toHaveAttribute('data-lens', 'incidents');
+    expect(within(missed).getByRole('link')).toHaveAttribute(
+      'href',
+      `/incidents/2026/${CARD}?stage=notifications`,
+    );
+    // A deadline that is missed is overdue, and needs the person.
+    expect(within(missed).getByTestId('due-overdue')).toBeInTheDocument();
+    // A deadline that is still open names its day quietly.
+    const open = entryOf(
+      'Phishing mail with a forged payment link: Notice to the supervisory authority',
+    );
+    expect(within(open).queryByTestId('due-overdue')).toBeNull();
+  });
+
+  it('is read in German', async () => {
+    await useProfile('workshop', 'de');
+    render(DueView);
+    await screen.findByTestId('due-list');
+    expect(
+      entryOf('Card data exposed in the checkout log: Meldung an die Aufsichtsbehörde', 'de'),
+    ).toHaveAttribute('data-lens', 'incidents');
+  });
+
+  it('keeps the title of the server for a deadline whose title does not end in its rule', async () => {
+    await useProfile('workshop');
+    const item = {
+      kind: 'deadline',
+      lens: 'incidents',
+      title: 'Something else',
+      address: `/incidents/2026/${CARD}?stage=notifications`,
+      due: '2026-12-01',
+      deadline: { rule: 'gdpr-art33', status: 'OPEN' },
+    } satisfies DueItem;
+    vi.spyOn(apiClient, 'getDue').mockResolvedValue({ items: [item] });
+    render(DueView);
+    await screen.findByTestId('due-list');
+    expect(screen.getByRole('link', { name: 'Open Something else' })).toBeInTheDocument();
+  });
+});
+
 describe('the events', () => {
   it('reads the list again when a release was requested or a document moved along its workflow', async () => {
     const kit = await useProfile('workshop');

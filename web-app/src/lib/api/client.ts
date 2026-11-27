@@ -62,6 +62,12 @@ import type {
   Session,
   Status,
   RecipeDraftRequest,
+  IncidentRead,
+  IncidentReport,
+  IncidentYearList,
+  IncidentYears,
+  StageActed,
+  StageRequest,
   ThreatEvaluation,
   ThreatModelCreate,
   ThreatModelCreated,
@@ -740,6 +746,111 @@ export class ApiClient {
       'POST',
       `/api/v1/threat-models/${seg(service)}`,
       password === undefined ? body : { ...body, password },
+    );
+  }
+
+  /**
+   * The years of the incident reports the person may read, newest first (PROVISIONAL): the first column of the lens
+   * Incidents. A person without a right on any incident repository gets no year, not a refusal.
+   *
+   * @returns the years with their counts
+   */
+  getIncidentYears(): Promise<IncidentYears> {
+    return this.request<IncidentYears>('GET', '/api/v1/incidents');
+  }
+
+  /**
+   * The incidents of a year with their stage statuses and deadline counts (PROVISIONAL).
+   *
+   * @param year the year, four digits
+   * @returns the incidents, newest awareness first
+   * @throws ApiError `NOT_FOUND` for a year that has no repository, or that the person may not read
+   */
+  getIncidentYear(year: string): Promise<IncidentYearList> {
+    return this.request<IncidentYearList>('GET', `/api/v1/incidents/${seg(year)}`);
+  }
+
+  /**
+   * One incident by its address (PROVISIONAL): the generic document read with its stages, deadlines and protection
+   * needs.
+   *
+   * @param year the year, four digits
+   * @param incident the incident's document id
+   * @param at a release (`v1`) or a commit, to read the incident as it was then
+   * @returns the incident
+   * @throws ApiError `NOT_FOUND` for an incident or a revision that does not exist, `VALIDATION` for an `at` of no form
+   */
+  getIncident(year: string, incident: string, at?: string): Promise<IncidentRead> {
+    const query = at === undefined ? '' : `?at=${encodeURIComponent(at)}`;
+    return this.request<IncidentRead>(
+      'GET',
+      `/api/v1/incidents/${seg(year)}/${seg(incident)}${query}`,
+    );
+  }
+
+  /**
+   * The report of an incident as AsciiDoc (PROVISIONAL): generated from the saved working state, or the one a release
+   * committed.
+   *
+   * @param year the year, four digits
+   * @param incident the incident's document id
+   * @param at a revision, to read the report of that state
+   * @returns the report source
+   */
+  getIncidentReport(year: string, incident: string, at?: string): Promise<IncidentReport> {
+    const query = at === undefined ? '' : `?at=${encodeURIComponent(at)}`;
+    return this.request<IncidentReport>(
+      'GET',
+      `/api/v1/incidents/${seg(year)}/${seg(incident)}/report${query}`,
+    );
+  }
+
+  /**
+   * Completes a stage (PROVISIONAL): signs off its part. The review asks for step-up, with local users the password
+   * travels as the member `password`.
+   *
+   * @param repository the repository of the year
+   * @param id the incident's document id
+   * @param stage the stage
+   * @param body the blob id the form loaded, if any
+   * @param password the renewed password of a local user, if step-up asks for it
+   * @returns the stage and the statuses of the stages afterwards
+   * @throws ApiError `STAGE_NOT_COMPLETABLE` (`missing`, `open`), `STAGE_NOT_APPLICABLE`, `STAGE_STATE`,
+   *   `CHANGED_SINCE_REVIEW`, `DOCUMENT_RELEASED`, `STEP_UP_REQUIRED`, `NOT_FOUND`
+   */
+  completeStage(
+    repository: string,
+    id: string,
+    stage: string,
+    body: StageRequest = {},
+    password?: string,
+  ): Promise<StageActed> {
+    return this.request<StageActed>(
+      'POST',
+      `/api/v1/documents/${seg(repository)}/${seg(id)}/stages/${seg(stage)}/complete`,
+      password === undefined ? body : { ...body, password },
+    );
+  }
+
+  /**
+   * Reopens a completed stage (PROVISIONAL): the stages after it stay completed and read as signed off before.
+   *
+   * @param repository the repository of the year
+   * @param id the incident's document id
+   * @param stage the stage
+   * @param body the blob id the form loaded, if any
+   * @returns the stage and the statuses of the stages afterwards
+   */
+  reopenStage(
+    repository: string,
+    id: string,
+    stage: string,
+    body: StageRequest = {},
+  ): Promise<StageActed> {
+    return this.request<StageActed>(
+      'POST',
+      `/api/v1/documents/${seg(repository)}/${seg(id)}/stages/${seg(stage)}/reopen`,
+      body,
     );
   }
 

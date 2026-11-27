@@ -112,6 +112,21 @@
     });
   });
 
+  /**
+   * @returns the words of an entry: for the deadline of an incident its title with the rule in the language of the person
+   * (the server's title ends in the rule's id, rest-api.adoc, The Deadlines), else the server's title
+   */
+  function titleOf(item: DueItem): string {
+    const deadline = item.deadline;
+    if (!deadline) return item.title;
+    const suffix = `: ${deadline.rule}`;
+    if (!item.title.endsWith(suffix)) return item.title;
+    return $t('incidents.due.title', {
+      incident: item.title.slice(0, -suffix.length),
+      rule: $t(`category.incident-reports.deadline.${deadline.rule}`),
+    });
+  }
+
   /** @returns who asked for the release, in the words of the person looking: "You" for their own request */
   function askedBy(item: DueItem): string {
     return item.requestedBy?.pseudonym && item.requestedBy.pseudonym === $session?.user.pseudonym
@@ -171,9 +186,9 @@
                           <span class="entry__title">
                             <Link
                               href={item.address}
-                              aria-label={$t('due.open', { title: item.title })}
+                              aria-label={$t('due.open', { title: titleOf(item) })}
                             >
-                              {item.title}
+                              {titleOf(item)}
                             </Link>
                           </span>
                           <span class="entry__meta">

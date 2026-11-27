@@ -653,6 +653,69 @@ describe('the SAMM and document requests', () => {
   });
 });
 
+describe('the incident requests (rest-api.adoc, Incident Report Requests)', () => {
+  it('reads the years, a year, an incident with or without a revision and the report, the segments encoded', async () => {
+    fetchMock.mockImplementation(async () => json(200, {}));
+    await client.getIncidentYears();
+    await client.getIncidentYear('2026');
+    await client.getIncident('2026', 'ID 1');
+    await client.getIncident('2026', 'ID1', 'v1');
+    await client.getIncidentReport('2026', 'ID1');
+    await client.getIncidentReport('2026', 'ID1', 'v1');
+    expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
+      '/api/v1/incidents',
+      '/api/v1/incidents/2026',
+      '/api/v1/incidents/2026/ID%201',
+      '/api/v1/incidents/2026/ID1?at=v1',
+      '/api/v1/incidents/2026/ID1/report',
+      '/api/v1/incidents/2026/ID1/report?at=v1',
+    ]);
+  });
+
+  it('completes and reopens a stage with POST, the blob as the body and the password as a member of it', async () => {
+    fetchMock
+      .mockResolvedValueOnce(json(200, SESSION))
+      .mockImplementation(async () => json(200, { outcome: 'COMPLETED' }));
+    await client.completeStage(
+      'isms-incidents-2026',
+      'ID1',
+      'review',
+      { blob: 'abc1234' },
+      'secret',
+    );
+    await client.completeStage('isms-incidents-2026', 'ID1', 'triage');
+    await client.reopenStage('isms-incidents-2026', 'ID1', 'triage', { blob: 'abc1234' });
+    const [path, init] = fetchMock.mock.calls[1];
+    expect(path).toBe('/api/v1/documents/isms-incidents-2026/ID1/stages/review/complete');
+    expect(init.method).toBe('POST');
+    expect(init.headers[CSRF_HEADER]).toBe('token-1');
+    expect(JSON.parse(init.body)).toEqual({ blob: 'abc1234', password: 'secret' });
+    expect(JSON.parse(fetchMock.mock.calls[2][1].body)).toEqual({});
+    expect(fetchMock.mock.calls[3][0]).toBe(
+      '/api/v1/documents/isms-incidents-2026/ID1/stages/triage/reopen',
+    );
+    expect(JSON.parse(fetchMock.mock.calls[3][1].body)).toEqual({ blob: 'abc1234' });
+  });
+
+  it('keeps the lists of the refusal of a completion', async () => {
+    fetchMock.mockResolvedValueOnce(json(200, SESSION)).mockResolvedValueOnce(
+      json(422, {
+        outcome: 'STAGE_NOT_COMPLETABLE',
+        stage: 'response',
+        missing: ['/response/actions'],
+        open: ['triage'],
+      }),
+    );
+    const error = await client
+      .completeStage('isms-incidents-2026', 'ID1', 'response')
+      .catch((e) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.outcome).toBe('STAGE_NOT_COMPLETABLE');
+    expect(error.details.missing).toEqual(['/response/actions']);
+    expect(error.details.open).toEqual(['triage']);
+  });
+});
+
 describe('the recipe wizard requests (rest-api.adoc, The Recipes, The Recipe Draft, A New Model)', () => {
   it('reads the recipes and the draft, keeps the draft and creates the model, with encoded paths', async () => {
     fetchMock.mockImplementation(async (path: string) =>

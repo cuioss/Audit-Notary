@@ -94,6 +94,15 @@ describe('the documents group', () => {
     expect(screen.getByTestId('search-status')).toHaveTextContent('documents match.');
   });
 
+  it('finds an incident report and opens it at its address in the lens Incidents', async () => {
+    await open('checkout log');
+    const hit = screen.getByTestId('search-document-01JZ9T4M6Q8S0V2X4B6D8F0H2K');
+    expect(hit).toHaveAttribute('href', '/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K');
+    expect(hit).toHaveTextContent('Card data exposed in the checkout log');
+    expect(hit).toHaveTextContent('Incident reports');
+    expect(hit).toHaveTextContent('Draft');
+  });
+
   it('says so when no document matches, and still offers the views that do', async () => {
     await open('zzzz');
     expect(screen.getByTestId('search-status')).toHaveTextContent('No document matches.');

@@ -32,7 +32,18 @@ const ADDRESSES = [
     'Threat models',
   ],
   ['/threat-models/payment-api/checkout-flow/release', 'release-view', 'Threat models', 'Release'],
-  ['/incidents/2026/inc-0007', 'lens-view', 'Incidents', 'Incidents'],
+  ['/incidents', 'incidents-view', 'Incidents', 'Incidents'],
+  ['/incidents/2026', 'incidents-view', 'Incidents', 'Incidents'],
+  ['/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K', 'incidents-view', 'Incidents', 'Incidents'],
+  [
+    '/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K?stage=notifications',
+    'incidents-view',
+    'Incidents',
+    'Incidents',
+  ],
+  ['/incidents/2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F?at=v1', 'incidents-view', 'Incidents', 'Incidents'],
+  // Part B of the lens (the new incident and the release) shows the placeholder until it is built.
+  ['/incidents/2026/new', 'lens-view', 'Incidents', 'Incidents'],
   ['/isms/risks/r-012', 'lens-view', 'ISMS', 'ISMS'],
   ['/isms/documents/policy-access', 'lens-view', 'ISMS', 'ISMS'],
   // The generic documents lens (rest-api.adoc, The Generic Documents Lens). `/categories` is no entry here: with one
