@@ -94,6 +94,8 @@ export class RecipeWizard {
     data: {},
   });
   private latest = 0;
+  /** Whether the draft that is kept holds the part `data`: once it does, every later keep carries it. */
+  private keepsData = false;
 
   /**
    * @param service the service's address segment
@@ -123,13 +125,15 @@ export class RecipeWizard {
 
   /**
    * @param sent what the page holds
-   * @returns the part `data` a draft carries: the last page's fields once the person has been there, and always the ones
-   *   that differ from what the last page starts with (a restored owner or review date is never dropped by a later keep),
-   *   `null` for none
+   * @returns the part `data` a draft carries: the last page's fields once the person has been there, once the draft that
+   *   was read or kept holds them (a restored owner or review date is never dropped by a later keep, even one that equals
+   *   what the last page starts with today), and whenever they differ from what the last page starts with; `null` for none
    */
   private dataToKeep(sent: DataValues): DataValues | null {
     const reached = this.furthest >= this.steps.length;
-    return reached || !jsonEqual(sent, dataOfDraft(null, this.today)) ? sent : null;
+    return reached || this.keepsData || !jsonEqual(sent, dataOfDraft(null, this.today))
+      ? sent
+      : null;
   }
 
   /**
@@ -140,11 +144,13 @@ export class RecipeWizard {
    */
   private async keep(step: number, sent: { values: ModelValues; data: DataValues }): Promise<void> {
     if (this.recipe === null) return;
+    const data = this.dataToKeep(sent.data);
     const answer = await this.client.saveThreatRecipeDraft(
       this.service,
       this.recipe.id,
-      draftRequest(step, sent.values, this.dataToKeep(sent.data)),
+      draftRequest(step, sent.values, data),
     );
+    if (data !== null) this.keepsData = true;
     this.keptAt = answer.at;
     this.baseline = sent;
   }
@@ -237,6 +243,7 @@ export class RecipeWizard {
       this.current = startStep(loaded.steps.length, draft);
       this.furthest = this.current;
       this.keptAt = draft?.at ?? null;
+      this.keepsData = draft?.parts.data !== undefined;
       this.baseline = this.snapshot();
       this.phase = 'ready';
     } catch (error) {

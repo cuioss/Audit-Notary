@@ -338,6 +338,23 @@ describe('going on and back', () => {
     expect(wizard.dirty).toBe(false);
   });
 
+  it('keeps a restored review date that equals the one the last page starts with today', async () => {
+    const draft: RecipeDraftBody = {
+      step: 1,
+      at: '2026-11-26T09:20:00Z',
+      parts: {
+        model: { fields: { '/project': { name: 'Scheduler overview' } } },
+        data: { fields: { '/last-review': '2026-11-26' } },
+      },
+    };
+    const { wizard, calls } = await opened({}, draft);
+    expect(await wizard.next()).toBe(true);
+    expect(calls.saved[0]).toMatchObject({
+      step: 2,
+      parts: { data: { fields: { '/last-review': '2026-11-26' } } },
+    });
+  });
+
   it('sends no part data for a draft that never had one and a last page that was never reached', async () => {
     const { wizard, calls } = await opened({}, draftOf(1));
     expect(await wizard.next()).toBe(true);
