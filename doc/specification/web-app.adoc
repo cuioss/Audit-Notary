@@ -110,6 +110,11 @@ Provisionally (decided with the incident reports, xref:rest-api.adoc#_incident_a
 Requests]): the lens *Incidents* gains `/incidents/<year>/new` (a new incident); the segment `new` is reserved as an incident,
 the id of an incident is a ULID (case sensitive), and the address of an incident admits `at` and `stage` (the tab).
 
+Provisionally (decided with the ISMS, xref:rest-api.adoc#_isms_addresses[REST API Register, ISMS Requests]): the lens *ISMS*
+gains `/isms/risks/new` (a new risk, with the allowed query `origin`), `/isms/documents/new` (`kind`) and
+`/isms/documents/<id>/compare` (`from`, `to`); the segment `new` is reserved as an entry and as a document, the id of a document is
+a ULID (case sensitive), and the addresses of the documents admit `kind`, `at`, `from` and `to`.
+
 Three more addresses are shown without the shell: `/login` (local users), `/signed-out` and `/login-problem`
 (provisional, xref:rest-api.adoc#_addresses_outside_the_shell[REST API Register, Addresses Outside the Shell]). They are
 in `canonical-addresses.json` as `outsideShell`, so the web app routes them and the check of a login's `return` refuses

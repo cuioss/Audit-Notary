@@ -163,6 +163,14 @@ xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register, Op
 . A step whose `fills` the form cannot show (a pointer that is no member of the model file) says so and can be passed.
 . The create goes through the shared step-up handler like every write, although the register lists no confirmation for it.
 
+Decided provisionally with the transfer to the risk register (UC-TM-3), recorded in
+xref:../specification/rest-api.adoc#_decided_isms[REST API Register, Open Questions]; the owner may change each one:
+
+. A threat is transferable when it is accepted, or open without a countermeasure and not yet transferred; the act opens the new
+  risk prefilled from the threat, and nothing is written until the person saves the risk. The first save of the risk records the
+  reference in the threat (`transferred`), as a save of the model by the application; a released model is then a draft again.
+  Whether the reference should instead be derived from the register is open.
+
 == Related
 
 * xref:category-samm.adoc[SAMM] — Threat Assessment practice

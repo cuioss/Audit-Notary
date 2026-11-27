@@ -134,6 +134,13 @@ xref:../specification/rest-api.adoc#_decided_reports[REST API Register, Open Que
   absolute `https` addresses; the act that starts an assessment stands in the scope, in the frozen practice and in the
   released assessment.
 
+Decided provisionally with the gaps (UC-SAMM-6), recorded in
+xref:../specification/rest-api.adoc#_decided_isms[REST API Register, Open Questions]; the owner may change each one:
+
+. The gaps of a scope are the practices of its latest released assessment whose score is below their target
+  (`GET /api/v1/samm/{scope}/gaps`); a practice without a target has no gap. *Create risk* opens the new risk prefilled, and the
+  risk keeps the reference to the practice of that assessment as its `origin`; one risk at a time per gap.
+
 == Related
 
 * https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/storage-engine.adoc[Storage Engine] — drafts, saving, release, index

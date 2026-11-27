@@ -156,3 +156,11 @@ xref:rest-api.adoc#_decided_reports[REST API Register, Open Questions]; the owne
 . *Comparison*: the page `/reports/samm-compare` reads the comparison of one scope; `delta` is `to` minus `from`. Two scopes
   are not compared.
 
+Decided provisionally with the gaps (UC-SAMM-6), recorded in
+xref:rest-api.adoc#_decided_isms[REST API Register, Open Questions]; the owner may change each one:
+
+. *Gaps* (AUN-SAMM-6): `GET /api/v1/samm/{scope}/gaps` lists, for the latest released assessment, every practice whose score is
+  below its target, in the order of the model, with the reference `samm-assessments:assessment/<id>#<practice>` and the risk of
+  the register that names it. "Create risk" is the page `/isms/risks/new?origin=<reference>`, prefilled by
+  `GET /api/v1/isms/risks/draft`; the draft is stored by the first save, which writes the reference as the `origin` of the risk.
+

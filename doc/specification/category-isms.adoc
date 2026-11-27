@@ -71,3 +71,18 @@ xref:rest-api.adoc#_decided_reports[REST API Register, Open Questions]; the owne
 . *The shape of an entry in the list* (AUN-ISMS-2): number, title, rating (`low` to `critical`), treatment (`mitigate`,
   `accept`, `transfer`, `avoid`), owning team, version, release time, review date and origin; the schema of a risk belongs to
   the ISMS lens.
+
+Decided provisionally with the ISMS lens (UC-ISMS-1, UC-ISMS-2, UC-SAMM-6, UC-TM-3), recorded with the bodies in
+xref:rest-api.adoc#_decided_isms[REST API Register, Open Questions]; the owner may change each one:
+
+. *Documents* (AUN-ISMS-1): every type is released more than once, with one workflow for the category; each is one file with
+  the part `data`; the fields are those of xref:rest-api.adoc#_isms_data[REST API Register, The Data Shape of an ISMS Document
+  and of a Risk]; the generated output is not shown by the web app. Two versions are compared with the
+  diff `from=<revision>&to=<revision>`.
+. *Risks* (AUN-ISMS-2): the id of a risk is its running number `R-<n>`, assigned by the server at the first save, which needs
+  only the title; the register as it is worked on is `GET /api/v1/isms/register`; a risk is released more than once, with the
+  tags `risks/R-<n>/v<n>`.
+. *Origin* (AUN-SAMM-6, AUN-TM-4): a risk made from a gap or a threat carries the reference as its read-only `origin`; the
+  transfer is recorded in the threat model (`transferred`) when the risk is first saved.
+. *Reviews* (AUN-ISMS-2): the review date is a field of the entry, not computed; the Due lens lists the reviews of released
+  entries that are overdue or within 30 days.

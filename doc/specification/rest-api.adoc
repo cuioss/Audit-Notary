@@ -123,10 +123,11 @@ without a mapped right answers `"rights": []` and is a session like any other (<
 release request of an agent (xref:../use-cases/02-documents.adoc#UC-DOC-8[UC-DOC-8]) adds the members `requestId`,
 `requestedBy` `{"pseudonym", "name"}`, `requestedAt` and `comment` to its item (PROVISIONAL); `lens` is one of the
 lenses of the rail, `categories` for the documents of the generic lens (<<_the_document_lifecycle>>). The item of a
-deadline of an incident (<<_incident_deadlines>>) has the member `deadline` `{"rule", "status"}` (PROVISIONAL)
+deadline of an incident (<<_incident_deadlines>>) has the member `deadline` `{"rule", "status"}` (PROVISIONAL). The item of
+the review of a released ISMS document or risk (<<_isms_due>>) is `kind` `review`, lens `isms` (PROVISIONAL)
 |none
 |xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]
-|`SPECIFIED`; the members of a release request, the member `deadline` and the lens `categories` `PROVISIONAL`
+|`SPECIFIED`; the members of a release request, the member `deadline`, the lens `categories` and the ISMS review items `PROVISIONAL`
 
 |`GET /api/v1/events`
 |none
@@ -453,15 +454,17 @@ for a release, the short commit id for any other commit
 |xref:../use-cases/02-documents.adoc#UC-DOC-2[UC-DOC-2], xref:mcp-server.adoc#AUN-MCP-6[AUN-MCP-6] (`read_document` with a revision)
 |`PROVISIONAL`
 
-|`GET /api/v1/documents/{repository}/{id}/diff?from=released`
-|none
+|`GET /api/v1/documents/{repository}/{id}/diff?from=released`, and, PROVISIONAL, `?from=<revision>&to=<revision>`
+|none; `from` is `released` or a revision (`v<n>`, a commit id), `to` an optional revision or `working` (the default)
 |The structured diff of the YAML data against the last released state, grouped by schema section: `{"repository",
 "id", "from", "to", "sections": [{"part", "changes": [{"pointer", "before", "after"}]}]}` (shape PROVISIONAL); `from`
 is `null` before the first release. The view groups the changes of one part by the first segment of the pointer, the
-property of the schema (<<_document_lifecycle_requests>>)
-|none
-|xref:web-app.adoc#AUN-WEB-6[AUN-WEB-6]
-|`SPECIFIED`
+property of the schema (<<_document_lifecycle_requests>>). With two revisions it is the comparison of two versions of the ISMS
+documents (<<_isms_documents>>); `from` and `to` then hold the tag of a release, the commit id of a commit or `working`
+|`422 VALIDATION` with the pointer `/from` or `/to` and the code `FORMAT` (not a revision) or `REQUIRED` (no `from`); `404
+NOT_FOUND` for a revision that does not exist
+|xref:web-app.adoc#AUN-WEB-6[AUN-WEB-6], xref:../use-cases/07-isms.adoc#UC-ISMS-1[UC-ISMS-1]
+|`SPECIFIED` for `from=released`; the two-revision form `PROVISIONAL`
 
 |`PUT /api/v1/drafts/{repository}/{id}`
 |`{"parts": {"<part>": {"blob", "fields"}}}`; with step-up by password `"password"`
@@ -596,6 +599,18 @@ the code `REQUIRED`. The two assessments may be in any state: an open one is rea
 |`SPECIFIED`; the status of `MODEL_VERSIONS_DIFFER` and the comparison of an open assessment `PROVISIONAL`. The page
 `/reports/samm-compare` of the lens *Reports* reads this request and adds none (<<_reports_requests>>, where the `200`
 body is written out)
+
+|`GET /api/v1/samm/{scope}/gaps`
+|none
+|The gaps of the latest released assessment of the scope (UC-SAMM-6): `{"scope", "today", "assessment": {"id", "document", "title",
+"date", "modelVersion", "release"} \| null, "gaps": [{"practice", "function", "score", "target", "gap", "due", "reference",
+"risk"}]}`, the practices whose released score is below their target, in the order of the model; `reference` is
+`samm-assessments:assessment/<id>#<practice>`, `risk` the risk of the register that names it or `null`. The exact body is in
+<<_isms_origin>>
+|`404 NOT_FOUND`; `403 FORBIDDEN` without `read` on `samm-assessments`; `"assessment": null` and `"gaps": []` for a scope without a
+released assessment or without targets
+|xref:category-samm.adoc#AUN-SAMM-6[AUN-SAMM-6], xref:../use-cases/04-samm.adoc#UC-SAMM-6[UC-SAMM-6]
+|`PROVISIONAL`; the requirement says "list every practice whose score is below its target", not how
 
 |`GET /api/v1/documents/samm-assessments/{document}`
 |none
@@ -887,6 +902,98 @@ commit that is not indexed yet
 |xref:category-isms.adoc#AUN-ISMS-3[AUN-ISMS-3], xref:../use-cases/07-isms.adoc#UC-ISMS-3[UC-ISMS-3]
 |`SPECIFIED`; the answer's shape, the codes of `422` and `GIT_UNAVAILABLE` `PROVISIONAL`; read by the page
 `/reports/risk-register` of the lens *Reports*
+
+|`GET /api/v1/isms/register`
+|none
+|The risk register as it is worked on, the first column of the lens *ISMS*: every entry in every state, ordered by the running
+number: `{"today", "risks": [{"id", "entry", "title", "state", "version", "rating", "treatment", "owner", "reviewDue",
+"reviewStatus", "origin", "requested", "updatedAt", "updatedBy", "release", "address"}], "truncated"}`, at most 500. The exact
+body is in <<_isms_register>>
+|`403 FORBIDDEN` without `read` on `isms-register`. Served from the last fetched state while the Git server is unreachable
+|xref:category-isms.adoc#AUN-ISMS-2[AUN-ISMS-2], xref:../use-cases/07-isms.adoc#UC-ISMS-2[UC-ISMS-2]
+|`PROVISIONAL`; the register as of a date stays the row above
+
+|`GET /api/v1/categories/isms/schema`
+|none
+|The schemas of the five document types of the category `isms` as the form kit reads them (<<_isms_data>>): `policy`,
+`isms-scope`, `audit-report` and `management-review` in `isms-core`, `risk` in `isms-register`; the request of the form kit
+(<<_form_kit_requests>>) for this category
+|`403 FORBIDDEN`
+|xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4], xref:category-isms.adoc#AUN-ISMS-1[AUN-ISMS-1],
+xref:category-isms.adoc#AUN-ISMS-2[AUN-ISMS-2]
+|`PROVISIONAL`
+
+|`GET /api/v1/documents/isms-core`, `GET …/{id}`, `GET …/{id}/revisions`, `GET …/{id}/diff?from=released` and
+`…/diff?from=<revision>&to=<revision>`
+|none; `at=<revision>` on the read
+|The generic requests of <<_the_document_lifecycle>> for the repository `isms-core` (the list with `address`
+`/isms/documents/<id>`, the document in the generic shape with `at`, its revisions, the diff against the last release and the
+comparison of two versions). The lens reads the list and the document; the compare page reads the diff of two revisions
+(<<_isms_documents>>)
+|As the generic requests; `403 FORBIDDEN` without `read`
+|xref:../use-cases/02-documents.adoc#UC-DOC-1[UC-DOC-1], xref:../use-cases/02-documents.adoc#UC-DOC-2[UC-DOC-2],
+xref:../use-cases/07-isms.adoc#UC-ISMS-1[UC-ISMS-1], xref:category-isms.adoc#AUN-ISMS-1[AUN-ISMS-1]
+|`PROVISIONAL`
+
+|`POST /api/v1/documents/isms-core`, `PUT /api/v1/drafts/isms-core/{id}`, `POST …/{id}/save`, `POST
+…/{id}/transitions/isms.submit` and `POST /api/v1/releases/isms-core/{id}`
+|The generic bodies (<<_document_lifecycle_requests>>); the create `{"kind": "policy" \| "isms-scope" \| "audit-report" \|
+"management-review", "parts": {"data": {"fields"}}}`
+|As the generic requests: `CREATED` (`/title` is the only mandatory field of a first save), `SAVED`, `DRAFT_SAVED`,
+`TRANSITIONED` (`draft` to `in-review`, right `edit`) and `RELEASED` with the tag `<collection>/<id>/v<n>` (`in-review` to
+`released`, right `approve`, step-up, `isms.release`). A document is released more than once: the first save after a release
+starts the next version
+|`MANDATORY_FIELDS_MISSING` with the pointers of the `required` fields of the type; `VALIDATION` per field; `CONFLICT`;
+`STEP_UP_REQUIRED`, `CHANGED_SINCE_REVIEW`, `FORBIDDEN`, `REJECTED`, `GIT_UNAVAILABLE`; `DOCUMENT_RELEASED` does not apply
+|xref:../use-cases/02-documents.adoc#UC-DOC-3[UC-DOC-3], xref:../use-cases/02-documents.adoc#UC-DOC-6[UC-DOC-6],
+xref:../use-cases/02-documents.adoc#UC-DOC-7[UC-DOC-7], xref:category-isms.adoc#AUN-ISMS-1[AUN-ISMS-1]
+|`SPECIFIED` where AUN-ISMS-1 says "released with step-up"; body and answer `PROVISIONAL`
+
+|`GET /api/v1/documents/isms-register`, `GET …/{id}`, `GET …/{id}/revisions`, `GET …/{id}/diff?from=released`
+|none; `at=<revision>` on the read; `{id}` is the running number, `R-018`
+|The generic requests for the repository `isms-register`: the list (the `address` of a row is `/isms/risks/<entry>`), the risk in
+the generic shape (also with `at=v<n>`, the release the register as of a date links to), its revisions and the diff against the
+last release. The release view and the sheet read these; the lens' list is `GET /api/v1/isms/register`
+|As the generic requests; `403 FORBIDDEN` without `read`
+|xref:../use-cases/02-documents.adoc#UC-DOC-2[UC-DOC-2], xref:category-isms.adoc#AUN-ISMS-2[AUN-ISMS-2],
+xref:category-isms.adoc#AUN-ISMS-3[AUN-ISMS-3]
+|`PROVISIONAL`
+
+|`POST /api/v1/documents/isms-register`
+|`{"kind": "risk", "origin": "<reference>", "parts": {"data": {"fields"}}}`: the first save of a new risk; `origin` is optional
+(<<_isms_origin>>), `fields` as in the save, without `blob`
+|`201 {"outcome": "CREATED", "id": "R-043", "repository", "address", "state": "draft", "version": 1, "at", "parts"}`: the server
+assigns the running number at this save and writes the first commit to the collection branch; with an `origin` the answer
+also carries `"origin": {"ref", "recorded"}`
+|`422 VALIDATION` per field (`/title` `REQUIRED` is the only mandatory field of a first save; `/origin` `PATTERN`), among them
+`REFERENCE_NOT_FOUND` for an owner team or a related reference that is in no catalog or register; `404 NOT_FOUND` for an
+origin that does not exist; `409 ORIGIN_HAS_RISK`, `ORIGIN_NOT_RELEASED`, `ORIGIN_NOT_A_GAP`, `ORIGIN_NOT_TRANSFERABLE`;
+`403 FORBIDDEN` without `edit`; `REJECTED`; `GIT_UNAVAILABLE`
+|xref:category-isms.adoc#AUN-ISMS-2[AUN-ISMS-2], xref:../use-cases/07-isms.adoc#UC-ISMS-2[UC-ISMS-2],
+xref:category-threat-models.adoc#AUN-TM-4[AUN-TM-4], xref:category-samm.adoc#AUN-SAMM-6[AUN-SAMM-6]
+|`SPECIFIED` for the running number assigned at the first save; body, answer and the outcomes `PROVISIONAL`
+
+|`PUT /api/v1/drafts/isms-register/{id}`, `POST /api/v1/documents/isms-register/{id}/save`, `POST
+…/{id}/transitions/isms.submit` and `POST /api/v1/releases/isms-register/{id}`
+|The generic bodies (<<_document_lifecycle_requests>>)
+|As the generic requests: `DRAFT_SAVED`, `SAVED`, `TRANSITIONED` (right `edit`) and `RELEASED` with the tag `risks/R-<n>/v<n>`
+(right `approve`, step-up, `isms.release`); a risk is released more than once, a release merges the entry's path into `main`
+|`MANDATORY_FIELDS_MISSING` (`/rating`, `/treatment`, `/owner`); `VALIDATION` per field, `READ_ONLY` for `/origin`; `CONFLICT`;
+`STEP_UP_REQUIRED`, `CHANGED_SINCE_REVIEW`, `FORBIDDEN`, `REJECTED`, `GIT_UNAVAILABLE`; `DOCUMENT_RELEASED` does not apply
+|xref:../use-cases/07-isms.adoc#UC-ISMS-2[UC-ISMS-2], xref:../use-cases/02-documents.adoc#UC-DOC-6[UC-DOC-6],
+xref:../use-cases/02-documents.adoc#UC-DOC-7[UC-DOC-7]
+|`PROVISIONAL`
+
+|`GET /api/v1/isms/risks/draft?origin=<reference>`
+|none; `origin` is `samm-assessments:assessment/<id>#<practice>` or `threat-models:threat-model/<id>#<threat>`, `#` percent-encoded
+|The risk the server prepares from a gap or a threat (UC-SAMM-6, UC-TM-3), stored nowhere: `{"origin": {"ref", "kind", "title",
+"address"}, "fields": {"/title", "/description", "/owner", "/treatment"}}`. The exact bodies are in <<_isms_origin>>
+|`404 NOT_FOUND` for an origin that does not exist or that the user may not read; `422 VALIDATION` with the pointer `/origin`
+and the code `PATTERN` or `REQUIRED`; `403 FORBIDDEN` without `edit` on `isms-register`; `409 ORIGIN_HAS_RISK` with `risk`,
+`ORIGIN_NOT_RELEASED`, `ORIGIN_NOT_A_GAP`, `ORIGIN_NOT_TRANSFERABLE`
+|xref:category-samm.adoc#AUN-SAMM-6[AUN-SAMM-6], xref:category-threat-models.adoc#AUN-TM-4[AUN-TM-4],
+xref:data-protection.adoc#AUN-DP-2[AUN-DP-2]
+|`PROVISIONAL`; the requirements say "opens a new draft ... with a reference", not how
 
 6+h|Reports
 
@@ -1180,6 +1287,8 @@ before `categories.document`.) The rules:
   The threat models add `at` on `threat-models.model` and the name `recipe` on the recipe wizard
   (<<_threat_model_addresses>>).
   The incident reports add `at` and the name `stage` on `incidents.incident` (<<_incident_addresses>>).
+  The ISMS adds the name `origin` on `isms.risks.new`, `kind` on `isms.documents` and `isms.documents.new`, `at` on
+  `isms.document` and `from` and `to` on `isms.document.compare` (<<_isms_addresses>>).
 
 What the code does for it (built by the mock and UI steps, not by this contract):
 
@@ -2553,8 +2662,8 @@ is the not-found view of the page, `from` or `to` that is none of the scope's as
 == Threat Model Requests
 
 The requests of the use cases UC-TM-1, UC-TM-2 and UC-TM-4 (xref:../use-cases/05-threat-models.adoc[Use Cases: Threat Models]);
-the transfer of a threat into the risk register (UC-TM-3) is a later step and only reads and writes the member of a threat
-that <<_threat_model_data>> reserves for it. The rows are in <<_requests>>, *Threat models*; this section fixes their bodies,
+the transfer of a threat into the risk register (UC-TM-3) is made with the ISMS (<<_isms_origin>>) and writes the member of a
+threat that <<_threat_model_data>> reserves for it, which these requests only read. The rows are in <<_requests>>, *Threat models*; this section fixes their bodies,
 the data shape of a threat model and the addresses of the new views. Every body is PROVISIONAL unless a row says otherwise;
 the decisions are in <<_decided_threat_models>>. The values are those of the mock: the services of the catalog
 (<<_directory_and_catalog_requests>>), the six models of the evaluation (<<_threat_evaluation>>) and today, 2026-11-26. The
@@ -2836,7 +2945,8 @@ What the shape says (the rules the server enforces, and the mock follows):
   carry out the work, entered by a person or an agent; the application connects to no issue tracker (AUN-TM-4).
 * *The transfer* is the member `attributes.transferred` of a threat, the reference `isms-register:risk/<id>` of the risk it
   became (AUN-TM-4 names the reverse reference, `threat-models:threat-model/<ulid>#<threat-id>`, on the risk). The transfer
-  is a later step (UC-TM-3): this step reads the member and never writes it. The schema marks it `readOnly`, so the form does
+  is made with the ISMS (UC-TM-3, <<_isms_origin>>), which writes the member when the risk is saved for the first time: this
+  step reads the member and never writes it. The schema marks it `readOnly`, so the form does
   not offer it, and a save keeps the stored `transferred` of every threat of the same `id` whatever the sent list carries
   (PROVISIONAL, <<_decided_threat_models>>, point 18).
 * *The ids* of the file are chosen by the application when a person adds a row: `T-<nn>` for a threat, `M-<nn>` for a
@@ -4100,6 +4210,766 @@ persons) is not part of the rules: AUN-IR-2 computes the deadline whenever perso
 for the owner).
 
 
+[#_isms_requests]
+== ISMS Requests
+
+The requests of the use cases UC-ISMS-1, UC-ISMS-2 and UC-ISMS-3 (xref:../use-cases/07-isms.adoc[Use Cases: ISMS]) and of the two
+use cases that carry something into the register, UC-SAMM-6 (a gap becomes a risk) and UC-TM-3 (a threat is transferred). The
+rows are in <<_requests>>, *ISMS*, *SAMM* and *Threat models*; this section fixes their bodies, the data shape of the ISMS
+documents and of a risk, the numbering of a risk, the addresses of the new views and the two requests that serve the transfer.
+Every body is PROVISIONAL unless a row says otherwise; the decisions are in <<_decided_isms>>. The values are those of the mock:
+the scopes of <<_samm_requests>>, the threat models of <<_threat_model_requests>>, the catalog of
+<<_directory_and_catalog_requests>>, the risk register of <<_risk_register_as_of>> and today, 2026-11-26.
+
+The category `isms` has two repositories and five document types (xref:category-isms.adoc[Category ISMS]):
+
+[cols="2,2,2,3"]
+|===
+|Document type (`kind`) |Repository |Collection |Tag of a release
+
+|`policy`
+|`isms-core`
+|`policies/<id>/`
+|`policies/<id>/v<n>`
+
+|`isms-scope`
+|`isms-core`
+|`scope/<id>/`
+|`scope/<id>/v<n>`
+
+|`audit-report`
+|`isms-core`
+|`audits/<id>/`
+|`audits/<id>/v<n>`
+
+|`management-review`
+|`isms-core`
+|`management-reviews/<id>/`
+|`management-reviews/<id>/v<n>`
+
+|`risk`
+|`isms-register`
+|`risks/R-<n>.yaml`
+|`risks/R-<n>/v<n>`
+|===
+
+Every type uses the document lifecycle of <<_the_document_lifecycle>> and is *released more than once* (the behaviour of a
+threat model and of `test-note`, not of a SAMM assessment): states `draft`, `in-review`, `released`; one workflow for the
+category, the transitions `isms.submit` (`draft` to `in-review`, right `edit`, no step-up) and `isms.release` (`in-review` to
+`released`, right `approve`, step-up); a save in every state; the first save after a release starts the next version. The
+rights are `read`, `edit` and `approve` on the repository. The id of a document is a ULID; the id of a risk is its running
+number `R-<n>`, which is also the name of its file. The web app reads and writes every document of the category with the
+generic requests; the domain requests of this section exist only where the address or a figure needs more than the generic
+answer (the register, the gaps, the draft of a risk from an origin).
+
+[#_isms_addresses]
+=== The Addresses
+
+The lens *ISMS* had `/isms`, `/isms/risks`, `/isms/risks/{entry}`, `/isms/risks/{entry}/release`, `/isms/documents`,
+`/isms/documents/{id}` and `/isms/documents/{id}/release`. The step adds three addresses, the allowed queries below and two placeholder
+patterns (<<_allowed_queries>>):
+
+[cols="2,3,2,3"]
+|===
+|Route id |Address |Query |Shows
+
+|`isms`
+|`/isms`
+|none
+|The first column of the lens: the document types with their documents and the risk register with its entries; the page
+reads `GET /api/v1/documents/isms-core` and `GET /api/v1/isms/register`
+
+|`isms.risks`
+|`/isms/risks`
+|none
+|The risk register (`GET /api/v1/isms/register`): every entry in every state, with rating, treatment, owning team, review
+date and origin, and the act *New risk*. The register as of a date is the page `/reports/risk-register`
+
+|`isms.risks.new`
+|`/isms/risks/new`
+|`origin`
+|The form of a new risk (a sheet of the lens). Nothing is stored and no number is shown before the first save. With `origin` the
+form is prefilled from a SAMM gap or a threat (<<_isms_origin>>). The route comes before `isms.risk` in the file
+
+|`isms.risk`
+|`/isms/risks/{entry}`
+|`at`
+|The sheet of a risk: the form, the workflow acts, the origin, the history; with `at` the risk as it was at that revision,
+read-only (the address the register as of a date links to)
+
+|`isms.risk.release`
+|`/isms/risks/{entry}/release`
+|none
+|The review and release of the risk (`ReleaseFlow`)
+
+|`isms.documents`
+|`/isms/documents`
+|`kind`
+|The documents of the category in the repository `isms-core`, by document type; with `kind` the documents of that type, and
+the act *New document*
+
+|`isms.documents.new`
+|`/isms/documents/new`
+|`kind`
+|The form of a new document of the type `kind` (without `kind`, a choice among the four); nothing is stored before the first
+save. The route comes before `isms.document` in the file
+
+|`isms.document`
+|`/isms/documents/{ismsdocument}`
+|`at`
+|The document sheet: the form, the workflow acts, the history and the releases to compare; with `at` the document as it was at
+that revision, read-only
+
+|`isms.document.compare`
+|`/isms/documents/{ismsdocument}/compare`
+|`from`, `to`
+|Two versions of one document side by side: the changes between two releases (or a release and the working state), by
+field. Without `from` the page offers the pairs of neighbouring releases and two pickers over the revisions
+
+|`isms.document.release`
+|`/isms/documents/{ismsdocument}/release`
+|none
+|The review and release of the document (`ReleaseFlow`)
+|===
+
+* `{entry}` is the running number in lower case (`r-043`), the segment of the register as of a date (`entry` of
+  <<_risk_register_as_of>>), and now has the placeholder pattern `entry`:
+  `(?!new(?![a-z0-9._-]))[a-z0-9][a-z0-9._-]{0,127}`; the id of the entry is `R-<n>`, so the web app writes the id by
+  upper-casing the segment. `new` is no entry (a segment that only begins with it, `new-2`, is one), so that
+  `/isms/risks/new` is the new page and `/isms/risks/new/release` is nothing.
+* `{ismsdocument}` replaces `{id}` (the ISMS documents are ULIDs, upper case) with the placeholder pattern `ismsdocument`:
+  `(?!new(?![0-9A-Za-z._-]))[0-9A-Za-z][0-9A-Za-z._-]{0,127}`. It is case sensitive and refuses `new`, as the pattern
+  `incident` does. The name `document` could not be used because the generic lens keeps its pattern, which does not refuse
+  `new` (the generic lens relies on the order of its routes).
+* The query values are `kind`, the pattern of the other addresses, a document type id (`[a-z0-9][a-z0-9-]{0,63}`); `at` (`v<n>`
+  or a commit id); `from` and `to`, the existing patterns (an address segment, which holds `v1` and a short commit id; the
+  server decides whether it is a revision, `422 FORMAT` otherwise); and the new name `origin`, a reference to a practice of a
+  SAMM assessment or to a threat of a threat model:
+  `(samm-assessments:assessment|threat-models:threat-model)/[A-Za-z0-9][A-Za-z0-9._-]{0,127}#[A-Za-z0-9][A-Za-z0-9._-]{0,63}`.
+  The reference contains `:`, `/` and `#`, so the web app writes it percent-encoded
+  (`/isms/risks/new?origin=samm-assessments%3Aassessment%2Fpayments-2026-q2%23st`); it is decoded once, as every value
+  (<<_allowed_queries>>), and a `#` of the address that is not encoded is a fragment and is refused in a login's `return`.
+* `origin` is the only way into the page with a prefill; it survives a step-up and a reload, which is why it is part of the
+  canonical form. It is refused on every other address.
+* `/isms/documents?kind=policy` and `/isms/documents/new?kind=policy` name the type by its id; a type that the category does not
+  have is answered by the page (the not-found view for `new`, an empty list otherwise), not by the address.
+
+[#_isms_data]
+=== The Data Shape of an ISMS Document and of a Risk
+
+The five types are *single-file documents*: one part, `data`, whose value is the document's YAML file; an AsciiDoc fragment is
+a field of that file (the type `x-asciidoc`, as `body` of `test-note`), not a file of its own. The generated output of
+xref:category-isms.adoc#AUN-ISMS-1[AUN-ISMS-1] is not part of the register: the web app has no request for it and does not show
+it (<<_decided_isms>>, point 55). The schema is what `GET /api/v1/categories/isms/schema` answers, in the
+vocabulary of the form kit (<<_form_kit_requests>>); the field names are lower case with hyphens, as in the other categories.
+
+[source,json]
+----
+{
+  "category": "isms",
+  "kinds": [
+    {
+      "id": "policy",
+      "repository": "isms-core",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["title", "owner", "statements"],
+        "properties": {
+          "title": {"type": "string", "maxLength": 200},
+          "owner": {"type": "string", "format": "gdr-link", "x-catalog": "role"},
+          "purpose": {"type": "string", "x-asciidoc": true},
+          "statements": {"type": "string", "x-asciidoc": true},
+          "applies-to": {
+            "type": "array",
+            "maxItems": 50,
+            "uniqueItems": true,
+            "items": {"type": "string", "format": "gdr-link"}
+          },
+          "review-due": {"type": "string", "format": "date"},
+          "related": {
+            "type": "array",
+            "maxItems": 50,
+            "uniqueItems": true,
+            "items": {"type": "string", "format": "gdr-link"}
+          }
+        }
+      }
+    },
+    {
+      "id": "isms-scope",
+      "repository": "isms-core",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["title", "owner", "boundaries"],
+        "properties": {
+          "title": {"type": "string", "maxLength": 200},
+          "owner": {"type": "string", "format": "gdr-link", "x-catalog": "role"},
+          "boundaries": {"type": "string", "x-asciidoc": true},
+          "exclusions": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "type": "object",
+              "required": ["what", "reason"],
+              "properties": {"what": {"type": "string", "maxLength": 200}, "reason": {"type": "string", "maxLength": 500}}
+            }
+          },
+          "interested-parties": {"type": "string", "x-asciidoc": true},
+          "review-due": {"type": "string", "format": "date"},
+          "related": {
+            "type": "array",
+            "maxItems": 50,
+            "uniqueItems": true,
+            "items": {"type": "string", "format": "gdr-link"}
+          }
+        }
+      }
+    },
+    {
+      "id": "audit-report",
+      "repository": "isms-core",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["title", "year", "conclusion"],
+        "properties": {
+          "title": {"type": "string", "maxLength": 200},
+          "year": {"type": "integer", "minimum": 2000, "maximum": 2100},
+          "period": {
+            "type": "object",
+            "required": ["from", "to"],
+            "properties": {"from": {"type": "string", "format": "date"}, "to": {"type": "string", "format": "date"}}
+          },
+          "auditors": {
+            "type": "array",
+            "maxItems": 20,
+            "uniqueItems": true,
+            "items": {"type": "string", "x-person": true}
+          },
+          "audited": {"type": "string", "x-asciidoc": true},
+          "findings": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "required": ["severity", "text"],
+              "properties": {
+                "severity": {"type": "string", "enum": ["major", "minor", "observation"]},
+                "text": {"type": "string", "maxLength": 1000},
+                "issues": {
+                  "type": "array",
+                  "maxItems": 50,
+                  "uniqueItems": true,
+                  "items": {"type": "string", "minLength": 1, "maxLength": 64}
+                }
+              }
+            }
+          },
+          "conclusion": {"type": "string", "x-asciidoc": true},
+          "related": {
+            "type": "array",
+            "maxItems": 50,
+            "uniqueItems": true,
+            "items": {"type": "string", "format": "gdr-link"}
+          }
+        }
+      }
+    },
+    {
+      "id": "management-review",
+      "repository": "isms-core",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["title", "year", "held-at", "conclusion"],
+        "properties": {
+          "title": {"type": "string", "maxLength": 200},
+          "year": {"type": "integer", "minimum": 2000, "maximum": 2100},
+          "held-at": {"type": "string", "format": "date"},
+          "participants": {
+            "type": "array",
+            "maxItems": 30,
+            "uniqueItems": true,
+            "items": {"type": "string", "x-person": true}
+          },
+          "inputs": {"type": "string", "x-asciidoc": true},
+          "decisions": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "required": ["what"],
+              "properties": {
+                "what": {"type": "string", "maxLength": 500},
+                "role": {"type": "string", "format": "gdr-link", "x-catalog": "role"},
+                "due": {"type": "string", "format": "date"},
+                "issues": {
+                  "type": "array",
+                  "maxItems": 50,
+                  "uniqueItems": true,
+                  "items": {"type": "string", "minLength": 1, "maxLength": 64}
+                }
+              }
+            }
+          },
+          "conclusion": {"type": "string", "x-asciidoc": true},
+          "related": {
+            "type": "array",
+            "maxItems": 50,
+            "uniqueItems": true,
+            "items": {"type": "string", "format": "gdr-link"}
+          }
+        }
+      }
+    },
+    {
+      "id": "risk",
+      "repository": "isms-register",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["title", "rating", "treatment", "owner"],
+        "properties": {
+          "title": {"type": "string", "maxLength": 200},
+          "description": {"type": "string", "x-asciidoc": true},
+          "rating": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+          "treatment": {"type": "string", "enum": ["mitigate", "accept", "transfer", "avoid"]},
+          "treatment-notes": {"type": "string", "x-asciidoc": true},
+          "owner": {"type": "string", "format": "gdr-link", "x-catalog": "team"},
+          "owner-role": {"type": "string", "format": "gdr-link", "x-catalog": "role"},
+          "review-due": {"type": "string", "format": "date"},
+          "issues": {
+            "type": "array",
+            "maxItems": 50,
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1, "maxLength": 64}
+          },
+          "origin": {"type": "string", "format": "gdr-link", "readOnly": true},
+          "related": {
+            "type": "array",
+            "maxItems": 50,
+            "uniqueItems": true,
+            "items": {"type": "string", "format": "gdr-link"}
+          }
+        }
+      }
+    }
+  ]
+}
+----
+
+What the shape says (the rules the server enforces, and the mock follows):
+
+* *A document needs a title, an owner and its main text to be released:* the `required` of each type are the mandatory fields
+  of the transition into review (`MANDATORY_FIELDS_MISSING` with `missing`, pointers into the value of the part, as for a
+  note). The *first save* of a new document or risk needs only `/title` (`422 REQUIRED` otherwise), so that nothing has to be
+  decided before the person starts.
+* *`owner` of a document is a role* (`role:<id>`, a catalog reference), as the owner of a threat model is: policies are owned by
+  a role, never by a person. *`owner` of a risk is a team* (`team:<id>`), the owning team the register lists; `owner-role` is the
+  optional role within the team. The register names roles and teams, not people
+  (xref:data-protection.adoc[Data Protection]).
+* *`review-due`* is the date by which the released entry is to be reviewed again (a date, optional). The application computes no
+  interval: the person enters it (the threat models compute theirs from the protection need, AUN-TM-3; the register has no such
+  rule, <<_decided_isms>>, point 62).
+* *A risk:* `rating` is `low` to `critical` and `treatment` `mitigate`, `accept`, `transfer` or `avoid`, the vocabularies of
+  <<_risk_register_as_of>>. `issues` are the ids of the measures in the issue tracker, entered by a person or an agent; the
+  application connects to no tracker and stores no task state (xref:category-isms.adoc#AUN-ISMS-4[AUN-ISMS-4]). `related`
+  holds further references (a service, a system, an incident, a document of the category), each resolved on save
+  (`REFERENCE_NOT_FOUND`, xref:data-protection.adoc#AUN-DP-2[AUN-DP-2]).
+* *`origin` of a risk* is the reference to the SAMM practice or the threat the risk was made from
+  (`samm-assessments:assessment/<id>#<practice>`, `threat-models:threat-model/<id>#<threat>`, xref:data-protection.adoc#AUN-DP-2[AUN-DP-2]).
+  It is `readOnly`: the form does not offer it, the first save writes it from the member `origin` of the create
+  (<<_isms_origin>>) and a later save answers `422 READ_ONLY` for a pointer to it. A risk that was written by hand has none.
+* *An audit report and a management review* carry the year as a field (xref:category-isms.adoc#AUN-ISMS-1[AUN-ISMS-1]: the year
+  is a field, not a part of the path). The findings and the decisions carry the issue ids of their measures.
+* *Labels* are catalogue keys as for the other categories: `category.isms.<kind>.field.<path>`
+  (`category.isms.risk.field.treatment`, `category.isms.audit-report.field.findings.severity`); the app's own catalogue carries
+  them and their option texts.
+
+[#_isms_documents]
+=== The Documents
+
+The documents of `isms-core` are read with the generic requests (<<_document_lifecycle_requests>>); the lens needs no request of
+its own. `GET /api/v1/documents/isms-core` is the list (shortened); `address` is `/isms/documents/<id>`; the web app groups
+by `kind` and filters by it itself, which is complete while `truncated` is `false`, and asks again with `?kind=` when it is
+`true`:
+
+[source,json]
+----
+{
+  "repository": "isms-core",
+  "documents": [
+    { "id": "01JZB3E5G7J9M1P3R5T7W9Y1B4", "kind": "policy", "title": "Secure development policy",
+      "state": "in-review", "version": 2, "updatedAt": "2026-11-25T16:00:00Z",
+      "updatedBy": { "pseudonym": "p-2b7f10", "name": "Jordan Weber" },
+      "release": { "tag": "policies/01JZB3E5G7J9M1P3R5T7W9Y1B4/v1", "at": "2026-02-12T11:00:00Z" }, "requested": false,
+      "address": "/isms/documents/01JZB3E5G7J9M1P3R5T7W9Y1B4" },
+    { "id": "01JZB1C3E5G7J9M1P3R5T7W9Y2", "kind": "policy", "title": "Information security policy",
+      "state": "released", "version": 3, "updatedAt": "2026-05-20T14:00:00Z",
+      "updatedBy": { "pseudonym": "p-7d2e58", "name": "Noor Haddad" },
+      "release": { "tag": "policies/01JZB1C3E5G7J9M1P3R5T7W9Y2/v3", "at": "2026-05-20T14:00:00Z" }, "requested": false,
+      "address": "/isms/documents/01JZB1C3E5G7J9M1P3R5T7W9Y2" }
+  ],
+  "truncated": false
+}
+----
+
+`GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2` is the generic read; the value is shortened:
+
+[source,json]
+----
+{
+  "repository": "isms-core", "id": "01JZB1C3E5G7J9M1P3R5T7W9Y2", "category": "isms", "kind": "policy",
+  "title": "Information security policy", "state": "released", "version": 3, "frozen": false,
+  "parts": {
+    "data": { "blob": "6a0d4f2", "savedAt": "2026-05-20T13:40:00Z",
+              "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example", "role": "Security Champion" },
+              "value": { "title": "Information security policy", "owner": "role:ciso",
+                         "purpose": "…", "statements": "…", "applies-to": ["organisation"], "review-due": "2027-05-20" } }
+  },
+  "draft": null,
+  "history": [ "…" ],
+  "release": { "tag": "policies/01JZB1C3E5G7J9M1P3R5T7W9Y2/v3", "at": "2026-05-20T14:00:00Z",
+               "by": { "pseudonym": "p-7d2e58", "name": "Noor Haddad" } },
+  "releaseRequest": null,
+  "transitions": []
+}
+----
+
+The revisions (`…/revisions`) and a revision (`?at=v2`, with `frozen: true`) are the generic ones; the releases of a document are
+the entries of `kind` `release` of the revisions, newest first, and the picker of the compare page offers them and the working
+commits. The `title` of a row and of a read is the value of the property `title`.
+
+*The comparison of two versions* is the generic diff with two more members of the query. `GET /api/v1/documents/{repository}/{id}/diff`
+takes `from` and, optional, `to`: each is `v<n>` (the release of that version), a commit id of seven to forty hexadecimal
+characters, or, for `to` only, `working`; `from=released` stays what it was (the last release against the working state, which
+the release view reads). `to` defaults to `working`. The answer has the shape of the generic diff, `from` and `to` holding the tag of
+a release, the commit id of a commit or `working`:
+
+[source,json]
+----
+{
+  "repository": "isms-core", "id": "01JZB1C3E5G7J9M1P3R5T7W9Y2",
+  "from": "policies/01JZB1C3E5G7J9M1P3R5T7W9Y2/v2", "to": "policies/01JZB1C3E5G7J9M1P3R5T7W9Y2/v3",
+  "sections": [
+    { "part": "data", "changes": [
+        { "pointer": "/statements", "before": "…", "after": "…" },
+        { "pointer": "/applies-to", "before": ["team:payments"], "after": ["organisation"] },
+        { "pointer": "/review-due", "before": "2026-11-18", "after": "2027-05-20" } ] }
+  ]
+}
+----
+
+A `from` that is no revision answers `422` `{"outcome": "VALIDATION", "errors": [{"pointer": "/from", "code": "FORMAT"}]}` (`/to`
+likewise), a missing `from` the same with `REQUIRED`, and a release that does not exist `404 NOT_FOUND`. `from` may be newer than
+`to`: the order is the caller's, as in the comparison of two assessments. Two equal revisions answer `"sections": []`. The same
+request serves a risk. Both revisions must exist in the history of the document; reading is always allowed with `read`, and a
+released document that has only one release answers the diff of that release against itself, which is empty.
+
+[#_isms_register]
+=== The Register of Risks
+
+The register has two reads, because the two have two meanings. `GET /api/v1/isms/risks?as-of=` is the released register as of a
+date (AUN-ISMS-3, <<_risk_register_as_of>>, unchanged). `GET /api/v1/isms/register` is the register *as it is worked on*: every
+entry in every state, the first column of the lens, answered from the index of the collection branch (shortened to three
+entries):
+
+[source,json]
+----
+{
+  "today": "2026-11-26",
+  "risks": [
+    { "id": "R-007", "entry": "r-007", "title": "Signing keys held by a single administrator", "state": "released",
+      "version": 1, "rating": "low", "treatment": "accept",
+      "owner": { "kind": "team", "id": "security-office", "name": "Security Office" },
+      "reviewDue": "2026-11-18", "reviewStatus": "overdue", "origin": null, "requested": false,
+      "updatedAt": "2026-02-18T11:20:00Z", "updatedBy": { "pseudonym": "p-7d2e58", "name": "Noor Haddad" },
+      "release": { "tag": "risks/R-007/v1", "at": "2026-02-18T11:20:00Z" }, "address": "/isms/risks/r-007" },
+    { "id": "R-018", "entry": "r-018", "title": "No tested restore of the customer database", "state": "in-review",
+      "version": 2, "rating": "high", "treatment": "mitigate",
+      "owner": { "kind": "team", "id": "identity", "name": "Identity Platform" },
+      "reviewDue": "2027-05-05", "reviewStatus": "ok", "origin": null, "requested": false,
+      "updatedAt": "2026-11-25T14:30:00Z", "updatedBy": { "pseudonym": "p-2b7f10", "name": "Jordan Weber" },
+      "release": { "tag": "risks/R-018/v1", "at": "2026-10-05T15:02:00Z" }, "address": "/isms/risks/r-018" },
+    { "id": "R-042", "entry": "r-042", "title": "Unpatched build agents", "state": "draft", "version": 1,
+      "rating": "high", "treatment": null,
+      "owner": { "kind": "team", "id": "security-office", "name": "Security Office" },
+      "reviewDue": null, "reviewStatus": "none", "origin": null, "requested": false,
+      "updatedAt": "2026-11-24T09:15:00Z", "updatedBy": { "pseudonym": "p-2b7f10", "name": "Jordan Weber" },
+      "release": null, "address": "/isms/risks/r-042" }
+  ],
+  "truncated": false
+}
+----
+
+* `risks` are ordered by the running number, at most 500; `truncated` is `true` when more exist, and the web app then says so
+  (the register is designed for a few thousand entries, xref:../concepts/category-isms.adoc[ISMS]; a paged request is an owner
+  question). The members of an entry are those of <<_risk_register_as_of>>, plus `state` (`draft`, `in-review`, `released`),
+  `requested` (a release request is pending), `updatedAt`, `updatedBy` and `release` (the last release, `null` before the
+  first), and without `releasedAt`: `version` is the number of the working state (`2` while a released risk is reopened or in
+  review, as for a document). A first save needs only the title, so `rating`, `treatment` and `owner` may be `null`.
+* `reviewDue` is the `review-due` of the working state, `reviewStatus` is computed by the server at the time of the read:
+  `overdue` (before today), `due-soon` (within the next 30 days, the window of <<_decided_reports>>, point 3), `ok`, or `none`
+  without a date; the summary of the Reports lens counts released entries only, this list counts every entry with a date.
+* `origin` is `{"ref", "title", "address"}` or `null`, as `reference` of the as-of list (`title` and `address` resolved by the
+  server; a reference into a repository the user may not read is `null` there and in the sheet: AUN-DP-2).
+* The rights: `read` on `isms-register`; a user without it gets `403 FORBIDDEN`. A document or an entry the user may read is
+  read with the generic request of its repository: `GET /api/v1/documents/isms-register/R-018` (with `at=v1` for the release),
+  `…/revisions`, `…/diff?from=released` and the generic list `GET /api/v1/documents/isms-register`, whose rows are the same
+  entries without the members above.
+
+*A risk* is read with `GET /api/v1/documents/isms-register/R-018`, the generic shape, the value shortened:
+
+[source,json]
+----
+{
+  "repository": "isms-register", "id": "R-018", "category": "isms", "kind": "risk",
+  "title": "No tested restore of the customer database", "state": "in-review", "version": 2, "frozen": false,
+  "parts": {
+    "data": { "blob": "c9e07a1", "savedAt": "2026-11-25T14:30:00Z",
+              "savedBy": { "pseudonym": "p-2b7f10", "name": "Jordan Weber", "role": "Developer" },
+              "value": { "title": "No tested restore of the customer database", "description": "…",
+                         "rating": "high", "treatment": "mitigate", "treatment-notes": "…", "owner": "team:identity",
+                         "owner-role": "role:service-owner", "review-due": "2027-05-05", "issues": ["OPS-211", "OPS-212"],
+                         "related": ["service:customer-db"] } }
+  },
+  "draft": null,
+  "history": [ "…" ],
+  "release": { "tag": "risks/R-018/v1", "at": "2026-10-05T15:02:00Z",
+               "by": { "pseudonym": "p-7d2e58", "name": "Noor Haddad" } },
+  "releaseRequest": null,
+  "transitions": [ { "id": "isms.release", "to": "released", "right": "approve", "stepUp": true, "release": true } ]
+}
+----
+
+A risk made from an origin has `"origin": "<reference>"` in its value. The sheet resolves every reference of the value with
+`GET /api/v1/references/resolve` (a risk, a threat, a practice, a service), as every form does.
+
+[#_isms_numbering]
+=== The First Save and the Number
+
+A new risk is no document until it is saved. `/isms/risks/new` stores nothing, shows no number and keeps the person's input in
+the form like any new document (<<_decided_forms>>); there is no draft of an entry that does not exist. The first save is the
+generic create `POST /api/v1/documents/isms-register`:
+
+[source,json]
+----
+{ "kind": "risk", "parts": { "data": { "fields": {
+    "/title": "Signing keys of the release pipeline are not rotated", "/rating": "medium", "/treatment": "mitigate",
+    "/owner": "team:security-office", "/issues": ["SEC-418"] } } } }
+----
+
+and answers `201`
+
+[source,json]
+----
+{ "outcome": "CREATED", "id": "R-043", "repository": "isms-register", "address": "/isms/risks/r-043",
+  "state": "draft", "version": 1, "at": "2026-11-26T09:41:00Z",
+  "parts": { "data": { "blob": "e51a7d3", "savedAt": "2026-11-26T09:41:00Z",
+                       "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example" } } } }
+----
+
+* The server assigns the number from the library's running-number mechanism
+  (xref:category-isms.adoc#AUN-ISMS-2[AUN-ISMS-2]; the entry is identified by a ULID until then, which no request shows). The
+  `id` of the answer is the number; the web app moves to `address` with `replace`, and from then on every request names the
+  entry by its number.
+* *Two users who create at once get two numbers.* The web app never shows a "next number" and never predicts one: the number
+  of the register read a minute ago may be taken. Numbers are never reused and need not be consecutive (the register of the
+  mock has `R-021` and `R-042`).
+* The refusals are those of the generic create: `422 VALIDATION` (`/title` `REQUIRED`, a pointer into the value of the part
+  `data` with `REFERENCE_NOT_FOUND` for an owner team or a related reference that is in no catalog or register, `ENUM` for a
+  rating or a treatment), `403 FORBIDDEN` without `edit`, `REJECTED`, `GIT_UNAVAILABLE`, and `STEP_UP_REQUIRED` for a create
+  that a workflow declares to ask for it (the shipped one does not, <<_decided_incidents>>, point 48).
+* The create of a document of `isms-core` is the same request on `/api/v1/documents/isms-core` with `"kind": "policy"` (or one of
+  the others); its `id` is a ULID, its `address` `/isms/documents/<id>`, its tag `policies/<id>/v1` after the release.
+
+[#_isms_origin]
+=== Risks from a Gap or a Threat
+
+Two ways into the register start from another lens, and both end in the form of a new risk, so that the person completes the
+risk (UC-ISMS-2) before anything is written. The server prepares the draft, the person saves it, the first save records the
+link.
+
+*The gaps of a scope* (UC-SAMM-6), `GET /api/v1/samm/payments/gaps`, shortened to two of the fifteen:
+
+[source,json]
+----
+{
+  "scope": "payments", "today": "2026-11-26",
+  "assessment": { "id": "2026-q2", "document": "payments-2026-q2", "title": "Payments 2026 Q2", "date": "2026-06-16",
+                  "modelVersion": "v2.2.0",
+                  "release": { "tag": "assessments/payments-2026-q2/v1", "at": "2026-06-18T11:20:00Z" } },
+  "gaps": [
+    { "practice": "sm", "function": "governance", "score": 1.25, "target": 2, "gap": 0.75, "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q2#sm", "risk": null },
+    { "practice": "st", "function": "verification", "score": 1.25, "target": 2, "gap": 0.75, "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q2#st",
+      "risk": { "id": "R-015", "entry": "r-015", "title": "Security Testing of the payments scope is below its target",
+                "address": "/isms/risks/r-015" } }
+  ]
+}
+----
+
+* The gaps are those of the *latest released* assessment of the scope (AUN-SAMM-6): the practices whose released score is below
+  their target. A practice without a target has no gap (a scope without targets answers `"gaps": []`), a score at or above
+  the target none. `score` is unrounded (as in the trend), `gap` is `target` minus `score`, `due` the date of the target or
+  `null`, `function` the id of the business function. The order is the model's, which the web app may change on the page.
+* `reference` is the reference of AUN-SAMM-6 for the practice of that assessment, `samm-assessments:assessment/<id>#<practice>`
+  with the document id of the assessment (the mock's ids are readable, `payments-2026-q2`; the application's are ULIDs).
+* `risk` is the risk that already names the gap as its `origin`, `{id, entry, title, address}`, else `null`; it is also `null`
+  for a user who may not read `isms-register` (the reference is reported as not found, AUN-DP-2). The web app offers *Create
+  risk* for a gap without a risk to a user with `edit` on `isms-register`, and *Open the risk* for a gap with one.
+* `assessment` is `null` and `gaps` is `[]` for a scope without a released assessment. `404 NOT_FOUND` for an unknown scope;
+  `403 FORBIDDEN` without `read` on `samm-assessments`. The scope sheet reads this request next to the scope and the trend; it
+  has no query.
+
+*The draft of a risk from an origin*, `GET /api/v1/isms/risks/draft?origin=samm-assessments:assessment/payments-2026-q2%23sm`
+(the `#` is percent-encoded):
+
+[source,json]
+----
+{
+  "origin": { "ref": "samm-assessments:assessment/payments-2026-q2#sm", "kind": "samm-gap",
+              "title": "Payments 2026 Q2, Strategy and Metrics", "address": "/samm/payments/2026-q2/sm" },
+  "fields": {
+    "/title": "Strategy and Metrics of the Payments scope is below its target",
+    "/description": "The released assessment Payments 2026 Q2 scores 1.25 for Strategy and Metrics; the target of the scope is 2.",
+    "/owner": "team:payments",
+    "/treatment": "mitigate"
+  }
+}
+----
+
+and for a threat, `origin=threat-models:threat-model/payment-api-checkout-flow%23T-02`:
+
+[source,json]
+----
+{
+  "origin": { "ref": "threat-models:threat-model/payment-api-checkout-flow#T-02", "kind": "threat",
+              "title": "Payment API, checkout flow: T-02", "address": "/threat-models/payment-api/checkout-flow" },
+  "fields": {
+    "/title": "Account takeover by credential stuffing at checkout",
+    "/description": "Credentials leaked elsewhere are tried at the checkout login until one works.",
+    "/owner": "team:payments"
+  }
+}
+----
+
+* *Nothing is stored.* The request prepares the entry; the form of `/isms/risks/new?origin=` shows `fields` as the initial
+  values of the person's form and the origin as a link, and the person decides rating, treatment and the rest. `fields` maps a
+  JSON Pointer into the value to its prefilled value, as `fields` of a save. `kind` is `samm-gap` or `threat`.
+* *The prefill* is the title and the description (English text written by the server, as the report of an incident; the web
+  app does not translate it), the owning team (the subject of the scope when it is a team, the owner of the service of the
+  scope or the model otherwise; absent when none resolves) and the treatment: `mitigate` for a gap, `accept` for a threat whose
+  status is `accepted`, none for an open one. The rating is never prefilled: the application derives no rating from a score or
+  from the likelihood and impact of a threat (<<_decided_isms>>, point 66).
+* *The refusals,* each decided by its `outcome`: `404 NOT_FOUND` for an origin that does not exist (an assessment, a practice
+  of the model, a model or a threat of it) or that the user may not read (AUN-DP-2); `422 VALIDATION` with the pointer `/origin`
+  and the code `PATTERN` for a value that is neither form, `REQUIRED` for none; `403 FORBIDDEN` without `edit` on
+  `isms-register`; `409 ORIGIN_HAS_RISK` with `risk` `{id, entry, title, address}` for a gap or a threat that already is a risk
+  (the threat carries `transferred`); `409 ORIGIN_NOT_RELEASED` for a practice of an assessment that is not released;
+  `409 ORIGIN_NOT_A_GAP` for a practice that has no target or reaches it; `409 ORIGIN_NOT_TRANSFERABLE` for a threat that is
+  neither `accepted` nor `open` without a countermeasure (AUN-TM-4: an accepted or untreated threat is transferable).
+* `origin` is the only query; the page `/isms/risks/new` without it is the form of a risk of no origin.
+
+*The first save with an origin* is the create above with the member `origin` outside `parts`, next to `kind` (as `recipe` of a
+new threat model):
+
+[source,json]
+----
+{ "kind": "risk", "origin": "threat-models:threat-model/payment-api-checkout-flow#T-02",
+  "parts": { "data": { "fields": {
+      "/title": "Account takeover by credential stuffing at checkout",
+      "/description": "Credentials leaked elsewhere are tried at the checkout login until …",
+      "/rating": "high", "/treatment": "mitigate", "/owner": "team:payments", "/review-due": "2027-05-26" } } } }
+----
+
+answers `201` as before and, because the request named an origin, the member `origin`:
+
+[source,json]
+----
+{ "outcome": "CREATED", "id": "R-043", "repository": "isms-register", "address": "/isms/risks/r-043",
+  "state": "draft", "version": 1, "at": "2026-11-26T09:41:00Z",
+  "parts": { "data": { "blob": "e51a7d3", "savedAt": "2026-11-26T09:41:00Z",
+                       "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example" } } },
+  "origin": { "ref": "threat-models:threat-model/payment-api-checkout-flow#T-02", "recorded": true } }
+----
+
+* The server checks the origin again at the create (the same refusals as the draft; `ORIGIN_HAS_RISK` is what the second of two
+  people who transfer the same threat at once meets), writes `/origin` into the value, and answers the `201`.
+* *The transfer is recorded in the threat model.* For a threat origin the server then sets `attributes.transferred` of that
+  threat to `isms-register:risk/R-043` (<<_threat_model_data>>): a save of the part `model` of the threat model onto its working
+  branch, as the person who created the risk, in a second commit (a second repository). `recorded` is `true` when it was
+  written. The save is a save like any other: a released model is `draft` again with the next `version` (<<_the_document_lifecycle>>), the
+  event `document-saved` (`repository` `threat-models`, `part` `model`, `fields` `["/threats"]`) reaches the other tabs, and the
+  evaluation counts the threat as `transferred` instead of `untreated`. The person needs only `edit` on `isms-register`: the
+  write is made by the application on its behalf and fails `recorded: false` (never the create) when the model could not be
+  written, for example because it changed meanwhile or the Git server of its repository is unreachable. The risk then exists
+  without the link; the next save of the risk tries again and answers `origin` (`recorded`) until it has been written
+  (PROVISIONAL, <<_decided_isms>>, point 68).
+* For a gap nothing else is written: the link is the `origin` of the risk, and the gaps request marks the gap with it.
+* The threat model of the transfer is a document of `threat-models`: the answer of the model after the transfer carries
+  `transferred` on the threat, a `draft` state and the evaluation counts of <<_threat_evaluation>> (`untreated` one lower,
+  `transferred` one higher).
+
+[#_isms_save_release]
+=== Saving, Submitting and Releasing
+
+The save, the draft, the submit and the release are the generic requests on `isms-core` and `isms-register`
+(<<_document_lifecycle_requests>>); the bodies, the conflicts and the step-up are those of the generic documents. What is
+specific:
+
+* *Submit* (`POST …/transitions/isms.submit`) answers `MANDATORY_FIELDS_MISSING` with the pointers of the `required` fields that
+  are empty: `{"outcome": "MANDATORY_FIELDS_MISSING", "missing": ["/treatment"]}` for the draft `R-042`, or
+  `["/statements"]` for a policy without text.
+* *Release* (`POST /api/v1/releases/isms-register/R-018`, `…/isms-core/<id>`) is the shared flow of the release view: the diff
+  of the working state against the last release (`diff?from=released`, grouped by field), the seal, the step-up. It answers
+  `{"outcome": "RELEASED", "tag": "risks/R-018/v2", "at": "2026-11-26T10:05:00Z"}`. A release of a risk merges that entry's
+  path from the collection branch into `main` (path-level merge, xref:category-isms.adoc#AUN-ISMS-3[AUN-ISMS-3]) and tags it:
+  the register as of a date then lists the entry as it is released. The web app sees none of the branches.
+* *A released entry is reopened by a save* (as a threat model): state `draft`, `version` one higher, `release` the last release.
+  There is no request that deletes, retires or closes a risk (<<_decided_isms>>, point 70).
+* *The events* are the generic ones (`document-created` with `kind` `risk` or one of the four, `document-saved`,
+  `document-transitioned`); the register list, the documents list and an open sheet read again on them.
+* *The search* (`GET /api/v1/search?q=`) indexes the documents of `isms-core` (`category` `isms`, `kind`, `address`
+  `/isms/documents/<id>`) and the entries of `isms-register` (`kind` `risk`, `id` `R-<n>`, `title` the title, `address`
+  `/isms/risks/<entry>`).
+* *The references* `isms-register:risk/R-<n>` and `isms-core:<kind>/<ulid>` resolve to the title and the address of the entry or
+  the document (`GET /api/v1/references/resolve`); a reference to a risk that does not exist is `found: false`.
+
+[#_isms_due]
+=== Reviews in the Due Lens
+
+`GET /api/v1/due` lists the reviews that are due, as it lists them for the threat models. PROVISIONAL: an item of the kind
+`review`, lens `isms`, for every *released* entry of the two repositories whose `review-due` falls within the next 30 days or
+before today, `due` that date, `title` `Risk R-<n>: <title>` for a risk and the title of the document for a document, `address` the
+address of the entry (`/isms/risks/r-012`, `/isms/documents/<id>`). The user needs `read` on the repository. An entry in
+`in-review` is no item in this step (an approver finds it in the lens; the open question of <<_decided_incidents>>, point 17,
+is the same), and a draft is none.
+
+[#_isms_derivation]
+=== Where the Figures Come From
+
+The files of the mock must agree with each other and with the earlier steps:
+
+* *The list of the register* (`GET /api/v1/isms/register`) and the as-of list of <<_risk_register_as_of>> are the same entries:
+  an entry that is `released` in the working state has the members of its entry in the list *as of now* (`reports-risks-now`:
+  `title`, `rating`, `treatment`, `owner`, `version`, `reviewDue`, `origin` = `reference`); an entry that was released and is
+  reopened or in review is listed in the as-of list with the data of its last release and in the register with the data of
+  its working state; an entry that was never released (a draft) is only in the register.
+* *`version`* of a risk is the number of the release of its last release when `state` is `released`, one more otherwise after a
+  release, `1` before the first. The tag of the release `v<n>` is `risks/R-<n>/v<n>`; `?at=v<n>` is that release.
+* *`reviewStatus`* is computed from `reviewDue` and today as above; `dueSoon` and `overdue` of the Reports summary count the
+  released entries by it (the summary of the mock is not recomputed by this step).
+* *The gaps* are computed from the targets of the scope (`GET /api/v1/samm/scopes/{scope}`) and the practice scores of the
+  latest released point of `GET /api/v1/samm/{scope}/trend`; `risk` is the entry of the register whose `origin` equals the
+  `reference` of the gap.
+* *`transferred`* of a threat equals the `id` of the risk that has the threat as its `origin`; the evaluation counts it
+  (<<_threat_model_data>>).
+* *The Due items* are those of <<_isms_due>>.
+
 [#_the_step_up_handler]
 == The Step-Up Handler
 
@@ -5268,3 +6138,127 @@ step-up, the multi-factor path leaves the page, and there is no draft of an inci
 time typed so far are lost across the redirect. Decided provisionally: leave it as it is (the password path stays on the page, and the
 shipped workflows ask for no step-up on a create); the options are a keep of its own (such as the session storage), a `beforeLeave` that
 refuses the create under multi-factor with a notice, or leaving the loss.
+
+[#_decided_isms]
+*Decided provisionally* with the ISMS (UC-ISMS-1, UC-ISMS-2, UC-SAMM-6, UC-TM-3; UC-ISMS-3 is the page of the lens *Reports*,
+<<_decided_reports>>), so that no screen is blocked; the owner may change each one. The bodies and addresses are in
+<<_isms_requests>>; the numbering goes on from the incident reports:
+
+[start=51]
+. *The addresses.* The lens *ISMS* gains `/isms/risks/new` (query `origin`), `/isms/documents/new` (query `kind`) and
+  `/isms/documents/{ismsdocument}/compare` (queries `from`, `to`); `isms.documents` admits `kind`, `isms.document` admits `at`;
+  `new` is reserved as an entry and as a document (the placeholder patterns `entry` and `ismsdocument`, the second case
+  sensitive because a document id is a ULID, replacing `{id}`). The name `origin` is new in `queries` of
+  `canonical-addresses.json`; `kind`, `at`, `from` and `to` are the existing names with their existing patterns. The compare
+  page is an address of its own and not a query of the document sheet, so that a comparison can be linked and returns from a
+  step-up like every address.
+. *The start of the lens reads two lists and has no request of its own.* `/isms` shows the document types with their documents
+  (`GET /api/v1/documents/isms-core`, grouped by `kind`) and the register (`GET /api/v1/isms/register`); a user who may read
+  only one repository sees that area. The documents of a type are the generic list filtered by `kind` (`?kind=` asks the server
+  when the list is `truncated`).
+. *The five types are the generic lifecycle,* each in the repository of its type, released more than once, one workflow for the
+  category: the transitions `isms.submit` (`draft` to `in-review`, right `edit`, no step-up) and `isms.release` (`in-review` to
+  `released`, right `approve`, step-up), the tags `policies/<id>/v<n>`, `scope/<id>/v<n>`, `audits/<id>/v<n>`,
+  `management-reviews/<id>/v<n>` and `risks/R-<n>/v<n>` (the collections of AUN-ISMS-1 and AUN-ISMS-2). The specification
+  does not say whether a document is released once or more than once; "every earlier version stays comparable" (UC-ISMS-1)
+  asks for more than once.
+. *Every type is a single-file document with the part `data`;* the AsciiDoc fragments of AUN-ISMS-1 are fields of that file, not
+  files of their own.
+. *The generated output of AUN-ISMS-1 is not part of the web app.* AUN-ISMS-1 names it as part of the layout of a type and
+  says nothing about who makes it or whether a person reads it; the web app shows the released data and the diff, and has no
+  request for the output. The owner may want a generated page in the web app.
+. *The fields of the types are provisional* (<<_isms_data>>), as is every list of values: a document has a title, an owner role,
+  its main text (`statements`, `boundaries`, `conclusion`) and a review date; an audit report a year, a period, the auditors,
+  findings with severity `major`, `minor` or `observation` and issue ids, and a conclusion; a management review a year, the date,
+  participants, decisions with role, date and issue ids, and a conclusion; a risk a title, a description, a rating, a
+  treatment, notes on the treatment, an owning team and an optional role, a review date, measures as issue ids, an origin and
+  related references. Mandatory for the transition into review are the `required` of the type; the first save needs the title.
+  The labels are the catalogue keys `category.isms.<kind>.field.<path>`.
+. *Two versions are compared with the generic diff:* `GET …/diff?from=<revision>&to=<revision>`, where `from=released` stays and
+  `to` defaults to the working state; no request of its own, and the page `/isms/documents/<id>/compare` reads it. The same
+  request serves a risk, which has no compare page in this step (the owner may want one).
+. *The register as it is worked on is `GET /api/v1/isms/register`.* The specified `GET /api/v1/isms/risks?as-of=` lists released
+  entries only and is not changed; the lens needs the draft, the entries in review and the reopened ones, the rating and the
+  review state, which the generic list does not carry. The list has the members of the as-of list plus the state, the release
+  and the update, is ordered by number, is not paged and holds at most 500 entries (`truncated`).
+. *A risk is the document `R-<n>` of `isms-register`,* read, saved, submitted and released with the generic requests; the
+  address segment is the number in lower case and the web app upper-cases it for the requests (the register as of a date
+  already names `entry` so). The release of an entry merges its path into `main` and tags it (AUN-ISMS-2, AUN-ISMS-3); the
+  web app sees no branch.
+. *The number is assigned by the first save, by the server.* `/isms/risks/new` stores nothing, shows no number, and moves to
+  the address of the entry with `replace` after the `201`. A "next number" is never shown. The numbers are never reused and need
+  not be consecutive (`R-021`, then `R-042`, then the next free one). Two creates at once get two numbers (UC-ISMS-2), which the
+  mock shows by answering the number that the register read earlier did not have.
+. *A first save needs only the title;* rating, treatment and owner are mandatory for the submit (`MANDATORY_FIELDS_MISSING`), as
+  the main text of a document is. The incident reports take the same line (point 24 of the incidents: only a title).
+. *The review date is typed, not computed.* No interval is derived from the rating (a threat model's interval comes from the
+  protection need, AUN-TM-3); `reviewStatus` is `overdue`, `due-soon` (30 days) or `ok` by the date, as the Reports summary counts
+  it. A risk or a document without a date has none.
+. *The gaps of a scope are one request,* `GET /api/v1/samm/{scope}/gaps`, those of the latest released assessment (AUN-SAMM-6),
+  every practice whose released score is below its target, in the order of the model, each with the reference, the score,
+  the target and, when a risk of the register names the gap, that risk. The scope sheet shows them as a part of the
+  sheet (the web app decides the place) and offers *Create risk* for a gap without a risk to a person with `edit` on
+  `isms-register`; the practice sheet of a released assessment may offer it too. A scope without a released assessment or without
+  targets has no gap.
+. *The draft of a risk from an origin is one request,* `GET /api/v1/isms/risks/draft?origin=` (UC-SAMM-6 and UC-TM-3 "the
+  server drafts a risk with the reference"): it stores nothing, and answers the origin and the prefilled fields. The prefill is
+  the title and the description (for a gap the practice and the scores, for a threat the name and the description of the threat,
+  in English), the owning team (the subject of the scope when it is a team; else the owner of the service), and the treatment
+  `mitigate` for a gap and `accept` for an accepted threat. The address `/isms/risks/new?origin=` is the page of the form.
+. *An origin is one risk at a time.* A gap or a threat that already has a risk is refused with `ORIGIN_HAS_RISK` (and the gaps
+  list says so); a gap needs a released assessment and a target above its score (`ORIGIN_NOT_RELEASED`, `ORIGIN_NOT_A_GAP`); a
+  threat is transferable when it is `accepted`, or `open` without a countermeasure and not transferred (AUN-TM-4:
+  "accepted or untreated"; `ORIGIN_NOT_TRANSFERABLE`). Whether a second risk may name the same gap (a new
+  assessment, a new gap on the same practice) is an owner question: the gap of the next released assessment is a different
+  reference (the assessment is part of it), so it is a new gap.
+. *The rating and the treatment are the person's.* The application derives no rating from the score of a gap or from the
+  likelihood and impact of a threat, and no treatment but the two prefills of point 64: the scales are not comparable and the
+  rating of a risk is the owner's judgement.
+. *The origin is a member of the create, not a field.* `POST /api/v1/documents/isms-register` accepts the optional member
+  `origin` beside `kind` and `parts` (as the create of a threat model takes `recipe`); the server validates it as the draft does
+  and writes `/origin` into the file, which the schema marks `readOnly`: the form does not offer it and a later save answers
+  `READ_ONLY` for it. The answer carries `origin` `{ref, recorded}`.
+. *The transfer is recorded in the threat model by the application, in a second commit.* AUN-TM-4 names the reference of the
+  risk to the threat; the threat models (<<_decided_threat_models>>, point 18) keep the reference `transferred` on the threat,
+  which the schema marks `readOnly`. The first save of the risk, when the number exists, writes it with a save of the part `model`
+  as the person; a released model becomes `draft` with the next version, because it is a save of the file like any other. Two
+  repositories are no transaction: a write that fails leaves the risk and answers `recorded: false`, the next save of the risk
+  tries again. The person needs `edit` on `isms-register` and, for the write, nothing more: the application writes on their
+  behalf. The alternative is to derive `transferred` from the register's `origin` and never store it in the model; the owner
+  decides (for the owner, below).
+. *The two acts are disabled with their reason without the right.* *Create risk* (the gap) and *Transfer to risk register* (the
+  threat) need `edit` on `isms-register`; without it the control stays and says why (the design rule of a disabled control), and
+  a person who may not read `isms-register` sees no risk of a gap. *Release* needs `approve` and step-up as every release does.
+  The mock gives the user of the profile `workshop` the rights `read`, `edit` and `approve` on `isms-register` and `isms-core`, so
+  that the release of a document and of a risk can be walked through (as for the incidents, point 11); `read-only` has `read` on
+  both; `release` keeps `read` on `isms-register` and has none on `isms-core`, so that a half-right lens can be seen; `degraded`
+  and `local` have `read` and `edit`.
+. *There is no way to delete, retire or close a risk.* A risk that no longer applies is released with the treatment that says
+  so (`accept`, `avoid`) and a review date, or not reviewed again. A retirement (a state `closed`, a request that withdraws the
+  entry from the register as of a date) is an owner question.
+. *The Due lens lists the reviews of released entries,* `kind` `review`, lens `isms`, for a review date that is overdue or within 30
+  days (<<_isms_due>>); an entry in review is no item in this step. The titles are `Risk R-<n>: <title>` and the document's title.
+. *The generic events, search and references cover the new objects:* `document-created` with `kind` `risk` or a document type; a
+  hit of `GET /api/v1/search` for a document and for an entry (`id` `R-<n>`); `isms-register:risk/R-<n>` and
+  `isms-core:<kind>/<ulid>` resolve to the title and the address. The transfer's write into the threat model is a `document-saved`
+  of `threat-models` with `part` `model`.
+. *Texts the server writes are English.* The prefilled title and description of a draft risk are written by the server in
+  English, as the report of an incident is; the web app shows them as the person's own text to edit. The labels and the notices
+  around them are the app's catalogue.
+. *Reading while the Git server is unreachable* serves the register, the documents, the gaps and the reads from the last
+  fetched state; the writes (the create and the save of a risk or a document, the transfer) answer `503 GIT_UNAVAILABLE` and keep the
+  draft. The page of `/isms/risks/new` keeps the person's input.
+
+For the owner: whether the categories of the ISMS should be one workflow or one per type, and whether a document may be
+released once only (53); whether a generated page of the ISMS documents belongs in the web app (55); the fields of the five
+types, above all the mandatory ones, the vocabularies of the rating and the treatment (which are those of the Reports step, not
+checked against a standard) and whether a risk should keep likelihood and impact and derive the rating from them (56, 66); whether
+the risk register as it is worked on should be a request of the library's index and whether it needs a paged request at a few
+thousand entries (58, with the open point of UC-ISMS-2: the measurement of the index at register size is still to be made); whether a
+risk may have more than one origin or a gap more than one risk (65); whether the transfer should be stored in the threat model at
+all, or derived from the register (68; it makes a released model a draft and fails without a transaction); whether a risk
+should be closed, retired or deleted, and whether an owner must accept a residual risk before the release (70; the requirement of
+the standard is not checked here, only that the register names the owner by team and role); whether the Due lens should list the
+entries in review and the reviews of drafts (71); whether the first save of a risk may be refused for the title alone being
+absent (61); and whether the application should keep a "next number" visible, which the first-save numbering of the library
+forbids (60).

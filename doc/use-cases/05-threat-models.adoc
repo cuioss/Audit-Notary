@@ -135,7 +135,10 @@ Variations::
 Outcome:: every threat is treated by a countermeasure with its issues, or is a risk in the register.
 Requirements:: xref:../specification/category-threat-models.adoc#AUN-TM-4[AUN-TM-4] (transfer, issues),
 xref:../specification/category-isms.adoc#AUN-ISMS-4[AUN-ISMS-4] (operational data by reference).
-Design:: none yet.
+Design:: none in the concepts. Decided provisionally for the web app: a threat that is accepted, or open without a
+countermeasure, offers *Transfer to risk register*, which opens `/isms/risks/new?origin=` prefilled by the server; the first save of
+the risk records the transfer in the threat (`transferred`)
+(xref:../specification/rest-api.adoc#_decided_isms[REST API Register, Open Questions]).
 
 [#UC-TM-4]
 == UC-TM-4: Evaluate Threat Models Across Services
