@@ -214,10 +214,14 @@
       model = null;
       revisions = null;
       revisionsFailed = false;
+      // A model or an earlier state that was missing must not keep the page at "not found" for the next address.
+      missing = false;
       if (route !== 'threat-models.model' || !serviceId || !segment) {
         succeed('model');
         return;
       }
+      // An earlier address of this view may have found nothing (a state that does not exist): the new one is read afresh.
+      missing = false;
       void readModel();
     });
   });

@@ -235,6 +235,25 @@ describe('the sheet of a model', () => {
     expect(await screen.findByTestId('not-found-view')).toBeInTheDocument();
   });
 
+  it('leaves the not-found view when the address goes back to a state that exists', async () => {
+    await useProfile('workshop', 'en');
+    const { rerender } = render(ThreatModelsView, {
+      route: 'threat-models.model',
+      params: CHECKOUT,
+      query: { at: 'v9' },
+      onnavigate: vi.fn(),
+    });
+    expect(await screen.findByTestId('not-found-view')).toBeInTheDocument();
+    await rerender({
+      route: 'threat-models.model',
+      params: CHECKOUT,
+      query: {},
+      onnavigate: vi.fn(),
+    });
+    expect(await screen.findByTestId('threat-model-sheet')).toBeInTheDocument();
+    expect(screen.queryByTestId('not-found-view')).toBeNull();
+  });
+
   it('reads as a document that may only be read for a person without the edit right', async () => {
     await openSheet('read-only');
     expect(screen.getByTestId('save-state')).toHaveTextContent(

@@ -362,7 +362,7 @@ describe('the changes of a release', () => {
     expect(groups[2].title).toBe('model');
   });
 
-  it('leaves out a list whose entries are all as they were, and an entry without an id', () => {
+  it('leaves out a list whose entries are all as they were', () => {
     const same = [threat('T-01')];
     const groups = groupModelDiff(
       diff([
@@ -370,13 +370,38 @@ describe('the changes of a release', () => {
           part: 'model',
           changes: [
             { pointer: '/threats', before: same, after: same },
-            { pointer: '/mitigations', before: 'x', after: [{ name: 'no id' }] },
+            { pointer: '/mitigations', before: [], after: [] },
           ],
         },
       ]),
       label,
     );
     expect(groups).toEqual([]);
+  });
+
+  it('reads a list that only changed its order as one change of the whole list', () => {
+    const before = [threat('T-01'), threat('T-02')];
+    const after = [threat('T-02'), threat('T-01')];
+    const groups = groupModelDiff(
+      diff([{ part: 'model', changes: [{ pointer: '/threats', before, after }] }]),
+      label,
+    );
+    expect(groups).toHaveLength(1);
+    expect(groups[0].changes).toHaveLength(1);
+    expect(groups[0].changes[0]).toMatchObject({ pointer: '/threats', before, after });
+  });
+
+  it('shows an entry without an id instead of leaving it out', () => {
+    const groups = groupModelDiff(
+      diff([
+        {
+          part: 'model',
+          changes: [{ pointer: '/mitigations', before: [], after: [{ name: 'no id' }] }],
+        },
+      ]),
+      label,
+    );
+    expect(groups[0].changes.map((change) => change.pointer)).toEqual(['/mitigations']);
   });
 });
 

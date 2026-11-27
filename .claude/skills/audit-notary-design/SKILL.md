@@ -158,6 +158,9 @@ Read the concept first, then the component you are about to change.
 - A control that holds a list (`DataTable`) edits a row in a dialog over a copy: nothing changes until "Apply changes";
   removing a row asks first; a limit of the list hides or explains the act, it never leaves a dead control; on a narrow
   column a row stands as a block of its columns, so nothing scrolls sideways.
+- A `Dialog` is at most as tall as the room under its top margin (`max-block-size` from the window height, the margin and one
+  `--space-4`) and scrolls inside; a dialog with a long body (a row editor) adds no limit of its own. A link or a summary that
+  stands in a table or a record is a target of 44 px on a phone (`min-block-size` in the phone media query).
 - The preview of AsciiDoc is the server's, cut to the allow-list and drawn with the app's own elements (`SafeNodes`);
   `{@html}` stays banned. An unavailable renderer costs the preview only.
 - Read-only: the same labels, sections and hints, values typeset in the serif as text; the marks belong to the reading.

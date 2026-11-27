@@ -457,9 +457,12 @@ export function groupModelDiff(
         groups.push(group);
       }
       const list = tokens.length === 1 && (property === 'threats' || property === 'mitigations');
-      if (list) {
-        group.changes.push(...elementChanges(section.part, change, group.key));
-      } else {
+      const byId = list ? elementChanges(section.part, change, group.key) : [];
+      if (byId.length > 0) {
+        group.changes.push(...byId);
+      } else if (!list || !jsonEqual(change.before, change.after)) {
+        // Another property, or a list that changed in a way no entry shows (the order, an entry without an id): the
+        // approver reads the whole list as one change rather than a record that says nothing.
         group.changes.push({
           key: `${group.key}${change.pointer}`,
           part: section.part,

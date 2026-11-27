@@ -179,6 +179,9 @@ team and role, never a name), a box for what needs the person (*not found*, *unk
 The AsciiDoc preview sits under its source behind a hairline margin; it is the server's rendering, cut to an allow-list
 and drawn with the app's own elements.
 
+A dialog (`Dialog`) is never taller than the room under its top margin (the window less that margin and one step of space);
+what does not fit scrolls inside it, so a long row editor never runs past the lower edge, on a phone as on a desk.
+
 == The Documents Lens
 
 The documents of the categories without a lens of their own are one more chain of columns: category, documents, document
