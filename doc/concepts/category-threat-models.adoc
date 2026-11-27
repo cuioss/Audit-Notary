@@ -116,6 +116,21 @@ xref:../specification/rest-api.adoc#_decided_reports[REST API Register, Open Que
 . An untreated threat is open, has no countermeasure and is not transferred; a model that was never released is
   `unreleased` and has no review date; the services without a model are listed beside the table, a planned one too.
 
+Decided provisionally with the threat models (UC-TM-1, UC-TM-2, UC-TM-4), recorded with the bodies in
+xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register, Open Questions]; the owner may change each one:
+
+. The format is OTM, serialised as YAML in the file `model.yaml` beside `document.yaml` (the schema's `gdr-split`), which settles
+  the first two open questions for now. The model is a subset of OTM: project, trust zones, components, data flows, threats and
+  mitigations; every other member is kept unchanged.
+. The status of a threat, its countermeasures with their issue ids and the reference of its transfer are kept on the threat in
+  `attributes`, not on OTM's instance of a threat on a component; a countermeasure belongs to one threat.
+. The diagram is generated from the components and the data flows and served as an image in the read; the file holds no
+  coordinates.
+. Two recipes ship (`quick-start`, four steps; `stride`, six), as data, in English and German; the recipe is read below the
+  category, and a person's unfinished recipe is a draft of a model that does not exist yet, kept by service and recipe.
+. A review starts with an act that prefills the review date with today; the due date counts from the date of the last release and
+  the interval by the highest protection need is served with the model.
+
 == Related
 
 * xref:category-samm.adoc[SAMM] — Threat Assessment practice

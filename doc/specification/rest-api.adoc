@@ -368,7 +368,7 @@ ISMS). The web app shows the lens *Documents* in the rail only when one category
 |`{"category", "kinds": [{"id", "repository", "schema"}]}`: per document type (kind) of the category its id, the alias
 of its repository and its JSON Schema as the file `<kind>/schema.json` holds it, markers included
 (xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4]). The same for every user; the request asks no more than a right on one of the
-category's repositories. The exact body is in <<_form_kit_requests>>
+category's repositories. The exact body is in <<_form_kit_requests>>; the schema of `threat-models` is in <<_threat_model_data>>
 |`404 NOT_FOUND` for an unknown category, or for one that is switched off and holds no documents; a switched-off category
 that still holds documents is answered like any other, so that its read-only sheets have a form to show; `403 FORBIDDEN`
 |xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4], xref:architecture-and-modules.adoc#AUN-GEN-1[AUN-GEN-1]
@@ -616,6 +616,128 @@ for the draft and the save alike (the assessment is frozen, the draft stays); `F
 |xref:category-samm.adoc#AUN-SAMM-3[AUN-SAMM-3], xref:category-samm.adoc#AUN-SAMM-4[AUN-SAMM-4],
 xref:category-samm.adoc#AUN-SAMM-7[AUN-SAMM-7]
 |`SPECIFIED`; the evidence key, its refusals and the draft of a frozen assessment `PROVISIONAL`
+
+6+h|Threat models
+
+|`GET /api/v1/threat-models/{service}`
+|none
+|The page of one service in the lens *Threat models*: `{"today", "service": {"id", "name", "lifecycle", "retired", "owner",
+"protectionNeed", "reviewInterval"}, "reviewIntervals", "models": [{"model", "document", "title", "address", "state",
+"version", "lastReview", "daysSinceReview", "reviewDue", "dueInDays", "status", "threats", "requested", "updatedAt"}],
+"drafts": [{"recipe", "step", "at"}]}`: the threat models of the service (none is a service without a model), the review
+intervals of the kind and the person's own unfinished recipe drafts. The first column of the lens is the answer of
+`GET /api/v1/reports/threat-evaluation`, which this request does not repeat. The exact body is in <<_threat_model_service>>
+|`404 NOT_FOUND` for a service that is in no catalog; `403 FORBIDDEN` without `read` on `threat-models`. Served from the
+last fetched state while the Git server is unreachable
+|xref:category-threat-models.adoc#AUN-TM-4[AUN-TM-4], xref:../use-cases/05-threat-models.adoc#UC-TM-4[UC-TM-4]
+|`PROVISIONAL`
+
+|`GET /api/v1/threat-models/{service}/{model}`, optional query `at=<revision>`
+|none; `at` reads the model as it was at a release (`v<n>`) or a commit
+|One threat model: the generic document read of <<_document_lifecycle_requests>> (`parts` with the files `data` and
+`model`, `state`, `version`, `frozen`, `draft`, `transitions`, `releaseRequest`, `history`, `release`; `at` for a revision)
+and the members `service`, `model`, `title`, `address`, `review`, `threats` and `diagram`. The address segment `model` is
+the one the server derived at the creation. The exact body, the data shape of the files and the schema are in
+<<_threat_model_data>> and <<_threat_model_read>>
+|`404 NOT_FOUND` for a service, a model or a revision that does not exist, or that the user may not read; `422 VALIDATION`
+with the pointer `/at` and the code `FORMAT`; `403 FORBIDDEN`
+|xref:category-threat-models.adoc#AUN-TM-1[AUN-TM-1], xref:category-threat-models.adoc#AUN-TM-2[AUN-TM-2],
+xref:category-threat-models.adoc#AUN-TM-3[AUN-TM-3], xref:../use-cases/05-threat-models.adoc#UC-TM-2[UC-TM-2]
+|`PROVISIONAL`; the data shape is open (<<_decided_threat_models>>)
+
+|`POST /api/v1/threat-models/{service}`
+|`{"recipe", "parts": {"data": {"fields"}, "model": {"fields"}}}`: the first save of a new threat model of the service;
+`recipe` is optional (a model without a recipe), `fields` as in the generic save, without `blob`
+|`201 {"outcome": "CREATED", "model", "document", "address", "state": "draft", "version": 1, "at", "parts"}`: the server
+writes `service` and `recipe`, derives the address segment `model` from `/project/name` and the document id (a ULID) and
+writes the first commit; the recipe draft of the service and the recipe ends with it
+|`404 NOT_FOUND` for an unknown service; `409 SERVICE_RETIRED`; `422 VALIDATION` per field (`part`, `pointer`, `code`;
+`/project/name` `REQUIRED` is the only mandatory field of a first save), among them `REFERENCE_NOT_FOUND` for an owner role
+that is in no catalog and `ENUM` for a recipe that does not exist; `403 FORBIDDEN` without `edit`; `REJECTED`;
+`GIT_UNAVAILABLE`
+|xref:category-threat-models.adoc#AUN-TM-1[AUN-TM-1], xref:category-threat-models.adoc#AUN-TM-4[AUN-TM-4],
+xref:../use-cases/05-threat-models.adoc#UC-TM-1[UC-TM-1]
+|`PROVISIONAL`; a bespoke create, because the service is the path and the server derives the address segment (the creates
+of a SAMM scope and assessment are the model)
+
+|`GET /api/v1/documents/threat-models`, `GET …/{document}`, `GET …/{document}/revisions`, `GET …/{document}/diff?from=released`
+|none
+|The generic requests of <<_the_document_lifecycle>> for the repository `threat-models`: the list (the `address` of a row is
+`/threat-models/<service>/<model>`), the document in the generic shape (also with `at`), its revisions and the diff against
+the last release, grouped by part (`data`, `model`) and by the first segment of the pointer (`/threats`, `/mitigations`, …).
+The release view reads these; the sheet reads the request by address above
+|As the generic requests; `403 FORBIDDEN` without `read`
+|xref:../use-cases/02-documents.adoc#UC-DOC-1[UC-DOC-1], xref:../use-cases/02-documents.adoc#UC-DOC-2[UC-DOC-2],
+xref:web-app.adoc#AUN-WEB-6[AUN-WEB-6]
+|`PROVISIONAL`
+
+|`PUT /api/v1/drafts/threat-models/{document}` and `POST /api/v1/documents/threat-models/{document}/save`
+|The generic body (<<_document_lifecycle_requests>>) with the parts `data` and `model` in one request; `fields` maps a JSON
+Pointer into the value of the part to its new value. The parts, the pointers and the lists that are sent as a whole are in
+<<_threat_model_save>>
+|As the generic request: `DRAFT_SAVED`, `SAVED` with the new blob id of every part saved; the first save after a release
+also answers `"state": "draft"` and the next `"version"`
+|`CONFLICT` per part with the fields (the lists) that differ; `VALIDATION` per field, among them `REFERENCE_NOT_FOUND` for
+a countermeasure whose threat is not in the model; `409 DOCUMENT_RELEASED` does not apply (a threat model is released more
+than once); `FORBIDDEN` without `edit`; `REJECTED`; `GIT_UNAVAILABLE`; `STEP_UP_REQUIRED`
+|xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5], xref:category-threat-models.adoc#AUN-TM-4[AUN-TM-4]
+|`SPECIFIED`; body and answer `PROVISIONAL`
+
+|`POST /api/v1/documents/threat-models/{document}/transitions/threat-model.submit` and `POST /api/v1/releases/threat-models/{document}`
+|As the generic requests: none, or `{"password"}`
+|`TRANSITIONED` (`draft` to `in-review`, right `edit`, no step-up) and `RELEASED` with the tag `models/<document>/v<n>`
+(`in-review` to `released`, right `approve`, step-up). The release is the shared flow of the release view; the review
+date of the model is content, so nothing is written after the release (UC-TM-2)
+|As the generic requests: `MANDATORY_FIELDS_MISSING` (the schema's `required`, as pointers into the document's value: `/owner`,
+`/last-review`, `/model/project/name`), `STEP_UP_REQUIRED`, `CHANGED_SINCE_REVIEW`, `DOCUMENT_RELEASED`, `FORBIDDEN`, `REJECTED`,
+`GIT_UNAVAILABLE`
+|xref:../use-cases/02-documents.adoc#UC-DOC-6[UC-DOC-6], xref:../use-cases/02-documents.adoc#UC-DOC-7[UC-DOC-7],
+xref:category-threat-models.adoc#AUN-TM-3[AUN-TM-3]
+|`PROVISIONAL`
+
+|`GET /api/v1/categories/threat-models/schema`
+|none
+|The schema of the document type `threat-model` as the form kit reads it (<<_threat_model_data>>); the request of the form kit
+(<<_form_kit_requests>>), not offered for SAMM, is offered for this category
+|`403 FORBIDDEN`
+|xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4], xref:category-threat-models.adoc#AUN-TM-2[AUN-TM-2]
+|`PROVISIONAL`
+
+|`GET /api/v1/categories/threat-models/recipes?lang=en\|de`
+|none; a missing `lang` returns English
+|`{"recipes": [{"id", "title", "description", "steps"}]}`: the recipes that ship with the application, in the order of the
+list `steps` being the number of steps. The exact body is in <<_threat_model_recipes>>
+|`403 FORBIDDEN`; `400` for any other `lang`; an empty list for an installation that ships none (the wizard is then not
+offered)
+|xref:category-threat-models.adoc#AUN-TM-5[AUN-TM-5], xref:mcp-server.adoc#AUN-MCP-6[AUN-MCP-6] (`read_recipe`)
+|`PROVISIONAL`
+
+|`GET /api/v1/categories/threat-models/recipes/{recipe}?lang=en\|de`
+|none
+|One recipe: `{"id", "title", "description", "steps": [{"id", "title", "guidance", "fills"}]}`; `guidance` is an AsciiDoc
+fragment, `fills` a JSON Pointer into the model file (`/project`, `/components`, …). The exact body is in
+<<_threat_model_recipes>>
+|`404 NOT_FOUND` for a recipe that does not exist; `403 FORBIDDEN`
+|xref:category-threat-models.adoc#AUN-TM-5[AUN-TM-5], xref:mcp-server.adoc#AUN-MCP-6[AUN-MCP-6] (`read_recipe`)
+|`PROVISIONAL`
+
+|`GET /api/v1/threat-models/{service}/drafts/{recipe}`
+|none
+|The unfinished recipe of the person for the service: `{"service", "recipe", "draft": {"step", "at", "parts": {"model":
+{"fields"}, "data": {"fields"}}}}`, or `"draft": null` for none. The draft of a model that does not exist yet (UC-DOC-3 before
+UC-DOC-4)
+|`404 NOT_FOUND` for an unknown service or recipe; `403 FORBIDDEN`
+|xref:../use-cases/02-documents.adoc#UC-DOC-3[UC-DOC-3], xref:../use-cases/05-threat-models.adoc#UC-TM-1[UC-TM-1]
+|`PROVISIONAL`
+
+|`PUT /api/v1/threat-models/{service}/drafts/{recipe}`
+|`{"step", "parts": {"model": {"fields"}, "data": {"fields"}}}`: the draft is replaced as a whole; `step` is the index of the
+step the person is on, the number of steps for the final check
+|`{"outcome": "DRAFT_SAVED", "at"}`
+|`422 VALIDATION` per field (`part`, `pointer`, `code`; `/step` `MAXIMUM`): a draft with field errors is refused and nothing is
+written; `404 NOT_FOUND`; `403 FORBIDDEN` without `edit`; `GIT_UNAVAILABLE` does not apply, a draft stays in the application
+|xref:../use-cases/02-documents.adoc#UC-DOC-3[UC-DOC-3], xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5]
+|`PROVISIONAL`
 
 6+h|ISMS
 
@@ -921,6 +1043,8 @@ before `categories.document`.) The rules:
 * `?at=` is allowed on `categories.document` and on `isms.risk` (the risk as it was at a release, from the Reports step);
   later steps add it to the address of the other lenses. The Reports step adds the names `scope`, `from`, `to` and `as-of`
   for the four reports, each with its own pattern (<<_reports_addresses>>).
+  The threat models add `at` on `threat-models.model` and the name `recipe` on the recipe wizard
+  (<<_threat_model_addresses>>).
 
 What the code does for it (built by the mock and UI steps, not by this contract):
 
@@ -2222,8 +2346,8 @@ is the not-found view of the page, `from` or `to` that is none of the scope's as
   workflow state and the number of the last release (`null` before the first).
 * `threats` counts the threats of the model as it is saved: `open` those with the status `open`, `untreated` the open ones
   without a countermeasure that are not transferred, `transferred` those that carry a reference into the risk register.
-  `untreated` is never more than `open`. The status of a threat (`open`, `mitigated`, `accepted`) belongs to the
-  threat-model data shape of the next step.
+  `untreated` is never more than `open`. The status of a threat (`open`, `mitigated`, `accepted`) and the members
+  that carry a countermeasure and a transfer are those of the data shape of <<_threat_model_data>>.
 * `withoutModel` lists the services of the catalog that are not retired and have no threat model, a planned one too, the
   highest `protectionNeed` first and then by name; its `address` is the service's page in the lens *Threat models* (`/threat-models/<service>`), from which a model
   is created (the next step). `owner` is the owning team of the service.
@@ -2283,6 +2407,556 @@ is the not-found view of the page, `from` or `to` that is none of the scope's as
   built and cannot be built while the Git server is down; the register as of now is answered from the index.
 * The rights: `read` on `isms-register`. The owner is a team, never a person: the register names roles and teams, not
   people (xref:data-protection.adoc[Data Protection]).
+
+[#_threat_model_requests]
+== Threat Model Requests
+
+The requests of the use cases UC-TM-1, UC-TM-2 and UC-TM-4 (xref:../use-cases/05-threat-models.adoc[Use Cases: Threat Models]);
+the transfer of a threat into the risk register (UC-TM-3) is a later step and only reads and writes the member of a threat
+that <<_threat_model_data>> reserves for it. The rows are in <<_requests>>, *Threat models*; this section fixes their bodies,
+the data shape of a threat model and the addresses of the new views. Every body is PROVISIONAL unless a row says otherwise;
+the decisions are in <<_decided_threat_models>>. The values are those of the mock: the services of the catalog
+(<<_directory_and_catalog_requests>>), the six models of the evaluation (<<_threat_evaluation>>) and today, 2026-11-26. The
+threat model is a document of the repository `threat-models` and uses the document lifecycle of <<_the_document_lifecycle>>:
+states `draft`, `in-review`, `released`, the transitions `threat-model.submit` (`draft` to `in-review`, right `edit`, no
+step-up) and `threat-model.release` (`in-review` to `released`, right `approve`, step-up; the tag is `models/<id>/v<n>`), a
+save in every state, and the next version after a release (a threat model is released more than once).
+
+[#_threat_model_addresses]
+=== The Addresses
+
+The lens *Threat models* had `/threat-models`, `/threat-models/{service}`, `/threat-models/{service}/{model}` and
+`/threat-models/{service}/{model}/release`. The step adds one address and one allowed query (<<_allowed_queries>>):
+
+[cols="2,3,2,3"]
+|===
+|Route id |Address |Query |Shows
+
+|`threat-models`
+|`/threat-models`
+|none
+|The first column: the evaluation of every service (`GET /api/v1/reports/threat-evaluation`, the table of the report), the
+services without a model below it
+
+|`threat-models.service`
+|`/threat-models/{service}`
+|none
+|The models of one service and the way to a new one (`GET /api/v1/threat-models/{service}`): the recipes to choose from and
+the recipes the person has started
+
+|`threat-models.new`
+|`/threat-models/{service}/new`
+|`recipe`
+|The recipe wizard (`WizardPage`) of a new threat model of the service; `recipe` names the recipe, without it the page offers the
+recipes. Nothing is stored before the first step is left (the recipe draft), no model before the last. The route comes before
+`threat-models.model` in the file
+
+|`threat-models.model`
+|`/threat-models/{service}/{model}`
+|`at`
+|The model sheet: the evaluation of the model, the diagram, the threat table with status and countermeasures, the data of the
+model, the workflow acts, the history; with `at` the model as it was at that revision, read-only
+
+|`threat-models.release`
+|`/threat-models/{service}/{model}/release`
+|none
+|The review and release of the model (`ReleaseFlow`)
+|===
+
+`recipe` is a recipe id, `[a-z0-9][a-z0-9-]{0,63}`; `at` is the pattern of the other addresses (`v<n>` or a commit id). The
+segment `new` is reserved as `{model}`: the server never derives it as an address segment (a title that yields it is treated
+as a collision and gets a number appended), and `/threat-models/{service}/new` is the wizard, never a model. `/threat-models/new`
+reads as the page of a service called `new`, which the catalog does not prevent and the register does not reserve. The
+`recipe` name is refused on every other address (the rules of <<_allowed_queries>>); `at` is refused on the wizard.
+
+[#_threat_model_data]
+=== The Data Shape of a Threat Model
+
+A threat model is a document of the document type `threat-model` in the repository `threat-models`, in the collection `models`
+(AUN-TM-1). Its schema declares one split (`gdr-split`, https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-3[GDR-FORMS-3]), so the document
+has two files and the document read two parts:
+
+[cols="1,2,3"]
+|===
+|Part |File |Content
+
+|`data`
+|`models/<ulid>/document.yaml`
+|`service` (a reference `service:<id>`), `owner` (a reference `role:<id>`), `last-review` (a date) and, when the model was
+started from a recipe, `recipe` (the recipe's id, not editable). The workflow state is the document's, not a field
+
+|`model`
+|`models/<ulid>/model.yaml`
+|The threat model as an Open Threat Model file, the subset below
+|===
+
+The format is Open Threat Model (OTM), serialised as YAML, which OTM allows (https://github.com/iriusrisk/OpenThreatModel[OTM on GitHub]; the
+JSON Schema `otm_schema.json` and the example `EXAMPLE.yaml` at commit `c88c5a7`, the specification says "Current schema
+version: 0.2.0"). The application reads and writes the members below and keeps every other member unchanged (AUN-TM-2). A
+diagram is data: the `components`, `dataflows` and `trustZones`; the image is generated (<<_threat_model_read>>).
+
+[source,yaml]
+----
+# models/01JZ…/document.yaml
+service: service:payment-api
+owner: role:service-owner
+last-review: 2026-06-01
+recipe: stride
+
+# models/01JZ…/model.yaml  (shortened)
+otmVersion: 0.2.0
+project:
+  id: checkout-flow
+  name: Payment API, checkout flow
+  description: The path of a payment from the checkout page to the payment provider.
+trustZones:
+  - id: internet
+    name: Internet
+    risk: { trustRating: 20 }
+  - id: payments-zone
+    name: Payments zone
+    risk: { trustRating: 90 }
+components:
+  - id: browser
+    name: Customer browser
+    type: external-entity
+    parent: { trustZone: internet }
+  - id: payment-api
+    name: Payment API
+    type: process
+    parent: { trustZone: payments-zone }
+dataflows:
+  - id: authorise
+    name: Authorise a payment
+    source: browser
+    destination: payment-api
+threats:
+  - id: T-07
+    name: Replay of a payment authorisation
+    description: A recorded authorisation is sent again and charges the customer twice.
+    categories: [Spoofing, Tampering]
+    risk: { likelihood: 50, impact: 100 }
+    attributes:
+      status: accepted
+      transferred: isms-register:risk/R-009
+  - id: T-03
+    name: Card data in the application log
+    categories: [Information Disclosure]
+    risk: { likelihood: 50, impact: 75 }
+    attributes:
+      status: open
+mitigations:
+  - id: M-03
+    name: Mask card numbers before logging
+    description: The logging filter keeps the last four digits.
+    riskReduction: 75
+    attributes:
+      threat: T-03
+      status: planned
+      issues: [PAY-1423]
+----
+
+The schema of the document type, `GET /api/v1/categories/threat-models/schema`, `kinds[0]` (the form kit's vocabulary,
+xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4]; the bounds are PROVISIONAL, <<_decided_threat_models>>, point 11):
+
+[source,json]
+----
+{
+  "category": "threat-models",
+  "kinds": [
+    {
+      "id": "threat-model",
+      "repository": "threat-models",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["service", "owner", "last-review", "model"],
+        "properties": {
+          "service":     { "type": "string", "format": "gdr-link", "x-catalog": "service" },
+          "owner":       { "type": "string", "format": "gdr-link", "x-catalog": "role" },
+          "last-review": { "type": "string", "format": "date" },
+          "recipe":      { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$", "readOnly": true },
+          "model": {
+            "type": "object",
+            "gdr-split": true,
+            "required": ["otmVersion", "project"],
+            "properties": {
+              "otmVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$", "readOnly": true },
+              "project": {
+                "type": "object",
+                "required": ["id", "name"],
+                "properties": {
+                  "id":          { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$", "readOnly": true },
+                  "name":        { "type": "string", "maxLength": 200 },
+                  "description": { "type": "string", "maxLength": 2000, "x-free-text": true }
+                }
+              },
+              "trustZones": {
+                "type": "array", "maxItems": 20,
+                "items": {
+                  "type": "object", "required": ["id", "name", "risk"],
+                  "properties": {
+                    "id":   { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+                    "name": { "type": "string", "maxLength": 200 },
+                    "risk": { "type": "object", "required": ["trustRating"],
+                              "properties": { "trustRating": { "type": "integer", "minimum": 0, "maximum": 100 } } }
+                  }
+                }
+              },
+              "components": {
+                "type": "array", "maxItems": 200,
+                "items": {
+                  "type": "object", "required": ["id", "name", "type", "parent"],
+                  "properties": {
+                    "id":          { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+                    "name":        { "type": "string", "maxLength": 200 },
+                    "type":        { "type": "string", "enum": ["external-entity", "process", "data-store"] },
+                    "description": { "type": "string", "maxLength": 2000, "x-free-text": true },
+                    "parent":      { "type": "object", "required": ["trustZone"],
+                                     "properties": { "trustZone": { "type": "string" } } }
+                  }
+                }
+              },
+              "dataflows": {
+                "type": "array", "maxItems": 400,
+                "items": {
+                  "type": "object", "required": ["id", "name", "source", "destination"],
+                  "properties": {
+                    "id":            { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+                    "name":          { "type": "string", "maxLength": 200 },
+                    "source":        { "type": "string" },
+                    "destination":   { "type": "string" },
+                    "bidirectional": { "type": "boolean" }
+                  }
+                }
+              },
+              "threats": {
+                "type": "array", "maxItems": 200,
+                "items": {
+                  "type": "object", "required": ["id", "name", "risk", "attributes"],
+                  "properties": {
+                    "id":          { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+                    "name":        { "type": "string", "maxLength": 200 },
+                    "description": { "type": "string", "maxLength": 2000, "x-free-text": true },
+                    "categories":  { "type": "array", "uniqueItems": true,
+                                     "items": { "type": "string", "enum": ["Spoofing", "Tampering", "Repudiation",
+                                       "Information Disclosure", "Denial of Service", "Elevation of Privilege"] } },
+                    "risk": { "type": "object", "required": ["likelihood", "impact"],
+                              "properties": { "likelihood": { "type": "integer", "minimum": 0, "maximum": 100 },
+                                              "impact":     { "type": "integer", "minimum": 0, "maximum": 100 } } },
+                    "attributes": {
+                      "type": "object", "required": ["status"],
+                      "properties": {
+                        "status":      { "type": "string", "enum": ["open", "mitigated", "accepted"] },
+                        "transferred": { "type": "string", "format": "gdr-link" }
+                      }
+                    }
+                  }
+                }
+              },
+              "mitigations": {
+                "type": "array", "maxItems": 400,
+                "items": {
+                  "type": "object", "required": ["id", "name", "riskReduction", "attributes"],
+                  "properties": {
+                    "id":            { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+                    "name":          { "type": "string", "maxLength": 200 },
+                    "description":   { "type": "string", "maxLength": 2000, "x-free-text": true },
+                    "riskReduction": { "type": "integer", "minimum": 0, "maximum": 100 },
+                    "attributes": {
+                      "type": "object", "required": ["threat"],
+                      "properties": {
+                        "threat": { "type": "string" },
+                        "status": { "type": "string", "enum": ["planned", "implemented"] },
+                        "issues": { "type": "array", "maxItems": 20, "uniqueItems": true,
+                                    "items": { "type": "string", "minLength": 1, "maxLength": 64 } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
+----
+
+What the shape says (the rules the server enforces, and the mock follows):
+
+* *A threat has one status,* `attributes.status`: `open` (not yet decided), `mitigated` (countermeasures treat it) or
+  `accepted` (the organisation lives with it). OTM binds a state and the mitigations to the instance of a threat on a
+  component or a data flow; Audit Notary evaluates a threat once, so it keeps both on the threat and the countermeasure
+  (<<_decided_threat_models>>, point 5).
+* *A countermeasure belongs to one threat:* a mitigation names it in `attributes.threat`, which must be the `id` of a threat of
+  the model (`REFERENCE_NOT_FOUND`, pointer `/mitigations/<n>/attributes/threat`). Its `issues` are the ids of the issues that
+  carry out the work, entered by a person or an agent; the application connects to no issue tracker (AUN-TM-4).
+* *The transfer* is the member `attributes.transferred` of a threat, the reference `isms-register:risk/<id>` of the risk it
+  became (AUN-TM-4 names the reverse reference, `threat-models:threat-model/<ulid>#<threat-id>`, on the risk). The transfer
+  is a later step (UC-TM-3): this step reads the member and never writes it.
+* *The ids* of the file are chosen by the application when a person adds a row: `T-<nn>` for a threat, `M-<nn>` for a
+  mitigation (the next free number, two digits at least); the reference of AUN-TM-4 ends with the threat id
+  (`…#T-07`). The ids of components, data flows and trust zones are lower-case words.
+* *The counts of the evaluation* are read from the file as it is saved (<<_threat_evaluation>>): `total` is the number of
+  threats, `open`, `mitigated` and `accepted` those of that status, `untreated` the open ones that no mitigation names and
+  that carry no `transferred`, `transferred` those that carry it. `total` = `open` + `mitigated` + `accepted`.
+* *The review date and the interval:* `last-review` is a field of the reviewed revision (UC-TM-2). The interval comes from the
+  highest of the three effective protection needs of the service (AUN-DIR-5) by the table `very-high` `P6M`, `high` `P12M`,
+  `normal` `P24M`, which the kind carries as data and the requests below serve as `reviewIntervals`; the due date is
+  the `last-review` of the last released version plus the interval.
+
+[#_threat_model_service]
+=== A Service and Its Models
+
+`GET /api/v1/threat-models/payment-api` (the rows of `models` are those of the evaluation without `service` and `protectionNeed`,
+with the members `document`, `title`, `requested` and `updatedAt`):
+
+[source,json]
+----
+{
+  "today": "2026-11-26",
+  "service": { "id": "payment-api", "name": "Payment API", "lifecycle": "active", "retired": false,
+               "owner": { "kind": "team", "id": "payments", "name": "Payments" },
+               "protectionNeed": "very-high", "reviewInterval": "P6M" },
+  "reviewIntervals": { "very-high": "P6M", "high": "P12M", "normal": "P24M" },
+  "models": [
+    { "model": "checkout-flow", "document": "payment-api-checkout-flow", "title": "Payment API, checkout flow",
+      "address": "/threat-models/payment-api/checkout-flow", "state": "released", "version": 3,
+      "lastReview": "2026-06-01", "daysSinceReview": 178, "reviewDue": "2026-12-01", "dueInDays": 5, "status": "due-soon",
+      "threats": { "total": 9, "open": 3, "untreated": 2, "transferred": 1 },
+      "requested": false, "updatedAt": "2026-06-02T09:30:00Z" }
+  ],
+  "drafts": [ { "recipe": "stride", "step": 2, "at": "2026-11-25T16:10:00Z" } ]
+}
+----
+
+`models` is ordered as the evaluation orders its rows. `drafts` are the person's own unfinished recipes for this service
+(<<_threat_model_recipe_draft>>); a service without a model answers `"models": []`. A retired service
+(`"retired": true`) keeps its models readable and gets no new one (`409 SERVICE_RETIRED` on the create). The members of a
+row are computed as in <<_threat_evaluation>>; a model that was never released has the `null`s of its `unreleased` row.
+
+[#_threat_model_read]
+=== A Threat Model
+
+`GET /api/v1/threat-models/payment-api/checkout-flow` (the files are shortened to the members the examples above show):
+
+[source,json]
+----
+{
+  "repository": "threat-models", "id": "payment-api-checkout-flow", "category": "threat-models", "kind": "threat-model",
+  "title": "Payment API, checkout flow", "state": "released", "version": 3, "frozen": false,
+  "service": { "id": "payment-api", "name": "Payment API" }, "model": "checkout-flow",
+  "address": "/threat-models/payment-api/checkout-flow",
+  "parts": {
+    "data": { "blob": "4d2a7e1", "savedAt": "2026-06-01T09:40:00Z",
+              "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example", "role": "Developer" },
+              "value": { "service": "service:payment-api", "owner": "role:service-owner", "last-review": "2026-06-01",
+                         "recipe": "stride" } },
+    "model": { "blob": "9c1b3f8", "savedAt": "2026-06-01T09:40:00Z",
+               "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example", "role": "Developer" },
+               "value": { "otmVersion": "0.2.0", "project": { "id": "checkout-flow", "name": "Payment API, checkout flow" },
+                          "threats": [ "…" ], "mitigations": [ "…" ] } }
+  },
+  "draft": null,
+  "history": [ "…" ],
+  "release": { "tag": "models/payment-api-checkout-flow/v3", "at": "2026-06-02T09:30:00Z",
+               "by": { "pseudonym": "p-7d2e58", "name": "Noor Haddad" } },
+  "releaseRequest": null,
+  "transitions": [],
+  "review": { "today": "2026-11-26", "protectionNeed": "very-high", "reviewInterval": "P6M",
+              "reviewIntervals": { "very-high": "P6M", "high": "P12M", "normal": "P24M" },
+              "lastReview": "2026-06-01", "daysSinceReview": 178, "reviewDue": "2026-12-01", "dueInDays": 5,
+              "status": "due-soon" },
+  "threats": { "total": 9, "open": 3, "untreated": 2, "transferred": 1 },
+  "diagram": { "mediaType": "image/svg+xml", "width": 640, "height": 360,
+               "dataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIC4uLg==" }
+}
+----
+
+* The members of the generic document read keep their meaning (<<_document_lifecycle_requests>>); `transitions` of a model
+  in `draft` is `threat-model.submit`, of one in `in-review` `threat-model.release` with `"release": true`, of a released
+  one empty (a save reopens it). A revision (`at`) has `frozen: true`, no draft and no transitions, and its `review`,
+  `threats` and `diagram` are those of that revision.
+* `review` is the review of the last released version, as in the evaluation row (`lastReview`, `reviewDue` and `status` are
+  `null`, `null` and `unreleased` before the first release); `lastReview` is not the `last-review` of the working files, which
+  a review changes before the release. `reviewIntervals` lets the sheet show the due date of a review date that is typed
+  and not yet released.
+* `threats` counts the saved working state of the model, as the evaluation does; `review` is that of the last release.
+* `diagram` is generated by the server from `trustZones`, `components` and `dataflows` and is never stored: a scalable
+  vector image as a data URL, `null` when the model has no component. The web app shows it as an image with a text
+  alternative made from the names of the components. No script of the image runs (an image element), and the
+  data URL is not an address of the app.
+* The same body is the answer of `GET /api/v1/documents/threat-models/{id}` and, with `at`, of the revision; a view that
+  has the document id reads either.
+
+[#_threat_model_save]
+=== Saving a Model
+
+The save and the draft of a threat model are the generic requests with the parts `data` and `model` in one body. `fields`
+maps a JSON Pointer into the value of the part to its new value, as everywhere:
+
+[source,json]
+----
+{ "parts": {
+    "data":  { "blob": "4d2a7e1", "fields": { "/last-review": "2026-11-26" } },
+    "model": { "blob": "9c1b3f8", "fields": {
+        "/threats": [ { "id": "T-03", "name": "Card data in the application log", "categories": ["Information Disclosure"],
+                        "risk": { "likelihood": 50, "impact": 75 }, "attributes": { "status": "mitigated" } } ],
+        "/mitigations": [ { "id": "M-03", "name": "Mask card numbers before logging", "riskReduction": 75,
+                            "attributes": { "threat": "T-03", "status": "implemented", "issues": ["PAY-1423"] } } ] } } } }
+----
+
+* *A list is sent as a whole:* `/threats`, `/mitigations`, `/components`, `/dataflows` and `/trustZones` carry the whole list,
+  and `/project` the whole object; the form kit's rule (a list or a section as a whole) is kept and a pointer into a list
+  (`/threats/3/…`) is not used. A threat and its countermeasures are two lists, so the editor of a countermeasure sends both
+  in one save and the file never holds a countermeasure of a threat that is gone.
+* *A conflict is per list:* `{"part": "model", "blob", "fields": [{"pointer": "/threats", "own": […], "other": […], "by"}]}`;
+  the user decides per list. A finer conflict (per threat) would need an element key in the pointer (<<_decided_threat_models>>,
+  point 9).
+* *The refusals* are those of the generic save with the pointer into the value of the part, for example
+  `{"part": "model", "pointer": "/mitigations/1/attributes/threat", "code": "REFERENCE_NOT_FOUND"}`,
+  `{"part": "model", "pointer": "/threats/0/risk/impact", "code": "MAXIMUM"}`,
+  `{"part": "data", "pointer": "/owner", "code": "REFERENCE_NOT_FOUND"}`.
+* *The review is an act of the sheet:* the sheet prefills `/last-review` with `review.today` when the person starts the review
+  of a released model (the act, not every change, sets the date: a corrected typo is no review), and the first save after the
+  release starts the next version in `draft` (UC-TM-2).
+
+[#_threat_model_create]
+=== A New Model
+
+`POST /api/v1/threat-models/report-scheduler`, the wizard's last request (the fields are those the steps filled; the example
+is shortened):
+
+[source,json]
+----
+{ "recipe": "quick-start",
+  "parts": {
+    "data":  { "fields": { "/owner": "role:service-owner", "/last-review": "2026-11-26" } },
+    "model": { "fields": {
+        "/project": { "name": "Scheduler overview", "description": "How a report is scheduled and sent." },
+        "/trustZones": [ { "id": "internal", "name": "Internal", "risk": { "trustRating": 80 } } ],
+        "/components": [ { "id": "scheduler", "name": "Scheduler", "type": "process", "parent": { "trustZone": "internal" } } ],
+        "/threats": [] } } } }
+----
+
+answers `201`
+
+[source,json]
+----
+{ "outcome": "CREATED", "model": "scheduler-overview", "document": "report-scheduler-scheduler-overview",
+  "address": "/threat-models/report-scheduler/scheduler-overview", "state": "draft", "version": 1,
+  "at": "2026-11-26T09:41:00Z",
+  "parts": { "data":  { "blob": "a41f09c", "savedAt": "2026-11-26T09:41:00Z", "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example" } },
+             "model": { "blob": "e0b73d2", "savedAt": "2026-11-26T09:41:00Z", "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example" } } } }
+----
+
+`model` is the address segment the server derives from `/project/name` (lower case, a number appended on a collision; `new`
+counts as a collision), written into `project.id`; `document` is the document id (a ULID in the application; the mock uses the
+service and the segment, `<service>-<model>`). The server writes `service`, `recipe` and `otmVersion` (the version of the
+OTM schema it writes) itself; the web app never sends them. Only `/project/name` is mandatory in a first save (`REQUIRED`);
+the other mandatory fields of the schema are asked for by the transition, as everywhere (`MANDATORY_FIELDS_MISSING`).
+`/last-review` is prefilled with today by the wizard's last page: the model is the review of its own first version. The event
+`document-created` (`kind` `threat-model`) reaches the other tabs, the evaluation lists the model as `unreleased`.
+
+[#_threat_model_recipes]
+=== The Recipes
+
+AUN-TM-5 fixes a recipe as `categories/threat-models/recipes/<id>.yaml` with `title`, ordered `steps`, each with `title`,
+`guidance` (an AsciiDoc fragment) and `fills` (a JSON Pointer into the model file). Provisionally a step also has an `id`,
+the recipe a `description`, and every text may be given per language, so that the files read:
+
+[source,yaml]
+----
+title: { en: STRIDE, step by step, de: STRIDE, Schritt für Schritt }
+description: { en: Every component, every data flow, six kinds of threat., de: Jede Komponente, jeder Datenfluss, sechs Arten von Bedrohung. }
+steps:
+  - id: zones
+    title: { en: Trust zones, de: Vertrauenszonen }
+    guidance: { en: "Name the areas that trust each other…", de: "Benennen Sie die Bereiche, die einander vertrauen…" }
+    fills: /trustZones
+----
+
+`GET /api/v1/categories/threat-models/recipes?lang=de`:
+
+[source,json]
+----
+{ "recipes": [
+    { "id": "quick-start", "title": "Schnellstart", "description": "Vier Schritte: der Rahmen, die Zonen, die Teile, die Bedrohungen.", "steps": 4 },
+    { "id": "stride", "title": "STRIDE, Schritt für Schritt", "description": "Jede Komponente, jeder Datenfluss, sechs Arten von Bedrohung.", "steps": 6 } ] }
+----
+
+`GET /api/v1/categories/threat-models/recipes/stride?lang=en`:
+
+[source,json]
+----
+{ "id": "stride", "title": "STRIDE, step by step", "description": "Every component, every data flow, six kinds of threat.",
+  "steps": [
+    { "id": "project",  "title": "The service",         "guidance": "Describe what the model covers…", "fills": "/project" },
+    { "id": "zones",    "title": "Trust zones",         "guidance": "Name the areas that trust each other…", "fills": "/trustZones" },
+    { "id": "components", "title": "Components",        "guidance": "List every process, store and outside party…", "fills": "/components" },
+    { "id": "dataflows", "title": "Data flows",         "guidance": "Draw every path between two components…", "fills": "/dataflows" },
+    { "id": "threats",  "title": "Threats",             "guidance": "For each component and flow ask the six STRIDE questions…", "fills": "/threats" },
+    { "id": "mitigations", "title": "Countermeasures",  "guidance": "For each threat you do not accept, name a countermeasure…", "fills": "/mitigations" } ] }
+----
+
+* The texts are resolved to the language of `lang` (English when the recipe has no text in it), so the answer holds plain
+  strings; the language of the interface is the language of the guidance. The texts are the recipe's data, not catalogue
+  messages.
+* `fills` names a node of the model file's schema that the form kit can show as a whole: an array of objects (`DataTable`)
+  or an object (a section), reached by `properties` and `items` only. The wizard builds the step's form from the schema
+  of `GET /api/v1/categories/threat-models/schema` at that node, and a step edits exactly the value at `fills` of the part
+  `model`: `fills` is the key of `fields` in a recipe draft and in the create.
+* The guidance is rendered with `POST /api/v1/render/asciidoc`, like every AsciiDoc text; the wizard asks once per step.
+* The two recipes of the mock are `quick-start` (four steps: `project`, `zones`, `components`, `threats`) and `stride`
+  (six steps as above). Which recipes ship is the owner's question (AUN-TM-5, the concept's open questions).
+
+[#_threat_model_recipe_draft]
+=== The Recipe Draft
+
+The wizard keeps what a person filled between its steps as a draft of a model that does not exist yet (UC-DOC-3 before
+UC-DOC-4): one draft per person, service and recipe, in the application and never in Git.
+
+`PUT /api/v1/threat-models/report-scheduler/drafts/stride`, when the person leaves step 2 (zero-based):
+
+[source,json]
+----
+{ "step": 2,
+  "parts": { "model": { "fields": {
+      "/project": { "name": "Scheduler overview", "description": "How a report is scheduled and sent." },
+      "/trustZones": [ { "id": "internal", "name": "Internal", "risk": { "trustRating": 80 } } ] } } } }
+----
+
+answers `{"outcome": "DRAFT_SAVED", "at": "2026-11-26T09:20:00Z"}`. The draft is replaced as a whole by the body, so the
+wizard sends every field filled so far; `step` is the step the person goes on to, and the number of steps for the final page
+(owner and review date, then the create). `GET /api/v1/threat-models/report-scheduler/drafts/stride` answers
+
+[source,json]
+----
+{ "service": "report-scheduler", "recipe": "stride",
+  "draft": { "step": 2, "at": "2026-11-26T09:20:00Z",
+             "parts": { "model": { "fields": { "/project": { "…": "…" }, "/trustZones": [ "…" ] } } } } }
+----
+
+or `"draft": null`. A draft with field errors is refused (`422`, the codes and pointers of a save with the part) and
+nothing is written, so the wizard goes to the next step only when the step is valid; the create ends the draft; there is no
+request that discards one (a draft ends with the create or by expiry, as every draft of this application).
+
+[#_threat_model_derivation]
+=== Where the Figures of the Evaluation Come From
+
+Every figure of <<_threat_evaluation>> and of the dashboard summary is derived from the documents; the mock's files must
+agree with each other. For a threat model `m` of a service `s`, today `t`:
+
+* `protectionNeed` is the highest effective protection need of `s` (catalog), `reviewInterval` the interval of the table above;
+* `state` is the workflow state of the document and `version` the number of its last release (`null` before the first),
+  `lastReview` is the `last-review` of the `data` part at that release, `reviewDue` is `lastReview` plus the interval, `daysSinceReview` is `t`
+  minus `lastReview` and `dueInDays` is `reviewDue` minus `t`, `status` is `overdue` below 0, `due-soon` from 0 to 30, `ok`
+  above, `unreleased` for a document without a release;
+* `threats` is counted from the `model` part of the document's saved working state, by the rules of <<_threat_model_data>>;
+* `address` is `/threat-models/<s>/<project.id>`, the risk that came from a threat is read from its `transferred`, and the
+  reference `threat-models:threat-model/<document>#<threat id>` on that risk names the threat back.
 
 [#_the_step_up_handler]
 == The Step-Up Handler
@@ -3000,7 +3674,7 @@ change each one. The bodies and addresses are in <<_reports_requests>>:
   that have no model (`withoutModel`; a retired service is in neither, a planned one is). The interval comes from the
   highest effective protection need (`P6M` very high, `P12M` high, `P24M` normal, AUN-TM-3); the review of a model that
   was never released is `unreleased`, not overdue.
-. *"Open" and "untreated" threats* are counted as the threat model of the next step defines them: `open` is the status
+. *"Open" and "untreated" threats* are counted as the threat model defines them (<<_decided_threat_models>>, point 6): `open` is the status
   `open`, `untreated` is open without a countermeasure and not transferred, `transferred` carries a reference into the
   risk register. AUN-TM-4 says "open threats" and "untreated threats" without a definition.
 . *The risk register as of a date is answered with a summary of each entry,* not the entry: the running number, title,
@@ -3040,3 +3714,94 @@ scopes is wanted (5); the definition of an untreated threat and the thresholds o
 as of a date should list the draft entries too, or the entry itself instead of its summary (9); whether the web app
 should create reporting tags (10, 11) and whether the register as of two dates should be compared; whether reports should
 be exported (14); whether a scope keeps its series colour by its place in the list (15, as decided) or only among the scopes that have points.
+
+
+[#_decided_threat_models]
+*Decided provisionally* with the threat models (UC-TM-1, UC-TM-2, UC-TM-4), so that no screen is blocked; the owner may
+change each one. The bodies and addresses are in <<_threat_model_requests>>:
+
+. *The addresses.* The lens *Threat models* gains `/threat-models/{service}/new` (`threat-models.new`, the recipe wizard) with
+  the allowed query `recipe`, before `threat-models.model`; `new` is reserved as a model. `threat-models.model` admits `at`. The
+  name `recipe` is new in `queries` of `canonical-addresses.json`.
+. *The first column is the evaluation, the second the service.* The lens reads `GET /api/v1/reports/threat-evaluation` for the
+  services (the table of the report, so one component serves both, and the services without a model with it) and
+  `GET /api/v1/threat-models/{service}` for the models of one service, the intervals and the person's recipe drafts. A model
+  is read by its address with `GET /api/v1/threat-models/{service}/{model}`, which is the generic read of the document with
+  the members `service`, `model`, `title`, `address`, `review`, `threats` and `diagram`; the lifecycle (save, draft, submit,
+  release, revisions, diff) is the generic requests of the repository `threat-models`. A domain request exists only where the
+  address does not name the document.
+. *The document type* is `threat-model` of the repository `threat-models`, collection `models`, with two files (the schema's
+  `gdr-split` on `model`): `document.yaml` (the part `data`) and `model.yaml` (the part `model`). The workflow is the one of
+  `test-note` with the transitions `threat-model.submit` and `threat-model.release` and the tag `models/<id>/v<n>`; the type is
+  released more than once, so the first save after a release starts the next version in `draft` (UC-TM-2).
+. *The format is Open Threat Model as YAML* (`model.yaml`), the subset of <<_threat_model_data>>; it closes the first two open
+  questions of the concept (OTM or Threat Dragon JSON; how the model file fits the layout) for this step. Threat Dragon v2.6.2
+  exports OTM but rejects an OTM import (concept, _Existing Tools_), so a team that edits in Threat Dragon cannot read the file
+  back; the application is not a diagram editor. `otmVersion` is written by the server (`0.2.0`); the title of the model is
+  `project.name` and the address segment is `project.id`, derived once at the creation and never changed (a renamed model keeps
+  its address).
+. *The treatment of a threat is kept on the threat,* in its `attributes` (`status`, `transferred`), and a countermeasure names its
+  threat in its `attributes` (`threat`, `status`, `issues`), where OTM would put the state and the mitigations on the instance of
+  a threat on a component or a data flow. Audit Notary evaluates a threat once and edits it in a table, not per component. The
+  OTM README describes `attributes` as a map of strings, the published JSON Schema (`otm_schema.json`) allows any object; the
+  lists (`issues`) rely on the schema. A countermeasure belongs to one threat. A tool that reads OTM instances finds none.
+. *The status of a threat is `open`, `mitigated` or `accepted`.* `untreated` is an open threat that no countermeasure names and
+  that carries no `transferred`; `transferred` is a threat that carries it, whatever its status. The ids are `T-<nn>` and
+  `M-<nn>`. The member `transferred` (the reference `isms-register:risk/<id>`) is written by the transfer of UC-TM-3, a later step;
+  the sheet of this step shows it and writes nothing to it. This is the definition the Reports decision (<<_decided_reports>>, point 8) waited for.
+. *The diagram is generated* by the server from `trustZones`, `components` and `dataflows` and served as the member `diagram` of a
+  read, a vector image as a data URL (`image/svg+xml`), never stored (AUN-TM-2: diagrams are data, images are generated). The
+  layout (zones side by side, components stacked in their zone, flows as arrows) is the server's; the file holds no
+  coordinates. A model without a component has `"diagram": null`.
+. *A first save of a model is a request of its own,* `POST /api/v1/threat-models/{service}`: the service is the path, the server
+  writes `service`, `recipe` and `otmVersion` and derives the address segment from `/project/name` (a collision gets a number,
+  `new` counts as a collision). Only `/project/name` is mandatory in a first save; a model is saved incomplete and the
+  transition asks for the rest, as every document. The generic `POST /api/v1/documents/threat-models` would make the web app
+  derive the segment and write the service reference.
+. *Lists are saved as a whole,* `/threats`, `/mitigations`, `/components`, `/dataflows`, `/trustZones`, `/project`, and a conflict is
+  decided per list. The countermeasure editor sends `/threats` and `/mitigations` in one save. A key per element (a pointer
+  `/threats/T-03`) would give a conflict per threat and needs an addition to the pointer rule of the generic save; it is not
+  decided here.
+. *The review date is set by the act of starting the review,* which prefills `/last-review` with `review.today`; an edit of a
+  released model does not change it. The due date counts from the `last-review` of the last release
+  (<<_decided_reports>>, point 7), and a review date that is typed and not yet released shows its due date from
+  `reviewIntervals`. The intervals are data of the kind and are served in the service page and the model read; there is no
+  request of their own.
+. *The bounds of the schema:* likelihood, impact and risk reduction are whole numbers from 0 to 100 (OTM fixes the range only for
+  `riskReduction`; its example uses 0 to 100 for the others); texts at most 200 and 2,000 characters; at most 20 trust zones,
+  200 components, 400 data flows, 200 threats and 400 countermeasures, 20 issues of a countermeasure; `type` of a component is
+  `external-entity`, `process` or `data-store`; the categories of a threat are the six of STRIDE. The server checks that a
+  countermeasure names a threat of the model; it does not check that a component's trust zone or a data flow's ends exist
+  (the form kit has no in-file reference picker, so the ids are typed).
+. *The recipes are read below the category,* `GET /api/v1/categories/threat-models/recipes` and `…/recipes/{recipe}`, the REST form
+  of `read_recipe` (a category and an optional id), with the optional `lang` (`en` or `de`, English without it). A recipe file has
+  `title`, `description`, steps with `id`, `title`, `guidance`, `fills`; every text is a string or a map of language to text, and the
+  request answers the text of `lang`. This extends AUN-TM-5, which fixes plain strings. Two recipes ship in the mock, `quick-start`
+  and `stride`; whether a recipe is a document itself stays the concept's open question.
+. *A recipe draft is the draft of a model that does not exist yet.* One per person, service and recipe, replaced as a whole by
+  `PUT /api/v1/threat-models/{service}/drafts/{recipe}`, read by the matching `GET`, ended by the create. The library keys a draft
+  by a document that exists; a draft of a document to come needs the library to key it by the service and the recipe, which is
+  open. A draft with field errors is refused like every draft (<<_decided_lifecycle>>, point 10), so a step is left only when it
+  is valid; the create is the last step and carries the `owner` (prefilled with the role of the service's owner in the catalog, `role:service-owner` in the mock) and the `last-review` (prefilled with today).
+. *The rights:* reading the lens and the evaluation needs `read` on `threat-models`, creating, saving and submitting `edit`, the
+  release `approve`. The mock gives the user of the profile `workshop` the right `approve` on `threat-models` (it had `read` and
+  `edit`), so that the release of a review can be walked through; `release` keeps no right on the repository. Without `edit`
+  the acts are shown disabled with the reason, and the requests answer `403 FORBIDDEN`.
+. *A service may have several models,* each with its own row in the evaluation and its own address; a retired service keeps its
+  models readable and gets no new one (`409 SERVICE_RETIRED`). A service that is planned or deprecated can have a model.
+. *References and the search.* A reference `threat-models:threat-model/<document>#<threat id>` resolves to the title
+  `<model title>: <threat id>` (for example "Payment API, checkout flow: T-07", the title of the reference of the risk R-009) and the
+  address of the model; the search lists the models with the category `threat-models` and the model's address.
+. *The recipe is a `WizardPage`* at `/threat-models/{service}/new?recipe=`: one page per step (the guidance above, the form of the
+  step below), a last page that checks and asks for the owner and the review date, and the act *Save*; the sub-form is built from the
+  schema at `fills`. The web app shows the recipes to choose from on the page of a service that has none or wants another, and
+  the recipes a person has started as *continue*.
+
+For the owner: whether OTM as YAML is the format (4) and whether the treatment may live in `attributes` (5), given that the OTM
+README calls `attributes` a map of strings and that a threat has one status, not one per component; whether a countermeasure may
+belong to one threat only (5); the definition of `untreated` and `transferred` (6); whether the diagram is generated from the file
+(7) and which tool draws it; whether a model needs a request of its own for the first save (8); whether a conflict per list is
+fine (9); whether the review date is the act of the person who starts the review (10); the bounds (11); whether recipe texts may
+be per language, which changes AUN-TM-5 (12); whether a recipe draft may be a draft of a model that does not exist (13), which
+the library does not offer; whether the person who edits may release in the mock (14); whether a service may have several
+models (15).

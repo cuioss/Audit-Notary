@@ -46,7 +46,9 @@ Outcome:: the service has a threat model, saved, in the chosen open format.
 Open points:: the format (OTM or Threat Dragon JSON), how the model file fits the library's layout, which recipes
 ship and whether a recipe is a document itself
 (xref:../concepts/category-threat-models.adoc#_open_questions[Threat Models, Open Questions]); whether recipes are MCP
-prompts (xref:../concepts/mcp-server.adoc#_open_questions[MCP Server, Open Questions]).
+prompts (xref:../concepts/mcp-server.adoc#_open_questions[MCP Server, Open Questions]). Decided provisionally for the web
+app: OTM as YAML, two recipes in two languages, and the steps kept in a draft of a model that does not exist yet
+(xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register, Open Questions]).
 Requirements:: xref:../specification/category-threat-models.adoc#AUN-TM-1[AUN-TM-1] (place),
 xref:../specification/category-threat-models.adoc#AUN-TM-2[AUN-TM-2] (open format),
 xref:../specification/category-threat-models.adoc#AUN-TM-5[AUN-TM-5] (recipes),
@@ -99,7 +101,9 @@ outdated model from the service's code is deferred.
 Changes:: xref:02-documents.adoc#change-reopen[Documents, the next version], <<change-last-review>>.
 Requirements:: xref:../specification/category-threat-models.adoc#AUN-TM-3[AUN-TM-3] (review due date),
 xref:../specification/directory.adoc#AUN-DIR-5[AUN-DIR-5] (effective protection needs).
-Design:: none yet.
+Design:: decided provisionally: the sheet of the model starts the review with an act that prefills `last-review` with today,
+the first save starts the next version, and the interval table is served with the model
+(xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register, Open Questions]).
 
 [#UC-TM-3]
 == UC-TM-3: Transfer a Threat to the Risk Register

@@ -102,6 +102,10 @@ lens *Reports* gains `/reports/samm-trend`, `/reports/samm-compare`, `/reports/t
 `/reports/risk-register`, with the allowed queries `scope`, `from`, `to` and `as-of`; `/reports/<report>` stays for every
 other name and is the not-found view. The address of a risk (`/isms/risks/<entry>`) admits `at`.
 
+Provisionally (decided with the threat models, xref:rest-api.adoc#_threat_model_addresses[REST API Register, Threat Model
+Requests]): the lens *Threat models* gains `/threat-models/<service>/new` (the recipe wizard, with the allowed query `recipe`);
+the segment `new` is reserved as a model, and the address of a model admits `at`.
+
 Three more addresses are shown without the shell: `/login` (local users), `/signed-out` and `/login-problem`
 (provisional, xref:rest-api.adoc#_addresses_outside_the_shell[REST API Register, Addresses Outside the Shell]). They are
 in `canonical-addresses.json` as `outsideShell`, so the web app routes them and the check of a login's `return` refuses
