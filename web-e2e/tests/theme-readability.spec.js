@@ -1366,6 +1366,8 @@ const THREAT_STATES = [
       await page.getByTestId('release-act').click();
       await expect(page.getByTestId('release-done')).toBeVisible();
     },
+    // The release moved the mock on: the state the page ends in.
+    'workshop#threat-model-released',
   ],
   [
     'a release that is to be checked again',
@@ -1379,6 +1381,8 @@ const THREAT_STATES = [
         'Someone saved after you opened the release.',
       );
     },
+    // The refused release moved the mock on: the state the page ends in.
+    'workshop#threat-model-release-changed-reviewed',
   ],
   [
     'a release the Git server cannot make',

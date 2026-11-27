@@ -65,15 +65,17 @@ test.describe('the fixtures of this spec', () => {
       return answer.json();
     };
 
-    // The services of the catalog are the ones this spec has words for: a service the mock gains is named here, not skipped
-    // by the loops below.
-    const catalog = await read('/api/v1/catalogs/service');
+    // The services of the lens are the ones this spec has words for: a service the mock gains or loses is named here, not
+    // skipped by the loops below. The evaluation lists every service that is not retired, with a model or without.
+    const listed = await read('/api/v1/reports/threat-evaluation');
     expect(
-      SERVICES.map((service) => service.id).sort(),
-      'the services of the fixtures against the catalog of the mock',
-    ).toEqual(catalog.entries.map((entry) => entry.id).sort());
+      SERVICES.filter((service) => service.retired !== true)
+        .map((service) => service.id)
+        .sort(),
+      'the services of the fixtures against the evaluation of the mock',
+    ).toEqual([...listed.models, ...listed.withoutModel].map((entry) => entry.service.id).sort());
 
-    // The services of the catalog, with their need and the models of each.
+    // The services of the lens, with their need and the models of each.
     for (const service of SERVICES) {
       const body = await read(servicePath(service.id));
       expect(body.service.name, service.id).toBe(service.name);
