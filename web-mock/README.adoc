@@ -121,7 +121,8 @@ creating a threat model answer `403 FORBIDDEN` (`requires`, no right `edit` or `
 so do creating a scope, creating an assessment and saving the targets; the models and the trends stay readable;
 `recovered` pushes the `status` event with the healthy status, and the creates and the save answer as in `workshop`; the
 reports answer as in `workshop`, except that the risk register as of a past date or tag answers `503 GIT_UNAVAILABLE` in
-`unreachable` and its data after `recovered` (_Reports_). The threat models read as in `workshop`; in `unreachable` a save,
+`unreachable` and its data after `recovered` (_Reports_). The threat models read as in `workshop` and `threat-models` is `DOWN`
+in the status of `unreachable`; in `unreachable` a save,
 a submit and a create of a threat model answer `503 GIT_UNAVAILABLE` (a draft stays `200`), after `recovered` they answer
 as in `workshop`; the user holds no `approve`, so the release is `403 FORBIDDEN` (_Threat Models_)
 
@@ -1003,9 +1004,10 @@ run time (_Fixtures and Drift Tests_: `ReportsLensTest` reads the data files and
 == Threat Models
 
 The requests of the lens *Threat models* (UC-TM-1, UC-TM-2, UC-TM-4; `doc/specification/rest-api.adoc`, _Threat Model
-Requests_; everything PROVISIONAL). Today is the fixed 2026-11-26. The data are written by a generator that asserts that
-the six models reproduce the figures of the threat evaluation and the summary of _Reports_ (counts, review dates,
-`T-07` to `R-009`) and draws the diagram of each model; `ThreatModelsTest` reads the files and fails on drift.
+Requests_; everything PROVISIONAL). Today is the fixed 2026-11-26. The data files are maintained by hand; no generator
+writes them. `ThreatModelsTest` reads them and fails on drift: it derives the counts and the review dates of the six models
+and compares them with the threat evaluation and the summary of _Reports_, asserts the transfer `T-07` to `R-009`, checks
+the diagram of each model as well-formed SVG and compares the lists and the pages with the reads.
 
 *The rights.* Alex Example (`workshop`) holds `read`, `edit` and `approve` on `threat-models` (it was `read` and `edit`: a
 person who edits may release in the mock, so that the review and the release can be walked through); Kim Reader keeps
@@ -1090,7 +1092,9 @@ origin of the risk, whose reference names `T-07` back), `T-08` stored tokens rea
 2025-11-26 and `v3` 2026-06-02 (the revision `v1` holds `T-01` to `T-05`, all open, `v2` holds `T-01` to `T-08`); the
 revisions of `login-flow` are `v1` 2025-10-08 (five threats) and `v2` 2026-04-15.
 
-*The routes.* Every route has a `requires`: `read` on `threat-models`, or `edit` or `approve` for a write.
+*The routes.* Every route has a `requires`: `read` on `threat-models`, or `edit` or `approve` for a write. Two requests are
+no route guard: `GET /api/v1/references/resolve` serves a shared fixture without a `requires`, and `GET /api/v1/search`
+has none either (the engine filters its results by the rights of the repositories).
 
 [cols="2,3"]
 |===
@@ -1222,7 +1226,7 @@ revisions, the page of `report-scheduler` lists it, the list holds seven documen
 |The create answers `422 VALIDATION`: `REQUIRED` at `/project/name` (part `model`)
 
 |`threat-model-recipes-none`
-|The list of the recipes is empty in every language
+|The list of the recipes is empty in every language and a recipe by its id answers `404 NOT_FOUND`
 
 |`no-threat-models`
 |(_Reports_) also the page of the *Payment API* lists no model; the other pages keep the base
@@ -1239,10 +1243,14 @@ not readable.
 (for example the evaluation of `no-threat-models` and a lifecycle state do not combine).
 * *The recipe drafts of other services* are `404 MOCK_NO_ROUTE`; `no-threat-models` overrides only the page of the
 *Payment API*; the Due list is not derived: the item of the checkout flow stays after the release.
-* *`degraded` and `local` do not walk the lifecycle* (no `approve`, no state); `degraded` names only `samm-assessments`
-`DOWN` in its status, while it refuses the threat model writes in `unreachable`.
-* *The diagram is a fixed drawing*, the evaluation must keep reproducing the figures of _Reports_ (the generator asserts
-it), and the revision reads exist for the checkout flow (`v1` to `v4`) and the login flow (`v1`) only.
+* *`degraded` and `local` do not walk the lifecycle* (no `approve`, no state); `degraded` names `samm-assessments` and, in
+`unreachable`, `threat-models` `DOWN` in its status, and refuses the threat model writes there. `local` grants `read` only
+on `threat-models`, so its web app offers no edit.
+* *A save or a submit after the release is not mocked.* `threat-model-released` reads released as v4; a save or a submit that
+reaches the base route there still answers as in `ready` (the opening of v5 is not mocked, and the contract does not yet
+define the submit of a released model).
+* *The diagram is a fixed drawing*, the evaluation must keep reproducing the figures of _Reports_ (`ThreatModelsTest`
+asserts it), and the revision reads exist for the checkout flow (`v1` to `v4`) and the login flow (`v1`) only.
 
 == Query-Keyed Routes
 

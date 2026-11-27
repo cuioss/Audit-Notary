@@ -31,8 +31,7 @@
     {
       "repository": "threat-models",
       "actions": [
-        "read",
-        "edit"
+        "read"
       ]
     },
     {

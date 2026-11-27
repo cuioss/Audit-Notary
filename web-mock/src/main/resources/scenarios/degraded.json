@@ -1846,7 +1846,7 @@
   },
   "states": {
     "unreachable": {
-      "description": "The fetch of samm-assessments fails.",
+      "description": "The fetch of samm-assessments and of threat-models fails: the status lists both as DOWN, the reads of the threat models are served from the last fetch, and every write of the threat models answers 503 GIT_UNAVAILABLE.",
       "routes": {
         "GET /api/v1/status": {
           "status": 200,
@@ -1861,7 +1861,7 @@
               },
               {
                 "alias": "threat-models",
-                "fetch": "UP"
+                "fetch": "DOWN"
               },
               {
                 "alias": "isms-register",
@@ -2048,16 +2048,6 @@
           "requires": {
             "repository": "threat-models",
             "action": "edit"
-          }
-        },
-        "POST /api/v1/releases/threat-models/payment-api-checkout-flow": {
-          "status": 503,
-          "body": {
-            "outcome": "GIT_UNAVAILABLE"
-          },
-          "requires": {
-            "repository": "threat-models",
-            "action": "approve"
           }
         },
         "POST /api/v1/threat-models/report-scheduler": {

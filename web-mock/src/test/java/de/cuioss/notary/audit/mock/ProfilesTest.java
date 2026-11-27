@@ -219,8 +219,12 @@ class ProfilesTest {
         void shouldHoldNoRightOnTheThreatModels() {
             try (var client = MockClient.start("release").login()) {
                 List<String> repositories = new ArrayList<>();
-                json(client.get("/api/v1/session")).path("rights").forEach(right -> repositories.add(right.path("repository").asText()));
+                var session = client.get("/api/v1/session");
+                var rights = json(session).path("rights");
+                rights.forEach(right -> repositories.add(right.path("repository").asText()));
                 assertAll(
+                        () -> assertEquals(200, session.statusCode()),
+                        () -> assertTrue(rights.isArray() && !rights.isEmpty()),
                         () -> assertFalse(repositories.contains("threat-models")),
                         () -> assertEquals(403, client.get("/api/v1/threat-models/payment-api").statusCode()));
             }

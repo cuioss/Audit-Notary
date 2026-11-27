@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
@@ -39,6 +41,7 @@ import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -191,13 +194,14 @@ class ThreatModelsTest {
         return required;
     }
 
-    private static JsonNode row(JsonNode evaluation, String model) {
+    /** The row of the evaluation of a model, by the service and the model segment: the address of a model is both. */
+    private static JsonNode row(JsonNode evaluation, String service, String model) {
         for (var row : evaluation.path("models")) {
-            if (model.equals(row.path("model").asText())) {
+            if (service.equals(row.path("service").path("id").asText()) && model.equals(row.path("model").asText())) {
                 return row;
             }
         }
-        throw new IllegalStateException(model);
+        throw new IllegalStateException(service + "/" + model);
     }
 
     /** Decodes the data URL of a diagram into a well-formed XML document (no DOCTYPE, no external entity). */
@@ -214,6 +218,26 @@ class ThreatModelsTest {
         } catch (Exception e) {
             throw new IllegalStateException("the diagram is no well-formed XML", e);
         }
+    }
+
+    /** The attributes of the document that link to something: an {@code href}, with or without a namespace. */
+    private static List<String> linkingAttributes(Element element) {
+        List<String> found = new ArrayList<>();
+        var attributes = element.getAttributes();
+        for (int i = 0; i < attributes.getLength(); i++) {
+            var attribute = attributes.item(i);
+            String local = attribute.getLocalName() != null ? attribute.getLocalName() : attribute.getNodeName();
+            if (local.equalsIgnoreCase("href") || attribute.getNodeName().toLowerCase(Locale.ROOT).endsWith(":href")) {
+                found.add(element.getTagName() + "@" + attribute.getNodeName());
+            }
+        }
+        var children = element.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            if (children.item(i) instanceof Element child) {
+                found.addAll(linkingAttributes(child));
+            }
+        }
+        return found;
     }
 
     private static void assertDiagram(JsonNode read) {
@@ -234,7 +258,7 @@ class ThreatModelsTest {
                         1, texts.stream().filter(component.path("name").asText()::equals).count(),
                         read.path("id").asText() + " " + component.path("name").asText())),
                 () -> forbidden.forEach(tag -> assertEquals(0, svg.getElementsByTagName(tag).getLength(), tag)),
-                () -> assertFalse(diagram.path("dataUrl").asText().contains("href")));
+                () -> assertEquals(List.of(), linkingAttributes(root)));
     }
 
     private static void assertCanonical(String address) {
@@ -268,7 +292,7 @@ class ThreatModelsTest {
             for (var entry : MODELS) {
                 var read = modelFile(entry.get(0));
                 var figures = figures(read);
-                var evaluated = row(evaluation, entry.get(2));
+                var evaluated = row(evaluation, entry.get(1), entry.get(2));
                 open += figures.get(1);
                 untreated += figures.get(2);
                 assertAll(entry.get(0),
@@ -298,7 +322,7 @@ class ThreatModelsTest {
                 var review = read.path("review");
                 var page = data("threat-model-service-" + entry.get(1) + ".json");
                 var interval = Period.parse(review.path("reviewInterval").asText());
-                var shown = row(evaluation, entry.get(2));
+                var shown = row(evaluation, entry.get(1), entry.get(2));
                 assertEquals(page.path("service").path("reviewInterval").asText(), review.path("reviewInterval").asText());
                 assertEquals(review.path("reviewInterval"), shown.path("reviewInterval"));
                 if (review.path("lastReview").isNull()) {
@@ -508,7 +532,7 @@ class ThreatModelsTest {
             for (var entry : MODELS) {
                 var page = data("threat-model-service-" + entry.get(1) + ".json");
                 var shown = page.path("models").get(0);
-                var evaluated = row(evaluation, entry.get(2));
+                var evaluated = row(evaluation, entry.get(1), entry.get(2));
                 assertEquals(1, page.path("models").size());
                 for (var name : List.of("address", "state", "version", "lastReview", "daysSinceReview", "reviewDue", "dueInDays",
                         "status", "threats")) {
@@ -536,22 +560,54 @@ class ThreatModelsTest {
                     "customer-portal-portal", "reporting-report-generation"), column(documents, "id"));
             String previous = "9";
             for (var item : documents) {
-                var read = modelFile(item.path("id").asText());
-                assertAll(item.path("id").asText(),
-                        () -> assertEquals("threat-model", item.path("kind").asText()),
-                        () -> assertEquals(read.path("title"), item.path("title")),
-                        () -> assertEquals(read.path("state"), item.path("state")),
-                        () -> assertEquals(read.path("version"), item.path("version")),
-                        () -> assertEquals(read.path("history").get(0).path("at"), item.path("updatedAt")),
-                        () -> assertEquals(read.path("history").get(0).path("by"), item.path("updatedBy")),
-                        () -> assertEquals(read.path("address"), item.path("address")),
-                        () -> assertFalse(item.path("requested").asBoolean()),
-                        () -> assertEquals(read.path("release").isNull() ? null : read.path("release").path("tag").asText(),
-                                item.path("release").isNull() ? null : item.path("release").path("tag").asText()));
+                assertListed(item, modelFile(item.path("id").asText()));
                 assertTrue(item.path("updatedAt").asText().compareTo(previous) <= 0);
                 previous = item.path("updatedAt").asText();
             }
             assertEquals(7, data("threat-models-index-created.json").path("documents").size());
+        }
+
+        @Test
+        @DisplayName("the list names every model of the data files and no other, and the lists of the states agree with the read of their state")
+        void shouldAgreeOnTheListsOfTheStates() throws IOException {
+            Set<String> reads = new HashSet<>();
+            try (var stream = Files.list(Path.of("src/main/resources/scenarios/data"))) {
+                for (var name : stream.map(path -> path.getFileName().toString()).toList()) {
+                    var matcher = Pattern.compile("threat-model-(.+)\\.json").matcher(name);
+                    if (matcher.matches() && data(name).path("id").asText().equals(matcher.group(1))
+                            && data(name).path("parts").has("model")) {
+                        reads.add(matcher.group(1));
+                    }
+                }
+            }
+            Set<String> listed = new HashSet<>(column(data("threat-models-index.json").path("documents"), "id"));
+            listed.add("report-scheduler-scheduler-overview");
+            assertEquals(listed, reads);
+            for (var variant : List.of("in-review", "released", "reopened")) {
+                for (var item : data("threat-models-index-" + variant + ".json").path("documents")) {
+                    String id = item.path("id").asText();
+                    assertListed(item, modelFile(CHECKOUT.equals(id) ? CHECKOUT + "-" + variant : id));
+                }
+            }
+            for (var item : data("threat-models-index-created.json").path("documents")) {
+                assertListed(item, modelFile(item.path("id").asText()));
+            }
+        }
+
+        private static void assertListed(JsonNode item, JsonNode read) {
+            assertAll(item.path("id").asText(),
+                    () -> assertEquals("threat-model", item.path("kind").asText()),
+                    () -> assertEquals(read.path("title"), item.path("title")),
+                    () -> assertEquals(read.path("state"), item.path("state")),
+                    () -> assertEquals(read.path("version"), item.path("version")),
+                    () -> assertEquals(read.path("history").get(0).path("at"), item.path("updatedAt")),
+                    () -> assertEquals(read.path("history").get(0).path("by"), item.path("updatedBy")),
+                    () -> assertEquals(read.path("address"), item.path("address")),
+                    () -> assertFalse(item.path("requested").asBoolean()),
+                    () -> assertEquals(read.path("release").isNull() ? null : read.path("release").path("tag").asText(),
+                            item.path("release").isNull() ? null : item.path("release").path("tag").asText()),
+                    () -> assertEquals(read.path("release").isNull() ? null : read.path("release").path("at").asText(),
+                            item.path("release").isNull() ? null : item.path("release").path("at").asText()));
         }
 
         @Test
@@ -562,7 +618,7 @@ class ThreatModelsTest {
                 var read = data("threat-model-" + CHECKOUT + "-" + stage + ".json");
                 var evaluation = data(stage.equals("released") ? "reports-threat-evaluation-reviewed.json"
                         : "reports-threat-evaluation-" + stage + ".json");
-                var shown = row(evaluation, "checkout-flow");
+                var shown = row(evaluation, "payment-api", "checkout-flow");
                 var summary = data(stage.equals("released") ? "reports-summary-tm-released.json" : "reports-summary-tm-saved.json")
                         .path("threatModels");
                 int sumOpen = 0;
@@ -694,6 +750,9 @@ class ThreatModelsTest {
                     var node = schemaNode(model, step.path("fills").asText());
                     assertTrue(node.path("type").asText().equals("array") || node.path("type").asText().equals("object"),
                             recipe + " " + step.path("fills").asText());
+                    if (node.path("type").asText().equals("array")) {
+                        assertEquals("object", node.path("items").path("type").asText(), recipe + " " + step.path("fills").asText());
+                    }
                     assertFalse(step.path("title").asText().isBlank());
                     assertFalse(step.path("guidance").asText().isBlank());
                 }
@@ -975,9 +1034,9 @@ class ThreatModelsTest {
                 var afterAt = get(client, DOCS + CHECKOUT + "?at=v4");
                 var afterPage = get(client, TM + "payment-api");
                 var afterList = get(client, "/api/v1/documents/threat-models");
-                var releasedRow = row(afterEvaluation, "checkout-flow");
+                var releasedRow = row(afterEvaluation, "payment-api", "checkout-flow");
                 assertAll(
-                        () -> assertEquals("released", row(before, "checkout-flow").path("state").asText()),
+                        () -> assertEquals("released", row(before, "payment-api", "checkout-flow").path("state").asText()),
                         () -> assertEquals(200, saved.statusCode()),
                         () -> assertEquals("SAVED", json(saved).path("outcome").asText()),
                         () -> assertEquals("draft", json(saved).path("state").asText()),
@@ -993,10 +1052,10 @@ class ThreatModelsTest {
                         () -> assertEquals("models/" + CHECKOUT + "/v3", reopened.path("release").path("tag").asText()),
                         () -> assertEquals("2026-06-01", reopened.path("review").path("lastReview").asText()),
                         () -> assertEquals("threat-model.submit", reopened.path("transitions").get(0).path("id").asText()),
-                        () -> assertEquals(List.of("draft", 3), List.of(row(reopenedEvaluation, "checkout-flow").path("state").asText(),
-                                row(reopenedEvaluation, "checkout-flow").path("version").asInt())),
-                        () -> assertEquals(List.of(9, 2, 2, 1), countsOf(row(reopenedEvaluation, "checkout-flow").path("threats"))),
-                        () -> assertEquals(reopened.path("threats"), row(reopenedEvaluation, "checkout-flow").path("threats")),
+                        () -> assertEquals(List.of("draft", 3), List.of(row(reopenedEvaluation, "payment-api", "checkout-flow").path("state").asText(),
+                                row(reopenedEvaluation, "payment-api", "checkout-flow").path("version").asInt())),
+                        () -> assertEquals(List.of(9, 2, 2, 1), countsOf(row(reopenedEvaluation, "payment-api", "checkout-flow").path("threats"))),
+                        () -> assertEquals(reopened.path("threats"), row(reopenedEvaluation, "payment-api", "checkout-flow").path("threats")),
                         () -> assertEquals(List.of(12, 10, 2, 1), List.of(reopenedSummary.path("openThreats").asInt(),
                                 reopenedSummary.path("untreatedThreats").asInt(), reopenedSummary.path("overdue").asInt(),
                                 reopenedSummary.path("dueSoon").asInt())),
@@ -1011,7 +1070,7 @@ class ThreatModelsTest {
                         () -> assertEquals("in-review", inReview.path("state").asText()),
                         () -> assertEquals("threat-model.release", inReview.path("transitions").get(0).path("id").asText()),
                         () -> assertTrue(inReview.path("transitions").get(0).path("release").asBoolean()),
-                        () -> assertEquals("in-review", row(inReviewEvaluation, "checkout-flow").path("state").asText()),
+                        () -> assertEquals("in-review", row(inReviewEvaluation, "payment-api", "checkout-flow").path("state").asText()),
                         () -> assertEquals("models/" + CHECKOUT + "/v3", diff.path("from").asText()),
                         () -> assertEquals("working", diff.path("to").asText()),
                         () -> assertEquals(List.of("data", "model"), column(diff.path("sections"), "part")),
@@ -1069,7 +1128,7 @@ class ThreatModelsTest {
         }
 
         @Test
-        @DisplayName("saved-by-other: the save answers CONFLICT per list with the first two threats of each side")
+        @DisplayName("saved-by-other: the save answers CONFLICT per list with the whole list of each side, differing in T-01")
         void shouldConflictPerList() {
             try (var client = start("workshop")) {
                 goTo(client, "threat-model-saved-by-other");
@@ -1082,8 +1141,10 @@ class ThreatModelsTest {
                         () -> assertEquals("model", conflict.path("part").asText()),
                         () -> assertEquals(modelFile(CHECKOUT).path("parts").path("model").path("blob"), conflict.path("blob")),
                         () -> assertEquals("/threats", field.path("pointer").asText()),
-                        () -> assertEquals(List.of("T-01", "T-02"), column(field.path("own"), "id")),
-                        () -> assertEquals(List.of("T-01", "T-02"), column(field.path("other"), "id")),
+                        () -> assertEquals(column(modelFile(CHECKOUT).path("parts").path("model").path("value").path("threats"), "id"),
+                                column(field.path("own"), "id")),
+                        () -> assertEquals(column(field.path("own"), "id"), column(field.path("other"), "id")),
+                        () -> assertEquals(modelFile(CHECKOUT).path("parts").path("model").path("value").path("threats"), field.path("own")),
                         () -> assertEquals("open", field.path("own").get(0).path("attributes").path("status").asText()),
                         () -> assertEquals("mitigated", field.path("other").get(0).path("attributes").path("status").asText()),
                         () -> assertEquals("Jordan Weber", field.path("by").path("name").asText()),
@@ -1299,7 +1360,10 @@ class ThreatModelsTest {
                         () -> assertEquals("REQUIRED", error.path("code").asText()),
                         () -> assertEquals(0, get(client, CATEGORY + "recipes").path("recipes").size()),
                         () -> assertEquals(0, get(client, CATEGORY + "recipes?lang=de").path("recipes").size()),
-                        () -> assertEquals(0, get(client, CATEGORY + "recipes?lang=en").path("recipes").size()));
+                        () -> assertEquals(0, get(client, CATEGORY + "recipes?lang=en").path("recipes").size()),
+                        () -> assertEquals(404, client.get(CATEGORY + "recipes/stride").statusCode()),
+                        () -> assertEquals(404, client.get(CATEGORY + "recipes/stride?lang=de").statusCode()),
+                        () -> assertEquals(404, client.get(CATEGORY + "recipes/quick-start?lang=en").statusCode()));
             }
         }
 

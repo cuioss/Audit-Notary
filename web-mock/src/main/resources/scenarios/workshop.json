@@ -6031,6 +6031,113 @@
                         "attributes": {
                           "status": "open"
                         }
+                      },
+                      {
+                        "id": "T-03",
+                        "name": "Card data in the application log",
+                        "description": "A card number written to the log can be read by everyone who can read the logs.",
+                        "categories": [
+                          "Information Disclosure"
+                        ],
+                        "risk": {
+                          "likelihood": 50,
+                          "impact": 75
+                        },
+                        "attributes": {
+                          "status": "open"
+                        }
+                      },
+                      {
+                        "id": "T-04",
+                        "name": "Payment provider callback is forged",
+                        "description": "A third party sends a callback that says an unpaid order was paid.",
+                        "categories": [
+                          "Spoofing"
+                        ],
+                        "risk": {
+                          "likelihood": 40,
+                          "impact": 90
+                        },
+                        "attributes": {
+                          "status": "mitigated"
+                        }
+                      },
+                      {
+                        "id": "T-05",
+                        "name": "A payment is submitted twice",
+                        "description": "A retry or a double click charges the customer twice.",
+                        "categories": [
+                          "Tampering"
+                        ],
+                        "risk": {
+                          "likelihood": 50,
+                          "impact": 50
+                        },
+                        "attributes": {
+                          "status": "mitigated"
+                        }
+                      },
+                      {
+                        "id": "T-06",
+                        "name": "Denial of service on the authorisation endpoint",
+                        "description": "A flood of requests keeps customers from paying.",
+                        "categories": [
+                          "Denial of Service"
+                        ],
+                        "risk": {
+                          "likelihood": 60,
+                          "impact": 50
+                        },
+                        "attributes": {
+                          "status": "mitigated"
+                        }
+                      },
+                      {
+                        "id": "T-07",
+                        "name": "Replay of a payment authorisation",
+                        "description": "A recorded authorisation is sent again and charges the customer twice.",
+                        "categories": [
+                          "Spoofing",
+                          "Tampering"
+                        ],
+                        "risk": {
+                          "likelihood": 50,
+                          "impact": 100
+                        },
+                        "attributes": {
+                          "status": "accepted",
+                          "transferred": "isms-register:risk/R-009"
+                        }
+                      },
+                      {
+                        "id": "T-08",
+                        "name": "Stored payment tokens read by an administrator",
+                        "description": "An administrator with access to the database reads the tokens and uses them.",
+                        "categories": [
+                          "Information Disclosure"
+                        ],
+                        "risk": {
+                          "likelihood": 25,
+                          "impact": 90
+                        },
+                        "attributes": {
+                          "status": "mitigated"
+                        }
+                      },
+                      {
+                        "id": "T-09",
+                        "name": "Repudiation of a refund by a support agent",
+                        "description": "A support agent refunds a payment and later denies it, and nothing shows who did it.",
+                        "categories": [
+                          "Repudiation"
+                        ],
+                        "risk": {
+                          "likelihood": 25,
+                          "impact": 50
+                        },
+                        "attributes": {
+                          "status": "accepted"
+                        }
                       }
                     ],
                     "other": [
@@ -6062,6 +6169,113 @@
                         },
                         "attributes": {
                           "status": "open"
+                        }
+                      },
+                      {
+                        "id": "T-03",
+                        "name": "Card data in the application log",
+                        "description": "A card number written to the log can be read by everyone who can read the logs.",
+                        "categories": [
+                          "Information Disclosure"
+                        ],
+                        "risk": {
+                          "likelihood": 50,
+                          "impact": 75
+                        },
+                        "attributes": {
+                          "status": "open"
+                        }
+                      },
+                      {
+                        "id": "T-04",
+                        "name": "Payment provider callback is forged",
+                        "description": "A third party sends a callback that says an unpaid order was paid.",
+                        "categories": [
+                          "Spoofing"
+                        ],
+                        "risk": {
+                          "likelihood": 40,
+                          "impact": 90
+                        },
+                        "attributes": {
+                          "status": "mitigated"
+                        }
+                      },
+                      {
+                        "id": "T-05",
+                        "name": "A payment is submitted twice",
+                        "description": "A retry or a double click charges the customer twice.",
+                        "categories": [
+                          "Tampering"
+                        ],
+                        "risk": {
+                          "likelihood": 50,
+                          "impact": 50
+                        },
+                        "attributes": {
+                          "status": "mitigated"
+                        }
+                      },
+                      {
+                        "id": "T-06",
+                        "name": "Denial of service on the authorisation endpoint",
+                        "description": "A flood of requests keeps customers from paying.",
+                        "categories": [
+                          "Denial of Service"
+                        ],
+                        "risk": {
+                          "likelihood": 60,
+                          "impact": 50
+                        },
+                        "attributes": {
+                          "status": "mitigated"
+                        }
+                      },
+                      {
+                        "id": "T-07",
+                        "name": "Replay of a payment authorisation",
+                        "description": "A recorded authorisation is sent again and charges the customer twice.",
+                        "categories": [
+                          "Spoofing",
+                          "Tampering"
+                        ],
+                        "risk": {
+                          "likelihood": 50,
+                          "impact": 100
+                        },
+                        "attributes": {
+                          "status": "accepted",
+                          "transferred": "isms-register:risk/R-009"
+                        }
+                      },
+                      {
+                        "id": "T-08",
+                        "name": "Stored payment tokens read by an administrator",
+                        "description": "An administrator with access to the database reads the tokens and uses them.",
+                        "categories": [
+                          "Information Disclosure"
+                        ],
+                        "risk": {
+                          "likelihood": 25,
+                          "impact": 90
+                        },
+                        "attributes": {
+                          "status": "mitigated"
+                        }
+                      },
+                      {
+                        "id": "T-09",
+                        "name": "Repudiation of a refund by a support agent",
+                        "description": "A support agent refunds a payment and later denies it, and nothing shows who did it.",
+                        "categories": [
+                          "Repudiation"
+                        ],
+                        "risk": {
+                          "likelihood": 25,
+                          "impact": 50
+                        },
+                        "attributes": {
+                          "status": "accepted"
                         }
                       }
                     ],
@@ -7750,7 +7964,7 @@
       }
     },
     "threat-model-recipes-none": {
-      "description": "The installation ships no recipe: the list of the recipes is empty (the wizard is not offered).",
+      "description": "The installation ships no recipe: the list of the recipes is empty (the wizard is not offered) and a recipe by its id answers 404 NOT_FOUND.",
       "routes": {
         "GET /api/v1/categories/threat-models/recipes": {
           "status": 200,
@@ -7776,6 +7990,66 @@
           "status": 200,
           "body": {
             "recipes": []
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/categories/threat-models/recipes/quick-start": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/categories/threat-models/recipes/quick-start?lang=en": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/categories/threat-models/recipes/quick-start?lang=de": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/categories/threat-models/recipes/stride": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/categories/threat-models/recipes/stride?lang=en": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/categories/threat-models/recipes/stride?lang=de": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
           },
           "requires": {
             "repository": "threat-models",
