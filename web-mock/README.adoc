@@ -1598,6 +1598,13 @@ a map; equal links are not: of several links with the same number of listed para
 state wins (`ScenarioState.linkFor`; `web-app/src/lib/test/scenarioFetch.ts` does the same). `/mock/acts`
 records the path of a request with its query as sent, and `/mock/state` lists a link with its query.
 
+A key cannot say "this parameter is absent" or "any value but the listed ones", so a request whose query value no key lists
+reaches the key without query. This is visible where a fixed set of values has an explicit answer for the rest: an `at` that
+is no release of a risk or a document (a commit of a save or a submit, `v8`) answers the current state, not `404` or `422`, and
+`GET /api/v1/isms/risks/draft?origin=` with an origin that has no key answers `422 REQUIRED` as the request without `origin`
+does. The explicit keys (`v9` and `zzz` of R-004, the unknown threat `T-99`) show the answers of the real server; the mock
+does not claim the others. A change of the engine, not of a fixture, would be needed (an owner question).
+
 == Document Lifecycle
 
 PROVISIONAL, like the requests (`doc/specification/rest-api.adoc`, _The Document Lifecycle_, _Document Lifecycle

@@ -1,0 +1,147 @@
+{
+  "scope": "payments",
+  "today": "2026-11-26",
+  "assessment": {
+    "id": "2026-q4",
+    "document": "payments-2026-q4",
+    "title": "Payments 2026 Q4",
+    "date": "2026-11-24",
+    "modelVersion": "v2.2.0",
+    "release": {
+      "tag": "assessments/payments-2026-q4/v1",
+      "at": "2026-11-25T11:20:00Z"
+    }
+  },
+  "gaps": [
+    {
+      "practice": "sm",
+      "function": "governance",
+      "score": 1.5,
+      "target": 2,
+      "gap": 0.5,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q4#sm",
+      "risk": null
+    },
+    {
+      "practice": "pc",
+      "function": "governance",
+      "score": 1.75,
+      "target": 2,
+      "gap": 0.25,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q4#pc",
+      "risk": null
+    },
+    {
+      "practice": "ta",
+      "function": "design",
+      "score": 1.375,
+      "target": 2.5,
+      "gap": 1.125,
+      "due": "2027-03-31",
+      "reference": "samm-assessments:assessment/payments-2026-q4#ta",
+      "risk": null
+    },
+    {
+      "practice": "sa",
+      "function": "design",
+      "score": 1.75,
+      "target": 2,
+      "gap": 0.25,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q4#sa",
+      "risk": null
+    },
+    {
+      "practice": "sb",
+      "function": "implementation",
+      "score": 2.25,
+      "target": 2.5,
+      "gap": 0.25,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q4#sb",
+      "risk": null
+    },
+    {
+      "practice": "sd",
+      "function": "implementation",
+      "score": 2.25,
+      "target": 2.5,
+      "gap": 0.25,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q4#sd",
+      "risk": null
+    },
+    {
+      "practice": "dm",
+      "function": "implementation",
+      "score": 1.375,
+      "target": 2,
+      "gap": 0.625,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q4#dm",
+      "risk": null
+    },
+    {
+      "practice": "aa",
+      "function": "verification",
+      "score": 1.375,
+      "target": 1.5,
+      "gap": 0.125,
+      "due": "2027-06-30",
+      "reference": "samm-assessments:assessment/payments-2026-q4#aa",
+      "risk": null
+    },
+    {
+      "practice": "rt",
+      "function": "verification",
+      "score": 1.125,
+      "target": 1.5,
+      "gap": 0.375,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q4#rt",
+      "risk": null
+    },
+    {
+      "practice": "st",
+      "function": "verification",
+      "score": 1.875,
+      "target": 2,
+      "gap": 0.125,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q4#st",
+      "risk": null
+    },
+    {
+      "practice": "im",
+      "function": "operations",
+      "score": 1.625,
+      "target": 2,
+      "gap": 0.375,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q4#im",
+      "risk": null
+    },
+    {
+      "practice": "em",
+      "function": "operations",
+      "score": 1.375,
+      "target": 2,
+      "gap": 0.625,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q4#em",
+      "risk": null
+    },
+    {
+      "practice": "om",
+      "function": "operations",
+      "score": 0.75,
+      "target": 1.5,
+      "gap": 0.75,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q4#om",
+      "risk": null
+    }
+  ]
+}

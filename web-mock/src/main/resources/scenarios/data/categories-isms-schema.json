@@ -211,6 +211,10 @@
             "type": "string",
             "x-asciidoc": true
           },
+          "review-due": {
+            "type": "string",
+            "format": "date"
+          },
           "related": {
             "type": "array",
             "maxItems": 50,
@@ -300,6 +304,10 @@
           "conclusion": {
             "type": "string",
             "x-asciidoc": true
+          },
+          "review-due": {
+            "type": "string",
+            "format": "date"
           },
           "related": {
             "type": "array",

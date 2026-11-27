@@ -1275,6 +1275,8 @@ class ProfilesTest {
         private static final String CORE = "/api/v1/documents/isms-core/";
         private static final String POLICY = "01JZB1C3E5G7J9M1P3R5T7W9Y2";
         private static final String SECURE = "01JZB3E5G7J9M1P3R5T7W9Y1B4";
+        private static final String SCOPE = "01JZB4F6H8K0N2Q4S6V8X0Z2C5";
+        private static final String ACCESS = "01JZB2D4F6H8K0N2Q4S6V8X0Z3";
         private static final String AUDIT = "01JZB6H8K0N2Q4S6V8X0Z2C4E7";
         private static final String SAMM_ORIGIN = "/api/v1/isms/risks/draft?origin=samm-assessments%3Aassessment%2Fpayments-2026-q2%23";
         private static final String THREAT_ORIGIN = "/api/v1/isms/risks/draft?origin=threat-models%3Athreat-model%2Fpayment-api-checkout-flow%23";
@@ -1297,6 +1299,32 @@ class ProfilesTest {
             List<String> aliases = new ArrayList<>();
             json(client.get("/api/v1/status")).path("repositories").forEach(repository -> aliases.add(repository.path("alias").asText()));
             return aliases;
+        }
+
+        /** Every write (a method other than GET) of the scenario on the two ISMS repositories or the origin draft's lens. */
+        private List<List<String>> ismsWrites(String scenario) {
+            try (var in = getClass().getClassLoader().getResourceAsStream("scenarios/" + scenario + ".json")) {
+                List<List<String>> writes = new ArrayList<>();
+                MockClient.MAPPER.readTree(in).path("routes").fieldNames().forEachRemaining(key -> {
+                    var parts = key.split(" ", 2);
+                    var path = parts[1];
+                    if (!"GET".equals(parts[0]) && (path.contains("/isms-register") || path.contains("/isms-core") || path.startsWith("/api/v1/isms/"))) {
+                        writes.add(List.of(parts[0], path));
+                    }
+                });
+                return writes;
+            } catch (IOException e) {
+                throw new java.io.UncheckedIOException(e);
+            }
+        }
+
+        private String fetchOf(MockClient client, String alias) {
+            for (var repository : json(client.get("/api/v1/status")).path("repositories")) {
+                if (alias.equals(repository.path("alias").asText())) {
+                    return repository.path("fetch").asText();
+                }
+            }
+            return "none";
         }
 
         private void assertOutcome(MockClient client, String method, String path, int status, String outcome) {
@@ -1351,7 +1379,7 @@ class ProfilesTest {
         }
 
         @Test
-        @DisplayName("workshop answers the gaps of a scope: fifteen for payments with R-015 on st, none for identity and mobile, 404 for an unknown scope")
+        @DisplayName("workshop answers the gaps of a scope: fifteen for payments with R-015 on st, none for identity, 404 for an unknown scope and for mobile before it exists")
         void shouldAnswerTheGaps() {
             try (var client = MockClient.start("workshop").login()) {
                 var payments = json(client.get("/api/v1/samm/payments/gaps"));
@@ -1368,7 +1396,7 @@ class ProfilesTest {
                         () -> assertEquals(14, json(client.get("/api/v1/samm/organisation/gaps")).path("gaps").size()),
                         () -> assertEquals(15, json(client.get("/api/v1/samm/shop/gaps")).path("gaps").size()),
                         () -> assertTrue(json(client.get("/api/v1/samm/identity/gaps")).path("assessment").isNull()),
-                        () -> assertEquals(0, json(client.get("/api/v1/samm/mobile/gaps")).path("gaps").size()));
+                        () -> assertEquals(404, client.get("/api/v1/samm/mobile/gaps").statusCode()));
                 assertGet(client, "/api/v1/samm/nope/gaps", 404, "NOT_FOUND");
             }
         }
@@ -1405,19 +1433,71 @@ class ProfilesTest {
         void shouldSaveAndRefuseTheSubmit() {
             try (var client = MockClient.start("workshop").login()) {
                 assertOutcome(client, "POST", REGISTER + "R-018/save", 200, "SAVED");
-                assertOutcome(client, "POST", REGISTER + "R-021/save", 200, "SAVED");
+                var reopened = client.change("POST", REGISTER + "R-021/save", "{}");
+                assertAll("R-021 save", () -> assertEquals(200, reopened.statusCode()),
+                        () -> assertEquals("SAVED", json(reopened).path("outcome").asText()),
+                        () -> assertEquals("draft", json(reopened).path("state").asText()),
+                        () -> assertEquals(2, json(reopened).path("version").asInt()));
                 assertOutcome(client, "PUT", "/api/v1/drafts/isms-register/R-018", 200, "DRAFT_SAVED");
                 assertOutcome(client, "PUT", "/api/v1/drafts/isms-register/R-042", 200, "DRAFT_SAVED");
                 assertOutcome(client, "POST", CORE + POLICY + "/save", 200, "SAVED");
                 assertOutcome(client, "PUT", "/api/v1/drafts/isms-core/" + AUDIT, 200, "DRAFT_SAVED");
-                assertOutcome(client, "POST", REGISTER + "R-042/transitions/isms.submit", 422, "MANDATORY_FIELDS_MISSING");
-                assertOutcome(client, "POST", CORE + AUDIT + "/transitions/isms.submit", 422, "MANDATORY_FIELDS_MISSING");
-                assertEquals(List.of("/treatment"), IncidentFixtures.texts(json(client.change("POST", REGISTER + "R-042/transitions/isms.submit", "{}")).path("missing")));
-                assertEquals(List.of("/conclusion"), IncidentFixtures.texts(json(client.change("POST", CORE + AUDIT + "/transitions/isms.submit", "{}")).path("missing")));
-                assertEquals("draft", json(client.change("POST", REGISTER + "R-021/save", "{}")).path("state").asText());
-                assertEquals(2, json(client.change("POST", REGISTER + "R-021/save", "{}")).path("version").asInt());
+                var riskSubmit = client.change("POST", REGISTER + "R-042/transitions/isms.submit", "{}");
+                var documentSubmit = client.change("POST", CORE + AUDIT + "/transitions/isms.submit", "{}");
+                assertAll("the submit",
+                        () -> assertEquals(422, riskSubmit.statusCode()),
+                        () -> assertEquals("MANDATORY_FIELDS_MISSING", json(riskSubmit).path("outcome").asText()),
+                        () -> assertEquals(List.of("/treatment"), IncidentFixtures.texts(json(riskSubmit).path("missing"))),
+                        () -> assertEquals(422, documentSubmit.statusCode()),
+                        () -> assertEquals("MANDATORY_FIELDS_MISSING", json(documentSubmit).path("outcome").asText()),
+                        () -> assertEquals(List.of("/conclusion"), IncidentFixtures.texts(json(documentSubmit).path("missing"))));
                 assertEquals("in-review", json(client.change("POST", REGISTER + "R-018/save", "{}")).path("state").asText());
             }
+        }
+
+        @Test
+        @DisplayName("workshop states: the gaps follow the saved targets and the Q4 release, mobile exists after its creation, a register outage refuses the save and keeps the draft")
+        void shouldFollowTheStatesInTheGaps() {
+            try (var client = MockClient.start("workshop").login()) {
+                client.send("POST", "/mock/goto/targets-saved", null, Map.of());
+                var saved = json(client.get("/api/v1/samm/payments/gaps"));
+                var ta = gapOf(saved, "ta");
+                assertAll("targets-saved",
+                        () -> assertEquals(file("isms-gaps-payments-targets-saved.json"), saved),
+                        () -> assertEquals(3, ta.path("target").asInt()),
+                        () -> assertEquals(1.25, ta.path("score").asDouble()),
+                        () -> assertEquals(1.75, ta.path("gap").asDouble()),
+                        () -> assertEquals("payments-2026-q2", saved.path("assessment").path("document").asText()),
+                        () -> assertEquals("R-015", gapOf(saved, "st").path("risk").path("id").asText()),
+                        () -> assertTrue(gapOf(saved, "om").isMissingNode(), "om has no target in the saved targets"));
+                client.send("POST", "/mock/goto/assessment-released-meanwhile", null, Map.of());
+                var released = json(client.get("/api/v1/samm/payments/gaps"));
+                var draft = json(client.get("/api/v1/isms/risks/draft?origin=samm-assessments%3Aassessment%2Fpayments-2026-q4%23sm"));
+                assertAll("assessment-released-meanwhile",
+                        () -> assertEquals(file("isms-gaps-payments-released.json"), released),
+                        () -> assertEquals("payments-2026-q4", released.path("assessment").path("document").asText()),
+                        () -> assertEquals("samm-assessments:assessment/payments-2026-q4#sm", gapOf(released, "sm").path("reference").asText()),
+                        () -> assertEquals(gapOf(released, "sm").path("reference").asText(), draft.path("origin").path("ref").asText()),
+                        () -> assertEquals("/samm/payments/2026-q4/sm", draft.path("origin").path("address").asText()),
+                        () -> assertEquals("team:payments", draft.path("fields").path("/owner").asText()));
+                client.send("POST", "/mock/goto/scope-created", null, Map.of());
+                var mobile = json(client.get("/api/v1/samm/mobile/gaps"));
+                assertAll("scope-created", () -> assertTrue(mobile.path("assessment").isNull()), () -> assertEquals(0, mobile.path("gaps").size()));
+                client.send("POST", "/mock/goto/risk-register-git-unavailable", null, Map.of());
+                assertOutcome(client, "POST", REGISTER + "R-018/save", 503, "GIT_UNAVAILABLE");
+                assertOutcome(client, "POST", REGISTER + "R-021/save", 503, "GIT_UNAVAILABLE");
+                assertOutcome(client, "POST", REGISTER + "R-042/transitions/isms.submit", 503, "GIT_UNAVAILABLE");
+                assertOutcome(client, "PUT", "/api/v1/drafts/isms-register/R-018", 200, "DRAFT_SAVED");
+            }
+        }
+
+        private static JsonNode gapOf(JsonNode gaps, String practice) {
+            for (var gap : gaps.path("gaps")) {
+                if (practice.equals(gap.path("practice").asText())) {
+                    return gap;
+                }
+            }
+            return MockClient.MAPPER.missingNode();
         }
 
         @Test
@@ -1426,6 +1506,7 @@ class ProfilesTest {
             try (var client = MockClient.start("workshop").login()) {
                 var aliases = aliases(client);
                 assertAll(
+                        () -> assertTrue(aliases.contains("isms-register")),
                         () -> assertEquals(aliases.indexOf("isms-register") + 1, aliases.indexOf("isms-core")),
                         () -> assertEquals(3, json(client.get("/api/v1/search?q=policy")).path("results").size()),
                         () -> assertEquals(1, json(client.get("/api/v1/search?q=R-009")).path("results").size()),
@@ -1465,12 +1546,10 @@ class ProfilesTest {
                         () -> assertEquals(3, json(client.get("/api/v1/search?q=policy")).path("results").size()));
                 assertGet(client, SAMM_ORIGIN + "sm", 403, "FORBIDDEN");
                 assertGet(client, "/api/v1/isms/risks/draft", 403, "FORBIDDEN");
-                for (var write : List.of(List.of("POST", REGISTER + "R-018/save"), List.of("POST", REGISTER + "R-012/save"),
-                        List.of("POST", REGISTER + "R-042/save"), List.of("PUT", "/api/v1/drafts/isms-register/R-018"),
-                        List.of("POST", REGISTER + "R-042/transitions/isms.submit"), List.of("POST", "/api/v1/releases/isms-register/R-018"),
-                        List.of("POST", "/api/v1/documents/isms-register"), List.of("POST", CORE + AUDIT + "/transitions/isms.submit"),
-                        List.of("PUT", "/api/v1/drafts/isms-core/" + AUDIT), List.of("POST", "/api/v1/releases/isms-core/" + SECURE),
-                        List.of("POST", "/api/v1/documents/isms-core"), List.of("POST", CORE + POLICY + "/save"))) {
+                var writes = ismsWrites("read-only");
+                assertTrue(writes.size() >= 12, () -> "the ISMS writes of the scenario: " + writes);
+                assertTrue(writes.contains(List.of("POST", CORE + SECURE + "/save")), () -> "the save of a policy: " + writes);
+                for (var write : writes) {
                     assertOutcome(client, write.get(0), write.get(1), 403, "FORBIDDEN");
                 }
             }
@@ -1535,7 +1614,10 @@ class ProfilesTest {
                         () -> assertEquals(file("isms-documents.json"), json(client.get("/api/v1/documents/isms-core"))),
                         () -> assertEquals(file("risk-r-012.json"), json(client.get(REGISTER + "R-012"))),
                         () -> assertEquals(file("risk-r-018.json"), json(client.get(REGISTER + "R-018"))),
+                        () -> assertEquals(file("risk-r-007.json"), json(client.get(REGISTER + "R-007"))),
                         () -> assertEquals(file("isms-doc-information-security-policy.json"), json(client.get(CORE + POLICY))),
+                        () -> assertEquals(file("isms-doc-isms-scope.json"), json(client.get(CORE + SCOPE))),
+                        () -> assertEquals(file("isms-doc-access-control-policy.json"), json(client.get(CORE + ACCESS))),
                         () -> assertEquals(file("isms-gaps-payments.json"), json(client.get("/api/v1/samm/payments/gaps"))),
                         () -> assertEquals(503, save.statusCode()),
                         () -> assertEquals("GIT_UNAVAILABLE", json(save).path("outcome").asText()),
@@ -1551,7 +1633,8 @@ class ProfilesTest {
                         () -> assertEquals(3, saved.path("version").asInt()),
                         () -> assertEquals(201, created.statusCode()),
                         () -> assertEquals("R-043", json(created).path("id").asText()),
-                        () -> assertEquals("UP", json(client.get("/api/v1/status")).path("repositories").get(0).path("fetch").asText()));
+                        () -> assertEquals("UP", fetchOf(client, "isms-register")),
+                        () -> assertEquals("UP", fetchOf(client, "isms-core")));
             }
         }
 
@@ -1562,11 +1645,16 @@ class ProfilesTest {
                 var aliases = aliases(client);
                 assertAll(
                         () -> assertEquals(List.of("read", "edit"), actions(client, "isms-core")),
+                        () -> assertTrue(aliases.contains("isms-register")),
                         () -> assertEquals(aliases.indexOf("isms-register") + 1, aliases.indexOf("isms-core")),
                         () -> assertEquals(file("isms-register.json"), json(client.get("/api/v1/isms/register"))),
                         () -> assertEquals(file("isms-documents.json"), json(client.get("/api/v1/documents/isms-core"))),
                         () -> assertEquals(file("risk-r-009.json"), json(client.get(REGISTER + "R-009"))),
+                        () -> assertEquals(file("risk-r-007.json"), json(client.get(REGISTER + "R-007"))),
+                        () -> assertEquals(file("risk-r-012.json"), json(client.get(REGISTER + "R-012"))),
                         () -> assertEquals(file("isms-doc-information-security-policy.json"), json(client.get(CORE + POLICY))),
+                        () -> assertEquals(file("isms-doc-isms-scope.json"), json(client.get(CORE + SCOPE))),
+                        () -> assertEquals(file("isms-doc-access-control-policy.json"), json(client.get(CORE + ACCESS))),
                         () -> assertEquals(file("isms-gaps-payments.json"), json(client.get("/api/v1/samm/payments/gaps"))),
                         () -> assertEquals(file("categories-isms-schema.json"), json(client.get("/api/v1/categories/isms/schema"))),
                         () -> assertEquals(404, client.change("POST", REGISTER + "R-012/save", "{}").statusCode()),

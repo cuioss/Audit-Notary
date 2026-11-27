@@ -112,7 +112,8 @@ xref:rest-api.adoc#_decided_threat_models[REST API Register, Open Questions]; th
 Decided provisionally with the transfer (UC-TM-3), recorded in
 xref:rest-api.adoc#_decided_isms[REST API Register, Open Questions]; the owner may change each one:
 
-. *Transfer* (AUN-TM-4): `GET /api/v1/isms/risks/draft?origin=threat-models:threat-model/<id>#<threat>` prepares a risk (nothing
-  is stored); the first save of the risk, `POST /api/v1/documents/isms-register` with `origin`, creates it with the reference
-  and sets `transferred` on the threat in a second commit. A threat that is mitigated, or has a countermeasure, or is
-  transferred already is refused (`ORIGIN_NOT_TRANSFERABLE`, `ORIGIN_HAS_RISK`).
+. *Transfer* (AUN-TM-4): `GET /api/v1/isms/risks/draft?origin=threat-models:threat-model/<id>%23<threat>` prepares a risk (the `#` is
+  percent-encoded, otherwise it starts the URL fragment and the server never receives the threat; nothing is stored); the first save of the risk, `POST /api/v1/documents/isms-register` with `origin`, creates it with the reference
+  and sets `transferred` on the threat in a second commit. An `accepted` threat is transferable, with or without a
+  countermeasure; an `open` threat with a countermeasure, a mitigated threat and a threat that is transferred already are
+  refused (`ORIGIN_NOT_TRANSFERABLE`, `ORIGIN_HAS_RISK`).

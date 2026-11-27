@@ -608,7 +608,7 @@ body is written out)
 `samm-assessments:assessment/<id>#<practice>`, `risk` the risk of the register that names it or `null`. The exact body is in
 <<_isms_origin>>
 |`404 NOT_FOUND`; `403 FORBIDDEN` without `read` on `samm-assessments`; `"assessment": null` and `"gaps": []` for a scope without a
-released assessment or without targets
+released assessment; the assessment and `"gaps": []` for a scope with a released assessment but without targets
 |xref:category-samm.adoc#AUN-SAMM-6[AUN-SAMM-6], xref:../use-cases/04-samm.adoc#UC-SAMM-6[UC-SAMM-6]
 |`PROVISIONAL`; the requirement says "list every practice whose score is below its target", not how
 
@@ -979,7 +979,8 @@ xref:category-threat-models.adoc#AUN-TM-4[AUN-TM-4], xref:category-samm.adoc#AUN
 |As the generic requests: `DRAFT_SAVED`, `SAVED`, `TRANSITIONED` (right `edit`) and `RELEASED` with the tag `risks/R-<n>/v<n>`
 (right `approve`, step-up, `isms.release`); a risk is released more than once, a release merges the entry's path into `main`
 |`MANDATORY_FIELDS_MISSING` (`/rating`, `/treatment`, `/owner`); `VALIDATION` per field, `READ_ONLY` for `/origin`; `CONFLICT`;
-`STEP_UP_REQUIRED`, `CHANGED_SINCE_REVIEW`, `FORBIDDEN`, `REJECTED`, `GIT_UNAVAILABLE`; `DOCUMENT_RELEASED` does not apply
+`STEP_UP_REQUIRED`, `CHANGED_SINCE_REVIEW`, `FORBIDDEN`, `REJECTED`, `GIT_UNAVAILABLE`; `DOCUMENT_RELEASED` does not apply;
+`409 TRANSFER_PENDING` at the release of a risk whose transfer into its threat model is not written (PROVISIONAL, <<_isms_save_release>>)
 |xref:../use-cases/07-isms.adoc#UC-ISMS-2[UC-ISMS-2], xref:../use-cases/02-documents.adoc#UC-DOC-6[UC-DOC-6],
 xref:../use-cases/02-documents.adoc#UC-DOC-7[UC-DOC-7]
 |`PROVISIONAL`
@@ -4468,6 +4469,7 @@ vocabulary of the form kit (<<_form_kit_requests>>); the field names are lower c
             }
           },
           "conclusion": {"type": "string", "x-asciidoc": true},
+          "review-due": {"type": "string", "format": "date"},
           "related": {
             "type": "array",
             "maxItems": 50,
@@ -4515,6 +4517,7 @@ vocabulary of the form kit (<<_form_kit_requests>>); the field names are lower c
             }
           },
           "conclusion": {"type": "string", "x-asciidoc": true},
+          "review-due": {"type": "string", "format": "date"},
           "related": {
             "type": "array",
             "maxItems": 50,
@@ -4747,6 +4750,12 @@ entries):
 A risk made from an origin has `"origin": "<reference>"` in its value. The sheet resolves every reference of the value with
 `GET /api/v1/references/resolve` (a risk, a threat, a practice, a service), as every form does.
 
+*The origin is hidden in the generic read as it is in the register* (PROVISIONAL, <<_decided_isms>>, point 75). For a user who
+may not read the repository of the origin (`threat-models`, `samm-assessments`), the server leaves `/origin` out of every value
+it returns for the risk: the working state, the draft, a release read with `at`, and the `diff`. The raw reference names a
+restricted model or assessment, so it is not sent even though resolving it answers `found: false` (AUN-DP-2). The form does
+not offer the field (`readOnly`), so the omission changes no save.
+
 [#_isms_numbering]
 === The First Save and the Number
 
@@ -4907,8 +4916,9 @@ answers `201` as before and, because the request named an origin, the member `or
   evaluation counts the threat as `transferred` instead of `untreated`. The person needs only `edit` on `isms-register`: the
   write is made by the application on its behalf and fails `recorded: false` (never the create) when the model could not be
   written, for example because it changed meanwhile or the Git server of its repository is unreachable. The risk then exists
-  without the link; the next save of the risk tries again and answers `origin` (`recorded`) until it has been written
-  (PROVISIONAL, <<_decided_isms>>, point 68).
+  without the link; the next save of the risk, its submit and its release try again and answer `origin` (`recorded`) until it
+  has been written, and the release is refused while it is pending (<<_isms_save_release>>; PROVISIONAL,
+  <<_decided_isms>>, points 68 and 76).
 * For a gap nothing else is written: the link is the `origin` of the risk, and the gaps request marks the gap with it.
 * The threat model of the transfer is a document of `threat-models`: the answer of the model after the transfer carries
   `transferred` on the threat, a `draft` state and the evaluation counts of <<_threat_evaluation>> (`untreated` one lower,
@@ -4924,6 +4934,12 @@ specific:
 * *Submit* (`POST …/transitions/isms.submit`) answers `MANDATORY_FIELDS_MISSING` with the pointers of the `required` fields that
   are empty: `{"outcome": "MANDATORY_FIELDS_MISSING", "missing": ["/treatment"]}` for the draft `R-042`, or
   `["/statements"]` for a policy without text.
+* *A pending transfer is retried by the submit and the release* (PROVISIONAL, <<_decided_isms>>, point 76). A risk whose first
+  save answered `origin.recorded: false` has no `transferred` link in its threat model. Submit and release first try the
+  write again, as the person who acts. The submit goes on whatever the result; the release is refused with
+  `409 TRANSFER_PENDING` (`origin` `{ref, recorded: false}`) while the write fails, so that a released risk never leaves its
+  threat counted as untreated. If the link is derived from the register instead of being stored (point 68, the alternative),
+  there is nothing to retry and no such refusal.
 * *Release* (`POST /api/v1/releases/isms-register/R-018`, `…/isms-core/<id>`) is the shared flow of the release view: the diff
   of the working state against the last release (`diff?from=released`, grouped by field), the seal, the step-up. It answers
   `{"outcome": "RELEASED", "tag": "risks/R-018/v2", "at": "2026-11-26T10:05:00Z"}`. A release of a risk merges that entry's
@@ -6248,6 +6264,15 @@ refuses the create under multi-factor with a notice, or leaving the loss.
 . *Reading while the Git server is unreachable* serves the register, the documents, the gaps and the reads from the last
   fetched state; the writes (the create and the save of a risk or a document, the transfer) answer `503 GIT_UNAVAILABLE` and keep the
   draft. The page of `/isms/risks/new` keeps the person's input.
+. *The origin of a risk is hidden from a user who may not read its repository,* in the generic read as in the register: the
+  server leaves `/origin` out of the value it returns (the working state, the draft, a release read with `at`, the `diff`),
+  because the raw reference would name a restricted model or assessment (AUN-DP-2). The form does not offer the field, so no
+  save changes.
+. *A pending transfer is retried by the submit and the release, and blocks the release.* The first save may answer
+  `origin.recorded: false` (the threat model could not be written); the submit and the release then try the write again as the
+  person who acts, the submit goes on, the release answers `409 TRANSFER_PENDING` until the link is written. Otherwise a risk
+  could be released without a save in between and leave its threat counted as untreated. Provisional until the owner decides
+  between storing the link and deriving it (68), which would make the point void.
 
 For the owner: whether the categories of the ISMS should be one workflow or one per type, and whether a document may be
 released once only (53); whether a generated page of the ISMS documents belongs in the web app (55); the fields of the five
@@ -6256,7 +6281,7 @@ checked against a standard) and whether a risk should keep likelihood and impact
 the risk register as it is worked on should be a request of the library's index and whether it needs a paged request at a few
 thousand entries (58, with the open point of UC-ISMS-2: the measurement of the index at register size is still to be made); whether a
 risk may have more than one origin or a gap more than one risk (65); whether the transfer should be stored in the threat model at
-all, or derived from the register (68; it makes a released model a draft and fails without a transaction); whether a risk
+all, or derived from the register (68, 76; it makes a released model a draft and fails without a transaction); whether a risk
 should be closed, retired or deleted, and whether an owner must accept a residual risk before the release (70; the requirement of
 the standard is not checked here, only that the register names the owner by team and role); whether the Due lens should list the
 entries in review and the reviews of drafts (71); whether the first save of a risk may be refused for the title alone being

@@ -56,9 +56,10 @@ class IsmsTest {
     private static final Pattern RISK_ID = Pattern.compile("R-\\d{3}");
     private static final LocalDate TODAY = LocalDate.parse("2026-11-26");
 
-    /** The eight risks in the order of the register: the id, and the versions that were released. */
+    private static final Path DATA_DIRECTORY = Path.of("src/main/resources/scenarios/data");
+    /** The risks in the order of the register (read from {@code isms-register.json}): the id, and the versions that were released (read from the revisions). */
     private static final Map<String, List<Integer>> RISKS = new LinkedHashMap<>();
-    /** The eight documents: the slug and the id. */
+    /** The documents: the slug (of the file {@code isms-doc-<slug>.json}) and the id, in the order of the ids. */
     private static final Map<String, String> DOCUMENTS = new LinkedHashMap<>();
     private static final Map<String, String> COLLECTIONS = Map.of("policy", "policies", "isms-scope", "scope", "audit-report", "audits",
             "management-review", "management-reviews");
@@ -66,22 +67,29 @@ class IsmsTest {
             "before-first", "empty");
 
     static {
-        RISKS.put("R-004", List.of(1, 2, 3));
-        RISKS.put("R-007", List.of(1));
-        RISKS.put("R-009", List.of(1, 2));
-        RISKS.put("R-012", List.of(1, 2));
-        RISKS.put("R-015", List.of(1));
-        RISKS.put("R-018", List.of(1));
-        RISKS.put("R-021", List.of(1));
-        RISKS.put("R-042", List.of());
-        DOCUMENTS.put("information-security-policy", "01JZB1C3E5G7J9M1P3R5T7W9Y2");
-        DOCUMENTS.put("access-control-policy", "01JZB2D4F6H8K0N2Q4S6V8X0Z3");
-        DOCUMENTS.put("secure-development-policy", "01JZB3E5G7J9M1P3R5T7W9Y1B4");
-        DOCUMENTS.put("isms-scope", "01JZB4F6H8K0N2Q4S6V8X0Z2C5");
-        DOCUMENTS.put("internal-audit-2025", "01JZB5G7J9M1P3R5T7W9Y1B3D6");
-        DOCUMENTS.put("internal-audit-2026", "01JZB6H8K0N2Q4S6V8X0Z2C4E7");
-        DOCUMENTS.put("management-review-2026-h1", "01JZB7J9M1P3R5T7W9Y1B3D5F8");
-        DOCUMENTS.put("management-review-2025", "01JZB8K0N2Q4S6V8X0Z2C4E6G9");
+        data("isms-register.json").path("risks").forEach(row -> {
+            String id = row.path("id").asText();
+            List<Integer> releases = new ArrayList<>();
+            data("risk-" + id.toLowerCase() + "-revisions.json").path("revisions").forEach(revision -> {
+                if ("release".equals(revision.path("kind").asText())) {
+                    releases.add(revision.path("version").asInt());
+                }
+            });
+            releases.sort(null);
+            RISKS.put(id, releases);
+        });
+        Map<String, String> byId = new java.util.TreeMap<>();
+        try (var files = Files.list(DATA_DIRECTORY)) {
+            files.map(path -> path.getFileName().toString())
+                    .filter(name -> name.startsWith("isms-doc-") && name.endsWith(".json") && !name.endsWith("-revisions.json") && !name.contains("-at-"))
+                    .forEach(name -> {
+                        String slug = name.substring("isms-doc-".length(), name.length() - ".json".length());
+                        byId.put(data(name).path("id").asText(), slug);
+                    });
+        } catch (IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+        byId.forEach((id, slug) -> DOCUMENTS.put(slug, id));
     }
 
     static JsonNode data(String name) {
@@ -203,6 +211,31 @@ class IsmsTest {
             addresses.forEach(address -> assertEquals(address, ADDRESSES.checkReturn(address), address));
             assertEquals(8, data("isms-register.json").path("risks").size());
             assertEquals(8, data("isms-documents.json").path("documents").size());
+            assertEquals(List.of("R-004", "R-007", "R-009", "R-012", "R-015", "R-018", "R-021", "R-042"), List.copyOf(RISKS.keySet()));
+            assertEquals(List.of(3, 1, 2, 2, 1, 1, 1, 0), RISKS.values().stream().map(List::size).toList());
+            assertEquals("01JZB4F6H8K0N2Q4S6V8X0Z2C5", DOCUMENTS.get("isms-scope"));
+            assertEquals("01JZB3E5G7J9M1P3R5T7W9Y1B4", DOCUMENTS.get("secure-development-policy"));
+            assertEquals("01JZB1C3E5G7J9M1P3R5T7W9Y2", DOCUMENTS.get("information-security-policy"));
+        }
+
+        @Test
+        @DisplayName("the document list holds exactly the documents whose files exist, and the register holds exactly the risks whose files exist")
+        void shouldListEveryFixtureOnce() {
+            List<String> listed = new ArrayList<>();
+            data("isms-documents.json").path("documents").forEach(row -> listed.add(row.path("id").asText()));
+            List<String> risks = new ArrayList<>();
+            data("isms-register.json").path("risks").forEach(row -> risks.add(row.path("id").asText()));
+            List<String> riskFiles;
+            try (var files = Files.list(DATA_DIRECTORY)) {
+                riskFiles = files.map(path -> path.getFileName().toString())
+                        .filter(name -> name.matches("risk-r-\\d{3}\\.json")).map(name -> name.substring(5, 10).toUpperCase()).sorted().toList();
+            } catch (IOException e) {
+                throw new java.io.UncheckedIOException(e);
+            }
+            assertAll(
+                    () -> assertEquals(new HashSet<>(DOCUMENTS.values()), new HashSet<>(listed)),
+                    () -> assertEquals(DOCUMENTS.size(), listed.size()),
+                    () -> assertEquals(risks.stream().sorted().toList(), riskFiles));
         }
 
         @Test
@@ -536,11 +569,19 @@ class IsmsTest {
         @Test
         @DisplayName("the gaps of a scope are recomputed from its targets and the last point of its trend; risk is the entry that names the gap")
         void shouldRecomputeTheGaps() {
-            Map<String, Integer> counts = Map.of("payments", 15, "shop", 15, "organisation", 14);
-            counts.forEach((scope, count) -> {
-                var gaps = data("isms-gaps-" + scope + ".json");
-                var targets = data("samm-scope-" + scope + ".json");
-                var point = list(data("samm-trend-" + scope + ".json").path("points")).stream().reduce((a, b) -> b).orElseThrow();
+            // the gaps file, the scope file, the trend file and the count: the three scopes, and the two states of Payments
+            // (the targets saved, the release of Q4)
+            List<String[]> cases = List.of(new String[]{"payments", "isms-gaps-payments.json", "samm-scope-payments.json", "samm-trend-payments.json", "15"},
+                    new String[]{"shop", "isms-gaps-shop.json", "samm-scope-shop.json", "samm-trend-shop.json", "15"},
+                    new String[]{"organisation", "isms-gaps-organisation.json", "samm-scope-organisation.json", "samm-trend-organisation.json", "14"},
+                    new String[]{"payments", "isms-gaps-payments-targets-saved.json", "samm-scope-payments-targets-saved.json", "samm-trend-payments.json", "14"},
+                    new String[]{"payments", "isms-gaps-payments-released.json", "samm-scope-payments-released.json", "samm-trend-payments-released.json", "13"});
+            cases.forEach(fixture -> {
+                String scope = fixture[0];
+                int count = Integer.parseInt(fixture[4]);
+                var gaps = data(fixture[1]);
+                var targets = data(fixture[2]);
+                var point = list(data(fixture[3]).path("points")).stream().reduce((a, b) -> b).orElseThrow();
                 var assessment = list(targets.path("assessments")).stream().filter(a -> point.path("assessment").asText().equals(a.path("id").asText())).findFirst().orElseThrow();
                 List<String> expected = new ArrayList<>();
                 for (String practice : practices()) {
@@ -550,7 +591,7 @@ class IsmsTest {
                     }
                 }
                 List<JsonNode> rows = list(gaps.path("gaps"));
-                assertAll(scope,
+                assertAll(fixture[1],
                         () -> assertEquals(count, rows.size()),
                         () -> assertEquals(expected, rows.stream().map(row -> row.path("practice").asText()).toList()),
                         () -> assertEquals(scope, gaps.path("scope").asText()),
@@ -653,14 +694,23 @@ class IsmsTest {
                 assertFalse(draft.path("fields").has("/rating"), "the rating is never prefilled");
                 assertTrue(teams.contains(draft.path("fields").path("/owner").asText().substring(5)));
                 assertTrue(draft.path("origin").path("address").asText().startsWith("/"));
-                assertEquals(draft.path("origin").path("address"), draft.path("origin").path("address"));
                 assertEquals(draft.path("origin").path("address").asText(), ADDRESSES.checkReturn(draft.path("origin").path("address").asText()));
             }
-            var sm = list(data("isms-gaps-payments.json").path("gaps")).stream().filter(row -> "sm".equals(row.path("practice").asText())).findFirst().orElseThrow();
+            var gaps = data("isms-gaps-payments.json");
+            var checkout = data("threat-model-payment-api-checkout-flow.json");
+            var sm = list(gaps.path("gaps")).stream().filter(row -> "sm".equals(row.path("practice").asText())).findFirst().orElseThrow();
             var threat = list(data("threat-model-payment-api-checkout-flow.json").path("parts").path("model").path("value").path("threats")).stream()
                     .collect(java.util.stream.Collectors.toMap(item -> item.path("id").asText(), item -> item));
             assertAll(
                     () -> assertEquals("samm-gap", gap.path("origin").path("kind").asText()),
+                    () -> assertEquals("/samm/" + gaps.path("scope").asText() + "/" + gaps.path("assessment").path("id").asText() + "/sm",
+                            gap.path("origin").path("address").asText()),
+                    () -> assertEquals("samm-assessments:assessment/" + gaps.path("assessment").path("document").asText() + "#sm",
+                            gap.path("origin").path("ref").asText()),
+                    () -> assertEquals("threat-models:threat-model/" + checkout.path("id").asText() + "#T-02", t02.path("origin").path("ref").asText()),
+                    () -> assertEquals("threat-models:threat-model/" + checkout.path("id").asText() + "#T-09", t09.path("origin").path("ref").asText()),
+                    () -> assertEquals(checkout.path("address").asText(), t02.path("origin").path("address").asText()),
+                    () -> assertEquals(checkout.path("address").asText(), t09.path("origin").path("address").asText()),
                     () -> assertEquals(sm.path("reference").asText(), gap.path("origin").path("ref").asText()),
                     () -> assertEquals("mitigate", gap.path("fields").path("/treatment").asText()),
                     () -> assertTrue(gap.path("fields").path("/description").asText().contains(sm.path("score").asText())),
@@ -704,6 +754,15 @@ class IsmsTest {
                         () -> assertFalse(items.stream().anyMatch(item -> item.path("title").asText().contains("supplier access")), "the old title"),
                         () -> assertEquals(items.indexOf(isms.get(0)) + 3, items.indexOf(isms.get(3))));
                 isms.forEach(item -> assertEquals(item.path("address").asText(), ADDRESSES.checkReturn(item.path("address").asText())));
+            }
+            for (String profile : List.of("degraded", "local", "read-only")) {
+                try (var in = getClass().getClassLoader().getResourceAsStream("scenarios/" + profile + ".json")) {
+                    var inline = list(MockClient.MAPPER.readTree(in).path("routes").path("GET /api/v1/due").path("body").path("items")).stream()
+                            .filter(item -> "isms".equals(item.path("lens").asText())).toList();
+                    assertEquals(expected, inline, profile + " serves the due items inline");
+                } catch (IOException e) {
+                    throw new java.io.UncheckedIOException(e);
+                }
             }
             var due = list(data("due-workshop-lifecycle.json").path("items"));
             assertEquals(List.of("samm", "samm", "threat-models", "incidents", "incidents", "incidents", "isms", "isms", "isms", "isms", "categories"),

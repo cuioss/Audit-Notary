@@ -4300,12 +4300,9 @@
       }
     },
     "GET /api/v1/samm/mobile/gaps": {
-      "status": 200,
+      "status": 404,
       "body": {
-        "scope": "mobile",
-        "today": "2026-11-26",
-        "assessment": null,
-        "gaps": []
+        "outcome": "NOT_FOUND"
       },
       "requires": {
         "repository": "samm-assessments",
@@ -6774,7 +6771,7 @@
       }
     },
     "scope-created": {
-      "description": "The scope Mobile Apps was created: the list and the scope read show it without an assessment, its trend is empty, a save of its targets answers SAVED, and the event document-created tells an open list.",
+      "description": "The scope Mobile Apps was created: the list and the scope read show it without an assessment, its gaps are empty (before, the scope is unknown and its gaps answer 404), its trend is empty, a save of its targets answers SAVED, and the event document-created tells an open list.",
       "routes": {
         "GET /api/v1/samm/scopes": {
           "body_file": "samm-scopes-scope-created.json"
@@ -6819,6 +6816,19 @@
         "GET /api/v1/reports/samm-trend": {
           "status": 200,
           "body_file": "reports-samm-trend-scope-created.json",
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/samm/mobile/gaps": {
+          "status": 200,
+          "body": {
+            "scope": "mobile",
+            "today": "2026-11-26",
+            "assessment": null,
+            "gaps": []
+          },
           "requires": {
             "repository": "samm-assessments",
             "action": "read"
@@ -6871,10 +6881,18 @@
       }
     },
     "targets-saved": {
-      "description": "The targets of Payments were saved (ta 3, rt 2, om removed): the scope read shows them with the new blob, and the event document-saved tells an open scope sheet.",
+      "description": "The targets of Payments were saved (ta 3, rt 2, om removed): the scope read shows them with the new blob, the gaps of the released assessment follow the targets (ta 3, gap 1.75; om has no target and no gap), and the event document-saved tells an open scope sheet.",
       "routes": {
         "GET /api/v1/samm/scopes/payments": {
           "body_file": "samm-scope-payments-targets-saved.json"
+        },
+        "GET /api/v1/samm/payments/gaps": {
+          "status": 200,
+          "body_file": "isms-gaps-payments-targets-saved.json",
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "read"
+          }
         }
       },
       "events": [
@@ -7166,7 +7184,7 @@
       }
     },
     "assessment-released-meanwhile": {
-      "description": "Noor Haddad released Payments 2026 Q4 while it was open: a save, a draft, a submit and a release answer DOCUMENT_RELEASED, the assessment, the scope, the list and the trend read as released, and the event document-transitioned tells an open sheet.",
+      "description": "Noor Haddad released Payments 2026 Q4 while it was open: a save, a draft, a submit and a release answer DOCUMENT_RELEASED, the assessment, the scope, the list and the trend read as released, the gaps are those of Q4 and Q4 is a valid origin of a risk (before it answers ORIGIN_NOT_RELEASED), and the event document-transitioned tells an open sheet.",
       "routes": {
         "POST /api/v1/documents/samm-assessments/payments-2026-q4/save": {
           "status": 409,
@@ -7218,6 +7236,35 @@
           "requires": {
             "repository": "samm-assessments",
             "action": "read"
+          }
+        },
+        "GET /api/v1/samm/payments/gaps": {
+          "status": 200,
+          "body_file": "isms-gaps-payments-released.json",
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks/draft?origin=samm-assessments%3Aassessment%2Fpayments-2026-q4%23sm": {
+          "status": 200,
+          "body": {
+            "origin": {
+              "ref": "samm-assessments:assessment/payments-2026-q4#sm",
+              "kind": "samm-gap",
+              "title": "Payments 2026 Q4, Strategy and Metrics",
+              "address": "/samm/payments/2026-q4/sm"
+            },
+            "fields": {
+              "/title": "Strategy and Metrics of the Payments scope is below its target",
+              "/description": "The released assessment Payments 2026 Q4 scores 1.5 for Strategy and Metrics; the target of the scope is 2.",
+              "/owner": "team:payments",
+              "/treatment": "mitigate"
+            }
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
           }
         }
       },
@@ -7475,7 +7522,7 @@
       }
     },
     "risk-register-git-unavailable": {
-      "description": "The Git server of the ISMS register cannot be reached: the status is degraded and the register as of a past date or tag answers GIT_UNAVAILABLE (503); the register as of now and every other report answer 200.",
+      "description": "The Git server of the ISMS register cannot be reached: the status is degraded and the register as of a past date or tag answers GIT_UNAVAILABLE (503); the register as of now and every other report answer 200; a save and a submit of a risk answer GIT_UNAVAILABLE (503) while a draft stays possible.",
       "routes": {
         "GET /api/v1/status": {
           "status": 200,
@@ -7557,6 +7604,36 @@
           "requires": {
             "repository": "isms-register",
             "action": "read"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-018/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-021/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-042/transitions/isms.submit": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
           }
         }
       }

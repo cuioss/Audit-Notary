@@ -102,6 +102,12 @@ class DocumentLifecycleTest {
         return json(client.change("POST", path, "{}"));
     }
 
+    private static java.util.Set<String> aliasesOf(JsonNode status) {
+        java.util.Set<String> aliases = new java.util.TreeSet<>();
+        status.path("repositories").forEach(repository -> aliases.add(repository.path("alias").asText()));
+        return aliases;
+    }
+
     private static void goTo(MockClient client, String state) {
         assertEquals(200, client.send("POST", "/mock/goto/" + state, null, Map.of()).statusCode(), state);
     }
@@ -1083,6 +1089,7 @@ class DocumentLifecycleTest {
         @DisplayName("note-git-unavailable: the status is degraded with test-notes DOWN, the writes answer 503, the rest works")
         void shouldBeUnavailable() {
             try (var client = MockClient.start("workshop").login()) {
+                var ready = aliasesOf(body(client, "/api/v1/status"));
                 goTo(client, "note-git-unavailable");
                 var status = body(client, "/api/v1/status");
                 Map<String, String> fetch = new HashMap<>();
@@ -1092,7 +1099,7 @@ class DocumentLifecycleTest {
                         () -> assertTrue(status.path("degraded").asBoolean()),
                         () -> assertEquals("DOWN", fetch.get("test-notes")),
                         () -> assertEquals("UP", fetch.get("samm-assessments")),
-                        () -> assertEquals(8, fetch.size()),
+                        () -> assertEquals(ready, fetch.keySet(), "the repositories of the ready status"),
                         () -> assertEquals("DRAFT_SAVED", json(client.change("PUT", draft(N2), "{}")).path("outcome").asText()),
                         () -> assertEquals(200, client.get(LIST).statusCode()),
                         () -> assertEquals(200, client.get(doc(N6) + "/revisions").statusCode()),
@@ -1166,6 +1173,7 @@ class DocumentLifecycleTest {
         @DisplayName("note-release-password: the status asks for the password, the release passes, wrong-password refuses")
         void shouldReleaseWithPassword() {
             try (var client = MockClient.start("workshop").login()) {
+                var ready = aliasesOf(body(client, "/api/v1/status"));
                 goTo(client, "note-release-password");
                 var status = body(client, "/api/v1/status");
                 var released = client.change("POST", release(N4), "{\"password\":\"secret\"}");
@@ -1176,7 +1184,8 @@ class DocumentLifecycleTest {
                 assertAll(
                         () -> assertEquals("local", status.path("loginProvider").asText()),
                         () -> assertEquals("password", status.path("stepUp").asText()),
-                        () -> assertEquals(8, status.path("repositories").size()),
+                        () -> assertEquals(ready, aliasesOf(status), "the repositories of the ready status"),
+                        () -> assertEquals(ready, aliasesOf(wrongStatus), "the repositories of the ready status"),
                         () -> assertEquals("RELEASED", json(released).path("outcome").asText()),
                         () -> assertEquals("note-release-done", afterRelease),
                         () -> assertEquals("password", wrongStatus.path("stepUp").asText()),

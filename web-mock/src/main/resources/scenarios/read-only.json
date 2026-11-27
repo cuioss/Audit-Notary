@@ -4275,12 +4275,9 @@
       }
     },
     "GET /api/v1/samm/mobile/gaps": {
-      "status": 200,
+      "status": 404,
       "body": {
-        "scope": "mobile",
-        "today": "2026-11-26",
-        "assessment": null,
-        "gaps": []
+        "outcome": "NOT_FOUND"
       },
       "requires": {
         "repository": "samm-assessments",
