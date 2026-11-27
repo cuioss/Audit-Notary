@@ -129,9 +129,9 @@ reports answer as in `workshop`, except that the risk register as of a past date
 `unreachable` and its data after `recovered` (_Reports_). The threat models read as in `workshop` and `threat-models` is `DOWN`
 in the status of `unreachable`; in `unreachable` a save,
 a submit and a create of a threat model answer `503 GIT_UNAVAILABLE` (a draft stays `200`), after `recovered` they answer
-as in `workshop`; the user holds no `approve`, so the release is `403 FORBIDDEN` (_Threat Models_). The incidents read as in `workshop` (`edit` on the year of today, `read` on
+as in `workshop`; the user holds no `approve`, so the release is `403 FORBIDDEN` (_Threat Models_), and so is the release of an incident. The incidents read as in `workshop` (`edit` on the year of today, `read` on
 the year before); `isms-incidents-2026` is `DOWN` in the status of `unreachable`, where a save, the completion of a stage
-and the create answer `503 GIT_UNAVAILABLE` (the draft stays `200`), and after `recovered` they answer as in `workshop`
+and the create answer `503 GIT_UNAVAILABLE` (the draft stays `200`; a test derives the writes of the outage from the writes of the base), and after `recovered` they answer as in `workshop`
 (_Incident Reports_)
 
 |`empty`
@@ -177,8 +177,8 @@ scope, list, trend, and the summary and the trend report). The models and the fo
 user holds no right on `threat-models`: the summary has no `threatModels` section and the threat evaluation answers `403 FORBIDDEN`; the
 trend report, the risk register and the comparison pair answer as in `workshop` (_Reports_); the schema, the recipes, the
 page of the *Payment API* and its threat model answer `403 FORBIDDEN` (_Threat Models_). It holds no right on the incident
-repositories either: the years are `[]` and the year, an incident, its report and the schema answer `403 FORBIDDEN`
-(_Incident Reports_)
+repositories either: the years are `[]`, the year, an incident and its report answer `404 NOT_FOUND` (the contract: a year or an
+incident the user may not read is not found) and the schema answers `403 FORBIDDEN` (_Incident Reports_)
 
 |`local`
 |`ready`
@@ -402,8 +402,9 @@ the incidents of a year and the generic lists of the repositories, with the vari
 
 |`incident-<slug>*.json`
 |The nine incidents, each with `-revisions` and `-report`; `notification-outage` `-at-v1`; `credential-stuffing` `-diff`
-and its states `-reopened`, `-review-completed`, `-in-review`, `-released` (with `-released-revisions`, `-released-report`,
-`-released-at-v1`); `wrong-recipient-recompleted`, `phishing-link-privacy-completed`, `-recorded`, `-missed`; the created
+and its states `-reopened`, `-review-completed`, `-in-review` (with `-in-review-report`), `-released` (with `-released-revisions`,
+`-released-report`, `-released-at-v1`); `wrong-recipient-recompleted`, `phishing-link-privacy-completed`, `-recorded` and `-missed`
+(each with its `-report`); the created
 `suspicious-vpn` with its `-revisions` (_Incident Reports_)
 
 |`due-incident-<state>.json`, `documents-index-incident-created.json`
@@ -1395,8 +1396,9 @@ The state `incident-created` adds a tenth incident, `01JZA8F0H2K4M6P8R0T2W4Y6A8`
 |The commits newest first; a release is `v1`
 
 |`GET /api/v1/incidents/<year>/<id>/report`
-|The generated report (`source` `generated`; `committed` for the three released incidents and, in `incident-released`, the
-*Credential stuffing*)
+|The generated report of the saved state (`source` `generated`; `committed` for the three released incidents and, in `incident-released`, the
+*Credential stuffing*); the states that change what it says have a report of their own (`-in-review-report`, `-recorded-report`,
+`-missed-report`)
 
 |`GET …/documents/isms-incidents-2026/<credential-stuffing>/diff?from=released`
 |`from` `null`, `to` `working`, the sections `data`, `triage`, `response`, `review`, each change an addition at the first segment
@@ -1485,12 +1487,13 @@ is offered. The submit (`submit-b`, `200 TRANSITIONED`, 10:03) moves to `inciden
 where it answers `200 COMPLETED` and moves to `incident-review-completed`
 
 |`incident-submitted`
-|`in-review`, `incident.release` (`release: true`), the diff; the release (`release-b`, `200 RELEASED`, tag
+|`in-review`, `incident.release` (`release: true`), the diff and the report of the submitted state (`State in-review`, 10:03); the release (`release-b`, `200 RELEASED`, tag
 `incidents/01JZ9V7P9S1T3W5Y7A9C1E3G5J/v1`, 10:05, with the `report`) moves to `incident-released`. The event `document-transitioned`
 
 |`incident-released`
 |Released `v1` by Noor Haddad, frozen, the clock stopped (`asOf` 10:05, no deadline), `transitions` empty; the report is `committed`; the
-revisions end with `v1` (`?at=v1` is the frozen release); the year has 5 open incidents. The event `document-transitioned`
+revisions end with `v1` (`?at=v1` is the frozen release); the year has 5 open incidents; a save and a draft of the incident that were opened before
+answer `409 DOCUMENT_RELEASED` with the tag. The event `document-transitioned`
 
 |`incident-release-step-up`, `incident-release-stepped-up`
 |By `goto`, the incident reads in review: the release answers `403 STEP_UP_REQUIRED` and moves to `-stepped-up`, where it answers `200 RELEASED`
@@ -1500,15 +1503,15 @@ revisions end with `v1` (`?at=v1` is the frozen release); the year has 5 open in
 read moves to `-reviewed`, where the release answers `200 RELEASED`
 
 |`incident-release-released-meanwhile`
-|The incident reads released; the release answers `409 DOCUMENT_RELEASED` with the tag
+|The incident reads released; the release, a save and a draft answer `409 DOCUMENT_RELEASED` with the tag
 
 |`incident-notification-recorded`
 |`record-notification-c` (`200 SAVED`, 10:12): the supervisory authority of the *Phishing mail* was notified at 09:45 (`reporting-portal`):
-`gdpr-art33` is MET, 0/1/0, the Due list drops the item; the notifications stay open. The event `document-saved` (part `notifications`)
+`gdpr-art33` is MET, 0/1/0, the Due list drops the item, the report (`-recorded-report`) lists the notice and the met deadline; the notifications stay open. The event `document-saved` (part `notifications`)
 
 |`incident-clock-advanced`
 |By `goto`: `asOf` and today are 2026-11-27T10:00Z: `gdpr-art33` of the *Phishing mail* is MISSED and not sent, the year has two
-incidents with a missed deadline, the Due item reads MISSED; the other incidents keep what they read
+incidents with a missed deadline, the Due item reads MISSED, the report (`-missed-report`) marks the deadline `*MISSED*`; the other incidents keep what they read
 
 |`incident-saved-by-other`
 |The save of the card data answers `409 CONFLICT` for `/supervisory-authority` of the part `notifications` (own: sent 09:45; other: sent 09:20 by email, Jordan Weber)
@@ -1517,8 +1520,8 @@ incidents with a missed deadline, the Due item reads MISSED; the other incidents
 |The save and the draft of the card data answer `409 STAGE_LOCKED` (`["triage"]`)
 
 |`incident-invalid`
-|The save and the draft of the card data answer `422 VALIDATION`: `READ_ONLY` at `/completion` and `REFERENCE_NOT_FOUND` at
-`/affected-services/0` (part `triage`), `FORMAT` at `/supervisory-authority/sent-at` (part `notifications`)
+|The save and the draft of the card data answer `422 VALIDATION`: `READ_ONLY` at `/completion`, `REFERENCE_NOT_FOUND` at
+`/affected-services/0` and `OUT_OF_YEAR` at `/aware-at` (part `triage`), `FORMAT` at `/supervisory-authority/sent-at` (part `notifications`)
 
 |`incident-git-unavailable`
 |The status is `degraded` with `isms-incidents-2026` `DOWN`; every write (save, complete, reopen, submit, release, create) answers `503 GIT_UNAVAILABLE`;
@@ -1529,7 +1532,7 @@ the reads and the draft `PUT` stay `200`
 
 |`incident-created`
 |`create-incident` (`POST /api/v1/documents/isms-incidents-2026`, `201 CREATED`, `01JZA8F0H2K4M6P8R0T2W4Y6A8`, 09:41): the incident
-reads as a draft (triage with the categories, the detection 08:05, the awareness 08:30 and the affected service `identity-provider`; no
+reads as a draft (the incident of the earlier address, the *Suspicious logins*, keeps reading as in the base; triage with the categories, the detection 08:05, the awareness 08:30 and the affected service `identity-provider`; no
 deadline; two stages unanswered), has one `create` revision, heads the list of the year (eight rows), the years (8 incidents, 7 open),
 the generic list and the search index (`q=vpn`). The event `document-created`
 
@@ -1537,7 +1540,8 @@ the generic list and the search index (`q=vpn`). The event `document-created`
 |The create answers `422 VALIDATION`: `REQUIRED` at `/title` (part `data`)
 
 |`incident-year-missing`
-|`GET /api/v1/incidents` lists 2025 only (`current: false`), `GET /api/v1/incidents/2026` and the create answer `404 NOT_FOUND`
+|`GET /api/v1/incidents` lists 2025 only (`current: false`); `GET /api/v1/incidents/2026`, every incident of 2026 with its report, its revisions and its diff,
+the generic list of the year and the create answer `404 NOT_FOUND`; the incidents of 2025 read as before
 |===
 
 *The report* is built by one template from the data of the read (a test checks the order of the headings): `= <title>`, `== Summary` (a
@@ -1557,8 +1561,8 @@ that moves. A completion answers the new blob id, which the read of its state re
 of the hash of `<id>/<part>/<n>`, `n` being the saves, the completions and the reopenings of the part (the create counts as the first
 save of `data` and `triage`).
 * *A state overrides only what it names.* The revisions of the states between the submit and the release, the generic lists, the report of
-the *Phishing mail* after the notification and the search index are those of the base (the exceptions are the revisions of
-`incident-released` and the generic list and the search index of `incident-created`); the clock moves only in `incident-clock-advanced`, and there only the
+the search index are those of the base (the exceptions are the revisions of
+`incident-released`, the reports of the three states named above and the generic list and the search index of `incident-created`); the clock moves only in `incident-clock-advanced`, and there only the
 *Phishing mail* is read at the new instant; `today` of the year lists in that state is 2026-11-27, every other lens keeps 2026-11-26.
 * *The row of a list shows the newest write of a part,* or the release, as `updatedAt`: a submit alone changes no row.
 * *The diff and `?at` are for one incident each:* `credential-stuffing` has a diff (that of the review; it holds the `completion` of the
@@ -1570,7 +1574,8 @@ states `incident-notification-recorded` and `incident-clock-advanced` have a lis
 list, so the items of the *Credential stuffing* (it has no deadline) are not affected.
 * *`degraded` and `local` do not walk the lifecycle* (no `approve`, no state): `degraded` reads, refuses the saves, the completion of the
 review and the create in `unreachable` (`isms-incidents-2026` `DOWN`) and answers them statically after `recovered`; `local` has no write
-route, so a write answers `404 NOT_FOUND` for the repository of its rights.
+route, so a write answers `404 NOT_FOUND` for the repository of its rights; the create has an explicit route that answers `404 NOT_FOUND` (it has
+no document id, and the unrouted create would answer `404 MOCK_NO_ROUTE`).
 * *The status lists `isms-incidents-2025`* next to `isms-incidents-2026` in `workshop`, `read-only`, `degraded` and `local`; `release` and
 `empty` list what they listed before.
 

@@ -60,8 +60,8 @@
       "value": {}
     },
     "response": {
-      "blob": "5e8ac95",
-      "savedAt": "2026-10-05T12:00:00Z",
+      "blob": "4bbc897",
+      "savedAt": "2026-10-20T12:05:00Z",
       "savedBy": {
         "pseudonym": "p-4c1a9e",
         "name": "Alex Example",
@@ -149,6 +149,16 @@
       },
       "kind": "save",
       "part": "notifications",
+      "count": 1
+    },
+    {
+      "at": "2026-10-20T12:05:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "response",
       "count": 1
     },
     {
@@ -356,7 +366,7 @@
       "due": "2026-11-07T09:00:00Z",
       "status": "MET",
       "sentAt": "2026-11-06T10:00:00Z",
-      "metBy": "/notifications/nis2-final-report"
+      "metBy": "/notifications/nis2-progress-report"
     },
     {
       "rule": "nis2-final-report-after-handling",

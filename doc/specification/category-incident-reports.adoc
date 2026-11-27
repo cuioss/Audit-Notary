@@ -135,5 +135,7 @@ xref:rest-api.adoc#_decided_incidents[REST API Register, Open Questions]; the ow
 . *Mandatory fields* (AUN-IR-3): the transitions into review and into release are refused with `STAGES_OPEN`, the list of
   the applicable stages that are not completed with their missing fields, because a stage is completed only with its
   mandatory fields; `MANDATORY_FIELDS_MISSING` stays for a document without stages.
-. *Protection needs* (AUN-IR-4): derived at the read and recorded in the generated report, not stored in a part.
+. *Protection needs* (AUN-IR-4): derived at the read while the incident is open, not stored in a part; the release records the
+  derived values in the release commit (`protection.yaml`) and reads them from there afterwards, so that the committed report
+  stays equal to a fresh generation when the catalog changes (xref:rest-api.adoc#_decided_incidents[REST API Register, point 19]).
 

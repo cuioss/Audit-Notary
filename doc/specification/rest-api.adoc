@@ -3282,7 +3282,7 @@ Protection and Repository Layout, Open Questions]); the web app never reads it:
               },
               "records-approximate": {"type": "integer", "minimum": 0},
               "risk": {"type": "string", "enum": ["unlikely", "risk", "high-risk"]},
-              "risk-assessment": {"type": "string", "x-asciidoc": true},
+              "risk-assessment": {"type": "string", "maxLength": 8000, "x-asciidoc": true, "x-free-text": true},
               "notify-authority": {"type": "boolean"},
               "inform-data-subjects": {"type": "boolean"},
               "reasons-for-delay": {"type": "string", "maxLength": 2000, "x-free-text": true},
@@ -3488,9 +3488,9 @@ Protection and Repository Layout, Open Questions]); the web app never reads it:
                 "uniqueItems": true,
                 "items": {"type": "string", "format": "gdr-link"}
               },
-              "course": {"type": "string", "x-asciidoc": true},
-              "root-cause-analysis": {"type": "string", "x-asciidoc": true},
-              "lessons": {"type": "string", "x-asciidoc": true},
+              "course": {"type": "string", "maxLength": 8000, "x-asciidoc": true, "x-free-text": true},
+              "root-cause-analysis": {"type": "string", "maxLength": 8000, "x-asciidoc": true, "x-free-text": true},
+              "lessons": {"type": "string", "maxLength": 8000, "x-asciidoc": true, "x-free-text": true},
               "completion": {
                 "type": "object",
                 "readOnly": true,
@@ -3519,8 +3519,9 @@ What the shape says (the rules the server enforces, and the mock follows):
   `nis2-significant`. A boolean that is absent is unanswered; `false` is an answer.
 * *The affected services* are references `service:<id>` of the service catalog (AUN-IR-4); the protection needs of the
   incident are derived (<<_incident_read>>), not stored.
-* *No person is named* (AUN-DP-5): the free-text fields carry the hint of the form kit (`x-free-text`), the narrative is
-  `x-asciidoc`; a person is a pseudonym only where a field is an `x-person` (`completion.by`). A recipient of a notification
+* *No person is named* (AUN-DP-5): the free-text fields carry the hint of the form kit (`x-free-text`); the narrative fields
+  (`risk-assessment`, `course`, `root-cause-analysis`, `lessons`) are `x-asciidoc` and carry the hint as well, with a bound
+  of 8,000 characters each (<<_incident_report>>); a person is a pseudonym only where a field is an `x-person` (`completion.by`). A recipient of a notification
   is the name of an organisation or an office, not of a person.
 * *A notification* is an object with `sent-at`, `recipient`, `channel` (`reporting-portal`, `email`, `phone`, `post`,
   `other`) and an optional `reference` (the number the authority gave). `supervisory-authority` (GDPR Art. 33),
@@ -3736,12 +3737,17 @@ never creates a repository (AUN-DP-1).
   `"release": true`, of a released one empty. The workflow offers the transition whatever the stages are; the view
   disables *Submit* with the reason while an applicable stage is not completed, and the request answers `STAGES_OPEN`.
 * `asOf` is the instant the deadlines were computed at: the time of the read for the working state, the release time for a
-  released incident or a revision (<<_incident_deadlines>>).
+  released incident or a revision from the release on, the commit time of a revision before the first release
+  (<<_incident_deadlines>>).
 * `protection` is derived, never stored: per dimension (`confidentiality`, `integrity`, `availability`) the highest of the
   *effective* protection needs of the affected services (`effective.protectionNeeds` of the service entry, which already
   include what the service depends on, AUN-DIR-5, AUN-IR-4), in the order `normal`, `high`, `very-high`; `decidedBy` is the
   first affected service, in the order of the list, whose effective need equals that highest one. Without an affected
-  service it is `null`.
+  service it is `null`. It is derived for as long as the incident is not released; the release records the derived
+  values and the titles of the affected services in the release commit (`incidents/<ulid>/protection.yaml`), and a
+  released incident and every revision from the release on read them from that record, never from the catalog again, so
+  that the committed `report.adoc` stays equal to a fresh generation when the catalog changes later (<<_decided_incidents>>
+  point 19).
 * A revision (`?at=`) has `frozen: true`, no draft and no transitions, and the member `at` of the generic revision; its
   `stages`, `deadlines` and `protection` are those of that revision. `GET /api/v1/documents/isms-incidents-2026/{id}` answers
   the same body.
@@ -3836,13 +3842,18 @@ deadlines:
 ----
 
 `startedAt` is the instant the clock started from (`null` when the start field is empty), `element` the index of the entry of
-a list rule (else `null`), `metBy` the pointer of the record that meets it. The web app writes the name of a rule and the
+a list rule (else `null`), `metBy` the pointer of the record that meets it (the `sent-at` the row carries comes from that record: for `nis2-final-report`
+met by the progress report it is `/notifications/nis2-progress-report`). The web app writes the name of a rule and the
 legal basis from its catalogue keys `category.incident-reports.deadline.<rule>` and `….basis`; the data carry no text.
 
-*At release the clock stops.* The `deadlines` of a released incident, and of every revision, are computed at the instant of the
-release (`asOf`), because the released `report.adoc` must be reproducible from the data (AUN-IR-1): a deadline that was open
-at the release stays `OPEN` in the released record, and a `MISSED` one stays `MISSED` and visible in the report (AUN-IR-2).
-A missed deadline never stops a release.
+*At release the clock stops.* The `deadlines` of a released incident, and of every revision from the release on, are computed at
+the instant of the release (`asOf`), because the released `report.adoc` must be reproducible from the data (AUN-IR-1): a
+deadline that was open at the release stays `OPEN` in the released record, and a `MISSED` one stays `MISSED` and visible in
+the report (AUN-IR-2). A revision before the first release is computed at its commit time: the clock was still running then.
+A missed deadline never stops a release. A deadline that is still `OPEN` at the release can no longer be met in the incident
+(a released incident is frozen, and it leaves the Due lens), so the release page lists the open deadlines before the person
+confirms; the request has no new member (the web app reads them from the incident). Whether the release should be refused
+while a deadline is open is an owner question (<<_decided_incidents>> point 16).
 
 *In the Due lens* (`GET /api/v1/due`, PROVISIONAL) an incident that is not released is an item of the kind `deadline`, lens
 `incidents`, for every deadline of it that is `OPEN` with a date, or `MISSED` and not sent at all (`sentAt` is `null`): a
@@ -3932,8 +3943,10 @@ answers `201`
              "triage": { "blob": "3a8f10c", "savedAt": "2026-11-26T09:41:00Z", "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example" } } } }
 ----
 
-The year of the address is the repository's: the first save needs no `aware-at` and checks none against the year
-(<<_decided_incidents>>). Only `/title` is mandatory (`{"part": "data", "pointer": "/title", "code": "REQUIRED"}`); the other
+The year of the address is the repository's: the first save needs no `aware-at`, but a save that sets `/triage/aware-at` to a
+time whose year (UTC) is not the year of the repository answers `422 VALIDATION` with `{"part": "triage", "pointer":
+"/aware-at", "code": "OUT_OF_YEAR"}` (PROVISIONAL, <<_decided_incidents>> point 24): the repository is the year of the
+awareness, and the person who learned of a breach on 31 December writes it in the year before. Only `/title` is mandatory (`{"part": "data", "pointer": "/title", "code": "REQUIRED"}`); the other
 mandatory fields are asked for by the completion of the stage and by the transition. The event `document-created` (`kind`
 `incident`) reaches the other tabs.
 
@@ -4008,10 +4021,18 @@ the changes of a part by the first segment of the pointer. The release page show
 ----
 
 * `source` is `generated` for an incident that is not released: `report.adoc` freshly generated by the template from the saved
-  working state, a preview that is never committed (it may be incomplete); `committed` for a released one or a revision: the
-  `report.adoc` that the release committed, which the CI check holds equal to a fresh generation (AUN-IR-1).
-* The `adoc` is an AsciiDoc document of at most 65,536 bytes. The web app renders it with `POST /api/v1/render/asciidoc`, like
-  every AsciiDoc text, and shows it as a read-only document; it makes no download. A PDF for authorities is made from the
+  working state, a preview that is never committed (it may be incomplete); `committed` for a released one or a revision from
+  the release on: the `report.adoc` that the release committed, which the CI check holds equal to a fresh generation
+  (AUN-IR-1). A revision before the first release has no committed report: `GET …/report?at=<revision>` generates it from
+  that revision, `source` is `generated` and `asOf` is the commit time of the revision.
+* The report of the working state describes the *saved* state: it follows a save, a completion, a submission and the clock
+  (the mock keeps one report per state of its profile, the states that change what the report says have a file of their own).
+* The `adoc` is an AsciiDoc document. The web app renders it with `POST /api/v1/render/asciidoc`, like every AsciiDoc text,
+  one request for each level-2 section, because the request is limited to 65,536 bytes of source; a section that is still
+  larger is shown as its source text. The narrative fields are bounded (8,000 characters each) so that each of them, a section
+  of its own, fits; the bounds of the other fields do not add up to one request (the part `response` alone may hold
+  more than 200,000 characters), which is why the report is rendered by section (<<_decided_incidents>> point 25). The web app
+  shows the report as a read-only document; it makes no download. A PDF for authorities is made from the
   committed file outside the web app (the concept names no export).
 * The template joins the data and the fragments in a fixed order (reproducible generation, AUN-IR-1): the title, a summary
   table (state, severity, the three times, the classification), the affected services with the derived protection needs,
@@ -5068,8 +5089,10 @@ change each one. The bodies and addresses are in <<_incident_requests>>:
   late `sent-at`, and the row carries `sentAt` so that the page says it was sent late. AUN-IR-2 says a missed deadline stays
   visible; it does not say whether late sending changes the status.
 . *The clock stops at the release.* A released incident and every revision compute `deadlines` at the instant of their
-  release, so that `report.adoc` is reproducible (AUN-IR-1); a deadline that was open then stays open in the record. The
-  working state is computed at the time of the read, and the web app reads the incident again when it comes back to it:
+  release (a revision before the first release at its commit time), so that `report.adoc` is reproducible (AUN-IR-1); a
+  deadline that was open then stays open in the record. The release page lists the deadlines that are open before the person
+  confirms, because a released incident is frozen and the notification can no longer be recorded in it. The working state is
+  computed at the time of the read, and the web app reads the incident again when it comes back to it:
   there is no event for the passing of a due time and no reminder (reminders are runtime state, not persistence).
 . *The Due lens lists the deadlines that are still a duty.* One item of the kind `deadline` per `OPEN` deadline with a date
   and per `MISSED` deadline that was not sent at all, of an incident that is not released; a late-sent one is not listed. The
@@ -5079,10 +5102,13 @@ change each one. The bodies and addresses are in <<_incident_requests>>:
   it (`frozen`, `DOCUMENT_RELEASED` for every write), and a change after the release is a new incident that names the earlier
   one in the ticket or a risk link. Whether a corrected report may be released as the next version of the same incident is
   an owner question.
-. *The protection needs are derived and not stored.* AUN-IR-1 lists `protection-needs` among the fields of the file; a
-  stored copy would drift from the catalog (AUN-DIR-5). The read carries the maximum per dimension over the effective
-  needs of the affected services and, per dimension, the first service that decides it; the released report records them
-  as of the release.
+. *The protection needs are derived while the incident is open, and recorded at the release.* AUN-IR-1 lists
+  `protection-needs` among the fields of the file; a stored copy of a working incident would drift from the catalog
+  (AUN-DIR-5). The read carries the maximum per dimension over the effective needs of the affected services and, per
+  dimension, the first service that decides it. The release writes the derived values and the titles of the affected services
+  into the release commit (`protection.yaml`), and a released incident and its revisions read them from there: otherwise a
+  later change of a protection need in the catalog would make a fresh generation differ from the committed `report.adoc`,
+  which the CI check of AUN-IR-1 forbids. The alternative is to pin the revision of the catalog in the release.
 . *The notifications are named members of the part `notifications`,* the names of AUN-IR-2 (`supervisory-authority`,
   `nis2-early-warning`, …), each `{sent-at, recipient, channel, reference}`, plus `data-subjects` (GDPR Art. 34, no deadline in
   the rules) and a list `others`; `nis2-intermediate-reports` is a list whose entries carry the `due` that the authority
@@ -5100,12 +5126,15 @@ change each one. The bodies and addresses are in <<_incident_requests>>:
 . *The narrative is part of the part `review`.* The three AsciiDoc fragments of the review stage are joined by the server into
   its value, so that the form edits them as `x-asciidoc` strings and the stage's mandatory fields include them; their files
   stay `narrative/*.adoc`.
-. *The first save needs only a title;* the address's year chooses the repository and the server checks no time against it. A
-  report started on 2 January for an awareness of 31 December is a decision of the person (the year of awareness is the
-  rule of AUN-IR, in the repository's name); the new page offers no check of it.
+. *The first save needs only a title;* the address's year chooses the repository. A save of `/triage/aware-at` into another
+  year than the repository's answers `422 VALIDATION` with the code `OUT_OF_YEAR` (new, the year of the awareness is the rule
+  of AUN-IR, in the repository's name), so that the index of a year never holds an incident of another one; a report started
+  on 2 January for an awareness of 31 December is written in the repository of the year before (the person needs `edit`
+  there). There is no request that moves an incident to another repository.
 . *The report is read, not downloaded:* `GET …/report` answers the AsciiDoc source of the generated `report.adoc`
   (`generated` for the working state, `committed` for a release), the web app renders it through the render request, and no
-  PDF or export is part of the web app. The text the template writes is English.
+  PDF or export is part of the web app. The text the template writes is English. The web app renders it by level-2 section
+  (the render request is limited to 65,536 bytes) and bounds the narrative fields at 8,000 characters.
 . *The diff of a staged document is by part, then by section:* the generic diff, whose parts are the stages (`from` is `null`,
   every field an addition); the release view groups by the first segment of the pointer. A stage that is `not-applicable` is
   left out.
@@ -5127,12 +5156,13 @@ deadlines in them, which moves AUN-IR-1 to AUN-IR-3 and the deadline inputs of t
 a repository per year (4); whether `STAGES_OPEN` may replace `MANDATORY_FIELDS_MISSING` for a staged document (9) and
 whether the completion of a stage needs its own right (11); whether reopening a stage should ask for step-up, since it
 undoes a sign-off (10); whether a deadline sent late should read `MISSED` (15) and whether the clock should stop at the
-release (16); whether the Due lens should list the deadlines as in point 17 and the incident in review; whether a corrected
-report of a released incident is the next version of the same incident (18); whether the protection needs should be stored
-at the release (19); the vocabularies of the points 20 to 22, above all the severity scale, which belongs to the incident
+release, and whether a release should be refused while a deadline is open (16); whether the Due lens should list the deadlines as in point 17 and the incident in review; whether a corrected
+report of a released incident is the next version of the same incident (18); whether the protection needs should be recorded
+at the release, as decided, or the revision of the catalog pinned in it (19); the vocabularies of the points 20 to 22, above all the severity scale, which belongs to the incident
 process of the organisation; whether the recipient of a notification should be a catalog entry (20); whether an assessment
 that finds the breach unlikely to result in a risk (`notify-authority` is `false`) should switch the deadline `gdpr-art33` off,
-as Art. 33(1) says the notification is not due then (21; the rules of AUN-IR-2 do not know it); whether the web app should
-check the year of the awareness against the repository (24); whether a generated report may be in English only (25); and
+as Art. 33(1) says the notification is not due then (21; the rules of AUN-IR-2 do not know it); whether the server should
+refuse an awareness outside the year of the repository (24) or let an incident move between the repositories; whether a generated report may be in English only, and whether it
+should be rendered by section or the limit of the render request raised for it (25); and
 the two statements of <<_incident_sources>> that the tool of this change could not check against EUR-Lex (GDPR Art. 33,
 NIS2 Art. 23(4)), which the owner should verify before the rules are called `SPECIFIED`.

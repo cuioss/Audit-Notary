@@ -1802,6 +1802,16 @@
         "repository": "isms-incidents-2025",
         "action": "read"
       }
+    },
+    "POST /api/v1/documents/isms-incidents-2026": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "isms-incidents-2026",
+        "action": "edit"
+      }
     }
   },
   "states": {

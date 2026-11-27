@@ -23,6 +23,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static de.cuioss.notary.audit.mock.IncidentFixtures.IDS;
@@ -56,13 +59,25 @@ class IncidentStatesTest {
     private static final ClassLoader CLASS_LOADER = IncidentStatesTest.class.getClassLoader();
     private static final ScenarioRegistry REGISTRY = new ScenarioRegistry(
             new ScenarioLoader(MockClient.MAPPER, name -> ScenarioRegistry.readDataFile(CLASS_LOADER, name)), CLASS_LOADER);
-    private static final List<String> STATES = List.of("incident-triage-reopened", "incident-triage-recompleted",
-            "incident-privacy-completed", "incident-review-completed", "incident-review-step-up", "incident-review-stepped-up",
-            "incident-submitted", "incident-released", "incident-release-step-up", "incident-release-stepped-up",
-            "incident-release-changed", "incident-release-changed-refused", "incident-release-changed-reviewed",
-            "incident-release-released-meanwhile", "incident-notification-recorded", "incident-clock-advanced",
-            "incident-saved-by-other", "incident-stage-locked", "incident-invalid", "incident-git-unavailable",
-            "incident-complete-changed", "incident-created", "incident-create-invalid", "incident-year-missing");
+    private static final JsonNode WORKSHOP = readScenario("workshop");
+    /** The states of the incident reports, found in the profile and not listed a second time. */
+    private static final List<String> STATES = fieldNames(WORKSHOP.path("states")).stream()
+            .filter(name -> name.startsWith("incident-")).toList();
+
+
+    private static JsonNode readScenario(String name) {
+        try (var stream = CLASS_LOADER.getResourceAsStream("scenarios/" + name + ".json")) {
+            return MockClient.MAPPER.readTree(java.util.Objects.requireNonNull(stream));
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+    }
+
+    private static List<String> fieldNames(JsonNode node) {
+        List<String> names = new ArrayList<>();
+        node.fieldNames().forEachRemaining(names::add);
+        return names;
+    }
 
     private static MockClient start() {
         return MockClient.start("workshop").login();
@@ -113,17 +128,40 @@ class IncidentStatesTest {
     @DisplayName("Mirrors: the files of the states keep the derivation")
     class Mirrors {
 
-        /** file of the read, file of the list, the slug the list row replaces. */
-        private static final List<List<String>> VARIANTS = List.of(
-                List.of("incident-credential-stuffing-reopened.json", "incidents-year-2026-b-reopened.json", "credential-stuffing"),
-                List.of("incident-wrong-recipient-recompleted.json", "incidents-year-2026-f-recompleted.json", "wrong-recipient"),
-                List.of("incident-phishing-link-privacy-completed.json", "incidents-year-2026-c-privacy.json", "phishing-link"),
-                List.of("incident-credential-stuffing-review-completed.json", "incidents-year-2026-b-review.json", "credential-stuffing"),
-                List.of("incident-credential-stuffing-in-review.json", "incidents-year-2026-b-in-review.json", "credential-stuffing"),
-                List.of("incident-credential-stuffing-released.json", "incidents-year-2026-b-released.json", "credential-stuffing"),
-                List.of("incident-phishing-link-recorded.json", "incidents-year-2026-c-recorded.json", "phishing-link"),
-                List.of("incident-phishing-link-missed.json", "incidents-year-2026-clock.json", "phishing-link"),
-                List.of("incident-suspicious-vpn.json", "incidents-year-2026-created.json", "suspicious-vpn"));
+        /**
+         * File of the read, file of the list, the slug the list row replaces: every pair that a state of the profile serves
+         * for the same incident, found in {@code workshop.json}.
+         */
+        private static final List<List<String>> VARIANTS = variants();
+
+        private static List<List<String>> variants() {
+            var slugs = new java.util.HashMap<String, String>();
+            IDS.forEach((slug, id) -> slugs.put(id, slug));
+            slugs.put(NEW, "suspicious-vpn");
+            java.util.Set<List<String>> found = new java.util.LinkedHashSet<>();
+            for (String state : STATES) {
+                var routes = WORKSHOP.path("states").path(state).path("routes");
+                String list = routes.path("GET /api/v1/incidents/2026").path("body_file").asText(null);
+                for (String key : fieldNames(routes)) {
+                    var matcher = java.util.regex.Pattern.compile("GET /api/v1/incidents/2026/([0-9A-Z]{26})").matcher(key);
+                    String file = routes.path(key).path("body_file").asText(null);
+                    if (list != null && file != null && matcher.matches()) {
+                        found.add(List.of(file, list, slugs.get(matcher.group(1))));
+                    }
+                }
+            }
+            return List.copyOf(found);
+        }
+
+        @Test
+        @DisplayName("the variants found are the nine files of the states, none of them forgotten")
+        void shouldFindTheVariants() {
+            assertTrue(VARIANTS.size() >= 9, VARIANTS.toString());
+            assertTrue(VARIANTS.stream().map(variant -> variant.get(0)).collect(java.util.stream.Collectors.toSet())
+                    .containsAll(List.of("incident-credential-stuffing-reopened.json", "incident-credential-stuffing-in-review.json",
+                            "incident-credential-stuffing-released.json", "incident-suspicious-vpn.json")));
+            assertTrue(STATES.size() >= 24, STATES.toString());
+        }
 
         @Test
         @DisplayName("every variant recomputes its stages and deadlines at its asOf and carries a completion in the value and the stage")
@@ -430,8 +468,8 @@ class IncidentStatesTest {
                 var errors = json(response).path("errors");
                 assertAll(request.toString(), () -> assertEquals(422, response.statusCode()),
                         () -> assertEquals("VALIDATION", json(response).path("outcome").asText()),
-                        () -> assertEquals(List.of("READ_ONLY", "REFERENCE_NOT_FOUND", "FORMAT"), texts(errors.findValues("code"))),
-                        () -> assertEquals(List.of("triage", "triage", "notifications"), texts(errors.findValues("part"))),
+                        () -> assertEquals(List.of("READ_ONLY", "REFERENCE_NOT_FOUND", "OUT_OF_YEAR", "FORMAT"), texts(errors.findValues("code"))),
+                        () -> assertEquals(List.of("triage", "triage", "triage", "notifications"), texts(errors.findValues("part"))),
                         () -> assertEquals("/completion", errors.get(0).path("pointer").asText()));
             }
         }
@@ -545,6 +583,10 @@ class IncidentStatesTest {
                     () -> assertEquals(7, years.path("open").asInt()),
                     () -> assertEquals(1, search.size()),
                     () -> assertEquals(NEW, search.get(0).path("id").asText()),
+                    () -> assertEquals(read("suspicious-logins"), get(client, dom("suspicious-logins"))),
+                    () -> assertEquals(read("suspicious-logins"), get(client, doc("suspicious-logins"))),
+                    () -> assertEquals(data("incident-suspicious-logins-revisions.json"),
+                            get(client, doc("suspicious-logins") + "/revisions")),
                     () -> assertEquals(8, get(client, REPOSITORY).path("documents").size()),
                     () -> assertEquals(NEW, get(client, REPOSITORY).path("documents").get(0).path("id").asText()));
         }
@@ -584,6 +626,124 @@ class IncidentStatesTest {
                 assertEquals(read(slug), get(client, dom(slug)), slug);
             }
             assertEquals(STAGES.size(), get(client, dom("card-data")).path("stages").size());
+        }
+    }
+
+    @Test
+    @DisplayName("the report of a state says what its incident reads: state, asOf, source, the deadlines with their status and the notices")
+    void shouldFollowTheReportsOfTheStates() {
+        int checked = 0;
+        for (String state : STATES) {
+            var routes = WORKSHOP.path("states").path(state).path("routes");
+            for (String key : fieldNames(routes)) {
+                var matcher = Pattern.compile("GET /api/v1/incidents/2026/([0-9A-Z]{26})/report").matcher(key);
+                if (!matcher.matches()) {
+                    continue;
+                }
+                if (!routes.path(key).has("body_file")) {
+                    continue;
+                }
+                checked++;
+                var read = data(routes.path("GET /api/v1/incidents/2026/" + matcher.group(1)).path("body_file").asText());
+                var report = data(routes.path(key).path("body_file").asText());
+                String adoc = report.path("adoc").asText();
+                String notifications = adoc.substring(adoc.indexOf("== Notifications"), adoc.indexOf("== Triage"));
+                var notices = read.path("parts").path("notifications").path("value");
+                assertAll(state + " " + key,
+                        () -> assertEquals(read.path("id"), report.path("id")),
+                        () -> assertEquals(read.path("title"), report.path("title")),
+                        () -> assertEquals(read.path("asOf"), report.path("asOf")),
+                        () -> assertEquals(read.path("frozen").asBoolean() ? "committed" : "generated", report.path("source").asText()),
+                        () -> assertTrue(adoc.contains("\n|State |" + read.path("state").asText() + "\n")),
+                        () -> assertEquals(notices.isEmpty(), notifications.contains("Nothing recorded.")),
+                        () -> notices.fieldNames().forEachRemaining(name -> {
+                            if (notices.path(name).has("sent-at")) {
+                                assertTrue(notifications.contains(notices.path(name).path("sent-at").asText()), name);
+                            }
+                        }),
+                        () -> IncidentFixtures.deadlinesOf(read).stream().filter(d -> d.due() != null).forEach(d -> assertTrue(
+                                adoc.lines().anyMatch(line -> line.startsWith("|") && line.contains("|" + d.due() + " |"
+                                        + ("MISSED".equals(d.status()) ? "*MISSED*" : d.status()) + " |"
+                                        + (d.sentAt() == null ? "not sent" : d.sentAt()))), d.rule() + " " + d.status())));
+            }
+        }
+        assertTrue(checked >= 10, "the reports of the states that were found: " + checked);
+    }
+
+    @Test
+    @DisplayName("after the release a save and a draft of the credential stuffing answer DOCUMENT_RELEASED with the tag; in ready the save passes")
+    void shouldRefuseAStaleSaveAfterTheRelease() {
+        for (String state : List.of("incident-released", "incident-release-released-meanwhile")) {
+            try (var client = start()) {
+                goTo(client, state);
+                for (var request : List.of(List.of("POST", doc("credential-stuffing") + "/save"),
+                        List.of("PUT", "/api/v1/drafts/isms-incidents-2026/" + K))) {
+                    var response = client.change(request.get(0), request.get(1), "{}");
+                    assertAll(state + " " + request,
+                            () -> assertEquals(409, response.statusCode()),
+                            () -> assertEquals("DOCUMENT_RELEASED", json(response).path("outcome").asText()),
+                            () -> assertEquals("incidents/" + K + "/v1", json(response).path("tag").asText()),
+                            () -> assertEquals(state, stateOf(client)));
+                }
+            }
+        }
+        try (var client = start()) {
+            post(client, doc("credential-stuffing") + "/save", 200, "SAVED");
+        }
+    }
+
+    @Test
+    @DisplayName("while the repository of the year is missing, no incident of 2026 and no report of it is read; 2025 is")
+    void shouldHideTheIncidentsOfTheMissingYear() {
+        try (var client = start()) {
+            goTo(client, "incident-year-missing");
+            for (String slug : IncidentFixtures.SLUGS) {
+                if (IncidentFixtures.yearOf(slug) != 2026) {
+                    assertEquals(200, client.get(dom(slug)).statusCode(), slug);
+                    continue;
+                }
+                for (String path : List.of(dom(slug), dom(slug) + "/report", doc(slug), doc(slug) + "/revisions")) {
+                    var response = client.get(path);
+                    assertAll(path, () -> assertEquals(404, response.statusCode()),
+                            () -> assertEquals("NOT_FOUND", json(response).path("outcome").asText()));
+                }
+            }
+            assertEquals(404, client.get(REPOSITORY).statusCode());
+            assertEquals(404, client.get(doc("credential-stuffing") + "/diff?from=released").statusCode());
+        }
+    }
+
+    @Test
+    @DisplayName("every Git write of the incidents is answered 503 in the outage, derived from the writes of the base; the draft stays out")
+    void shouldCoverEveryGitWriteInTheOutage() {
+        var degraded = readScenario("degraded");
+        for (var scenario : List.of(
+                List.of(WORKSHOP, WORKSHOP.path("states").path("incident-git-unavailable").path("routes")),
+                List.of(degraded, degraded.path("states").path("unreachable").path("routes")))) {
+            var profile = scenario.get(0);
+            var outage = scenario.get(1);
+            Set<String> writes = new TreeSet<>();
+            for (String key : fieldNames(profile.path("routes"))) {
+                if (key.startsWith("POST ") && key.contains("/isms-incidents-") && !key.contains("/releases/")) {
+                    writes.add(key);
+                }
+            }
+            for (String state : fieldNames(profile.path("states"))) {
+                var links = profile.path("states").path(state).path("links");
+                for (String name : fieldNames(links)) {
+                    var link = links.path(name);
+                    if ("POST".equals(link.path("method").asText()) && link.path("path").asText().contains("/isms-incidents-")) {
+                        writes.add("POST " + link.path("path").asText());
+                    }
+                }
+            }
+            assertTrue(writes.size() >= 30, profile.path("name").asText() + ": " + writes.size());
+            for (String write : writes) {
+                assertEquals(503, outage.path(write).path("status").asInt(), profile.path("name").asText() + " " + write);
+            }
+            for (String key : fieldNames(outage)) {
+                assertFalse(key.startsWith("PUT ") && key.contains("/drafts/isms-incidents-"), "the draft stays outside the outage: " + key);
+            }
         }
     }
 }

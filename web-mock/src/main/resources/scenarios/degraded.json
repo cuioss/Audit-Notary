@@ -3181,11 +3181,24 @@
         "repository": "isms-incidents-2026",
         "action": "edit"
       }
+    },
+    "POST /api/v1/releases/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J": {
+      "status": 200,
+      "body": {
+        "outcome": "RELEASED",
+        "tag": "incidents/01JZ9V7P9S1T3W5Y7A9C1E3G5J/v1",
+        "at": "2026-11-26T10:05:00Z",
+        "report": "incidents/01JZ9V7P9S1T3W5Y7A9C1E3G5J/report.adoc"
+      },
+      "requires": {
+        "repository": "isms-incidents-2026",
+        "action": "approve"
+      }
     }
   },
   "states": {
     "unreachable": {
-      "description": "The fetch of samm-assessments, threat-models and isms-incidents-2026 fails: the status lists all three as DOWN, the reads of the threat models are served from the last fetch, and every write of the threat models and of the incidents answers 503 GIT_UNAVAILABLE.",
+      "description": "The fetch of samm-assessments, threat-models and isms-incidents-2026 fails: the status lists all three as DOWN, the reads of the threat models are served from the last fetch, and the Git writes of the threat models and of the incidents (save, completion and reopening of a stage, submit, create) answer 503 GIT_UNAVAILABLE; a draft stays 200, and the release of an incident is 403 FORBIDDEN, because the profile grants no approve.",
       "routes": {
         "GET /api/v1/status": {
           "status": 200,
@@ -3781,16 +3794,6 @@
           "requires": {
             "repository": "isms-incidents-2026",
             "action": "edit"
-          }
-        },
-        "POST /api/v1/releases/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J": {
-          "status": 503,
-          "body": {
-            "outcome": "GIT_UNAVAILABLE"
-          },
-          "requires": {
-            "repository": "isms-incidents-2026",
-            "action": "approve"
           }
         }
       }

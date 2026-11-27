@@ -1151,6 +1151,7 @@ class ProfilesTest {
                         List.of("POST", YEAR + CARD + "/stages/privacy-assessment/complete"),
                         List.of("POST", YEAR + STUFFING + "/stages/review/complete"), List.of("POST", YEAR + STUFFING + "/stages/triage/reopen"),
                         List.of("POST", YEAR + STUFFING + "/transitions/incident.submit"),
+                        List.of("POST", "/api/v1/releases/isms-incidents-2026/" + STUFFING),
                         List.of("POST", YEAR + IncidentFixtures.IDS.get("phishing-link") + "/save"), List.of("POST", "/api/v1/documents/isms-incidents-2026"));
                 for (var write : writes) {
                     var response = client.change(write.get(0), write.get(1), "{}");
@@ -1161,18 +1162,19 @@ class ProfilesTest {
         }
 
         @Test
-        @DisplayName("release has no right on the incidents: no year, and the year, the incident, the report and the schema are 403")
+        @DisplayName("release has no right on the incidents: no year, the year, the incident and the report are 404, the schema 403")
         void shouldHaveNoIncidentsInRelease() {
             try (var client = MockClient.start("release").login()) {
                 assertAll(
                         () -> assertEquals(0, json(client.get("/api/v1/incidents")).path("years").size()),
                         () -> assertEquals("2026-11-26", json(client.get("/api/v1/incidents")).path("today").asText()),
-                        () -> assertEquals(403, client.get("/api/v1/incidents/2026").statusCode()),
-                        () -> assertEquals(403, client.get("/api/v1/incidents/2025").statusCode()),
-                        () -> assertEquals(403, client.get("/api/v1/incidents/2026/" + CARD).statusCode()),
-                        () -> assertEquals(403, client.get("/api/v1/incidents/2026/" + CARD + "/report").statusCode()),
+                        () -> assertEquals(404, client.get("/api/v1/incidents/2026").statusCode()),
+                        () -> assertEquals(404, client.get("/api/v1/incidents/2025").statusCode()),
+                        () -> assertEquals(404, client.get("/api/v1/incidents/2026/" + CARD).statusCode()),
+                        () -> assertEquals(404, client.get("/api/v1/incidents/2026/" + CARD + "/report").statusCode()),
                         () -> assertEquals(403, client.get("/api/v1/categories/incident-reports/schema").statusCode()),
-                        () -> assertEquals("FORBIDDEN", json(client.get("/api/v1/incidents/2026")).path("outcome").asText()));
+                        () -> assertEquals("NOT_FOUND", json(client.get("/api/v1/incidents/2026")).path("outcome").asText()),
+                        () -> assertFalse(client.get("/api/v1/incidents/2026/" + CARD).body().contains("Card data")));
                 List<String> repositories = new ArrayList<>();
                 json(client.get("/api/v1/session")).path("rights").forEach(right -> repositories.add(right.path("repository").asText()));
                 assertFalse(repositories.stream().anyMatch(repository -> repository.startsWith("isms-incidents-")));
@@ -1203,6 +1205,7 @@ class ProfilesTest {
                 var complete = client.change("POST", YEAR + STUFFING + "/stages/review/complete", "{}");
                 var create = client.change("POST", "/api/v1/documents/isms-incidents-2026", "{}");
                 var draft = client.change("PUT", "/api/v1/drafts/isms-incidents-2026/" + CARD, "{}");
+                var release = client.change("POST", "/api/v1/releases/isms-incidents-2026/" + STUFFING, "{}");
                 assertAll(
                         () -> assertEquals("DOWN", find(down.path("repositories"), "isms-incidents-2026")),
                         () -> assertEquals(file("incidents-years.json"), json(client.get("/api/v1/incidents"))),
@@ -1215,6 +1218,8 @@ class ProfilesTest {
                         () -> assertEquals("GIT_UNAVAILABLE", json(save).path("outcome").asText()),
                         () -> assertEquals(503, complete.statusCode()),
                         () -> assertEquals(503, create.statusCode()),
+                        () -> assertEquals(403, release.statusCode()),
+                        () -> assertEquals("FORBIDDEN", json(release).path("outcome").asText()),
                         () -> assertEquals(200, draft.statusCode()),
                         () -> assertEquals("DRAFT_SAVED", json(draft).path("outcome").asText()));
                 client.send("POST", "/mock/goto/recovered", null, Map.of());
@@ -1248,7 +1253,9 @@ class ProfilesTest {
                                 json(client.get("/api/v1/incidents/2026/" + STUFFING + "/report"))),
                         () -> assertEquals(1, json(client.get("/api/v1/search?q=card")).path("results").size()),
                         () -> assertEquals(404, client.change("POST", YEAR + CARD + "/save", "{}").statusCode()),
-                        () -> assertEquals(404, client.change("POST", YEAR + STUFFING + "/stages/review/complete", "{}").statusCode()));
+                        () -> assertEquals(404, client.change("POST", YEAR + STUFFING + "/stages/review/complete", "{}").statusCode()),
+                        () -> assertEquals(404, client.change("POST", "/api/v1/documents/isms-incidents-2026", "{}").statusCode()),
+                        () -> assertEquals("NOT_FOUND", json(client.change("POST", "/api/v1/documents/isms-incidents-2026", "{}")).path("outcome").asText()));
                 List<String> due = new ArrayList<>();
                 json(client.get("/api/v1/due")).path("items").forEach(item -> {
                     if ("incidents".equals(item.path("lens").asText())) {

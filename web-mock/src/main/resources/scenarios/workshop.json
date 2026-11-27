@@ -9761,6 +9761,14 @@
             "repository": "isms-incidents-2026",
             "action": "read"
           }
+        },
+        "GET /api/v1/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/report": {
+          "status": 200,
+          "body_file": "incident-credential-stuffing-in-review-report.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
         }
       },
       "links": {
@@ -9860,6 +9868,28 @@
         "GET /api/v1/incidents": {
           "status": 200,
           "body_file": "incidents-years-b-released.json"
+        },
+        "POST /api/v1/documents/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/save": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "incidents/01JZ9V7P9S1T3W5Y7A9C1E3G5J/v1"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "edit"
+          }
+        },
+        "PUT /api/v1/drafts/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "incidents/01JZ9V7P9S1T3W5Y7A9C1E3G5J/v1"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "edit"
+          }
         }
       },
       "events": [
@@ -9921,6 +9951,14 @@
             "repository": "isms-incidents-2026",
             "action": "read"
           }
+        },
+        "GET /api/v1/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/report": {
+          "status": 200,
+          "body_file": "incident-credential-stuffing-in-review-report.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
         }
       },
       "links": {
@@ -9978,6 +10016,14 @@
         "GET /api/v1/documents/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/diff?from=released": {
           "status": 200,
           "body_file": "incident-credential-stuffing-diff.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/report": {
+          "status": 200,
+          "body_file": "incident-credential-stuffing-in-review-report.json",
           "requires": {
             "repository": "isms-incidents-2026",
             "action": "read"
@@ -10045,6 +10091,14 @@
             "repository": "isms-incidents-2026",
             "action": "read"
           }
+        },
+        "GET /api/v1/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/report": {
+          "status": 200,
+          "body_file": "incident-credential-stuffing-in-review-report.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
         }
       },
       "links": {
@@ -10085,6 +10139,14 @@
         "GET /api/v1/incidents/2026": {
           "status": 200,
           "body_file": "incidents-year-2026-b-in-review.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/report": {
+          "status": 200,
+          "body_file": "incident-credential-stuffing-in-review-report.json",
           "requires": {
             "repository": "isms-incidents-2026",
             "action": "read"
@@ -10156,6 +10218,14 @@
         "GET /api/v1/documents/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/diff?from=released": {
           "status": 200,
           "body_file": "incident-credential-stuffing-diff.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/report": {
+          "status": 200,
+          "body_file": "incident-credential-stuffing-in-review-report.json",
           "requires": {
             "repository": "isms-incidents-2026",
             "action": "read"
@@ -10254,6 +10324,28 @@
             "repository": "isms-incidents-2026",
             "action": "approve"
           }
+        },
+        "POST /api/v1/documents/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/save": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "incidents/01JZ9V7P9S1T3W5Y7A9C1E3G5J/v1"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "edit"
+          }
+        },
+        "PUT /api/v1/drafts/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "incidents/01JZ9V7P9S1T3W5Y7A9C1E3G5J/v1"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "edit"
+          }
         }
       }
     },
@@ -10287,6 +10379,14 @@
         "GET /api/v1/due": {
           "status": 200,
           "body_file": "due-incident-recorded.json"
+        },
+        "GET /api/v1/incidents/2026/01JZA2B4D6F8H0K2N4Q6S8V0X2/report": {
+          "status": 200,
+          "body_file": "incident-phishing-link-recorded-report.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
         }
       },
       "events": [
@@ -10339,6 +10439,14 @@
         "GET /api/v1/due": {
           "status": 200,
           "body_file": "due-incident-clock.json"
+        },
+        "GET /api/v1/incidents/2026/01JZA2B4D6F8H0K2N4Q6S8V0X2/report": {
+          "status": 200,
+          "body_file": "incident-phishing-link-missed-report.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
         }
       }
     },
@@ -10416,7 +10524,7 @@
       }
     },
     "incident-invalid": {
-      "description": "The server refuses a save and a draft of the card data with three per-field errors (completion is read-only, an affected service that does not exist, a malformed time).",
+      "description": "The server refuses a save and a draft of the card data with four per-field errors (completion is read-only, an affected service that does not exist, an awareness outside the year of the repository, a malformed time).",
       "routes": {
         "POST /api/v1/documents/isms-incidents-2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K/save": {
           "status": 422,
@@ -10432,6 +10540,11 @@
                 "part": "triage",
                 "pointer": "/affected-services/0",
                 "code": "REFERENCE_NOT_FOUND"
+              },
+              {
+                "part": "triage",
+                "pointer": "/aware-at",
+                "code": "OUT_OF_YEAR"
               },
               {
                 "part": "notifications",
@@ -10459,6 +10572,11 @@
                 "part": "triage",
                 "pointer": "/affected-services/0",
                 "code": "REFERENCE_NOT_FOUND"
+              },
+              {
+                "part": "triage",
+                "pointer": "/aware-at",
+                "code": "OUT_OF_YEAR"
               },
               {
                 "part": "notifications",
@@ -10915,30 +11033,6 @@
     "incident-created": {
       "description": "The incident Suspicious logins from the VPN gateway was created (09:41): it is a draft; the read, the revisions, the year (eight rows), the years (8 incidents, 7 open), the generic list and the search index follow.",
       "routes": {
-        "GET /api/v1/incidents/2026/01JZA6D8F0H2K4M6P8R0T2W4Y6": {
-          "status": 200,
-          "body_file": "incident-suspicious-vpn.json",
-          "requires": {
-            "repository": "isms-incidents-2026",
-            "action": "read"
-          }
-        },
-        "GET /api/v1/documents/isms-incidents-2026/01JZA6D8F0H2K4M6P8R0T2W4Y6": {
-          "status": 200,
-          "body_file": "incident-suspicious-vpn.json",
-          "requires": {
-            "repository": "isms-incidents-2026",
-            "action": "read"
-          }
-        },
-        "GET /api/v1/documents/isms-incidents-2026/01JZA6D8F0H2K4M6P8R0T2W4Y6/revisions": {
-          "status": 200,
-          "body_file": "incident-suspicious-vpn-revisions.json",
-          "requires": {
-            "repository": "isms-incidents-2026",
-            "action": "read"
-          }
-        },
         "GET /api/v1/incidents/2026/01JZA8F0H2K4M6P8R0T2W4Y6A8": {
           "status": 200,
           "body_file": "incident-suspicious-vpn.json",
@@ -11047,6 +11141,376 @@
           "requires": {
             "repository": "isms-incidents-2026",
             "action": "edit"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K/report": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K/revisions": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/report": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/revisions": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZA2B4D6F8H0K2N4Q6S8V0X2": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZA2B4D6F8H0K2N4Q6S8V0X2/report": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZA2B4D6F8H0K2N4Q6S8V0X2": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZA2B4D6F8H0K2N4Q6S8V0X2/revisions": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F/report": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F/revisions": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ8K1M3P5R7T9V1X3Z5B7D9F": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ8K1M3P5R7T9V1X3Z5B7D9F/report": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ8K1M3P5R7T9V1X3Z5B7D9F": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ8K1M3P5R7T9V1X3Z5B7D9F/revisions": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ6Q8S0V2X4B6D8F0H2K4M6P": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ6Q8S0V2X4B6D8F0H2K4M6P/report": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ6Q8S0V2X4B6D8F0H2K4M6P": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ6Q8S0V2X4B6D8F0H2K4M6P/revisions": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZA6D8F0H2K4M6P8R0T2W4Y6": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZA6D8F0H2K4M6P8R0T2W4Y6/report": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZA6D8F0H2K4M6P8R0T2W4Y6": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZA6D8F0H2K4M6P8R0T2W4Y6/revisions": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/diff": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/diff?from=released": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F?at=v1": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F?at=v9": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F?at=zzz": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F?at=v1": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F?at=v9": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F?at=zzz": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
           }
         }
       }

@@ -152,7 +152,9 @@
               },
               "risk-assessment": {
                 "type": "string",
-                "x-asciidoc": true
+                "maxLength": 8000,
+                "x-asciidoc": true,
+                "x-free-text": true
               },
               "notify-authority": {
                 "type": "boolean"
@@ -667,15 +669,21 @@
               },
               "course": {
                 "type": "string",
-                "x-asciidoc": true
+                "maxLength": 8000,
+                "x-asciidoc": true,
+                "x-free-text": true
               },
               "root-cause-analysis": {
                 "type": "string",
-                "x-asciidoc": true
+                "maxLength": 8000,
+                "x-asciidoc": true,
+                "x-free-text": true
               },
               "lessons": {
                 "type": "string",
-                "x-asciidoc": true
+                "maxLength": 8000,
+                "x-asciidoc": true,
+                "x-free-text": true
               },
               "completion": {
                 "type": "object",

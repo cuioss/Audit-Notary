@@ -3758,6 +3758,19 @@
         "repository": "isms-incidents-2026",
         "action": "edit"
       }
+    },
+    "POST /api/v1/releases/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J": {
+      "status": 200,
+      "body": {
+        "outcome": "RELEASED",
+        "tag": "incidents/01JZ9V7P9S1T3W5Y7A9C1E3G5J/v1",
+        "at": "2026-11-26T10:05:00Z",
+        "report": "incidents/01JZ9V7P9S1T3W5Y7A9C1E3G5J/report.adoc"
+      },
+      "requires": {
+        "repository": "isms-incidents-2026",
+        "action": "approve"
+      }
     }
   },
   "states": {

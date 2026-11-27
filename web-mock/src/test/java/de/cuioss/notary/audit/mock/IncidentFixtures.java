@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The incident fixtures of the web mock as the tests read them: the data files, the nine incidents and the derivation of
@@ -50,7 +51,7 @@ final class IncidentFixtures {
     static final Set<String> RELEASED = Set.of("notification-outage", "lost-laptop", "newsletter-list");
     static final List<String> STAGES = List.of("triage", "privacy-assessment", "response", "notifications", "review");
     static final List<String> PARTS = List.of("data", "triage", "privacy-assessment", "response", "notifications", "review");
-    private static final Map<String, List<String>> AFTER = Map.of("triage", List.of(), "privacy-assessment", List.of("triage"),
+    static final Map<String, List<String>> AFTER = Map.of("triage", List.of(), "privacy-assessment", List.of("triage"),
             "response", List.of("triage"), "notifications", List.of("triage"), "review", List.of("response"));
     private static final Instant NEVER = null;
 
@@ -211,10 +212,12 @@ final class IncidentFixtures {
             Instant finalSent = instant(notifications.path("nis2-final-report").path("sent-at"));
             Instant progress = instant(notifications.path("nis2-progress-report").path("sent-at"));
             Instant sent = finalSent;
+            String metBy = "/notifications/nis2-final-report";
             if (progress != null && (resolved == null || resolved.isAfter(due)) && (sent == null || progress.isBefore(sent))) {
                 sent = progress;
+                metBy = "/notifications/nis2-progress-report";
             }
-            out.add(deadline("nis2-final-report", null, notified, due, sent, asOf, "/notifications/nis2-final-report"));
+            out.add(deadline("nis2-final-report", null, notified, due, sent, asOf, metBy));
             if (asOf.isAfter(due) && (resolved == null || resolved.isAfter(due))) {
                 out.add(deadline("nis2-final-report-after-handling", null, resolved, resolved == null ? null : plusMonth(resolved),
                         finalSent, asOf, "/notifications/nis2-final-report"));
@@ -259,24 +262,50 @@ final class IncidentFixtures {
         return needs.isEmpty() ? null : Map.of("needs", needs, "decidedBy", decided);
     }
 
-    /** The newest write of a read: the newest {@code savedAt} of its parts and the release. */
-    static String updatedOf(JsonNode read) {
-        String newest = "";
+    /** A write of a read: its instant (compared as an instant, the text kept for the assertions) and its actor. */
+    record Write(Instant instant, String at, JsonNode by) {
+    }
+
+    /** The newest write of a read: the newest {@code savedAt} of its parts or the release, with the person who made it. */
+    static Write newestWrite(JsonNode read) {
+        Write newest = null;
         for (var part : read.path("parts")) {
             String at = text(part.path("savedAt"));
-            if (at != null && at.compareTo(newest) > 0) {
-                newest = at;
+            if (at != null && (newest == null || Instant.parse(at).isAfter(newest.instant()))) {
+                newest = new Write(Instant.parse(at), at, part.path("savedBy"));
             }
         }
-        return read.path("release").isNull() || read.path("release").path("at").asText().compareTo(newest) <= 0 ? newest
-                : read.path("release").path("at").asText();
+        var release = read.path("release");
+        if (!release.isNull() && !release.isMissingNode()
+                && (newest == null || Instant.parse(release.path("at").asText()).isAfter(newest.instant()))) {
+            newest = new Write(Instant.parse(release.path("at").asText()), release.path("at").asText(), release.path("by"));
+        }
+        return newest;
+    }
+
+    static String updatedOf(JsonNode read) {
+        return newestWrite(read).at();
+    }
+
+    /** The {@code next} of a row: the dated OPEN deadline with the earliest due time, else an explicit null. */
+    static void assertNext(JsonNode next, List<Deadline> deadlines) {
+        var expected = deadlines.stream().filter(d -> "OPEN".equals(d.status()) && d.due() != null)
+                .min(Comparator.comparing(d -> Instant.parse(d.due())));
+        if (expected.isEmpty()) {
+            assertTrue(next.isNull(), "next must be an explicit null: " + next);
+        } else {
+            assertTrue(next.isObject(), "next must be an object: " + next);
+            assertEquals(expected.get().rule(), next.path("rule").asText());
+            assertEquals(expected.get().due(), next.path("due").asText());
+            assertEquals(2, next.size());
+        }
     }
 
     /** The row of a list equals the read it summarises: classification, stages, deadline counts, next, time and release. */
     static void assertRow(JsonNode row, JsonNode read) {
         var triage = read.path("parts").path("triage").path("value");
         var deadlines = deadlinesOf(read);
-        var next = deadlines.stream().filter(d -> "OPEN".equals(d.status()) && d.due() != null).min(Comparator.comparing(Deadline::due));
+        var write = newestWrite(read);
         org.junit.jupiter.api.Assertions.assertAll(read.path("id").asText(),
                 () -> assertEquals(read.path("title"), row.path("title")),
                 () -> assertEquals(read.path("address"), row.path("address")),
@@ -295,11 +324,12 @@ final class IncidentFixtures {
                 () -> assertEquals(deadlines.stream().filter(d -> "MET".equals(d.status())).count(), row.path("deadlines").path("met").asLong()),
                 () -> assertEquals(deadlines.stream().filter(d -> "MISSED".equals(d.status())).count(),
                         row.path("deadlines").path("missed").asLong()),
-                () -> assertEquals(next.map(Deadline::rule).orElse(null), text(row.path("deadlines").path("next").path("rule"))),
-                () -> assertEquals(next.map(Deadline::due).orElse(null), text(row.path("deadlines").path("next").path("due"))),
+                () -> assertTrue(row.path("deadlines").has("next")),
+                () -> assertNext(row.path("deadlines").path("next"), deadlines),
                 () -> assertEquals(false, row.path("requested").asBoolean()),
                 () -> assertEquals(updatedOf(read), row.path("updatedAt").asText()),
-                () -> assertEquals(read.path("history").get(0).path("by"), row.path("updatedBy")),
+                () -> assertEquals(write.by().path("pseudonym"), row.path("updatedBy").path("pseudonym")),
+                () -> assertEquals(write.by().path("name"), row.path("updatedBy").path("name")),
                 () -> assertEquals(read.path("release").isNull() ? null : read.path("release").path("tag").asText(),
                         text(row.path("release").path("tag"))));
     }

@@ -234,7 +234,8 @@ xref:../specification/rest-api.adoc#_decided_incidents[REST API Register, Open Q
   `nis2-early-warning`, …), with the time, the recipient as a short text, the channel and the reference of the authority.
 . A refused completion or submission names the missing mandatory fields by stage and the stages that are not completed; the
   review stage asks for step-up, reopening a stage does not.
-. An incident is released once and frozen; the protection needs are derived from the affected services and not stored; the
+. An incident is released once and frozen; the protection needs are derived from the affected services while it is open and
+  recorded in the release commit, so that the report stays reproducible when the catalog changes; the
   report is generated from the saved state as a preview and committed with the release.
 
 == Related

@@ -137,10 +137,94 @@ class IncidentsTest {
                     () -> assertEquals("incident-reports", schema.path("category").asText()),
                     () -> assertEquals("incident", schema.path("kinds").get(0).path("id").asText()),
                     () -> assertEquals(List.of("title"), texts(schema.path("kinds").get(0).path("schema").path("required"))),
+                    () -> List.of("risk-assessment", "course", "root-cause-analysis", "lessons").forEach(field -> {
+                        var narrative = schema.findValue(field);
+                        assertTrue(narrative.path("x-asciidoc").asBoolean() && narrative.path("x-free-text").asBoolean(), field);
+                        assertEquals(8000, narrative.path("maxLength").asInt(), field);
+                    }),
                     () -> STAGES.forEach(stage -> {
                         assertTrue(properties.path(stage).path("gdr-split").asBoolean(), stage);
                         assertTrue(properties.path(stage).path("properties").path("completion").path("readOnly").asBoolean(), stage);
                     }));
+        }
+
+        @Test
+        @DisplayName("the stage descriptors of every read (after, when, narrative, stepUp) are the declaration of The Stages of the register")
+        void shouldMirrorTheDeclarationOfTheStages() throws IOException {
+            String adoc = Files.readString(Path.of("../doc/specification/rest-api.adoc"));
+            int marker = adoc.indexOf("=== The Stages");
+            int start = adoc.indexOf("[source,yaml]\n----\n", marker) + "[source,yaml]\n----\n".length();
+            List<String> entries = new ArrayList<>();
+            for (String line : adoc.substring(start, adoc.indexOf("\n----\n", start)).lines().skip(1).toList()) {
+                if (line.startsWith("  - ")) {
+                    entries.add(line.substring(4).strip());
+                } else {
+                    entries.add(entries.remove(entries.size() - 1) + " " + line.strip());
+                }
+            }
+            var declared = MockClient.MAPPER.createArrayNode();
+            for (String entry : entries) {
+                var stage = declared.addObject();
+                stage.put("id", group(entry, "\\bid:\\s*([\\w-]+)"));
+                stage.put("part", group(entry, "\\bpart:\\s*([\\w-]+)"));
+                var after = stage.putArray("after");
+                String afterList = group(entry, "\\bafter:\\s*\\[([^\\]]*)\\]");
+                if (afterList != null && !afterList.isBlank()) {
+                    for (String id : afterList.split(",")) {
+                        after.add(id.strip());
+                    }
+                }
+                String any = group(entry, "\\bwhen:\\s*\\{\\s*any:\\s*\\[([^\\]]*)\\]");
+                String single = group(entry, "\\bwhen:\\s*(/[\\w/-]+)");
+                if (any != null) {
+                    var list = stage.putObject("when").putArray("any");
+                    for (String field : any.split(",")) {
+                        list.addObject().put("field", field.strip());
+                    }
+                } else if (single != null) {
+                    stage.putObject("when").put("field", single);
+                } else {
+                    stage.putNull("when");
+                }
+                var narrative = stage.putArray("narrative");
+                String narrativeList = group(entry, "\\bnarrative:\\s*\\[([^\\]]*)\\]");
+                if (narrativeList != null) {
+                    for (String field : narrativeList.split(",")) {
+                        narrative.add(field.strip());
+                    }
+                }
+                stage.put("stepUp", entry.contains("step-up: true"));
+            }
+            assertEquals(STAGES, texts(declared.findValues("id")));
+            declared.forEach(stage -> assertEquals(IncidentFixtures.AFTER.get(stage.path("id").asText()), texts(stage.path("after")),
+                    stage.path("id").asText()));
+            List<String> files;
+            try (Stream<Path> listing = Files.list(Path.of("src/main/resources/scenarios/data"))) {
+                files = listing.map(file -> file.getFileName().toString())
+                        .filter(name -> name.startsWith("incident-") && name.endsWith(".json")).sorted().toList();
+            }
+            int checked = 0;
+            for (String name : files) {
+                var read = data(name);
+                if (!read.path("stages").isArray() || !read.path("parts").isObject()) {
+                    continue;
+                }
+                checked++;
+                assertEquals(declared.size(), read.path("stages").size(), name);
+                for (int i = 0; i < declared.size(); i++) {
+                    var want = declared.get(i);
+                    var have = read.path("stages").get(i);
+                    for (String member : List.of("id", "part", "after", "when", "narrative", "stepUp")) {
+                        assertEquals(want.path(member), have.path(member), name + " " + want.path("id").asText() + " " + member);
+                    }
+                }
+            }
+            assertTrue(checked >= 20, "the reads that were found: " + checked);
+        }
+
+        private static String group(String text, String regex) {
+            var matcher = Pattern.compile(regex).matcher(text);
+            return matcher.find() ? matcher.group(1) : null;
         }
 
         @Test
@@ -521,23 +605,34 @@ class IncidentsTest {
                     .get(0).asText());
             assertEquals("isms-register:risk/R-021", read("lost-laptop").path("parts").path("review").path("value").path("risks")
                     .get(0).asText());
-            for (String name : List.of("documents-index.json", "documents-index-created.json", "documents-index-n5-released.json",
-                    "documents-index-minutes.json")) {
+            List<String> indexes;
+            try (Stream<Path> files = Files.list(Path.of("src/main/resources/scenarios/data"))) {
+                indexes = files.map(file -> file.getFileName().toString())
+                        .filter(name -> name.startsWith("documents-index") && name.endsWith(".json")).sorted().toList();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+            assertTrue(indexes.contains("documents-index.json") && indexes.contains("documents-index-incident-created.json"), indexes.toString());
+            for (String name : indexes) {
                 List<JsonNode> entries = new ArrayList<>();
                 data(name).path("entries").forEach(entry -> {
                     if ("incident-reports".equals(entry.path("category").asText())) {
                         entries.add(entry);
                     }
                 });
-                assertEquals(9, entries.size(), name);
+                boolean created = name.contains("incident-created");
+                assertEquals(created ? 10 : 9, entries.size(), name);
                 for (var entry : entries) {
-                    String slug = SLUGS.stream().filter(s -> IDS.get(s).equals(entry.path("id").asText())).findFirst().orElseThrow();
-                    var read = read(slug);
+                    String id = entry.path("id").asText();
+                    String slug = SLUGS.stream().filter(s -> IDS.get(s).equals(id)).findFirst().orElse("suspicious-vpn");
+                    var read = "suspicious-vpn".equals(slug) ? data("incident-suspicious-vpn.json") : read(slug);
                     assertAll(name + " " + slug,
+                            () -> assertTrue(created || !"suspicious-vpn".equals(slug), "only the index of the created state holds the VPN incident"),
+                            () -> assertEquals(read.path("id").asText(), id),
                             () -> assertEquals(read.path("repository"), entry.path("repository")),
                             () -> assertEquals("incident", entry.path("kind").asText()),
                             () -> assertEquals(read.path("title"), entry.path("title")),
-                            () -> assertEquals(RELEASED.contains(slug) ? "released" : "draft", entry.path("state").asText()),
+                            () -> assertEquals(read.path("state").asText(), entry.path("state").asText()),
                             () -> assertEquals(read.path("address"), entry.path("address")));
                 }
             }

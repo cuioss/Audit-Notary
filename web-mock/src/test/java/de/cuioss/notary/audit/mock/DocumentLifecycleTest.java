@@ -1421,7 +1421,7 @@ class DocumentLifecycleTest {
                 assertAll(
                         () -> assertEquals("notes/" + N5 + "/v1", diff.path("from").asText()),
                         () -> assertEquals(1, requestsOf(dueBefore, N5)),
-                        () -> assertEquals("rr-01JZ8V9C2E4G6J8M0P2R4T6W8Y", dueBefore.get(8).path("requestId").asText()),
+                        () -> assertEquals("rr-01JZ8V9C2E4G6J8M0P2R4T6W8Y", requestFor(dueBefore, N5).path("requestId").asText()),
                         () -> assertEquals("RELEASED", json(released).path("outcome").asText()),
                         () -> assertEquals("notes/" + N5 + "/v2", json(released).path("tag").asText()),
                         () -> assertEquals("note-release-request-done", next),
@@ -1450,6 +1450,16 @@ class DocumentLifecycleTest {
                         () -> assertEquals(1, requestsOf(dueAfter, N2)),
                         () -> assertEquals("2026-11-22", dueAfter.get(3).path("due").asText()));
             }
+        }
+
+        /** The release request of a note in the Due list, found by the address of its release and not by its position. */
+        private JsonNode requestFor(JsonNode items, String id) {
+            for (var item : items) {
+                if (item.path("requestId").isTextual() && item.path("address").asText().endsWith("/" + id + "/release")) {
+                    return item;
+                }
+            }
+            throw new AssertionError("no release request for " + id);
         }
 
         private int requestsOf(JsonNode items, String id) {
