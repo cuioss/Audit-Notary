@@ -3803,7 +3803,7 @@ change each one. The bodies and addresses are in <<_threat_model_requests>>:
 . *The recipe is a `WizardPage`* at `/threat-models/{service}/new?recipe=`: one page per step (the guidance above, the form of the
   step below), a last page that checks and asks for the owner and the review date, and the act *Save*; the sub-form is built from the
   schema at `fills`. The web app shows the recipes to choose from on the page of a service that has none or wants another, and
-  the recipes a person has started as *continue*.
+  the recipes a person has started as *continue*. (Decided later, point 27: the wizard is a sheet of the lens, not a `WizardPage`.)
 
 . *A save keeps the stored `transferred`.* `attributes.transferred` is `readOnly` in the schema and the server takes it from the
   stored file by the `id` of the threat, ignoring a value in the sent `/threats` list (a refusal code would add a request outcome

@@ -267,13 +267,15 @@ test.describe('the choice of a recipe (UC-TM-1)', () => {
         contentType: 'application/json',
         body: JSON.stringify({ outcome: 'GIT_UNAVAILABLE' }),
       });
-    await page.route((url) => url.pathname === RECIPES_PATH, refuse);
+    // One function for both calls: `unroute` finds the route by the identity of the matcher.
+    const isRecipes = (url) => url.pathname === RECIPES_PATH;
+    await page.route(isRecipes, refuse);
     await page.goto(newAddress(SERVICE.id));
     await expect(page.getByTestId('new-threat-model-sheet').getByRole('alert')).toContainText(
       'Git server',
     );
     await expect(page.getByTestId('recipe-choice')).toHaveCount(0);
-    await page.unroute((url) => url.pathname === RECIPES_PATH, refuse);
+    await page.unroute(isRecipes, refuse);
 
     await page.route((url) => url.pathname === recipePath('quick-start'), refuse);
     await page.goto(newAddress(SERVICE.id, 'quick-start'));

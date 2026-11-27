@@ -74,7 +74,8 @@ Transfer, issues and evaluation:
   part of the model it fills.
 
 A recipe is `categories/threat-models/recipes/<id>.yaml`: `title`, ordered `steps`, each with `title`, `guidance`
-(AsciiDoc fragment) and `fills` (JSON Pointer into the model file). The web app renders a recipe as `WizardPage`; the MCP
+(AsciiDoc fragment) and `fills` (JSON Pointer into the model file). The web app renders a recipe as `WizardPage`
+(decided provisionally: as a sheet in the last column of the lens, see <<_open_questions,Open Questions>>); the MCP
 server exposes recipes through the tool `read_recipe` (xref:mcp-server.adoc#AUN-MCP-6[MCP Server, AUN-MCP-6]).
 
 [#_open_questions]
@@ -101,8 +102,7 @@ xref:rest-api.adoc#_decided_threat_models[REST API Register, Open Questions]; th
 . *Treatment* (AUN-TM-4): the status of a threat (`open`, `mitigated`, `accepted`), the countermeasures with their issue ids and
   the reference of the transfer are `attributes` of the threat and of the mitigation; an untreated threat is open, named by no
   countermeasure and not transferred.
-. *Recipes* (AUN-TM-5): a step also has an `id`, the recipe a `description`, and every text may be given per language; the
-  the `fills` of a step is a JSON Pointer to an array or an object of the model file's schema. A recipe is read with
+. *Recipes* (AUN-TM-5): a step also has an `id`, the recipe a `description`, and every text may be given per language; the `fills` of a step is a JSON Pointer to an array or an object of the model file's schema. A recipe is read with
   `GET /api/v1/categories/threat-models/recipes` and `…/recipes/{recipe}`.
 . *Review date* (AUN-TM-3): `last-review` is set by the act of starting the review (the web app prefills today), the interval
   table is served as `reviewIntervals`.

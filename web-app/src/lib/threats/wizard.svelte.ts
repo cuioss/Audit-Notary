@@ -159,6 +159,7 @@ export class RecipeWizard {
   async open(recipe: string, lang: string): Promise<void> {
     const read = ++this.latest;
     this.phase = 'loading';
+    this.loadFailure = null;
     try {
       // Both reads are settled before either answer is used: a recipe that does not exist is the answer, whichever of the
       // two reads is refused first (the draft of a recipe that does not exist is refused as well).
@@ -197,6 +198,9 @@ export class RecipeWizard {
    * @param lang `en` or `de`
    */
   async relocalise(recipe: string, lang: string): Promise<void> {
+    // Nothing is shown yet: the first read starts again in the new language, so that it is never dropped for this one.
+    if (this.phase === 'loading') return this.open(recipe, lang);
+    if (this.phase !== 'ready') return;
     const read = ++this.latest;
     try {
       const loaded = await this.client.getThreatRecipe(recipe, lang);
@@ -277,6 +281,8 @@ export class RecipeWizard {
   async next(): Promise<boolean> {
     if (this.recipe === null || this.busy !== null || this.onReview) return false;
     const target = this.current + 1;
+    // What the request carries is what is kept: a change made while it runs is not kept yet.
+    const sent = this.snapshot();
     this.busy = 'keeping';
     this.lastAct = 'keeping';
     this.failure = null;
@@ -285,10 +291,10 @@ export class RecipeWizard {
       const answer = await this.client.saveThreatRecipeDraft(
         this.service,
         this.recipe.id,
-        draftRequest(target, this.values, this.furthest >= this.steps.length ? this.data : null),
+        draftRequest(target, sent.values, this.furthest >= this.steps.length ? sent.data : null),
       );
       this.keptAt = answer.at;
-      this.baseline = this.snapshot();
+      this.baseline = sent;
       this.current = target;
       this.furthest = Math.max(this.furthest, target);
       return true;
@@ -307,6 +313,7 @@ export class RecipeWizard {
    */
   async create(): Promise<ThreatModelCreated | null> {
     if (this.recipe === null || this.busy !== null || this.created) return null;
+    if (this.createBlocker !== null) return null;
     const recipe = this.recipe.id;
     const body = createRequest(recipe, this.values, this.data);
     this.busy = 'creating';

@@ -167,6 +167,32 @@ describe('opening', () => {
     expect(wizard.name).toBe('Scheduler overview');
   });
 
+  it('does not stay at loading when the language changes while the recipe is still being read', async () => {
+    const kit = client();
+    const wizard = new RecipeWizard(
+      'report-scheduler',
+      '2026-11-26',
+      kit.api,
+      new StepUpHandler(kit.api, () => 'off'),
+    );
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    kit.fake.getThreatRecipe.mockImplementationOnce(async () => {
+      await gate;
+      return { ...structuredClone(RECIPE), title: 'Quick start' };
+    });
+    kit.fake.getThreatRecipe.mockImplementationOnce(async () => ({
+      ...structuredClone(RECIPE),
+      title: 'Schnellstart',
+    }));
+    const first = wizard.open('quick-start', 'en');
+    await wizard.relocalise('quick-start', 'de');
+    release();
+    await first;
+    expect(wizard.phase).toBe('ready');
+    expect(wizard.recipe?.title).toBe('Schnellstart');
+  });
+
   it('keeps the texts it has when the other language cannot be read or has other steps', async () => {
     const { wizard, fake } = await opened();
     fake.getThreatRecipe.mockImplementationOnce(async () => {
@@ -193,6 +219,23 @@ describe('filling in', () => {
     expect(wizard.dirty).toBe(false);
     wizard.setValue('/project', undefined);
     expect(wizard.values).toEqual({});
+    expect(wizard.dirty).toBe(true);
+  });
+
+  it('does not count a change made while the draft is being kept as kept', async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const { wizard } = await opened({
+      saveThreatRecipeDraft: async () => {
+        await gate;
+        return { outcome: 'DRAFT_SAVED' as const, at: '2026-11-26T09:21:00Z' };
+      },
+    });
+    wizard.setValue('/project', { name: 'Scheduler' });
+    const going = wizard.next();
+    wizard.setValue('/project', { name: 'Scheduler overview' });
+    release();
+    expect(await going).toBe(true);
     expect(wizard.dirty).toBe(true);
   });
 
@@ -310,6 +353,13 @@ describe('creating', () => {
     wizard.setValue('/project', { name: 'A' });
     expect(wizard.createBlocker).toBeNull();
     expect(wizard.nameStep).toBe(0);
+  });
+
+  it('sends nothing, and asks for nothing, while the name is missing', async () => {
+    const { wizard, calls } = await opened({}, { ...draftOf(3), parts: { model: { fields: {} } } });
+    expect(await wizard.create()).toBeNull();
+    expect(calls.created).toEqual([]);
+    expect(wizard.busy).toBeNull();
   });
 
   it('creates from the recipe and both parts, and then has nothing to lose', async () => {

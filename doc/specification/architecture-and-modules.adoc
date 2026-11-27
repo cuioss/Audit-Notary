@@ -141,7 +141,7 @@ The only extension point is `ScoreCalculator` (SAMM scores), a named CDI interfa
 Web-app equivalents: `list_documents` the document lists of the lenses and `read_catalog` the *Catalogs* lens
 (xref:web-app.adoc#AUN-WEB-3[AUN-WEB-3]), `list_due` the *Due* lens, `search` the search of the top bar
 (xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App]), `read_recipe` the recipe's
-`WizardPage` (xref:category-threat-models.adoc#AUN-TM-5[AUN-TM-5]), `read_document` the document request
+wizard (a `WizardPage` in AUN-TM-5, decided provisionally as a sheet of the lens; xref:category-threat-models.adoc#AUN-TM-5[AUN-TM-5]), `read_document` the document request
 `GET /api/v1/documents/…`, `diff` the diff request (xref:web-app.adoc#AUN-WEB-6[AUN-WEB-6]), `write_draft` the
 draft save and `save` the save (xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5]). Two tools
 have no web-app equivalent and are tested through the MCP server alone: `discard_draft`, because the web app offers
