@@ -136,6 +136,40 @@ class CanonicalAddressesTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {"/isms", "/isms/risks", "/isms/risks/new",
+            "/isms/risks/new?origin=samm-assessments%3Aassessment%2Fpayments-2026-q2%23st",
+            "/isms/risks/new?origin=threat-models%3Athreat-model%2Fpayment-api-checkout-flow%23T-03",
+            "/isms/risks/r-043", "/isms/risks/r-004?at=v3", "/isms/risks/r-018/release", "/isms/risks/new-2",
+            "/isms/risks/new-2/release", "/isms/documents", "/isms/documents?kind=management-review",
+            "/isms/documents/new?kind=policy", "/isms/documents/01JZB1C3E5G7J9M1P3R5T7W9Y2",
+            "/isms/documents/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=v2", "/isms/documents/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=4be0c3a",
+            "/isms/documents/01JZB1C3E5G7J9M1P3R5T7W9Y2/compare",
+            "/isms/documents/01JZB1C3E5G7J9M1P3R5T7W9Y2/compare?from=v2&to=v3",
+            "/isms/documents/01JZB1C3E5G7J9M1P3R5T7W9Y2/release", "/isms/documents/NEW", "/isms/documents/new-2"})
+    @DisplayName("keeps a return address of the ISMS lens, with its allowed query")
+    void shouldKeepIsmsAddressesWithAllowedQuery(String address) {
+        assertEquals(address, addresses.checkReturn(address));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/isms/risks/new#x", "/isms/risks/new/release", "/isms/risks/new?kind=policy",
+            "/isms/risks/new?origin=", "/isms/risks/new?origin=service%3Apayment-api",
+            "/isms/risks/new?origin=samm-assessments%3Aassessment%2Fpayments-2026-q2%23st&origin=samm-assessments%3Aassessment%2Fpayments-2026-q2%23st",
+            "/isms/risks?at=v1", "/isms/risks/r-004?at=zzz", "/isms/risks/r-004?origin=x",
+            "/isms/risks/r-018/release?at=v1", "/isms/documents?kind=Policy", "/isms/documents?at=v1",
+            "/isms/documents/new/release", "/isms/documents/new/compare",
+            "/isms/documents/01JZB1C3E5G7J9M1P3R5T7W9Y2?kind=policy",
+            "/isms/documents/01JZB1C3E5G7J9M1P3R5T7W9Y2?from=v1",
+            "/isms/documents/01JZB1C3E5G7J9M1P3R5T7W9Y2/compare?at=v1",
+            "/isms/documents/01JZB1C3E5G7J9M1P3R5T7W9Y2/compare?from=V1",
+            "/isms/documents/01JZB1C3E5G7J9M1P3R5T7W9Y2/compare?from=v1&from=v2",
+            "/isms/documents/01JZB1C3E5G7J9M1P3R5T7W9Y2/release?from=v1"})
+    @DisplayName("replaces a return address of the ISMS lens with a name it does not admit or a bad value by /")
+    void shouldReplaceIsmsAddressesWithOtherQueries(String candidate) {
+        assertEquals(CanonicalAddresses.FALLBACK, addresses.checkReturn(candidate));
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"/reports", "/reports/samm-trend", "/reports/samm-trend?scope=payments",
             "/reports/samm-compare", "/reports/samm-compare?scope=payments",
             "/reports/samm-compare?scope=payments&from=2026-q2&to=2026-q4",
