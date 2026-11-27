@@ -57,6 +57,22 @@ import {
   walkQuickStart,
 } from './helpers/wizard.js';
 import {
+  ARCHIVE,
+  CARD_DATA,
+  CREDENTIAL_STUFFING,
+  OUTAGE,
+  PHISHING,
+  STAGES,
+  SUSPICIOUS,
+  WRONG_RECIPIENT,
+  incidentAddress,
+  loginToIncidents,
+  loginToSheet as loginToIncident,
+  pinClock,
+  readPath,
+} from './helpers/incidents.js';
+import { patchRead } from './helpers/samm.js';
+import {
   CANDIDATES,
   DESCRIPTOR,
   IMPORT_ADDRESS,
@@ -1524,5 +1540,238 @@ test.describe('at 390 px', () => {
     await expectTarget(page.getByTestId('create-confirm'));
     await expectNoSideways(page);
     await expectNoSeriousViolations(page, 'threat models wizard password question (phone)');
+  });
+  test('the years and the incidents of a year fit: every row is a target, the stages are a list and nothing scrolls sideways', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToIncidents(page, '/incidents');
+    await expect(page.getByTestId('year-list')).toBeVisible();
+    await expectTarget(page.getByTestId('year-2026'));
+    await expectTarget(page.getByTestId('year-2025'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incidents years (phone)');
+    await page.getByTestId('year-2026').click();
+    await expect(page.getByTestId('incident-list')).toBeVisible();
+    await expectTarget(page.getByTestId('new-incident-link'));
+    for (const row of await page.getByTestId('incident-list').locator('> li > a').all()) {
+      await expectTarget(row);
+      // The row does not grow wider than the screen: the five stages and the deadlines wrap.
+      const box = await row.boundingBox();
+      expect(box.x + box.width).toBeLessThanOrEqual(390.5);
+    }
+    await expect(page.getByTestId(`incident-${CARD_DATA.id}`)).toContainText('2 deadlines missed');
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incidents year (phone)');
+  });
+
+  test('the sheet of an incident fits: the stages are rows of the phone size, the clock fits, and the acts are targets', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToIncident(page, CARD_DATA, 'privacy-assessment');
+    await expectNoSideways(page);
+    // The tabs are a list of full-width rows, each a target, with its status in words.
+    const tabs = page.getByTestId('stage-tabs');
+    await tabs.scrollIntoViewIfNeeded();
+    const list = await tabs.boundingBox();
+    for (const stage of STAGES) {
+      const tab = page.getByTestId(`stage-tabs-${stage}`);
+      await expectTarget(tab);
+      const box = await tab.boundingBox();
+      expect(box.width).toBeGreaterThan(list.width - 2);
+    }
+    // The clock: every deadline stands inside the screen with its state in words, whatever the length of its basis.
+    const clock = page.getByTestId('deadline-clock');
+    await clock.scrollIntoViewIfNeeded();
+    for (const row of await clock.locator('li').all()) {
+      const box = await row.boundingBox();
+      expect(box.x).toBeGreaterThanOrEqual(-0.5);
+      expect(box.x + box.width).toBeLessThanOrEqual(390.5);
+    }
+    await expect(page.getByTestId('deadline-clock-gdpr-art33-')).toContainText('Missed');
+    await expectTarget(page.getByTestId('stage-complete'));
+    await expectTarget(page.getByTestId('save-everyone'));
+    await expectTarget(page.getByTestId('report-toggle'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incident sheet (phone)');
+    // The stages that do not apply and the marker fit as rows as well.
+    await loginToIncident(page, WRONG_RECIPIENT, 'response');
+    for (const stage of STAGES) await expectTarget(page.getByTestId(`stage-tabs-${stage}`));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incident stages with a marker (phone)');
+    await loginToIncident(page, SUSPICIOUS, 'triage');
+    await expectNoSideways(page);
+    await loginToIncident(page, CREDENTIAL_STUFFING, 'privacy-assessment');
+    await expect(page.getByTestId('stage-not-applicable')).toBeVisible();
+    await expectNoSideways(page);
+  });
+
+  test('the notices are stacked rows, the form to record one fits, and the clock without a date fits', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToIncident(page, CARD_DATA, 'notifications');
+    await expect(page.getByTestId('notifications-table')).toBeVisible();
+    await expectStacked(page.getByTestId('notifications-table'));
+    for (const row of await page.getByTestId('notifications-table').locator('tbody tr').all()) {
+      const box = await row.boundingBox();
+      expect(box.x + box.width).toBeLessThanOrEqual(390.5);
+    }
+    await expect(page.getByTestId('notification-nis2-notification')).toContainText('Sent late');
+    const authority = field(page.getByTestId('stage-form'), '/supervisory-authority');
+    await expectTarget(authority.getByLabel('Sent at'));
+    await expectTarget(authority.getByLabel('Recipient'));
+    await expectTarget(authority.getByLabel('Channel'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incident notices (phone)');
+    await loginToIncident(page, ARCHIVE, 'notifications');
+    await expectStacked(page.getByTestId('notifications-table'));
+    await expect(
+      page.getByTestId('deadline-clock-nis2-final-report-after-handling-'),
+    ).toContainText('The clock starts when');
+    await expectNoSideways(page);
+  });
+
+  test('the refusal of a stage fits: each missing field and the way back are targets, and the open stages are links', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToIncident(page, SUSPICIOUS, 'triage');
+    await page.getByTestId('stage-complete').click();
+    await expect(page.getByTestId('missing-fields')).toBeVisible();
+    await page.getByTestId('stage-refusal').scrollIntoViewIfNeeded();
+    for (const button of await page.getByTestId('missing-fields').getByRole('button').all()) {
+      await expectTarget(button);
+    }
+    await expectTarget(page.getByTestId('back-to-editing'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incident refusal (phone)');
+    await patchRead(page, `**${readPath(SUSPICIOUS)}`, (body) => ({
+      ...body,
+      stages: body.stages.map((stage) =>
+        stage.id === 'response' ? { ...stage, blockedBy: [] } : stage,
+      ),
+    }));
+    await page.goto(incidentAddress(SUSPICIOUS, { stage: 'response' }));
+    await page.getByTestId('stage-complete').click();
+    await expect(page.getByTestId('stage-open-before')).toBeVisible();
+    await expectTarget(page.getByTestId('stage-open-before').getByRole('link'));
+    await expectNoSideways(page);
+    // A stage that waits for another says why, inside the screen.
+    await page.goto(incidentAddress(CARD_DATA, { stage: 'review' }));
+    await page.getByTestId('stage-bar').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('stage-bar')).toContainText('Complete Response first.');
+    await expectNoSideways(page);
+  });
+
+  test('the question to save first, the question for the password and the conflict are in the viewport with targets of the phone size', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop#incident-review-stepped-up');
+    await patchRead(page, '**/api/v1/status', (body) => ({
+      ...body,
+      loginProvider: 'local',
+      stepUp: 'password',
+    }));
+    await loginToIncident(page, CREDENTIAL_STUFFING, 'review');
+    await expect(page.getByTestId('stage-step-up-note')).toBeVisible();
+    await page.getByTestId('stage-complete').click();
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expectTarget(page.getByTestId('document-password'));
+    await expectTarget(page.getByTestId('document-confirm'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incident password question (phone)');
+    await page.keyboard.press('Escape');
+    await useScenario(request, 'workshop');
+    await page.goto(incidentAddress(CARD_DATA, { stage: 'privacy-assessment' }));
+    await field(page.getByTestId('stage-form'), '/risk')
+      .getByRole('combobox')
+      .selectOption({ label: 'Risk' });
+    await page.getByTestId('stage-complete').click();
+    await expect(page.getByTestId('stage-save-first')).toBeVisible();
+    await expectTarget(page.getByTestId('stage-save-first'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incident save first (phone)');
+    await useScenario(request, 'workshop#incident-saved-by-other');
+    await page.goto(incidentAddress(CARD_DATA, { stage: 'notifications' }));
+    const authority = field(page.getByTestId('stage-form'), '/supervisory-authority');
+    await authority.getByLabel('Sent at').fill('2026-11-26T10:45');
+    await authority.getByLabel('Recipient').fill('State data protection authority');
+    await authority.getByLabel('Channel').selectOption({ label: 'Reporting portal' });
+    await page.getByTestId('save-everyone').click();
+    await expect(page.getByTestId('conflict-panel')).toBeVisible();
+    await page.getByTestId('conflict-panel').scrollIntoViewIfNeeded();
+    await expectTarget(page.getByTestId('keep-own-/supervisory-authority'));
+    await expectTarget(page.getByTestId('take-other-/supervisory-authority'));
+    await expect(page.getByTestId('stage-tabs-notifications')).toContainText('Conflict');
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incident conflict (phone)');
+  });
+
+  test('the report preview, the submit with its reason and the release step fit', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToIncident(page, CARD_DATA);
+    const submit = page.getByTestId('transition-incident.submit');
+    await submit.scrollIntoViewIfNeeded();
+    await expectTarget(submit);
+    await expect(page.getByTestId('transition-bar')).toContainText('Complete these stages first');
+    await expectNoSideways(page);
+    await page.getByTestId('report-toggle').click();
+    await expect(page.getByTestId('report-section')).toHaveCount(8);
+    await page.getByTestId('report-preview').scrollIntoViewIfNeeded();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incident report (phone)');
+    await useScenario(request, 'workshop#incident-submitted');
+    await page.goto(incidentAddress(CREDENTIAL_STUFFING));
+    const release = page.getByTestId('transition-incident.release');
+    await release.scrollIntoViewIfNeeded();
+    await expectTarget(release);
+    await expectNoSideways(page);
+  });
+
+  test('a released incident, an earlier state of it and a person who may only read fit, without a control to change them', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToIncident(page, OUTAGE, 'notifications');
+    await expect(page.getByTestId('clock-stopped')).toBeVisible();
+    await expectStacked(page.getByTestId('notifications-table'));
+    await expect(page.getByTestId('save-everyone')).toHaveCount(0);
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incident released (phone)');
+    await page.goto(incidentAddress(OUTAGE, { at: 'v1' }));
+    await expect(page.getByTestId('revision-notice')).toBeVisible();
+    await expectTarget(page.getByTestId('revision-back'));
+    await expectNoSideways(page);
+    await useScenario(request, 'read-only');
+    await page.goto(incidentAddress(CARD_DATA));
+    await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'read-only');
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incident read only (phone)');
+  });
+
+  test('the deadlines in the Due list fit, and their links are targets of the phone size', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await pinClock(page);
+    await page.goto('/api/v1/auth/login?return=%2F');
+    await expect(page.getByTestId('due-list')).toBeVisible();
+    const link = page.getByTestId('due-list').getByRole('link', { name: /Phishing mail/ });
+    await expectTarget(link);
+    await expect(page.getByTestId('due-list')).toContainText(PHISHING.title);
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'due deadlines (phone)');
   });
 });

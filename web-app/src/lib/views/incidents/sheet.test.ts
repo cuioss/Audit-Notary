@@ -284,7 +284,7 @@ describe('the deadline clock', () => {
     expect(missed).toHaveTextContent('Meldung an die Aufsichtsbehörde');
     expect(missed).toHaveTextContent('DSGVO Art. 33: 72 Stunden nach Kenntnis');
     expect(missed).toHaveTextContent('Versäumt');
-    expect(missed).toHaveTextContent('Seit 4 Tage überfällig');
+    expect(missed).toHaveTextContent('4 Tage überfällig');
   });
 });
 

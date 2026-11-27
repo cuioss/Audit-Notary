@@ -82,6 +82,15 @@ recipes with their steps in English and German, the draft of `recipe-draft-saved
 steps (sign in at the choice or at a recipe, `goOn` to the next step by its title, the rows of the form kit, the dialog of a
 threat, the walks through the quick start, `routeCreate`, which answers only the `POST` of the create); the first test of
 `threat-model-wizard.spec.js` compares the fixtures with the mock
+
+|`tests/helpers/incidents.js`
+|The addresses and paths of the lens Incidents, the static fixtures (the nine incidents of the mock with the status of each
+stage and their deadlines, the two years with their figures, the order of both lists, the incident that `incident-created`
+adds) and the shared steps: `pinClock`, which pins the clock of the page to the instant the mock reads at (the deadline clock
+compares with the clock of the page, so a deadline would otherwise be open or missed by the day the suite runs), the sign-in
+at an address or at the sheet of an incident, the statuses of the tabs, the rows of the clock, and `refuseRead`, which answers
+one read with another status where the mock has no profile for it; the first test of `incidents.spec.js` compares the
+fixtures with the mock
 |===
 
 == Specs
@@ -187,6 +196,23 @@ sheet of the new model, the evaluation and the service read again, the refusal a
 Git server down, the password and the identity provider before a create); the stream (a model created elsewhere changes
 nothing of what the person typed) and English and German
 
+|`incidents.spec.js`
+|The lens Incidents as far as it is built (UC-IR-1, UC-IR-2, UC-IR-3), against `workshop`, `read-only`, `release`, `empty` and
+the `incident-*` states: the years (their figures, a repository that is not set up, no right, the empty installation, a year the
+server refuses), the incidents of a year (the stages of each row, the deadlines, the way to a new incident, which part B
+builds), the stages as tabs (the status in words, a stage that does not apply greyed with its condition, the question that is
+not answered, the marker of a stage signed off before a predecessor was reopened, the arrow keys), the panel of a stage (the
+guidance, the form with the title and the derived protection needs, a completed stage read only), the notices sent (the
+table with the deadline each meets, a list of notices, recording a notice and what follows in the table, the clock and the Due
+list), the deadline clock (open, met, missed, sent late, not started, the page overtaking the server, the frozen clock of a
+released incident and of an earlier state), completing and reopening a stage (the missing fields, the stages open before, the
+stage that waits, a stage that changed meanwhile, save first, the markers), the review that asks for the identity again (the
+identity provider and the password), submit with its reason and the step to the release, saving the parts (two parts as two
+changes, the conflict decided per field, `STAGE_LOCKED`, the fields the server refused, the Git server down), the earlier
+states (`?at=v1`), the report preview (English only, rendered by section, committed or generated), the deadlines in the Due
+list, the live refresh on `document-saved` and `document-transitioned`, and German, with the amounts of time in the right
+case
+
 |`theme-readability.spec.js`
 |The axe-core audit of every view in both themes, and of the states of the documents lens, the release, the palette, the
 catalogs lens, the directory pages, the SAMM completion (the forms with their refusals and notices, the targets, the
@@ -194,7 +220,10 @@ evidence with its editor and question, the frozen practice, the refused comparis
 refusal, empty and unavailable state of its five pages, the practices of the comparison opened) and the lens Threat models
 (the evaluation and the pages of a service in each state, the sheet with its dialogs, its review, its refusals and its steps,
 the release with its seal and its refusals) and the recipe wizard (the choice and what stands in its place, the steps with
-their tables and dialogs, the last page, the refusals of a create and the questions it asks)
+their tables and dialogs, the last page, the refusals of a create and the questions it asks) and the lens Incidents (the
+years and what stands in their place, the list of a year, the sheet in every state of its stages and of its clock, the notices,
+the refusals and questions of a stage, the conflict and the refusals of a save, the report, the incident in review and the
+released one, the deadlines in Due)
 
 |`fonts.spec.js`
 |Every request stays on the own origin, and Inter is loaded
@@ -210,11 +239,18 @@ sheet with its stacked tables and its diagram within the screen, the dialogs ins
 the conflict, the errors and the release, whose group summaries are 44 px targets (the release of a note as well); the
 recipe wizard: the choice, a step whose list of steps gives way to the count, the dialogs of a row, a threat and a
 countermeasure inside the window, the last page with its create in reach, the refusals of a create and the questions of the
-wizard; axe on each page
+wizard; in the lens Incidents the years and the rows of a year, the sheet with its stages as rows of 44 px and its clock
+inside the screen, the notices as stacked rows, the refusal of a stage with its fields as targets, the question to save first,
+the question for the password and the conflict inside the window, the report, the released incident and the deadlines in
+Due; axe on each page
 |===
 
 A new view gets its address in `navigation.spec.js` and its audit in `theme-readability.spec.js`; a new profile of
 `web-mock` gets the spec of the flow it exists for.
+
+The clock of the page is the real one. A spec that tells a deadline (`incidents.spec.js`, the audit rows and the phone checks
+of the lens Incidents) pins it with `pinClock` to `2026-11-26T10:00:00Z`, the instant the mock reads at, and a test that wants
+another day (a deadline the page has overtaken) pins that and reloads.
 
 A test that depends on the state of the mock says so: `useScenario` checks that the mock answered the profile and the
 state it was asked for, and the audit rows of `theme-readability.spec.js` that read what a state answers check it again
@@ -224,7 +260,9 @@ connection, but the checks are checkpoints and not isolation: a check that names
 switched the mock to another state of that profile, and a page may read a state between two checks. Give every concurrent
 run its own ports.
 
-The mock stores nothing, and a state it has no profile for is not invented in the page: where a flow needs one (a
+The mock stores nothing, and a state it has no profile for is not invented in the page: where a flow needs one (an incident the
+server does not know, a year the person may not read, a stage the page reads as open that the server knows does not apply,
+a local user who is asked for the password, a
 trend that leaves versions out, a scope whose targets another assessor saved, a scope that shows no open assessment
 while the server knows one, fifty evidence links, a sixth scope in the trend, a third released assessment, a session that
 reads no register, a register that answers `FORBIDDEN`), the test fetches the real answer and changes it with `patchRead`, and

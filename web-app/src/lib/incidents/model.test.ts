@@ -273,7 +273,7 @@ describe('a row of the deadline clock', () => {
     use('de');
     const row = clockRow(deadline({ due: '2026-11-28T10:00:00Z' }), at, german, when);
     expect(row.name).toBe('Meldung an die Aufsichtsbehörde');
-    expect(row.detail).toBe('Fällig in 2 Tage');
+    expect(row.detail).toBe('Noch 2 Tage bis zur Fälligkeit');
     expect(row.statusLabel).toBe('Offen');
   });
 });
