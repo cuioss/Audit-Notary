@@ -12,6 +12,7 @@
   import { MITIGATION_STATUSES } from '../../api/types';
   import DataTable from '../../forms/DataTable.svelte';
   import { errorKey } from '../../forms/fieldErrors';
+  import { jsonEqual } from '../../forms/schema';
   import { t } from '../../i18n';
   import {
     issuesProblem,
@@ -255,11 +256,20 @@
       dialogNote = $t('threats.mitigation.threat-gone');
       return;
     }
+    // A field the person left alone stays exactly as the stored countermeasure holds it (white space and issue ids that hold
+    // a separator included): only a field that differs from the stored one is written.
+    const stored = held ? fieldsOf(held) : null;
+    const untouched = (key: keyof MitigationFields) =>
+      stored !== null && jsonEqual(merged[key], stored[key]);
     const attributes: OtmMitigation['attributes'] = { ...held?.attributes, threat: merged.threat };
-    if (merged.status === '') delete attributes.status;
-    else attributes.status = merged.status as MitigationStatus;
-    if (merged.issues.length === 0) delete attributes.issues;
-    else attributes.issues = merged.issues;
+    if (!untouched('status')) {
+      if (merged.status === '') delete attributes.status;
+      else attributes.status = merged.status as MitigationStatus;
+    }
+    if (!untouched('issues')) {
+      if (merged.issues.length === 0) delete attributes.issues;
+      else attributes.issues = merged.issues;
+    }
     const next: OtmMitigation = {
       ...held,
       id:
@@ -268,12 +278,14 @@
           'M',
           mitigations.map((entry) => entry.id),
         ),
-      name: merged.name,
+      name: untouched('name') && held ? held.name : merged.name,
       riskReduction: merged.riskReduction,
       attributes,
     };
-    if (merged.description === '') delete next.description;
-    else next.description = merged.description;
+    if (!untouched('description')) {
+      if (merged.description === '') delete next.description;
+      else next.description = merged.description;
+    }
     onchange?.(
       position < 0
         ? [...mitigations, next]

@@ -14,6 +14,7 @@
   import { STRIDE_CATEGORIES, THREAT_TREATMENTS } from '../../api/types';
   import DataTable from '../../forms/DataTable.svelte';
   import { errorKey } from '../../forms/fieldErrors';
+  import { jsonEqual } from '../../forms/schema';
   import { t } from '../../i18n';
   import {
     categorySlug,
@@ -240,6 +241,11 @@
       return;
     }
     const merged = fields?.merged ?? mine;
+    // A field the person left alone stays exactly as the stored threat holds it (white space and kinds the dialog does not
+    // offer included): only a field that differs from the stored one is written.
+    const stored = held ? fieldsOf(held) : null;
+    const untouched = (key: keyof ThreatFields) =>
+      stored !== null && jsonEqual(merged[key], stored[key]);
     const next: OtmThreat = {
       ...held,
       id:
@@ -248,13 +254,19 @@
           'T',
           threats.map((entry) => entry.id),
         ),
-      name: merged.name,
-      categories: merged.categories,
-      risk: { ...held?.risk, likelihood: merged.likelihood, impact: merged.impact },
+      name: untouched('name') && held ? held.name : merged.name,
+      risk: {
+        ...held?.risk,
+        likelihood: merged.likelihood,
+        impact: merged.impact,
+      },
       attributes: { ...held?.attributes, status: merged.status },
     };
-    if (merged.description === '') delete next.description;
-    else next.description = merged.description;
+    if (!untouched('categories')) next.categories = merged.categories;
+    if (!untouched('description')) {
+      if (merged.description === '') delete next.description;
+      else next.description = merged.description;
+    }
     onchange?.(
       position < 0
         ? [...threats, next]

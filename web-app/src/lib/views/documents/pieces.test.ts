@@ -151,6 +151,27 @@ describe('ConflictPanel', () => {
     expect(onresolve).toHaveBeenNthCalledWith(2, '/pinned', 'other');
   });
 
+  it('tells two lists of the same size apart by the ids inside their rows', () => {
+    const row = (issue: string) => ({ id: 'M-01', attributes: { issues: [issue] } });
+    render(ConflictPanel, {
+      conflicts: {
+        '/mitigations': {
+          pointer: '/mitigations',
+          own: [row('A-1')],
+          other: [row('B-2')],
+          by,
+        },
+      },
+      category: 'test-note',
+      kind: 'note',
+      locked: false,
+      onresolve: vi.fn(),
+    });
+    const panel = screen.getByTestId('conflict-/mitigations');
+    expect(panel).toHaveTextContent('A-1');
+    expect(panel).toHaveTextContent('B-2');
+  });
+
   it('moves the focus on to the next field to decide, and to the sheet after the last', async () => {
     const ondecided = vi.fn();
     let current = { ...conflicts };

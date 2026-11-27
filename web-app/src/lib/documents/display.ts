@@ -8,8 +8,11 @@ import { optionOf } from '../forms/texts';
 import { pointerTokens } from '../forms/schema';
 import type { Translate } from './saveLabel';
 
-/** How deep a list or a section is spelled out; below it a value is told by its size alone. */
-const SPELLED_DEPTH = 3;
+/**
+ * How deep a list or a section is spelled out; below it a value is told by its size alone. Four levels reach the ids of a
+ * list inside a row of a list (a countermeasure's issues), which two lists of the same size would otherwise not tell apart.
+ */
+const SPELLED_DEPTH = 4;
 
 /**
  * @param messages the catalogue

@@ -330,6 +330,35 @@ describe('ThreatTable', () => {
     });
   });
 
+  it('writes a field the person left alone exactly as a newer list holds it', async () => {
+    const onchange = vi.fn();
+    const { rerender } = render(ThreatTable, {
+      threats: [threat('T-01')],
+      mitigations: [],
+      onchange,
+    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit T-01' }));
+    await change('threats-field-impact', '40');
+    await rerender({
+      threats: [
+        threat('T-01', {
+          name: ' Padded name ',
+          description: '    first line\n    second line\n',
+          categories: ['Tampering', 'Spoofing'],
+        }),
+      ],
+      mitigations: [],
+      onchange,
+    });
+    await fireEvent.click(screen.getByTestId('threats-apply'));
+    expect(onchange.mock.calls[0][0][0]).toMatchObject({
+      name: ' Padded name ',
+      description: '    first line\n    second line\n',
+      categories: ['Tampering', 'Spoofing'],
+      risk: { impact: 40 },
+    });
+  });
+
   it('tells a field that both changed to different values, and applies nothing', async () => {
     const onchange = vi.fn();
     const { rerender } = render(ThreatTable, {
@@ -495,6 +524,27 @@ describe('CountermeasureEditor', () => {
       name: 'Renamed',
       description: 'Added by someone else',
       riskReduction: 80,
+    });
+  });
+
+  it('writes a field the person left alone exactly as a newer list holds it', async () => {
+    const onchange = vi.fn();
+    const { rerender } = render(CountermeasureEditor, {
+      mitigations: [mitigation('M-01', 'T-01')],
+      threats: [threat('T-01')],
+      onchange,
+    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit M-01' }));
+    await change('mitigations-field-name', 'Renamed');
+    await rerender({
+      mitigations: [mitigation('M-01', 'T-01', { description: '\n  New details\n' })],
+      threats: [threat('T-01')],
+      onchange,
+    });
+    await fireEvent.click(screen.getByTestId('mitigations-apply'));
+    expect(onchange.mock.calls[0][0][0]).toMatchObject({
+      name: 'Renamed',
+      description: '\n  New details\n',
     });
   });
 

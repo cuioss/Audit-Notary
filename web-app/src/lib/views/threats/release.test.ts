@@ -73,6 +73,33 @@ describe('the review', () => {
     expect(mitigations.querySelector('ins')).toHaveTextContent('Implemented');
   });
 
+  it('reads the whole list when the countermeasures were reordered and an issue id changed', async () => {
+    const entry = (id: string, issue: string) => ({
+      id,
+      name: `Countermeasure ${id}`,
+      riskReduction: 50,
+      attributes: { threat: 'T-03', issues: [issue] },
+    });
+    const before = [entry('M-01', 'A'), entry('M-02', 'C')];
+    const after = [entry('M-02', 'C'), entry('M-01', 'B')];
+    await useProfile('workshop#threat-model-in-review', 'en', {
+      'GET /api/v1/documents/threat-models/payment-api-checkout-flow/diff': {
+        repository: 'threat-models',
+        id: 'payment-api-checkout-flow',
+        from: 'models/payment-api-checkout-flow/v3',
+        to: 'working',
+        sections: [{ part: 'model', changes: [{ pointer: '/mitigations', before, after }] }],
+      },
+    });
+    status.set(await apiClient.getStatus());
+    render(ThreatModelReleaseView, { params: { service: 'payment-api', model: 'checkout-flow' } });
+    const record = await screen.findByTestId('record-model:mitigations');
+    expect(record.querySelectorAll('li.change')).toHaveLength(1);
+    expect(record.querySelector('del')).toHaveTextContent('M-01');
+    expect(record.querySelector('del')).toHaveTextContent('A');
+    expect(record.querySelector('ins')).toHaveTextContent('B');
+  });
+
   it('reads the review date as the form reads it', async () => {
     await open('workshop#threat-model-in-review');
     const group = screen.getByTestId('record-data:last-review');
