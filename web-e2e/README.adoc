@@ -89,8 +89,11 @@ stage and their deadlines, the two years with their figures, the order of both l
 adds) and the shared steps: `pinClock`, which pins the clock of the page to the instant the mock reads at (the deadline clock
 compares with the clock of the page, so a deadline would otherwise be open or missed by the day the suite runs), the sign-in
 at an address or at the sheet of an incident, the statuses of the tabs, the rows of the clock, and `refuseRead`, which answers
-one read with another status where the mock has no profile for it; the first test of `incidents.spec.js` compares the
-fixtures with the mock
+one read with another status where the mock has no profile for it; for the release page and the form of a new incident the
+addresses and paths of both (`releaseAddress`, `releasePath`, `diffPath`, `newIncidentAddress`, `createPath`), the sign-in at
+each (`loginToRelease`, `loginToNew`) and `withOpenDeadlines`, which gives the incident of a read the four deadlines of the
+card data, because no incident of the mock in review has a deadline still open; the first test of `incidents.spec.js`
+compares the fixtures with the mock
 |===
 
 == Specs
@@ -197,10 +200,9 @@ Git server down, the password and the identity provider before a create); the st
 nothing of what the person typed) and English and German
 
 |`incidents.spec.js`
-|The lens Incidents as far as it is built (UC-IR-1, UC-IR-2, UC-IR-3), against `workshop`, `read-only`, `release`, `empty` and
+|The sheet side of the lens Incidents (UC-IR-1, UC-IR-2, UC-IR-3), against `workshop`, `read-only`, `release`, `empty` and
 the `incident-*` states: the years (their figures, a repository that is not set up, no right, the empty installation, a year the
-server refuses), the incidents of a year (the stages of each row, the deadlines, the way to a new incident, which part B
-builds), the stages as tabs (the status in words, a stage that does not apply greyed with its condition, the question that is
+server refuses), the incidents of a year (the stages of each row, the deadlines, the way to a new incident), the stages as tabs (the status in words, a stage that does not apply greyed with its condition, the question that is
 not answered, the marker of a stage signed off before a predecessor was reopened, the arrow keys), the panel of a stage (the
 guidance, the form with the title and the derived protection needs, a completed stage read only), the notices sent (the
 table with the deadline each meets, a list of notices, recording a notice and what follows in the table, the clock and the Due
@@ -213,6 +215,20 @@ states (`?at=v1`), the report preview (English only, rendered by section, commit
 list, the live refresh on `document-saved` and `document-transitioned`, and German, with the amounts of time in the right
 case
 
+|`incidents-release.spec.js`
+|The review and release of an incident and the form of a new incident (UC-IR-1, UC-IR-3, AUN-WEB-6), against `workshop`,
+`read-only` and the `incident-submitted`, `incident-release-*`, `incident-create-invalid`, `incident-git-unavailable` and
+`incident-year-missing` states: the facts, the diff grouped by stage and then by field (the title as the group `data`, the
+sign-off of a stage as its own row), the checks, the act that reads only "Release" or "Freigeben" with no mechanism on any
+control, the deadlines still open that are listed before the person confirms and never block (a patched read, see
+`withOpenDeadlines`), the release with its seal, its tag and the stopped clock, the identity provider and the password before
+a release, `CHANGED_SINCE_REVIEW` with the record read again, `DOCUMENT_RELEASED` meanwhile, `STAGES_OPEN` with a link to
+each stage, the Git server down, no approve right, an incident released already, a draft, an unknown incident and a read that
+fails; the form of a new incident (the title as the one mandatory field and the reason of the act, the create that lands on
+the new incident with the history replaced and the year and the years read again, the refusals at the field, `OUT_OF_YEAR`
+and `STEP_UP_REQUIRED`, which the test answers itself for that one create, the Git server down, a year without a repository,
+no right, a year that is not the current one, the question before the form is left) and German
+
 |`theme-readability.spec.js`
 |The axe-core audit of every view in both themes, and of the states of the documents lens, the release, the palette, the
 catalogs lens, the directory pages, the SAMM completion (the forms with their refusals and notices, the targets, the
@@ -223,7 +239,8 @@ the release with its seal and its refusals) and the recipe wizard (the choice an
 their tables and dialogs, the last page, the refusals of a create and the questions it asks) and the lens Incidents (the
 years and what stands in their place, the list of a year, the sheet in every state of its stages and of its clock, the notices,
 the refusals and questions of a stage, the conflict and the refusals of a save, the report, the incident in review and the
-released one, the deadlines in Due)
+released one, the deadlines in Due, the release of an incident with its deadlines, seal, refusals and confirmation, and the
+form of a new incident with its refusals, its questions and its blocked states)
 
 |`fonts.spec.js`
 |Every request stays on the own origin, and Inter is loaded
@@ -242,13 +259,15 @@ countermeasure inside the window, the last page with its create in reach, the re
 wizard; in the lens Incidents the years and the rows of a year, the sheet with its stages as rows of 44 px and its clock
 inside the screen, the notices as stacked rows, the refusal of a stage with its fields as targets, the question to save first,
 the question for the password and the conflict inside the window, the report, the released incident and the deadlines in
-Due; axe on each page
+Due, the release of an incident (the record in groups, the open deadlines, the refusal with its links, the confirmation) and
+the form of a new incident (its fields and act as targets, its refusals and the questions inside the window); axe on each
+page
 |===
 
 A new view gets its address in `navigation.spec.js` and its audit in `theme-readability.spec.js`; a new profile of
 `web-mock` gets the spec of the flow it exists for.
 
-The clock of the page is the real one. A spec that tells a deadline (`incidents.spec.js`, the audit rows and the phone checks
+The clock of the page is the real one. A spec that tells a deadline (`incidents.spec.js`, `incidents-release.spec.js`, the audit rows and the phone checks
 of the lens Incidents) pins it with `pinClock` to `2026-11-26T10:00:00Z`, the instant the mock reads at, and a test that wants
 another day (a deadline the page has overtaken) pins that and reloads.
 
@@ -265,10 +284,12 @@ says so in a comment, by one of two ways:
 
 * For something the server does not hold, or a read the person may not make (an incident the server does not know, a year the
   person may not read, an answer that fails), the test answers the read with `refuseRead`, which gives the status and the body
-  directly and fetches nothing.
+  directly and fetches nothing. A write the mock has no state for (a create refused for the year of the awareness, a create that
+  asks for a fresh login) is answered the same way with `page.route`, for that request only, and the request never reaches the
+  mock.
 * For a state the server holds but the page must read differently, the test fetches the real answer and changes it with
   `patchRead` (a stage the page reads as open that the server knows does not apply, a released incident with a deadline that
-  was open at the release, a local user who is asked for the password, a trend that leaves versions out, a scope whose targets
+  was open at the release, an incident in review with deadlines still open, a local user who is asked for the password, a trend that leaves versions out, a scope whose targets
   another assessor saved, a scope that shows no open assessment while the server knows one, fifty evidence links, a sixth scope
   in the trend, a third released assessment, a session that reads no register, a register that answers `FORBIDDEN`). With
   `times` only the first reads are changed, so that a read the page makes after a refusal brings the mock's own answer.

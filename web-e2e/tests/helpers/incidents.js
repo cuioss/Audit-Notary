@@ -1,4 +1,5 @@
 import { expect } from '@playwright/test';
+import { patchRead } from './samm.js';
 
 /**
  * What the lens Incidents of the end-to-end suite needs of the page and of the mock (web-mock/README.adoc, Incident
@@ -25,6 +26,16 @@ export function yearAddress(year) {
 export function incidentAddress(incident, { stage, at } = {}) {
   const query = [at ? `at=${at}` : null, stage ? `stage=${stage}` : null].filter(Boolean);
   return `${yearAddress(incident.year)}/${incident.id}${query.length > 0 ? `?${query.join('&')}` : ''}`;
+}
+
+/** @returns the address of the release page of an incident */
+export function releaseAddress(incident) {
+  return `${incidentAddress(incident)}/release`;
+}
+
+/** @returns the address of the form of a new incident of a year */
+export function newIncidentAddress(year = 2026) {
+  return `${yearAddress(year)}/new`;
 }
 
 /** The stages of an incident in the order of the declaration. */
@@ -228,6 +239,21 @@ export function submitPath(incident) {
   return documentPath(incident, '/transitions/incident.submit');
 }
 
+/** @returns the path of the release of an incident at the mock */
+export function releasePath(incident) {
+  return `/api/v1/releases/isms-incidents-${incident.year}/${incident.id}`;
+}
+
+/** @returns the path of the diff against the last release of an incident at the mock */
+export function diffPath(incident) {
+  return documentPath(incident, '/diff');
+}
+
+/** @returns the path of the create of an incident of a year at the mock */
+export function createPath(year = 2026) {
+  return `/api/v1/documents/isms-incidents-${year}`;
+}
+
 /** @returns the path of the read of an incident (the lens's own address) at the mock */
 export function readPath(incident) {
   return `/api/v1/incidents/${incident.year}/${incident.id}`;
@@ -366,4 +392,90 @@ export async function refuseRead(page, pattern, status, body) {
   await page.route(pattern, (route) =>
     route.request().method() === 'GET' ? route.fulfill({ status, json: body }) : route.continue(),
   );
+}
+
+/**
+ * Signs in and waits for the release page of an incident with its record read. The review of the page is drawn only once the
+ * incident, its schema and its diff are there, so the record is what the step waits for.
+ *
+ * @param page the page
+ * @param incident the incident
+ */
+export async function loginToRelease(page, incident) {
+  await pinClock(page);
+  const address = releaseAddress(incident);
+  await page.goto(`/api/v1/auth/login?return=${encodeURIComponent(address)}`);
+  await expect(page).toHaveURL(address);
+  await expect(page.getByTestId('release-view')).toBeVisible();
+  await expect(page.getByTestId('release-record')).toBeVisible();
+}
+
+/**
+ * Signs in and waits for the sheet of a new incident.
+ *
+ * @param page the page
+ * @param year the year of the address
+ */
+export async function loginToNew(page, year = 2026) {
+  await loginToIncidents(page, newIncidentAddress(year));
+  await expect(page.getByTestId('new-incident-sheet')).toBeVisible();
+}
+
+/**
+ * The deadlines of the card data as the mock reads them (`incident-card-data.json`): one missed and never sent, one met, one
+ * missed and sent late, one open. The mock has no incident in review that has a deadline still open, so the tests of the
+ * release page that need one give the *Credential stuffing* these (see `withOpenDeadlines`).
+ */
+export const OPEN_DEADLINES = [
+  {
+    rule: 'gdpr-art33',
+    element: null,
+    startedAt: '2026-11-19T07:40:00Z',
+    due: '2026-11-22T07:40:00Z',
+    status: 'MISSED',
+    sentAt: null,
+    metBy: '/notifications/supervisory-authority',
+  },
+  {
+    rule: 'nis2-early-warning',
+    element: null,
+    startedAt: '2026-11-19T07:40:00Z',
+    due: '2026-11-20T07:40:00Z',
+    status: 'MET',
+    sentAt: '2026-11-20T06:55:00Z',
+    metBy: '/notifications/nis2-early-warning',
+  },
+  {
+    rule: 'nis2-notification',
+    element: null,
+    startedAt: '2026-11-19T07:40:00Z',
+    due: '2026-11-22T07:40:00Z',
+    status: 'MISSED',
+    sentAt: '2026-11-22T10:20:00Z',
+    metBy: '/notifications/nis2-notification',
+  },
+  {
+    rule: 'nis2-final-report',
+    element: null,
+    startedAt: '2026-11-22T10:20:00Z',
+    due: '2026-12-22T10:20:00Z',
+    status: 'OPEN',
+    sentAt: null,
+    metBy: '/notifications/nis2-final-report',
+  },
+];
+
+/**
+ * Gives the incident the deadlines of `OPEN_DEADLINES` in the read of the page: a patch of the answer of the mock for the
+ * tests of the release page that need a deadline still open, which no incident in review of the mock has. The mock itself
+ * still holds none, so what it answers to the release is unchanged.
+ *
+ * @param page the page
+ * @param incident the incident
+ */
+export async function withOpenDeadlines(page, incident) {
+  await patchRead(page, `**${readPath(incident)}`, (body) => ({
+    ...body,
+    deadlines: OPEN_DEADLINES,
+  }));
 }

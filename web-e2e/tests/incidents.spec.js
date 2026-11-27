@@ -54,8 +54,8 @@ import { patchRead } from './helpers/samm.js';
  * The lens Incidents as far as it is built (UC-IR-1, UC-IR-2, UC-IR-3, rest-api.adoc, Incident Report Requests): the years,
  * the incidents of a year, and the sheet of an incident with its stages, its deadline clock, the notices sent, the steps of
  * the workflow and the generated report. They run against the profiles `workshop`, `read-only`, `release` and `empty` of the
- * mock and its `incident-*` states (web-mock/README.adoc, Incident Reports). Part B of the lens (`/incidents/{year}/new` and
- * the release) is not built: only the way to it is tested here.
+ * mock and its `incident-*` states (web-mock/README.adoc, Incident Reports). The form of a new incident and the release are
+ * in `incidents-release.spec.js`: only the way to them is tested here.
  *
  * The incidents, their stages and their deadlines are static fixtures of `helpers/incidents.js`; the first test compares
  * them with what the mock answers. The deadline clock compares with the clock of the page, so every page of this spec is
