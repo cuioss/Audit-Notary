@@ -200,7 +200,12 @@ describe('AppRouter', () => {
     ['/settings', 'settings-view'],
     ['/settings/appearance', 'settings-view'],
     ['/samm/payments/2026-q4/sm', 'samm-view'],
-    ['/threat-models/payment-gateway', 'lens-view'],
+    ['/threat-models', 'threat-models-view'],
+    ['/threat-models/payment-api', 'threat-models-view'],
+    ['/threat-models/payment-api/new?recipe=stride', 'threat-models-view'],
+    ['/threat-models/payment-api/checkout-flow', 'threat-models-view'],
+    ['/threat-models/payment-api/checkout-flow?at=v1', 'threat-models-view'],
+    ['/threat-models/payment-api/checkout-flow/release', 'release-view'],
     ['/categories', 'documents-view'],
     ['/categories/test-note', 'documents-view'],
     ['/categories/test-note/new?kind=note', 'documents-view'],
@@ -237,6 +242,9 @@ describe('AppRouter', () => {
     vi.spyOn(apiClient, 'getReportsSummary').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'getSammTrendReport').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'getThreatEvaluation').mockReturnValue(new Promise(() => {}));
+    vi.spyOn(apiClient, 'getThreatModelService').mockReturnValue(new Promise(() => {}));
+    vi.spyOn(apiClient, 'getThreatModel').mockReturnValue(new Promise(() => {}));
+    vi.spyOn(apiClient, 'getCategorySchema').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'getRiskRegister').mockReturnValue(new Promise(() => {}));
     vi.spyOn(apiClient, 'subscribeEvents').mockReturnValue(() => {});
     const [path, search = ''] = pathname.split('?');

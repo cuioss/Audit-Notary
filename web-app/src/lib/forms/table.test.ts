@@ -112,6 +112,10 @@ describe('DataTable with a row editor (AUN-WEB-4, Choosing the Component, rule 1
     const { onchange } = await open('test-note', { ...CLEAN_NOTE });
     expect(screen.queryByRole('button', { name: 'Move up, row 1' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Move down, row 2' })).toBeNull();
+    // The place of a move a row does not have stays empty, so the acts of every row stand in the same columns.
+    const gaps = table('/actions').querySelectorAll('.table__move-gap');
+    expect(gaps).toHaveLength(2);
+    for (const gap of gaps) expect(gap).toHaveAttribute('aria-hidden', 'true');
     await fireEvent.click(screen.getByRole('button', { name: 'Move down, row 1' }));
     expect((last(onchange).actions as { what: string }[]).map((row) => row.what)).toEqual([
       'Rotate the staging keys',

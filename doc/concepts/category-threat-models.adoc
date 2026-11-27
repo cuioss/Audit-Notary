@@ -131,6 +131,24 @@ xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register, Op
 . A review starts with an act that prefills the review date with today; the due date counts from the date of the last release and
   the interval by the highest protection need is served with the model.
 
+Decided provisionally with the screens of the lens (the lens without the recipe wizard), recorded in
+xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register, Open Questions]; the owner may change each one:
+
+. The sheet of a model keeps one document controller for the data of the document and one for the file of the model, so a save
+  of both is two signed commits; whether it should be one needs the shared controller to key its changes by part.
+. The threat table and the countermeasure editor are the lens's own, so that a countermeasure names its threat and its issue ids
+  can be typed; removing a threat removes its countermeasures in the same save.
+. The act *Start the review* is offered to everyone who may edit, in every state, and sets the review date and nothing else.
+. The first column of the lens is the table of the report, a service without a model is offered *New threat model* in its row,
+  and the address of the wizard is a placeholder inside the lens until the wizard is built.
+. The labels of the form are keys of the app's own catalogue, because the server's catalogue of the document type is not
+  served yet.
+. The release page reads the lists of threats and countermeasures change by change, by id. Where one change per id cannot say it
+  all (the list was reordered, an entry has no id or a second one with the same id), it shows the whole list as one change.
+  An entry in a dialog is merged with the newer list field by field: a field the person left alone keeps what someone else
+  wrote, a field both changed differently is told as a conflict and nothing is applied; an entry that was gone from a list
+  once stays gone for the open dialog or prompt even when another entry takes its id later (decided provisionally).
+
 == Related
 
 * xref:category-samm.adoc[SAMM] — Threat Assessment practice

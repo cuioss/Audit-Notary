@@ -120,4 +120,12 @@
       color: var(--color-text-muted);
     }
   }
+
+  /* A list column of a lens is narrower than a phone: the label stands over its value, so a badge keeps its room. */
+  @container (max-width: 20rem) {
+    .grid :global(td) {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+  }
 </style>

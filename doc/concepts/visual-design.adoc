@@ -179,6 +179,9 @@ team and role, never a name), a box for what needs the person (*not found*, *unk
 The AsciiDoc preview sits under its source behind a hairline margin; it is the server's rendering, cut to an allow-list
 and drawn with the app's own elements.
 
+A dialog (`Dialog`) is never taller than the room under its top margin (the window less that margin and one step of space);
+what does not fit scrolls inside it, so a long row editor never runs past the lower edge, on a phone as on a desk.
+
 == The Documents Lens
 
 The documents of the categories without a lens of their own are one more chain of columns: category, documents, document
@@ -275,6 +278,35 @@ practice and its streams stand in a disclosure under their business function.
 models*: a review that is overdue or due within 30 days is a box (`ReasonBadge`) with its words, one in date or never released
 a dot. *The risk register as of a day or tag* takes a day or the name of a tag in one field with the tags of the register
 beside it; what the server refuses is said beside the field and the value stays in it.
+
+== The Threat Models
+
+The lens *Threat models* is a chain of columns (`TriagePage`, xref:../specification/rest-api.adoc#_threat_model_requests[REST API Register, Threat Model Requests]):
+the services, the service with its models, the model as a sheet. The first column is the evaluation table of the report
+(`ThreatEvaluationTable`) in the order of the server, and a service without a model is offered the act *New threat model*
+there, in the table row, for a person who may create one. The address of a new model is routed to a calm placeholder until the
+recipe wizard is built.
+
+*The sheet of a model* reads in the layout of the record: the review, the diagram, the threats, the countermeasures and the data
+of the model, each a section divided by space and a hairline (no card, no sheet in a sheet), the status and the margin as every
+document has them. The review is the one act of the sheet that is the person's own: *Start the review* sets the review date to
+today and says why it is spent when it already is; the date of the last release and the date the next review is due stand
+as terms above it, an overdue or soon due review as a box with its words, one in date a dot.
+
+*Two editors are added to the closed vocabulary*, both over the form kit's `DataTable` with a dialog over a copy of the row,
+so that giving up changes nothing and removing asks first. `ThreatTable` changes the status of a threat in its row (a select
+with a hidden label that names the threat) and the rest in the dialog; a threat that is open, treated by no countermeasure and
+not transferred carries the box *Untreated*, the only box of the row besides the status dot; a threat that was transferred
+names the risk it became as a link and cannot be changed by the sheet; removing a threat says that its countermeasures go with
+it. `CountermeasureEditor` lists every countermeasure with the threat it treats, its status and its issue ids as `Chip`s (they
+are compared and copied); one whose threat is not in the model carries the box *Unknown threat*. The acts of the rows are named
+by the id of the row (`Remove T-03`), because the page holds two tables. A list is saved as a whole and a conflict is one
+panel entry per list, told by the ids and names of its entries.
+
+*The diagram* is an image of the generated vector drawing, never inline markup: it is drawn only from a base64 `image/svg+xml`
+data URL, with a text alternative made from the names of the components, on its own white ground with a hairline in both themes.
+*The release* reads each threat and countermeasure that changed as one change of its own, by its id, with the two states side
+by side, and the review date as a date.
 
 == The Pages of the Directory
 

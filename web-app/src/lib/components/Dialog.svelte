@@ -51,6 +51,8 @@
   .dialog {
     margin: 10vh auto auto;
     inline-size: min(36rem, calc(100vw - 2 * var(--space-4)));
+    /* The room under the top margin only: the native limit (the whole window) lets a long dialog run past the lower edge. */
+    max-block-size: calc(100dvh - 10vh - var(--space-4));
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     background-color: var(--color-bg-raised);

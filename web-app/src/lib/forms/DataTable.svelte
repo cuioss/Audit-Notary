@@ -40,6 +40,13 @@
     flagged?: (row: number) => boolean;
     /** Why a row cannot be added now, if it cannot. */
     addDisabledReason?: string | null;
+    /** The words of the act that adds a row, where the page holds more than one table ("Add a threat"). */
+    addLabel?: string;
+    /**
+     * The name of a row where its number is not a good one (a threat by its id): the acts of the row are named by it,
+     * "Remove T-03", so that two tables on one page do not offer two "Remove row 3".
+     */
+    rowName?: (row: number) => string;
     /** Whether a row can be removed; with `false` the acts to remove stay out and `note` says why. */
     canRemove?: boolean;
     /** A line under the table: the limit of the list that the acts respect. */
@@ -65,6 +72,8 @@
     empty,
     flagged,
     addDisabledReason = null,
+    addLabel,
+    rowName,
     canRemove = true,
     note = null,
     onadd,
@@ -140,34 +149,48 @@
             {#if !readonly}
               <td class="table__actions">
                 {#if flagged?.(row)}
-                  <ReasonBadge label={$t('form.table.row-error')} testId="row-error-{row}" />
+                  <span class="table__flag">
+                    <ReasonBadge label={$t('form.table.row-error')} testId="row-error-{row}" />
+                  </span>
                 {/if}
                 <span class="table__buttons">
                   <Button
                     variant="ghost"
-                    aria-label={$t('form.table.edit-row', { number: row + 1 })}
+                    aria-label={rowName
+                      ? $t('form.table.edit-named', { name: rowName(row) })
+                      : $t('form.table.edit-row', { number: row + 1 })}
                     onclick={() => onedit?.(row)}>{$t('form.table.edit')}</Button
                   >
                   {#if row > 0}
                     <IconButton
                       icon="act.up"
-                      label={$t('form.table.up-row', { number: row + 1 })}
+                      label={rowName
+                        ? $t('form.table.up-named', { name: rowName(row) })
+                        : $t('form.table.up-row', { number: row + 1 })}
                       data-move="up"
                       onclick={() => move(row, -1)}
                     />
+                  {:else if rowCount > 1}
+                    <span class="table__move-gap" aria-hidden="true"></span>
                   {/if}
                   {#if row < rowCount - 1}
                     <IconButton
                       icon="act.down"
-                      label={$t('form.table.down-row', { number: row + 1 })}
+                      label={rowName
+                        ? $t('form.table.down-named', { name: rowName(row) })
+                        : $t('form.table.down-row', { number: row + 1 })}
                       data-move="down"
                       onclick={() => move(row, 1)}
                     />
+                  {:else if rowCount > 1}
+                    <span class="table__move-gap" aria-hidden="true"></span>
                   {/if}
                   {#if canRemove}
                     <Button
                       variant="ghost"
-                      aria-label={$t('form.table.remove-row', { number: row + 1 })}
+                      aria-label={rowName
+                        ? $t('form.table.remove-named', { name: rowName(row) })
+                        : $t('form.table.remove-row', { number: row + 1 })}
                       onclick={() => onremove?.(row)}>{$t('form.table.remove')}</Button
                     >
                   {/if}
@@ -185,7 +208,7 @@
   {#if !readonly}
     <div class="table__add">
       <Button variant="secondary" disabledReason={addDisabledReason} onclick={() => onadd?.()}
-        >{$t('form.table.add')}</Button
+        >{addLabel ?? $t('form.table.add')}</Button
       >
     </div>
   {/if}
@@ -245,11 +268,24 @@
     text-align: end;
   }
 
+  /* The mark of a row that is wrong stands over its acts, so it never widens the column of the acts. */
+  .table__flag {
+    display: block;
+    margin-block-end: var(--space-1);
+  }
+
   .table__buttons {
     display: inline-flex;
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: var(--space-1);
+  }
+
+  /* The place of a move that the first or the last row does not have: the acts of every row stand in the same columns. */
+  .table__move-gap {
+    flex: 0 0 auto;
+    inline-size: var(--control-height);
+    block-size: var(--control-height);
   }
 
   .table__add {
@@ -308,6 +344,11 @@
       justify-content: flex-start;
       gap: var(--space-3);
       white-space: normal;
+    }
+
+    /* A stacked row reads its acts as a line: the empty place of a move would only be a hole. */
+    .table__move-gap {
+      display: none;
     }
   }
 </style>

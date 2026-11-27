@@ -26,6 +26,11 @@
     reading: RevisionAt | null;
     /** Opens an address inside the app. */
     onnavigate: (href: string) => void;
+    /**
+     * The address of the document as it was at a revision (`null` for the current state), for a lens that has its own
+     * address for its documents; the address of the generic lens by default.
+     */
+    addressFor?: (ref: string | null) => string;
   }
 
   let {
@@ -36,10 +41,12 @@
     failed = false,
     reading,
     onnavigate,
+    addressFor,
   }: Props = $props();
 
   /** @returns the address of the document as it was at a revision, or the current state for none */
   function addressOf(ref: string | null): string {
+    if (addressFor) return addressFor(ref);
     return formatAddress({
       route: 'categories.document',
       params: { category, document: id },

@@ -33,6 +33,15 @@ import {
   trendAddress,
 } from './helpers/reports.js';
 import {
+  CHECKOUT,
+  LENS_ADDRESS,
+  editThreat,
+  loginToSheet,
+  loginToThreats,
+  releaseAddress,
+  serviceAddress,
+} from './helpers/threats.js';
+import {
   CANDIDATES,
   DESCRIPTOR,
   IMPORT_ADDRESS,
@@ -246,6 +255,8 @@ test.describe('at 390 px', () => {
     await expect(page.getByTestId('release-act')).toBeInViewport();
     await expect(page.getByTestId('release-request')).toBeVisible();
     await page.getByTestId('record-actions').scrollIntoViewIfNeeded();
+    // The summary of a group of the record is a target of the phone size, in every release that draws one.
+    await expectTarget(page.getByTestId('record-actions').locator('summary'));
     await expectNoSideways(page);
     await expectNoSeriousViolations(page, 'release review (phone)');
     await page.getByTestId('release-act').click();
@@ -1077,5 +1088,209 @@ test.describe('at 390 px', () => {
     await page.getByTestId('risk-git-unavailable').scrollIntoViewIfNeeded();
     await expectNoSideways(page);
     await expectNoSeriousViolations(page, 'risk register git unavailable (phone)');
+  });
+
+  test('the evaluation of the lens Threat models fits: its rows stack, and the way to a new model is a target', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToThreats(page, LENS_ADDRESS);
+    await expect(page.getByTestId('threat-evaluation-table')).toBeVisible();
+    await expectStacked(page.getByTestId('threat-evaluation-table'));
+    await expectStacked(page.getByTestId('threat-evaluation-without-table'));
+    for (const link of await page.getByTestId('evaluation-column').locator('a.link').all()) {
+      await expectTarget(link);
+    }
+    await expectTarget(page.getByTestId('threat-new-report-scheduler'));
+    await expect(page.getByTestId('threat-new-report-scheduler')).toBeInViewport();
+    await page.getByTestId('threat-status-customer-portal-portal').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('threat-status-customer-portal-portal')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat models evaluation (phone)');
+    await page.getByTestId('threat-new-report-scheduler').click();
+    await expect(page.getByTestId('new-threat-model-sheet')).toBeVisible();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat models new (phone)');
+  });
+
+  test('the page of a service fits: a model, the way to a new one and the recipe to continue are targets', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToThreats(page, serviceAddress('payment-api'));
+    await expect(page.getByTestId('model-checkout-flow')).toBeVisible();
+    await expectTarget(page.getByTestId('model-checkout-flow'));
+    await expectTarget(page.getByTestId('new-threat-model-link'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat models service (phone)');
+    await useScenario(request, 'workshop#recipe-draft-saved');
+    await page.goto(serviceAddress('report-scheduler'));
+    await expect(page.getByTestId('continue-quick-start')).toBeVisible();
+    await expectTarget(page.getByTestId('continue-quick-start'));
+    await expectTarget(page.getByTestId('new-threat-model-link'));
+    await expectNoSideways(page);
+    await useScenario(request, 'workshop');
+    await page.goto(serviceAddress('ledger'));
+    await expect(page.getByTestId('service-retired')).toBeVisible();
+    await expectNoSideways(page);
+  });
+
+  test('the sheet of a model fits: the diagram scrolls in its own region, the tables stack and the acts are targets', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToSheet(page);
+    await expectNoSideways(page);
+    // The diagram keeps the size of its image so that its text stays readable; the region that scrolls it fits the
+    // screen, can be reached by keyboard and says that it scrolls. The page itself does not scroll sideways.
+    const image = page.getByTestId('diagram-image');
+    await image.scrollIntoViewIfNeeded();
+    const region = page.getByRole('group', { name: 'Diagram' });
+    const regionBox = await region.boundingBox();
+    expect(regionBox.width).toBeLessThanOrEqual(390);
+    expect(regionBox.width).toBeGreaterThan(200);
+    expect((await image.boundingBox()).width).toBeGreaterThan(regionBox.width);
+    await expect(region).toHaveAttribute('tabindex', '0');
+    await expect(page.getByTestId('diagram-scrolls')).toBeVisible();
+    await expectStacked(page.getByTestId('threats-table'));
+    await expectStacked(page.getByTestId('mitigations-table'));
+    await expectTarget(page.getByTestId('start-review'));
+    await expectTarget(page.getByTestId('save-everyone'));
+    await expectTarget(page.getByTestId('threat-status-T-01'));
+    await expectTarget(page.getByRole('button', { name: 'Edit T-01', exact: true }));
+    await expectTarget(page.getByRole('button', { name: 'Remove T-01', exact: true }));
+    await expectTarget(page.getByRole('button', { name: 'Add a threat' }));
+    await expectTarget(page.getByRole('button', { name: 'Edit M-03', exact: true }));
+    await expectTarget(page.getByRole('button', { name: 'Add a countermeasure' }));
+    await expectTarget(page.getByTestId('threat-transferred-T-07').getByRole('link'));
+    await expectTarget(page.getByTestId('revision-select'));
+    // A row of the threats is stacked: its cells stand under each other, each with its label.
+    const row = page.getByTestId('threats-table').locator('tbody tr').first();
+    const cells = await row
+      .locator('td')
+      .evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().left)));
+    expect(new Set(cells).size, 'the cells of a threat start at one column').toBe(1);
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat model sheet (phone)');
+  });
+
+  test('the dialogs of a threat and of a countermeasure are in the viewport with targets of the phone size', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToSheet(page);
+    await editThreat(page, 'T-02');
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expectTarget(page.getByTestId('threats-field-name'));
+    await expectTarget(page.getByTestId('threats-field-likelihood'));
+    await expectTarget(page.getByTestId('threats-field-status'));
+    await expectTarget(page.getByTestId('threats-category-tampering'));
+    await expectTarget(page.getByTestId('threats-apply'));
+    await expectTarget(page.getByTestId('threats-cancel'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat dialog (phone)');
+    await page.getByTestId('threats-cancel').click();
+    await page.getByRole('button', { name: 'Remove T-03', exact: true }).click();
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expect(page.getByTestId('threats-remove-treatments')).toBeVisible();
+    await expectTarget(page.getByTestId('threats-remove-confirm'));
+    await expectTarget(page.getByTestId('threats-remove-cancel'));
+    await expectNoSeriousViolations(page, 'threat removal question (phone)');
+    await page.getByTestId('threats-remove-cancel').click();
+    await page.getByRole('button', { name: 'Edit M-03', exact: true }).click();
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expectTarget(page.getByTestId('mitigations-field-threat'));
+    await expectTarget(page.getByTestId('mitigations-field-issues'));
+    await expectTarget(page.getByTestId('mitigations-apply'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'countermeasure dialog (phone)');
+  });
+
+  test('a conflict, the errors of rows and a refusal of the Git server fit, and each act is a target', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop#threat-model-saved-by-other');
+    await loginToSheet(page);
+    await page.getByTestId('threat-status-T-01').selectOption({ label: 'Mitigated' });
+    await page.getByTestId('save-everyone').click();
+    await expect(page.getByTestId('conflict-panel')).toBeVisible();
+    await page.getByTestId('conflict-panel').scrollIntoViewIfNeeded();
+    await expectTarget(page.getByTestId('keep-own-/threats'));
+    await expectTarget(page.getByTestId('take-other-/threats'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat model conflict (phone)');
+    await useScenario(request, 'workshop#threat-model-invalid');
+    await page.goto(CHECKOUT.address);
+    await expect(page.getByTestId('threats-table')).toBeVisible();
+    await page.getByTestId('threat-status-T-01').selectOption({ label: 'Mitigated' });
+    await page.getByTestId('save-everyone').click();
+    await expect(page.getByTestId('threats-errors')).toBeVisible();
+    await page.getByTestId('threats-errors').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('threats-errors')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat model errors (phone)');
+    await useScenario(request, 'workshop#threat-model-git-unavailable');
+    await page.goto(CHECKOUT.address);
+    await page.getByTestId('threat-status-T-01').selectOption({ label: 'Mitigated' });
+    await page.getByTestId('save-everyone').click();
+    await expect(page.getByTestId('failure-notice')).toBeVisible();
+    await expectNoSideways(page);
+  });
+
+  test('a model that is read only and an earlier state of it fit, without a control to change them', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'read-only');
+    await loginToSheet(page);
+    await expect(page.getByTestId('save-everyone')).toHaveCount(0);
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat model read only (phone)');
+    await useScenario(request, 'workshop');
+    await page.goto(`${CHECKOUT.address}?at=v2`);
+    await expect(page.getByTestId('revision-notice')).toBeVisible();
+    await expectStacked(page.getByTestId('threats-table'));
+    await expectNoSideways(page);
+  });
+
+  test('the release of a threat model fits: the changes are readable, the groups are targets and the act is in reach', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop#threat-model-in-review');
+    await page.goto(
+      `/api/v1/auth/login?return=${encodeURIComponent(releaseAddress(CHECKOUT.service, CHECKOUT.model))}`,
+    );
+    await expect(page.getByTestId('release-view')).toBeVisible();
+    await expect(page.getByTestId('release-record')).toBeVisible();
+    await expectNoSideways(page);
+    // The summary of each group of the record is a target of the phone size.
+    // The groups are read from the record, so a group the release gains is checked too; the three of this state must be there.
+    const summaries = page.getByTestId('release-record').locator('summary');
+    expect(await summaries.count()).toBeGreaterThanOrEqual(3);
+    for (const group of [
+      'record-data:last-review',
+      'record-model:threats',
+      'record-model:mitigations',
+    ]) {
+      await expect(page.getByTestId(group)).toBeVisible();
+    }
+    for (const summary of await summaries.all()) await expectTarget(summary);
+    await page.getByTestId('release-act').scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('release-act')).toBeInViewport();
+    await expectTarget(page.getByTestId('release-act'));
+    await expectTarget(page.getByTestId('release-back'));
+    await expectNoSeriousViolations(page, 'threat model release (phone)');
+    await page.getByTestId('release-act').click();
+    await expect(page.getByTestId('release-done')).toBeVisible();
+    await expect(page.getByTestId('release-seal')).toBeVisible();
+    await expectTarget(page.getByTestId('release-open'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat model released (phone)');
   });
 });
