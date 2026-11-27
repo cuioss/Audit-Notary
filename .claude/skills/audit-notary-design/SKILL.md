@@ -87,6 +87,10 @@ Read the concept first, then the component you are about to change.
    say why they are disabled, and list the missing fields and the stages to complete first on a refusal. The report is `ReportPreview`:
    read on demand, rendered by level-2 section, with the note that it is a preview and in English. `TransitionBar` takes `reasonFor`
    for the reasons only a lens knows (the incident is not submitted while a stage is open).
+   The release of an incident is `IncidentReleaseView` on `ReleaseFlow` (the diff by stage from `incidents/release.ts`, the
+   deadlines that are still a duty as a `DeadlineClock` in the flow's `since` section, the clock stopped after the release; the
+   open deadlines never block it; `explain` tells `STAGES_OPEN` with a link to the tab of every stage). `NewIncidentSheet` is the
+   form of `/incidents/{year}/new` (title and awareness as two `SchemaForm`s, the create through the step-up handler, `LeaveGuard`).
 3. For a chart, use the five series colours in model order (`--color-series-1` … `-5`); they are validated for
    colour-vision and normal-vision separation against both sheet colours (`#ffffff`, `#161d2e`). A new chart colour
    needs the same validation before it lands: with the validator of the `dataviz` skill where your agent has that

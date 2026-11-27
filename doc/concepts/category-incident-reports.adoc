@@ -251,6 +251,16 @@ owner may change each one:
   and against the time of the release afterwards.
 . The notices are a table over the form of the part `notifications`; the report is read on demand, by section, in English only.
 
+Decided provisionally with the lens *Incidents*, part B (the release and the form of a new incident), recorded in
+xref:../specification/rest-api.adoc#_decided_incidents[REST API Register, Open Questions], points 46 to 50; the owner may change each one:
+
+. The release lists the deadlines that are still a duty before the person confirms and does not refuse for them; after the release
+  the clock has stopped and the list says so.
+. The release shows the diff by stage, then by field, with the sign-off of a stage as a row (the person, not the pseudonym); an
+  open stage is not forecast, the server's `STAGES_OPEN` names the stages as links to their tabs.
+. A new incident is a title and, if known, the time of the awareness, made in the current year; the create can ask for step-up like
+  every request that can ask.
+
 == Related
 
 * xref:staged-documents.adoc[Staged Documents] — stages, tabs and sign-offs of the incident file

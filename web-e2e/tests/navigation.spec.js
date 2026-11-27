@@ -43,7 +43,7 @@ const ADDRESSES = [
   ],
   ['/incidents/2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F?at=v1', 'incidents-view', 'Incidents', 'Incidents'],
   // Part B of the lens (the new incident and the release) shows the placeholder until it is built.
-  ['/incidents/2026/new', 'lens-view', 'Incidents', 'Incidents'],
+  ['/incidents/2026/new', 'incidents-view', 'Incidents', 'Incidents'],
   ['/isms/risks/r-012', 'lens-view', 'ISMS', 'ISMS'],
   ['/isms/documents/policy-access', 'lens-view', 'ISMS', 'ISMS'],
   // The generic documents lens (rest-api.adoc, The Generic Documents Lens). `/categories` is no entry here: with one

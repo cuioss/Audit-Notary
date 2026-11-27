@@ -556,6 +556,24 @@ class IncidentStatesTest {
     }
 
     @Test
+    @DisplayName("a release refused because a stage was reopened meanwhile answers STAGES_OPEN with the stage and stays refused")
+    void shouldRefuseTheReleaseWithOpenStages() {
+        try (var client = start()) {
+            goTo(client, "incident-release-stages-open");
+            var inReview = get(client, dom("credential-stuffing"));
+            var refused = post(client, "/api/v1/releases/isms-incidents-2026/" + K, 422, "STAGES_OPEN");
+            assertAll(
+                    () -> assertEquals("in-review", inReview.path("state").asText()),
+                    () -> assertEquals(1, refused.path("stages").size()),
+                    () -> assertEquals("review", refused.path("stages").get(0).path("stage").asText()),
+                    () -> assertEquals(0, refused.path("stages").get(0).path("missing").size()),
+                    () -> assertEquals("incident-release-stages-open", stateOf(client)));
+            post(client, "/api/v1/releases/isms-incidents-2026/" + K, 422, "STAGES_OPEN");
+            assertEquals("incident-release-stages-open", stateOf(client));
+        }
+    }
+
+    @Test
     @DisplayName("the create makes a tenth incident that reads, has one revision, heads the year, is searched and counted")
     void shouldCreateAnIncident() {
         try (var client = start()) {

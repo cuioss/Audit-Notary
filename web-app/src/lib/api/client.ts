@@ -364,10 +364,15 @@ export class ApiClient {
    *
    * @param repository the repository of the document type
    * @param body the document type and the fields of each part, keyed by JSON Pointer
+   * @param password the renewed password of a local user, if step-up asks for it
    * @returns the id, the address and the blob ids
    */
-  createDocument(repository: string, body: CreateRequest): Promise<Created> {
-    return this.request<Created>('POST', `/api/v1/documents/${seg(repository)}`, body);
+  createDocument(repository: string, body: CreateRequest, password?: string): Promise<Created> {
+    return this.request<Created>(
+      'POST',
+      `/api/v1/documents/${seg(repository)}`,
+      password === undefined ? body : { ...body, password },
+    );
   }
 
   /**

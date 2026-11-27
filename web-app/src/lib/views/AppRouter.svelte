@@ -19,6 +19,7 @@
   import DocumentsView from './documents/DocumentsView.svelte';
   import SammReleaseView from './samm/SammReleaseView.svelte';
   import SammView from './samm/SammView.svelte';
+  import IncidentReleaseView from './incidents/IncidentReleaseView.svelte';
   import IncidentsView from './incidents/IncidentsView.svelte';
   import ReportsView from './reports/ReportsView.svelte';
   import RiskRegisterView from './reports/RiskRegisterView.svelte';
@@ -91,10 +92,9 @@
   {/key}
 {:else if lensOf(route) === 'threat-models' && address}
   <ThreatModelsView {route} params={address.params} query={address.query} {onnavigate} />
-{:else if route === 'incidents.new' || route === 'incidents.release'}
-  <!-- Part B of the lens: the sheet of a new incident and the review and release page replace this placeholder. -->
-  {#key route}
-    <LensPlaceholderView titleKey={routeTitleKey(route)} {route} />
+{:else if route === 'incidents.release' && address}
+  {#key `${address.params.year}/${address.params.incident}`}
+    <IncidentReleaseView params={address.params} />
   {/key}
 {:else if lensOf(route) === 'incidents' && address}
   <IncidentsView {route} params={address.params} query={address.query} {onnavigate} />

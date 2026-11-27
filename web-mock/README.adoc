@@ -1502,6 +1502,10 @@ answer `409 DOCUMENT_RELEASED` with the tag. The event `document-transitioned`
 |The release answers `409 CHANGED_SINCE_REVIEW` and moves to `-refused`, where it stays refused until the diff is read again; that
 read moves to `-reviewed`, where the release answers `200 RELEASED`
 
+|`incident-release-stages-open`
+|The incident reads in review as in `incident-submitted`; the release answers `422 STAGES_OPEN` with the `review` (a stage that was reopened
+while the page was open, `missing` empty) and stays refused
+
 |`incident-release-released-meanwhile`
 |The incident reads released; the release, a save and a draft answer `409 DOCUMENT_RELEASED` with the tag
 

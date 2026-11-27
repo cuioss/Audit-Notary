@@ -33,6 +33,33 @@
     open?: boolean;
   }
 
+  /** A link that comes with a refusal: a place where what the refusal asks for is done. */
+  export interface ReleaseRefusalLink {
+    /** A key that is unique in the list. */
+    key: string;
+    /** The words. */
+    label: string;
+    /** The address. */
+    href: string;
+  }
+
+  /**
+   * The refusal of a release that only one document type knows: its words and where to go. The flow tells it as it tells
+   * its own refusals.
+   */
+  export interface ReleaseRefusal {
+    /** The tone: a refusal that asks the person to do something is attention. */
+    tone: 'attention' | 'danger';
+    /** The catalogue key of the title. */
+    key: string;
+    /** The sentence under the title. */
+    body?: string;
+    /** The places to go to, as links under the sentence. */
+    links?: ReleaseRefusalLink[];
+    /** Whether the document and its record are read again: the refusal says that what the person reviewed has changed. */
+    reload?: boolean;
+  }
+
   /** What the release made: the tag and the time. */
   export interface ReleaseDone {
     tag: string;
@@ -75,7 +102,7 @@
   import Sheet from '../../components/Sheet.svelte';
   import MascotFigure from '../../brand/MascotFigure.svelte';
   import { apiClient } from '../../api/client';
-  import { errorMessageKey, isApiError } from '../../api/errors';
+  import { errorMessageKey, isApiError, type ApiError } from '../../api/errors';
   import { stepUpMethodOf } from '../../access/access';
   import { formatDateTime } from '../../format';
   import { currentLocale, t } from '../../i18n';
@@ -126,6 +153,11 @@
     fieldLabel?: (pointer: string) => string;
     /** Reads the document and its record again, after a refusal that changed what the person reviews. */
     onreload: () => Promise<void>;
+    /**
+     * The words of a refusal that only this document type knows (an incident whose stages are not all completed); `null`
+     * leaves it to the flow. It is asked before the flow's own refusals.
+     */
+    explain?: (error: ApiError) => ReleaseRefusal | null;
     /** Called after the release was made. */
     onreleased?: (done: ReleaseDone) => void;
     /** The stage: the seal of the document, and what is released. It gets the release once it is made. */
@@ -152,6 +184,7 @@
     openHref,
     fieldLabel = (pointer) => pointer,
     onreload,
+    explain,
     onreleased,
     stage,
     since,
@@ -159,7 +192,12 @@
     value,
   }: Props = $props();
 
-  let notice = $state<{ tone: 'attention' | 'danger'; key: string; body?: string } | null>(null);
+  let notice = $state<{
+    tone: 'attention' | 'danger';
+    key: string;
+    body?: string;
+    links?: ReleaseRefusalLink[];
+  } | null>(null);
   let released = $state<ReleaseDone | null>(null);
   /**
    * Whether a release is under way, from the press of the act until its outcome is told and the record is read again.
@@ -200,6 +238,12 @@
   async function refuse(error: unknown) {
     if (!isApiError(error)) {
       notice = { tone: 'danger', key: errorMessageKey(error) };
+      return;
+    }
+    const own = explain?.(error) ?? null;
+    if (own) {
+      notice = { tone: own.tone, key: own.key, body: own.body, links: own.links };
+      if (own.reload) await onreload();
       return;
     }
     switch (error.outcome) {
@@ -251,7 +295,30 @@
     <p class="muted">{$t('common.loading')}</p>
   {:else}
     {#if notice}
-      <Notice tone={notice.tone} title={$t(notice.key)} body={notice.body} live />
+      {@const links = notice.links ?? []}
+      {#if links.length > 0}
+        <div data-testid="release-refusal">
+          <Notice tone={notice.tone} title={$t(notice.key)} body={notice.body} live stacked>
+            {#snippet actions()}
+              <ul class="refusal__links" data-testid="release-refusal-links">
+                {#each links as link (link.key)}
+                  <li>
+                    <Link
+                      href={link.href}
+                      look="secondary"
+                      data-testid="release-refusal-{link.key}"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                {/each}
+              </ul>
+            {/snippet}
+          </Notice>
+        </div>
+      {:else}
+        <Notice tone={notice.tone} title={$t(notice.key)} body={notice.body} live />
+      {/if}
     {/if}
     {#if released}
       <div class="done" data-testid="release-done">
@@ -386,6 +453,13 @@
 
   .done {
     margin-block-end: var(--space-2);
+  }
+
+  .refusal__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    list-style: none;
   }
 
   .section + .section {

@@ -19,6 +19,7 @@
     INCIDENT_KIND,
     INCIDENTS_ADDRESS,
     incidentAddress,
+    newAddress,
     repositoryOf,
     yearAddress,
   } from '../../incidents/model';
@@ -28,6 +29,7 @@
   import TriagePage, { type Level } from '../../templates/TriagePage.svelte';
   import NotFoundView from '../NotFoundView.svelte';
   import IncidentSheet from './IncidentSheet.svelte';
+  import NewIncidentSheet from './NewIncidentSheet.svelte';
   import YearColumn from './YearColumn.svelte';
   import YearsColumn from './YearsColumn.svelte';
 
@@ -35,14 +37,15 @@
    * The lens Incidents (UC-IR-1, UC-IR-2, UC-IR-3): the chain years › year › incident as columns (`TriagePage`). The years the
    * person may read are always the first level, a year lists its incidents with the status of every stage and its
    * deadlines, and the incident is the sheet with the stages as tabs. The address `?stage=` chooses the tab and `?at=` an
-   * earlier state.
+   * earlier state. The address `/incidents/{year}/new` is the form of a new incident, a sheet in the place of the incident.
+   * The release of an incident is a page of its own (`IncidentReleaseView`).
    *
    * Data is read per address and again when the event stream names a document of an incident repository: a save, a
    * completion or a creation by someone else refreshes the years, the year and the open incident within the 5 seconds of
    * AUN-WEB-5.
    */
   interface Props {
-    /** The route id: `incidents`, `incidents.year` or `incidents.incident`. */
+    /** The route id: `incidents`, `incidents.year`, `incidents.new` or `incidents.incident`. */
     route: string;
     /** The values of the address: `year`, `incident`. */
     params: Record<string, string>;
@@ -96,6 +99,17 @@
     yearId !== undefined &&
       actionsOn($session, repositoryOf(yearId)).includes('edit') &&
       (years?.years.find((entry) => String(entry.year) === yearId)?.current ?? false),
+  );
+
+  /** What the person may do on the form of a new incident: it is made in the current year, by a person who may edit it. */
+  let newAccess = $derived<'loading' | 'allowed' | 'right' | 'year'>(
+    years === null
+      ? 'loading'
+      : !actionsOn($session, repositoryOf(yearId ?? '')).includes('edit')
+        ? 'right'
+        : years.years.find((entry) => String(entry.year) === yearId)?.current
+          ? 'allowed'
+          : 'year',
   );
 
   let latestYears = 0;
@@ -244,7 +258,7 @@
   // The schema of the document type, for the forms of the stages.
   $effect(() => {
     void schemaAttempt;
-    if (route !== 'incidents.incident') {
+    if (route !== 'incidents.incident' && route !== 'incidents.new') {
       untrack(() => succeed('schema'));
       return;
     }
@@ -286,7 +300,15 @@
         href: yearAddress(yearId),
       });
     }
-    if (incidentId && yearId) {
+    if (route === 'incidents.new' && yearId) {
+      chain.push({
+        key: 'new',
+        kind: 'incident',
+        kindLabel: $t('incidents.kind.incident'),
+        title: $t('incidents.new.title'),
+        href: newAddress(yearId),
+      });
+    } else if (incidentId && yearId) {
       chain.push({
         key: `incident:${incidentId}`,
         kind: 'incident',
@@ -307,7 +329,9 @@
 
   // The sheet holds a table of notices and the forms of a stage: it keeps the room they need to stand as tables, and the
   // window hides a list column instead.
-  let objectMin = $derived(route === 'incidents.incident' ? 860 : undefined);
+  let objectMin = $derived(
+    route === 'incidents.incident' ? 860 : route === 'incidents.new' ? 780 : undefined,
+  );
   /** The key of a sheet: another incident or another earlier state is another sheet, never an edited one. */
   let sheetKey = $derived(`${yearId}/${incidentId}@${at ?? ''}`);
 </script>
@@ -347,6 +371,17 @@
         {:else}
           <YearColumn {list} year={yearId ?? ''} selected={incidentId ?? null} {canCreate} />
         {/if}
+      {:else if level.key === 'new'}
+        <NewIncidentSheet
+          year={yearId ?? ''}
+          access={newAccess}
+          {schema}
+          {onnavigate}
+          oncreated={() => {
+            reloadYears();
+            void reloadYear();
+          }}
+        />
       {:else if incidentForbidden}
         {@render blocked()}
       {:else if incident && schema}

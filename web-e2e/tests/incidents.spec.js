@@ -303,7 +303,7 @@ test.describe('the years and the incidents of a year (UC-IR-1, UC-IR-2)', () => 
     await expect(page.getByTestId('new-incident-link')).toHaveCount(0);
   });
 
-  test('the current year offers a new incident to a person who may edit, and the way leads to the page of part B', async ({
+  test('the current year offers a new incident to a person who may edit, and the way leads to the form of the new incident', async ({
     page,
     request,
   }) => {
@@ -313,9 +313,8 @@ test.describe('the years and the incidents of a year (UC-IR-1, UC-IR-2)', () => 
     await expect(link).toHaveText('New incident');
     await expect(link).toHaveAttribute('href', '/incidents/2026/new');
     await link.click();
-    // Part B of the lens is not built: the address shows the placeholder of the lens.
     await expect(page).toHaveURL('/incidents/2026/new');
-    await expect(page.getByTestId('lens-view')).toBeVisible();
+    await expect(page.getByTestId('new-incident-sheet')).toBeVisible();
   });
 
   test('a row opens the sheet of its incident, and the way up leads back to the list of the year', async ({
@@ -1484,7 +1483,7 @@ test.describe('submit (UC-IR-1, UC-DOC-6)', () => {
     await expectNoSeriousViolations(page, 'incident: in review');
     await release.click();
     await expect(page).toHaveURL(`/incidents/2026/${CREDENTIAL_STUFFING.id}/release`);
-    await expect(page.getByTestId('lens-view')).toBeVisible();
+    await expect(page.getByTestId('release-view')).toBeVisible();
   });
 
   test('the incident whose review was completed is offered for submit when it is opened', async ({
