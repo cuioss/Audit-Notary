@@ -168,6 +168,10 @@
     sinceTitle?: string;
     /** One side of a change. */
     value: Snippet<[ReleaseChange, 'before' | 'after']>;
+    /** Whether the notary stands beside the seal once released; a document of an incident, which the deadlines weigh on, has none. */
+    mascot?: boolean;
+    /** Whether the fields have short labels and long values (a form's fields, not a questionnaire's questions): the values get the room. */
+    shortLabels?: boolean;
   }
 
   let {
@@ -190,6 +194,8 @@
     since,
     sinceTitle = '',
     value,
+    mascot = true,
+    shortLabels = false,
   }: Props = $props();
 
   let notice = $state<{
@@ -271,6 +277,10 @@
         };
         break;
       }
+      case 'GIT_UNAVAILABLE':
+        // Nothing of the person's is kept here to save again: the release is simply not made.
+        notice = { tone: 'danger', key: 'release.git-unavailable' };
+        break;
       default:
         notice = { tone: 'danger', key: errorMessageKey(error) };
     }
@@ -279,8 +289,8 @@
 
 <WizardPage
   wide
-  title={released ? texts.doneTitle : texts.title}
-  intro={released ? texts.doneIntro : texts.intro}
+  title={!ready ? $t('lens.release') : released ? texts.doneTitle : texts.title}
+  intro={!ready ? '' : released ? texts.doneIntro : texts.intro}
   testId="release-view"
 >
   <StepUpDialog
@@ -290,7 +300,11 @@
     testId="release"
   />
   {#if failure}
-    <Notice tone="danger" title={$t(failure)} live />
+    <Notice
+      tone="danger"
+      title={$t(failure === 'error.git-unavailable' ? 'release.read-unavailable' : failure)}
+      live
+    />
   {:else if !ready}
     <p class="muted">{$t('common.loading')}</p>
   {:else}
@@ -337,7 +351,7 @@
         </h2>
         <div class="stage" class:stage--done={!!released}>
           {@render stage(released)}
-          {#if released}
+          {#if released && mascot}
             <div class="stage__mascot"><MascotFigure pose="done" /></div>
           {/if}
         </div>
@@ -364,7 +378,11 @@
               {/snippet}
               <ul class="changes">
                 {#each group.changes as change (change.key)}
-                  <li class="change" class:change--bare={change.label === ''}>
+                  <li
+                    class="change"
+                    class:change--bare={change.label === ''}
+                    class:change--short={shortLabels}
+                  >
                     {#if change.label !== ''}
                       <span class="change__question">{change.label}</span>
                     {/if}
@@ -552,6 +570,10 @@
     grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
     gap: var(--space-4);
     font-size: var(--text-sm);
+  }
+
+  .change--short {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   }
 
   .change--bare {

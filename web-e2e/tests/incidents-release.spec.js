@@ -175,9 +175,7 @@ test.describe('the review of an incident before it is released (UC-IR-3, AUN-WEB
     // A deadline that was met, or sent late, is a fact and no duty.
     await expect(open.getByTestId('release-deadlines-nis2-early-warning-')).toHaveCount(0);
     await expect(open.getByTestId('release-deadlines-nis2-notification-')).toHaveCount(0);
-    await expect(
-      page.getByText('A released incident is frozen and its clock stops.'),
-    ).toBeVisible();
+    await expect(page.getByText('The clock stops with the release.')).toBeVisible();
     await expect(page.getByTestId('release-facts')).toContainText('1 open, 1 met, 2 missed');
     await expect(page.getByText('2 deadlines are still open')).toBeVisible();
     // The way to record the notice that was sent leads to the stage of the notices.
@@ -249,6 +247,8 @@ test.describe('the release (UC-IR-3, AUN-WEB-6)', () => {
     );
     // Without a deadline open the clock has nothing to show: the page does not say it stopped.
     await expect(page.getByTestId('release-clock-stopped')).toHaveCount(0);
+    // The notary stands beside the seal of a document, never of an incident, whose deadlines weigh on the page.
+    await expect(page.locator('.mascot')).toHaveCount(0);
     await expect(page.getByTestId('release-act')).toHaveCount(0);
     const sent = sentTo(await acts(request), releasePath(CREDENTIAL_STUFFING), 'POST');
     expect(sent).toHaveLength(1);
@@ -910,7 +910,7 @@ test.describe('a new incident (UC-IR-1, AUN-WEB-4)', () => {
     await expect(page.getByTestId('create-incident')).toHaveText('Vorfall anlegen');
     await expect(sheet).toContainText('Geben Sie zuerst einen Titel ein.');
     await expect(sheet).toContainText(
-      'Das Jahr des Zeitpunkts, an dem der Vorfall bekannt wurde, bestimmt, wo er abgelegt wird.',
+      'Der Vorfall wird in dem Jahr abgelegt, in dem er Ihnen bekannt geworden ist.',
     );
     await expect(page.getByTestId('save-state')).toContainText('Noch nicht gespeichert');
     await sheet.getByLabel('Titel').fill(CREATED.title);

@@ -136,10 +136,9 @@ describe('the create', () => {
     const kit = await open('workshop#incident-create-invalid');
     await typeTitle('Suspicious logins from the VPN gateway');
     await fireEvent.click(screen.getByTestId('create-incident'));
-    expect(
-      await screen.findByText('Some entries are not valid. Correct the marked fields.'),
-    ).toBeInTheDocument();
-    expect(screen.getByText('Fill in this field.')).toBeInTheDocument();
+    expect(await screen.findByText('Fill in this field.')).toBeInTheDocument();
+    // The status and the field say it; no third sentence stands above the form.
+    expect(screen.queryByText('Some entries are not valid. Correct the marked fields.')).toBeNull();
     expect(screen.getByLabelText(/^Title/)).toHaveValue('Suspicious logins from the VPN gateway');
     expect(kit.onnavigate).not.toHaveBeenCalled();
     expect(screen.getByTestId('save-state')).toHaveTextContent('Some entries need a correction');

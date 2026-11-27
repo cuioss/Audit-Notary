@@ -19,7 +19,7 @@
    * One side of a change in the diff of a release: the value as the form reads it (the name of a person, the text of an
    * option, the title of a document, the localised date, a yes or a no), so the approver reads the words of the domain
    * and never a pseudonym or a code. A list or a row that is new or gone is read row by row, field by field, the same
-   * way; a row's list of plain values (the tickets of an action) is read entry by entry; a section of more than that or a field the
+   * way; a list of plain values (the classification, the tickets of an action) is read entry by entry; a section of more than that or a field the
    * schema no longer has is told in one line.
    *
    * It stands under a form's services (`provideFormServices`), which resolve the references once for the whole diff.
@@ -127,6 +127,11 @@
     return null;
   });
 
+  /** A list of plain values (the classification, the tickets): read value by value, a row's number would say nothing. */
+  let plain = $derived(
+    rows !== null && rows.every((cells) => cells.length === 1 && cells[0].label === ''),
+  );
+
   /** A row that is new or gone, as cells. */
   let single: Cell[] | null = $derived(node?.kind === 'section' ? cellsOf(node, value) : null);
 </script>
@@ -155,6 +160,12 @@
 
 {#if shown}
   <ReadValue node={shown} {value} />
+{:else if rows && plain}
+  <ul class="entries">
+    {#each rows as cells, index (index)}
+      <li><ReadValue node={cells[0].node} value={cells[0].value} compact /></li>
+    {/each}
+  </ul>
 {:else if rows}
   <ol class="rows">
     {#each rows as cells, index (index)}

@@ -126,6 +126,16 @@ describe('the review', () => {
     expect(triage.querySelectorAll('del')).toHaveLength(0);
   });
 
+  it('reads a list of plain values value by value, with no row number that says nothing', async () => {
+    await open('workshop#incident-submitted');
+    const triage = screen.getByTestId('record-triage');
+    expect(triage).toHaveTextContent('Security incident');
+    expect(triage).toHaveTextContent('SEC-2188');
+    expect(triage).not.toHaveTextContent('Row 1');
+    // A list of rows that hold fields is still read row by row.
+    expect(screen.getByTestId('record-response')).toHaveTextContent('Row 1');
+  });
+
   it('reads a row that holds a list field by field: the role by its name, the issues one by one', async () => {
     await open('workshop#incident-submitted');
     const response = screen.getByTestId('record-response');
@@ -192,7 +202,7 @@ describe('the deadlines that are still open', () => {
     expect(clock).toHaveTextContent('Due in 23 hours');
     expect(clock).toHaveTextContent('Overdue by 26 hours');
     expect(clock).not.toHaveTextContent('Sent');
-    expect(screen.getByText(/can no longer be recorded after the release/)).toBeInTheDocument();
+    expect(screen.getByText(/can no longer be recorded afterwards/)).toBeInTheDocument();
     expect(screen.getByText('2 deadlines are still open')).toBeInTheDocument();
     expect(screen.getByTestId('release-record-notice')).toHaveAttribute(
       'href',
@@ -230,6 +240,8 @@ describe('the deadlines that are still open', () => {
     expect(screen.getByRole('heading', { name: 'Deadlines at the release' })).toBeInTheDocument();
     // Told against the release, not against the page.
     expect(screen.getByTestId('release-deadlines')).toHaveTextContent('Due in 22 hours');
+    // The notary stands beside the seal of a release; never where a deadline is open.
+    expect(document.querySelector('.mascot')).toBeNull();
   });
 });
 
@@ -317,7 +329,9 @@ describe('the release', () => {
     await open('workshop#incident-submitted');
     vi.spyOn(apiClient, 'release').mockRejectedValueOnce(new ApiError('GIT_UNAVAILABLE', 503));
     await fireEvent.click(screen.getByTestId('release-act'));
-    expect(await screen.findByRole('alert')).toHaveTextContent('The Git server cannot be reached.');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'The Git server cannot be reached. Nothing was released; release again later.',
+    );
     expect(screen.getByTestId('release-record')).toBeInTheDocument();
   });
 
@@ -457,5 +471,8 @@ describe('addresses that are no release', () => {
     });
     render(IncidentReleaseView, { params: PARAMS });
     expect(await screen.findByRole('alert')).toBeInTheDocument();
+    // An error is no loading: the page does not read "Release Loading…".
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/^Release$/);
+    expect(screen.queryByText('Loading…')).toBeNull();
   });
 });

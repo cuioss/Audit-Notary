@@ -158,7 +158,8 @@
       lede={$t('incidents.new.lede', { year })}
       size="title"
     />
-    {#if failure}
+    <!-- A refusal at the fields is told by the status and at the fields: a third sentence above the form would repeat them. -->
+    {#if failure && !errors}
       <div class="notice">
         <Notice tone="danger" title={$t(failure)} live />
       </div>

@@ -89,7 +89,8 @@ Read the concept first, then the component you are about to change.
    for the reasons only a lens knows (the incident is not submitted while a stage is open).
    The release of an incident is `IncidentReleaseView` on `ReleaseFlow` (the diff by stage from `incidents/release.ts`, the
    deadlines that are still a duty as a `DeadlineClock` in the flow's `since` section, the clock stopped after the release; the
-   open deadlines never block it; `explain` tells `STAGES_OPEN` with a link to the tab of every stage). `NewIncidentSheet` is the
+   open deadlines never block it; `explain` tells `STAGES_OPEN` with a link to the tab of every stage; `mascot={false}`, because an incident's
+   deadlines weigh on the page, and `shortLabels`, so that the long values of a form's fields get the room). `NewIncidentSheet` is the
    form of `/incidents/{year}/new` (title and awareness as two `SchemaForm`s, the create through the step-up handler, `LeaveGuard`).
 3. For a chart, use the five series colours in model order (`--color-series-1` … `-5`); they are validated for
    colour-vision and normal-vision separation against both sheet colours (`#ffffff`, `#161d2e`). A new chart colour

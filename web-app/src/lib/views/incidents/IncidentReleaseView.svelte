@@ -440,6 +440,8 @@
       ? $t('incidents.release.deadlines.stopped')
       : $t('incidents.release.deadlines.title')}
     {value}
+    mascot={false}
+    shortLabels
   />
 {/if}
 
