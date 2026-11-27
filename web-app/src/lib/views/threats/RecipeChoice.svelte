@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from '../../components/Button.svelte';
   import EmptyState from '../../components/EmptyState.svelte';
   import Link from '../../components/Link.svelte';
   import Notice from '../../components/Notice.svelte';
@@ -27,17 +28,22 @@
 
   let recipes = $state<ThreatRecipeSummary[] | null>(null);
   let failure = $state<string | null>(null);
+  /** The number of the reads asked for by the person: a retry reads the list again in the same language. */
+  let attempt = $state(0);
 
-  // The list is read again when the language changes, so that the titles and descriptions follow the interface.
+  // The list is read again when the language changes, so that the titles and descriptions follow the interface; until the
+  // new answer arrives the list is not shown, because its texts are in the other language.
   $effect(() => {
     const lang = $currentLocale;
+    void attempt;
     let current = true;
+    recipes = null;
+    failure = null;
     apiClient
       .getThreatRecipes(lang)
       .then((answer) => {
         if (!current) return;
         recipes = answer.recipes;
-        failure = null;
       })
       .catch((error) => {
         if (current) failure = errorMessageKey(error);
@@ -63,7 +69,13 @@
   />
 
   {#if failure}
-    <Notice tone="danger" title={$t(failure)} live />
+    <Notice tone="danger" title={$t(failure)} live>
+      {#snippet actions()}
+        <Button onclick={() => (attempt += 1)} data-testid="recipes-retry">
+          {$t('common.retry')}
+        </Button>
+      {/snippet}
+    </Notice>
   {:else if recipes === null}
     <p class="muted">{$t('common.loading')}</p>
   {:else if recipes.length === 0}

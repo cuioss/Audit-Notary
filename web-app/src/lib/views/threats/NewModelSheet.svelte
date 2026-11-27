@@ -28,9 +28,23 @@
     oncreated?: () => void;
     /** Called after the draft of the recipe was kept, so the service page lists it. */
     onkept?: () => void;
+    /** The catalogue key of the failure of the read of the schema, `null` while it did not fail. */
+    schemaFailure?: string | null;
+    /** Reads the schema again. */
+    onretryschema?: () => void;
   }
 
-  let { service, recipe, canCreate, schema, onnavigate, oncreated, onkept }: Props = $props();
+  let {
+    service,
+    recipe,
+    canCreate,
+    schema,
+    onnavigate,
+    oncreated,
+    onkept,
+    schemaFailure = null,
+    onretryschema,
+  }: Props = $props();
 </script>
 
 {#if service === null}
@@ -57,7 +71,16 @@
   </Sheet>
 {:else if recipe}
   {#key `${service.service.id}/${recipe}`}
-    <RecipeWizardSheet {service} recipeId={recipe} {schema} {onnavigate} {oncreated} {onkept} />
+    <RecipeWizardSheet
+      {service}
+      recipeId={recipe}
+      {schema}
+      {onnavigate}
+      {oncreated}
+      {onkept}
+      {schemaFailure}
+      {onretryschema}
+    />
   {/key}
 {:else}
   <RecipeChoice {service} />

@@ -208,6 +208,26 @@ describe('opening', () => {
     await wizard.relocalise('quick-start', 'de');
     expect(wizard.recipe?.title).toBe('Quick start');
   });
+
+  it('does not take in a recipe whose steps are other ones of the same number', async () => {
+    const { wizard, fake } = await opened();
+    fake.getThreatRecipe.mockImplementationOnce(async () => ({
+      ...structuredClone(RECIPE),
+      title: 'Other',
+      steps: RECIPE.steps.map((step, position) =>
+        position === 2 ? { ...step, id: 'mitigations', fills: '/mitigations' } : step,
+      ),
+    }));
+    await wizard.relocalise('quick-start', 'de');
+    expect(wizard.recipe?.title).toBe('Quick start');
+    fake.getThreatRecipe.mockImplementationOnce(async () => ({
+      ...structuredClone(RECIPE),
+      title: 'Schnellstart',
+      steps: RECIPE.steps.map((step) => ({ ...step, title: `${step.title} (de)` })),
+    }));
+    await wizard.relocalise('quick-start', 'de');
+    expect(wizard.recipe?.title).toBe('Schnellstart');
+  });
 });
 
 describe('filling in', () => {
@@ -298,6 +318,32 @@ describe('going on and back', () => {
     });
   });
 
+  it('keeps the restored owner and review date when an earlier step is kept after the draft was opened', async () => {
+    const draft: RecipeDraftBody = {
+      step: 1,
+      at: '2026-11-26T09:20:00Z',
+      parts: {
+        model: { fields: { '/project': { name: 'Scheduler overview' } } },
+        data: { fields: { '/owner': 'role:a', '/last-review': '2026-09-01' } },
+      },
+    };
+    const { wizard, calls } = await opened({}, draft);
+    expect(wizard.data).toEqual({ owner: 'role:a', 'last-review': '2026-09-01' });
+    expect(wizard.furthest).toBe(1);
+    expect(await wizard.next()).toBe(true);
+    expect(calls.saved[0]).toMatchObject({
+      step: 2,
+      parts: { data: { fields: { '/owner': 'role:a', '/last-review': '2026-09-01' } } },
+    });
+    expect(wizard.dirty).toBe(false);
+  });
+
+  it('sends no part data for a draft that never had one and a last page that was never reached', async () => {
+    const { wizard, calls } = await opened({}, draftOf(1));
+    expect(await wizard.next()).toBe(true);
+    expect(calls.saved[0]).not.toHaveProperty('parts.data');
+  });
+
   it('does not go on from the last page, before the recipe is read, or while it keeps a draft', async () => {
     const { wizard } = await opened({}, draftOf(3));
     expect(await wizard.next()).toBe(false);
@@ -343,6 +389,72 @@ describe('going on and back', () => {
     expect(wizard.current).toBe(0);
     expect(wizard.errors).toBeNull();
     expect(wizard.failure).toBe('error.network');
+  });
+});
+
+describe('the step-up through the identity provider', () => {
+  const stepUpRefusal = () =>
+    new ApiError('STEP_UP_REQUIRED', 403, [], { stepUp: '/auth/step-up' });
+
+  it('keeps what the last page holds as the draft before the app leaves', async () => {
+    const order: string[] = [];
+    const kit = client({
+      createThreatModel: async () => {
+        throw stepUpRefusal();
+      },
+      getThreatRecipeDraft: async () => ({
+        service: 's',
+        recipe: 'quick-start',
+        draft: draftOf(3),
+      }),
+      stepUp: vi.fn(() => order.push('leave')),
+    });
+    kit.fake.saveThreatRecipeDraft.mockImplementation(
+      async (_s: string, _r: string, body: unknown) => {
+        kit.calls.saved.push(body);
+        order.push('keep');
+        return { outcome: 'DRAFT_SAVED' as const, at: '2026-11-26T09:22:00Z' };
+      },
+    );
+    const wizard = new RecipeWizard('report-scheduler', '2026-11-26', kit.api);
+    await wizard.open('quick-start', 'en');
+    wizard.setData({ owner: 'role:a', 'last-review': '2026-12-01' });
+    expect(await wizard.create()).toBeNull();
+    expect(order).toEqual(['keep', 'leave']);
+    expect(kit.calls.saved[0]).toMatchObject({
+      step: 3,
+      parts: {
+        model: { fields: { '/project': { name: 'Scheduler overview' } } },
+        data: { fields: { '/owner': 'role:a', '/last-review': '2026-12-01' } },
+      },
+    });
+    expect(wizard.dirty).toBe(false);
+  });
+
+  it('stays on the page, and says why, when the draft cannot be kept', async () => {
+    const leave = vi.fn();
+    const kit = client({
+      createThreatModel: async () => {
+        throw stepUpRefusal();
+      },
+      getThreatRecipeDraft: async () => ({
+        service: 's',
+        recipe: 'quick-start',
+        draft: draftOf(3),
+      }),
+      saveThreatRecipeDraft: async () => {
+        throw new ApiError('GIT_UNAVAILABLE', 503);
+      },
+      stepUp: leave,
+    });
+    const wizard = new RecipeWizard('report-scheduler', '2026-11-26', kit.api);
+    await wizard.open('quick-start', 'en');
+    wizard.setData({ owner: 'role:a', 'last-review': '2026-12-01' });
+    expect(await wizard.create()).toBeNull();
+    expect(leave).not.toHaveBeenCalled();
+    expect(wizard.failure).toBe('error.git-unavailable');
+    expect(wizard.busy).toBeNull();
+    expect(wizard.dirty).toBe(true);
   });
 });
 

@@ -37,6 +37,20 @@ import {
   type ModelValues,
 } from './recipe';
 
+/**
+ * @param read the steps of a recipe read in another language
+ * @param held the steps the person is in
+ * @returns whether they are the same steps, in the same order
+ */
+function sameSteps(read: ThreatRecipe['steps'], held: ThreatRecipe['steps']): boolean {
+  return (
+    read.length === held.length &&
+    read.every(
+      (step, position) => step.id === held[position].id && step.fills === held[position].fills,
+    )
+  );
+}
+
 /** What the wizard is doing. */
 export type WizardPhase = 'loading' | 'ready' | 'missing' | 'failed';
 
@@ -93,7 +107,10 @@ export class RecipeWizard {
     private readonly client: ApiClient = apiClient,
     stepUp?: StepUpHandler,
   ) {
-    this.stepUp = stepUp ?? new StepUpHandler(client);
+    // A step-up through the identity provider keeps nothing of this page: what was entered since the last keep (the owner
+    // and the review date of the last page are the usual case) is kept as the draft before the app leaves. When that
+    // fails the handler rejects, the app stays on the page and the wizard shows why.
+    this.stepUp = stepUp ?? new StepUpHandler(client, undefined, () => this.keepBeforeLeave());
   }
 
   /** @returns what the page holds now, as a plain copy: the base of the question whether it differs from what is kept */
@@ -102,6 +119,48 @@ export class RecipeWizard {
       values: JSON.parse(JSON.stringify(this.values)) as ModelValues,
       data: JSON.parse(JSON.stringify(this.data)) as DataValues,
     };
+  }
+
+  /**
+   * @param sent what the page holds
+   * @returns the part `data` a draft carries: the last page's fields once the person has been there, and always the ones
+   *   that differ from what the last page starts with (a restored owner or review date is never dropped by a later keep),
+   *   `null` for none
+   */
+  private dataToKeep(sent: DataValues): DataValues | null {
+    const reached = this.furthest >= this.steps.length;
+    return reached || !jsonEqual(sent, dataOfDraft(null, this.today)) ? sent : null;
+  }
+
+  /**
+   * Writes the draft for this person: the whole draft, replaced as a whole.
+   *
+   * @param step the step the draft is at
+   * @param sent what the request carries
+   */
+  private async keep(step: number, sent: { values: ModelValues; data: DataValues }): Promise<void> {
+    if (this.recipe === null) return;
+    const answer = await this.client.saveThreatRecipeDraft(
+      this.service,
+      this.recipe.id,
+      draftRequest(step, sent.values, this.dataToKeep(sent.data)),
+    );
+    this.keptAt = answer.at;
+    this.baseline = sent;
+  }
+
+  /**
+   * Keeps what the page holds as the draft at the step the person is on, before the app leaves for the identity provider.
+   * A draft that cannot be kept rejects: the app stays on the page, which shows the refusal.
+   */
+  private async keepBeforeLeave(): Promise<void> {
+    if (this.recipe === null || this.created) return;
+    try {
+      await this.keep(this.current, this.snapshot());
+    } catch (error) {
+      this.refuse(error);
+      throw error;
+    }
   }
 
   /** The steps of the recipe. */
@@ -205,8 +264,9 @@ export class RecipeWizard {
     try {
       const loaded = await this.client.getThreatRecipe(recipe, lang);
       if (read !== this.latest) return;
-      // A recipe whose steps differ from the ones the person is in (another installation) is not mixed in.
-      if (loaded.steps.length === this.steps.length) this.recipe = loaded;
+      // A recipe whose steps are not the ones the person is in (another installation) is not mixed in: the steps are the
+      // same when each has the same id and fills the same member, whatever its translated words.
+      if (sameSteps(loaded.steps, this.steps)) this.recipe = loaded;
     } catch {
       // The texts stay in the language they were read in.
     }
@@ -288,13 +348,7 @@ export class RecipeWizard {
     this.failure = null;
     this.errors = null;
     try {
-      const answer = await this.client.saveThreatRecipeDraft(
-        this.service,
-        this.recipe.id,
-        draftRequest(target, sent.values, this.furthest >= this.steps.length ? sent.data : null),
-      );
-      this.keptAt = answer.at;
-      this.baseline = sent;
+      await this.keep(target, sent);
       this.current = target;
       this.furthest = Math.max(this.furthest, target);
       return true;

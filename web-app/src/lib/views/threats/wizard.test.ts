@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/sve
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { currentLocale, messagesStore } from '../../i18n';
 import { mockMessages } from '../../test/scenarioFetch';
-import { resetKit, useProfile, type Kit } from '../documents/testkit';
+import { hold, resetKit, useProfile, type Kit } from '../documents/testkit';
 import ThreatModelsView from './ThreatModelsView.svelte';
 
 /**
@@ -120,6 +120,36 @@ describe('the choice of a recipe', () => {
       ),
     });
     expect(await screen.findByRole('alert')).toBeInTheDocument();
+  });
+
+  it('reads the list again when the person asks after a refused read', async () => {
+    const answers: Record<string, unknown> = {
+      'GET /api/v1/categories/threat-models/recipes': new Response(
+        JSON.stringify({ outcome: 'GIT_UNAVAILABLE' }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } },
+      ),
+    };
+    await open('workshop', {}, 'en', answers);
+    const retry = await screen.findByTestId('recipes-retry');
+    expect(retry).toHaveTextContent('Try again');
+    delete answers['GET /api/v1/categories/threat-models/recipes'];
+    await fireEvent.click(retry);
+    expect(await screen.findByTestId('recipe-quick-start')).toHaveTextContent('Quick start');
+    expect(screen.queryByTestId('recipes-retry')).toBeNull();
+  });
+
+  it('does not show the list in the old language while the other one is read', async () => {
+    await open();
+    expect(await screen.findByTestId('recipe-quick-start')).toHaveTextContent('Quick start');
+    const release = hold('GET', '/api/v1/categories/threat-models/recipes');
+    messagesStore.set(mockMessages('de'));
+    currentLocale.set('de');
+    await waitFor(() => expect(screen.queryByTestId('recipe-quick-start')).toBeNull());
+    expect(screen.getByText('Wird geladen…')).toBeInTheDocument();
+    release();
+    await waitFor(() =>
+      expect(screen.getByTestId('recipe-quick-start')).toHaveTextContent('Schnellstart'),
+    );
   });
 
   it('reads the recipes again in the other language', async () => {
@@ -361,6 +391,30 @@ describe('the steps', () => {
       expect(screen.getByTestId('step-next')).toHaveAttribute('aria-disabled', 'true'),
     );
     expect(screen.getByText('Correct the marked fields first.')).toBeInTheDocument();
+    // Another language is the same step with the same error: the act still says so.
+    messagesStore.set(mockMessages('de'));
+    currentLocale.set('de');
+    await waitFor(() => expect(stepTitle()).toBe('Der Rahmen'));
+    expect(screen.getByTestId('step-next')).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByText('Korrigieren Sie zuerst die markierten Felder.')).toBeInTheDocument();
+  });
+
+  it('offers to read the schema again when it could not be read, and then shows the step', async () => {
+    const answers: Record<string, unknown> = {
+      'GET /api/v1/categories/threat-models/schema': new Response(
+        JSON.stringify({ outcome: 'GIT_UNAVAILABLE' }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } },
+      ),
+    };
+    await open('workshop', { recipe: 'quick-start' }, 'en', answers);
+    const failed = await screen.findByTestId('recipe-schema-failed');
+    expect(failed).toHaveTextContent('Git server');
+    expect(screen.queryByTestId('recipe-wizard-loading')).toBeNull();
+    delete answers['GET /api/v1/categories/threat-models/schema'];
+    await fireEvent.click(screen.getByTestId('schema-retry'));
+    await screen.findByTestId('recipe-step');
+    await waitFor(() => expect(field(/^Name/)).toBeInTheDocument());
+    expect(screen.queryByTestId('recipe-schema-failed')).toBeNull();
   });
 });
 

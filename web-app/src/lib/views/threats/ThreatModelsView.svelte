@@ -226,8 +226,18 @@
     });
   });
 
+  /** The number of the reads of the schema the person asked for again after one failed. */
+  let schemaAttempt = $state(0);
+
+  /** Reads the schema again after it failed; nothing else of the page is read again. */
+  function retrySchema() {
+    succeed('schema');
+    schemaAttempt += 1;
+  }
+
   // The schema of the document type, for the sheet of a model and for the forms of the wizard.
   $effect(() => {
+    void schemaAttempt;
     if (route !== 'threat-models.model' && route !== 'threat-models.new') {
       untrack(() => succeed('schema'));
       return;
@@ -338,6 +348,8 @@
             void reloadService();
           }}
           onkept={() => void reloadService()}
+          schemaFailure={failures.schema ?? null}
+          onretryschema={retrySchema}
         />
       {:else if level.key.startsWith('service:')}
         <ServiceColumn {service} selected={params.model ?? null} {canCreate} />

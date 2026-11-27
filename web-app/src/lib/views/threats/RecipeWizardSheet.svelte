@@ -69,9 +69,22 @@
     oncreated?: () => void;
     /** Called after the draft was kept, so the service page lists it. */
     onkept?: () => void;
+    /** The catalogue key of the failure of the read of the schema, `null` while it did not fail. */
+    schemaFailure?: string | null;
+    /** Reads the schema again; the recipe and the draft are not read again. */
+    onretryschema?: () => void;
   }
 
-  let { service, recipeId, schema, onnavigate, oncreated, onkept }: Props = $props();
+  let {
+    service,
+    recipeId,
+    schema,
+    onnavigate,
+    oncreated,
+    onkept,
+    schemaFailure = null,
+    onretryschema,
+  }: Props = $props();
 
   const wizard = new RecipeWizard(
     untrack(() => service.service.id),
@@ -124,15 +137,19 @@
     { id: 'review', title: $t('threats.wizard.review.title') },
   ]);
 
-  // A step the person moves to is announced politely and takes the focus on its heading; the first one is just shown.
+  // A step the person moves to is announced politely and takes the focus on its heading; the first one is just shown. The
+  // errors of the form on the page are the step's own: another step starts without them, a change of the language (the
+  // title only) keeps them.
   let shown = false;
+  let announced = -1;
   $effect(() => {
     const position = wizard.current;
     const ready = wizard.phase === 'ready';
     const text = title;
     if (!ready) return;
     untrack(() => {
-      formErrors = 0;
+      if (position !== announced) formErrors = 0;
+      announced = position;
       announcement = $t('threats.wizard.announce', {
         step: position + 1,
         count: wizard.steps.length + 1,
@@ -215,7 +232,17 @@
   }
 </script>
 
-{#if wizard.phase === 'loading' || (wizard.phase === 'ready' && schema === null)}
+{#if wizard.phase === 'ready' && schema === null && schemaFailure}
+  <Sheet testId="recipe-schema-failed">
+    <Notice tone="danger" title={$t(schemaFailure)}>
+      {#snippet actions()}
+        <Button onclick={() => onretryschema?.()} data-testid="schema-retry">
+          {$t('common.retry')}
+        </Button>
+      {/snippet}
+    </Notice>
+  </Sheet>
+{:else if wizard.phase === 'loading' || (wizard.phase === 'ready' && schema === null)}
   <Sheet testId="recipe-wizard-loading"><p class="muted">{$t('common.loading')}</p></Sheet>
 {:else if wizard.phase === 'missing'}
   <Sheet testId="recipe-missing">

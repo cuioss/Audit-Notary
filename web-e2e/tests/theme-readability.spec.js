@@ -1458,7 +1458,10 @@ const WIZARD_STATES = [
     NEW_ADDRESS,
     'new-threat-model-sheet',
     'new-threat-model-sheet',
-    async () => {},
+    // The sheet stands before the recipes are read: the audit waits for the empty state, not for the loading text.
+    async (page) => {
+      await expect(page.getByRole('heading', { name: 'No recipe is available' })).toBeVisible();
+    },
   ],
   [
     'a recipe that does not exist',
