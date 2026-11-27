@@ -1150,6 +1150,135 @@ export interface ThreatEvaluation {
   withoutModel: ServiceWithoutModel[];
 }
 
+/** The treatment of a threat (rest-api.adoc, The Data Shape of a Threat Model). */
+export const THREAT_TREATMENTS = ['open', 'mitigated', 'accepted'] as const;
+
+/** The status of one threat: not yet decided, treated by countermeasures, or accepted. */
+export type ThreatTreatment = (typeof THREAT_TREATMENTS)[number];
+
+/** The six kinds of threat of STRIDE, as the model file writes them. */
+export const STRIDE_CATEGORIES = [
+  'Spoofing',
+  'Tampering',
+  'Repudiation',
+  'Information Disclosure',
+  'Denial of Service',
+  'Elevation of Privilege',
+] as const;
+
+/** The status of a countermeasure. */
+export const MITIGATION_STATUSES = ['planned', 'implemented'] as const;
+
+/** The status of one countermeasure. */
+export type MitigationStatus = (typeof MITIGATION_STATUSES)[number];
+
+/** One threat of the model file (the subset of Open Threat Model the application reads and writes). */
+export interface OtmThreat {
+  id: string;
+  name: string;
+  description?: string;
+  categories?: string[];
+  risk: { likelihood: number; impact: number };
+  attributes: {
+    status: ThreatTreatment;
+    /** The reference `isms-register:risk/<id>` of the risk the threat became; written by the transfer only. */
+    transferred?: string;
+  };
+}
+
+/** One countermeasure of the model file: it belongs to one threat. */
+export interface OtmMitigation {
+  id: string;
+  name: string;
+  description?: string;
+  riskReduction: number;
+  attributes: {
+    /** The `id` of the threat the countermeasure treats. */
+    threat: string;
+    status?: MitigationStatus;
+    /** The ids of the issues that carry out the work, entered by a person; no issue tracker is connected. */
+    issues?: string[];
+  };
+}
+
+/** The review of the last released version of a threat model (rest-api.adoc, A Threat Model). */
+export interface ThreatModelReview {
+  today: string;
+  protectionNeed: ProtectionLevel;
+  /** An ISO 8601 period of months: `P6M`, `P12M` or `P24M`. */
+  reviewInterval: string;
+  /** The interval of every protection need: the table of the kind. */
+  reviewIntervals: Record<ProtectionLevel, string>;
+  lastReview: string | null;
+  daysSinceReview: number | null;
+  reviewDue: string | null;
+  dueInDays: number | null;
+  status: ThreatStatus;
+}
+
+/** The generated diagram of a model: a vector image as a data URL. */
+export interface ThreatModelDiagram {
+  mediaType: string;
+  width: number;
+  height: number;
+  dataUrl: string;
+}
+
+/** `GET /api/v1/threat-models/{service}/{model}` (PROVISIONAL): the generic document read with the members of the model. */
+export interface ThreatModelRead extends DocumentRead {
+  service: ReportService;
+  /** The address segment of the model. */
+  model: string;
+  address: string;
+  review: ThreatModelReview;
+  threats: ThreatCounts;
+  /** `null` for a model without a component. */
+  diagram: ThreatModelDiagram | null;
+}
+
+/** One model in the page of a service. */
+export interface ThreatModelSummary {
+  model: string;
+  document: string;
+  title: string;
+  address: string;
+  state: WorkflowState;
+  version: number | null;
+  lastReview: string | null;
+  daysSinceReview: number | null;
+  reviewDue: string | null;
+  dueInDays: number | null;
+  status: ThreatStatus;
+  threats: ThreatCounts;
+  requested: boolean;
+  updatedAt: string;
+}
+
+/** A recipe the person started and has not finished. */
+export interface ThreatRecipeDraft {
+  recipe: string;
+  /** The zero-based step the person goes on to. */
+  step: number;
+  at: string;
+}
+
+/** `GET /api/v1/threat-models/{service}` (PROVISIONAL): a service, its models and the person's recipe drafts. */
+export interface ThreatModelService {
+  today: string;
+  service: {
+    id: string;
+    name: string;
+    lifecycle: string;
+    retired: boolean;
+    owner: ReportOwner;
+    protectionNeed: ProtectionLevel;
+    reviewInterval: string;
+  };
+  reviewIntervals: Record<ProtectionLevel, string>;
+  models: ThreatModelSummary[];
+  drafts: ThreatRecipeDraft[];
+}
+
 /** What a read of the risk register names: the date or tag it was asked for and the commit it read. */
 export interface RiskRegisterAsOf {
   /** The parameter as given; `null` for the register as of now. */

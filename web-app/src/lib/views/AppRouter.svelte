@@ -24,6 +24,8 @@
   import SammCompareView from './reports/SammCompareView.svelte';
   import SammTrendView from './reports/SammTrendView.svelte';
   import ThreatEvaluationView from './reports/ThreatEvaluationView.svelte';
+  import ThreatModelReleaseView from './threats/ThreatModelReleaseView.svelte';
+  import ThreatModelsView from './threats/ThreatModelsView.svelte';
 
   /**
    * Chooses the view of an address (AUN-WEB-3). The route files are stubs that render this component.
@@ -82,6 +84,12 @@
   {/key}
 {:else if lensOf(route) === 'categories' && address}
   <DocumentsView {route} params={address.params} query={address.query} {onnavigate} />
+{:else if route === 'threat-models.release' && address}
+  {#key `${address.params.service}/${address.params.model}`}
+    <ThreatModelReleaseView params={address.params} />
+  {/key}
+{:else if lensOf(route) === 'threat-models' && address}
+  <ThreatModelsView {route} params={address.params} query={address.query} {onnavigate} />
 {:else if route === 'reports'}
   <ReportsView />
 {:else if route === 'reports.samm-trend'}

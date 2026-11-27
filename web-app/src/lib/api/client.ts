@@ -62,6 +62,8 @@ import type {
   Session,
   Status,
   ThreatEvaluation,
+  ThreatModelRead,
+  ThreatModelService,
   Transitioned,
   JsonObject,
 } from './types';
@@ -614,6 +616,36 @@ export class ApiClient {
    */
   getThreatEvaluation(): Promise<ThreatEvaluation> {
     return this.request<ThreatEvaluation>('GET', '/api/v1/reports/threat-evaluation');
+  }
+
+  /**
+   * A service of the lens Threat models: its threat models, the review intervals and the person's recipe drafts
+   * (PROVISIONAL).
+   *
+   * @param service the service's address segment
+   * @returns the service page
+   * @throws ApiError `NOT_FOUND` for a service that is in no catalog, `FORBIDDEN` without the right to read `threat-models`
+   */
+  getThreatModelService(service: string): Promise<ThreatModelService> {
+    return this.request<ThreatModelService>('GET', `/api/v1/threat-models/${seg(service)}`);
+  }
+
+  /**
+   * One threat model by its address (PROVISIONAL): the generic read of the document with its review, its threat counts
+   * and its generated diagram.
+   *
+   * @param service the service's address segment
+   * @param model the model's address segment
+   * @param at a release (`v3`) or a commit, for the model as it was then; the current state without it
+   * @returns the model
+   * @throws ApiError `NOT_FOUND` for a service, model or revision that does not exist, `VALIDATION` for an `at` of no form
+   */
+  getThreatModel(service: string, model: string, at?: string): Promise<ThreatModelRead> {
+    const query = at === undefined ? '' : `?at=${encodeURIComponent(at)}`;
+    return this.request<ThreatModelRead>(
+      'GET',
+      `/api/v1/threat-models/${seg(service)}/${seg(model)}${query}`,
+    );
   }
 
   /**

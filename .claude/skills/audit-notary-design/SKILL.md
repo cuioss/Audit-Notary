@@ -52,6 +52,16 @@ Read the concept first, then the component you are about to change.
    one slot of the series colours and one marker shape each, a legend, the end value of every line as a label) and
    `Dumbbell` (the same measure at two moments: ring, filled dot, bar, the scores and the change in words) are the two
    charts; a sixth series is a table row, never a sixth colour.
+   `web-app/src/lib/views/threats/` holds the lens Threat models (`ThreatModelsView`: evaluation › service › model on
+   `TriagePage`; `EvaluationColumn`, which is `ThreatEvaluationTable` with `offerNew`, and `ServiceColumn`; `NewModelSheet`, the
+   placeholder of `/threat-models/{service}/new` until the recipe wizard; `ThreatModelReleaseView`, the release on
+   `ReleaseFlow`) and what it knows is in `web-app/src/lib/threats/` (addresses, ids, untreated, the review date, errors by row,
+   the diff by threat). The sheet (`ThreatModelSheet`) has two parts and so two document controllers, one for the data of the
+   document (owner, review date) and one for the file of the model; "Save for everyone" saves both, and a list of the file
+   (`/threats`, `/mitigations`) is changed and sent as a whole, a conflict decided per list (`ConflictPanel describe`).
+   `ThreatTable` and `CountermeasureEditor` are `DataTable` editors with a dialog over a copy (`DataTable` takes `addLabel` and
+   `rowName` where a page holds more than one table); a threat that was transferred is shown as a link and never written
+   here; the diagram is an `<img>` of a checked `data:image/svg+xml;base64,` URL with a text alternative, never markup.
 3. For a chart, use the five series colours in model order (`--color-series-1` … `-5`); they are validated for
    colour-vision and normal-vision separation against both sheet colours (`#ffffff`, `#161d2e`). A new chart colour
    needs the same validation before it lands: with the validator of the `dataviz` skill where your agent has that

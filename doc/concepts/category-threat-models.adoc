@@ -131,6 +131,15 @@ xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register, Op
 . A review starts with an act that prefills the review date with today; the due date counts from the date of the last release and
   the interval by the highest protection need is served with the model.
 
+Decided provisionally with the screens of the lens (the lens without the recipe wizard), recorded in
+xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register, Open Questions]; the owner may change each one:
+
+. The sheet of a model keeps one document controller for the data of the document and one for the file of the model, so a save
+  of both is two signed commits; whether it should be one needs the shared controller to key its changes by part.
+. The threat table and the countermeasure editor are the lens's own, so that a countermeasure names its threat and its issue ids
+  can be typed; removing a threat removes its countermeasures in the same save.
+. The release page reads the lists of threats and countermeasures change by change, by id.
+
 == Related
 
 * xref:category-samm.adoc[SAMM] — Threat Assessment practice

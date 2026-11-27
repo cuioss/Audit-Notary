@@ -8,6 +8,7 @@
   import type { ThreatEvaluation } from '../../api/types';
   import { formatDate } from '../../format';
   import { currentLocale, t } from '../../i18n';
+  import { newAddress } from '../../threats/model';
   import {
     intervalMonths,
     linkTarget,
@@ -29,11 +30,21 @@
     evaluation: ThreatEvaluation;
     /** Whether the order of the rows can be changed; the order of the server stays the first one. */
     sortable?: boolean;
+    /**
+     * Whether a service without a model offers the act *New threat model* (the lens Threat models, for a person who may
+     * create one); the report only reads.
+     */
+    offerNew?: boolean;
     /** A test id prefix. */
     testId?: string;
   }
 
-  let { evaluation, sortable = true, testId = 'threat-evaluation' }: Props = $props();
+  let {
+    evaluation,
+    sortable = true,
+    offerNew = false,
+    testId = 'threat-evaluation',
+  }: Props = $props();
 
   let picked = $state('');
   let sort = $derived(
@@ -185,6 +196,7 @@
             $t('reports.threat.without.col.owner'),
             $t('reports.threat.without.col.need'),
             $t('reports.threat.without.col.state'),
+            ...(offerNew ? [$t('reports.threat.without.col.act')] : []),
           ]}
           testId="{testId}-without-table"
         >
@@ -204,6 +216,17 @@
               <td data-label={$t('reports.threat.without.col.state')}>
                 <StatusLabel tone="neutral" label={$t(`reports.lifecycle.${entry.lifecycle}`)} />
               </td>
+              {#if offerNew}
+                <td data-label={$t('reports.threat.without.col.act')}>
+                  <Link
+                    href={newAddress(entry.service.id)}
+                    aria-label={$t('reports.threat.new.for', { service: entry.service.name })}
+                    data-testid="threat-new-{entry.service.id}"
+                  >
+                    {$t('reports.threat.new')}
+                  </Link>
+                </td>
+              {/if}
             </tr>
           {/each}
         </GridTable>

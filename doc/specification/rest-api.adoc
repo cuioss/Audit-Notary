@@ -3807,10 +3807,38 @@ change each one. The bodies and addresses are in <<_threat_model_requests>>:
 . *A save keeps the stored `transferred`.* `attributes.transferred` is `readOnly` in the schema and the server takes it from the
   stored file by the `id` of the threat, ignoring a value in the sent `/threats` list (a refusal code would add a request outcome
   the form kit has no text for); the transfer of UC-TM-3 is the only writer. A threat added by a save carries none.
-. *The issues of a countermeasure cannot be edited in the table yet.* `mitigations` is a `DataTable` and rule 13 of the form kit
-  (`web-app.adoc`) keeps an array inside a row read-only, so a person cannot add an issue id such as `PAY-1423` in the sheet of
-  this step; an agent enters them through the REST API (AUN-TM-4). Left open (no screen is blocked): the mechanism, a row
-  editor or a chips control in the form kit, is the owner's choice. The bounds stay `maxItems` 20, unique, 1 to 64 characters.
+. *The issues of a countermeasure cannot be edited in the form kit's table.* `mitigations` is a `DataTable` and rule 13 of the form kit
+  (`web-app.adoc`) keeps an array inside a row read-only. The sheet of the lens does not use that table for the countermeasures:
+  its own editor (`CountermeasureEditor`, decision 21) takes the issue ids as one field, separated by commas, and an agent enters
+  them through the REST API as well (AUN-TM-4). Left open: whether the form kit should get a control for a list of short texts, so
+  that the generic form and the lens read alike. The bounds stay `maxItems` 20, unique, 1 to 64 characters.
+
+. *The sheet of a model has two parts and so two document controllers* (decided with the screens of the lens). The data of the document (`owner`, `last-review`) and the
+  file of the model (`model`) each have their own draft, blob id and conflicts, and *Save for everyone* sends one save for each
+  part that has changes, in that order (`model`, then `data`): two signed commits, not one, although the body of the generic
+  save could carry both parts. A refusal of one part keeps the changes of the other. Left open: one commit for both parts needs
+  the controller to key its changes by part, which the shared controller does not do yet.
+. *The countermeasure editor and the threat table are the lens's own components,* not the form kit's `DataTable` through
+  `SchemaForm`: a countermeasure names one threat by a choice among the threats of the model, a threat shows its status in its row
+  and its transfer as a link, and the editor edits the issue ids (decision 19). The rest of the file (project, trust zones,
+  components, data flows) is the form kit's `SchemaForm` over the schema of the property `model` without `otmVersion`,
+  `threats` and `mitigations`.
+. *Removing a threat removes its countermeasures in the same save,* and the dialog says so: the file never holds a
+  countermeasure of a threat that is gone (the server answers `REFERENCE_NOT_FOUND` otherwise). The ids `T-<nn>` and `M-<nn>`
+  are the next free number after the highest taken, so the id of a removed entry is not reused while a later one stands.
+. *The labels of the form are catalogue keys relative to the value of the part:* `category.threat-models.threat-model.field.<path>`
+  with `<path>` as in the schema of the property `model` (`threats`, `project.name`) or of the document (`owner`, `last-review`).
+  The pointer of a `MANDATORY_FIELDS_MISSING` names the field in the document (`/model/project/name`); the sheet strips the
+  leading `/model` to find its label and its field. The app's own catalogue carries the keys, because the server's catalogue of
+  the document type is not served yet.
+. *The act *Start the review* is offered to everyone who may edit,* in every state, and is disabled with its reason when the review
+  date is already today; it sets `/last-review` of the part `data` to `review.today` and nothing else. The due date a typed review
+  date would give is shown as a sentence from `reviewIntervals` and the highest protection need (`review.protectionNeed`).
+. *The release page reads the lists change by change.* The server's diff carries the whole lists `/threats` and `/mitigations`; the
+  page makes one change of each entry that is new, gone or changed, by its `id` (`/threats/T-03`), so the approver reads a
+  threat, not two lists of nine. A change of any other property is the generic one.
+. *The first column is the table of the report;* a service without a model is offered *New threat model* in its row for a person
+  with `edit`, and `/threat-models/{service}/new` is routed to a placeholder inside the lens until the recipe wizard is built.
 
 For the owner: whether OTM as YAML is the format (4) and whether the treatment may live in `attributes` (5), given that the OTM
 README calls `attributes` a map of strings and that a threat has one status, not one per component; whether a countermeasure may
@@ -3820,4 +3848,6 @@ fine (9); whether the review date is the act of the person who starts the review
 be per language, which changes AUN-TM-5 (12); whether a recipe draft may be a draft of a model that does not exist (13), which
 the library does not offer; whether the person who edits may release in the mock (14); whether a service may have several
 models (15); whether a save keeps the stored `transferred` or refuses a changed one (18); how a person enters the issues of a
-countermeasure (19).
+countermeasure (19). With the screens of the lens: whether the two parts of the document should be one commit (20); whether the threat table and the
+countermeasure editor should be the form kit's (21), and whether removing a threat should take its countermeasures with it (22); whether the
+start of a review should be offered in every state (24).
