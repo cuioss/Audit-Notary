@@ -160,11 +160,17 @@ export class RecipeWizard {
     const read = ++this.latest;
     this.phase = 'loading';
     try {
-      const [loaded, draft] = await Promise.all([
+      // Both reads are settled before either answer is used: a recipe that does not exist is the answer, whichever of the
+      // two reads is refused first (the draft of a recipe that does not exist is refused as well).
+      const [recipeRead, draftRead] = await Promise.allSettled([
         this.client.getThreatRecipe(recipe, lang),
         this.client.getThreatRecipeDraft(this.service, recipe).then((answer) => answer.draft),
       ]);
       if (read !== this.latest) return;
+      if (recipeRead.status === 'rejected') throw recipeRead.reason;
+      if (draftRead.status === 'rejected') throw draftRead.reason;
+      const loaded = recipeRead.value;
+      const draft = draftRead.value;
       this.recipe = loaded;
       this.values = valuesOfDraft(draft);
       this.data = dataOfDraft(draft, this.today);

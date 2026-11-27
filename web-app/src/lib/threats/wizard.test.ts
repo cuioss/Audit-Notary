@@ -117,6 +117,19 @@ describe('opening', () => {
     expect(wizard.phase).toBe('missing');
   });
 
+  it('knows that a recipe does not exist even when the read of its draft is refused first', async () => {
+    const { wizard } = await opened({
+      getThreatRecipe: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        throw new ApiError('NOT_FOUND', 404);
+      },
+      getThreatRecipeDraft: async () => {
+        throw new ApiError('FORBIDDEN', 403);
+      },
+    });
+    expect(wizard.phase).toBe('missing');
+  });
+
   it('keeps the failure of the read as the text it shows', async () => {
     const { wizard } = await opened({
       getThreatRecipeDraft: async () => {

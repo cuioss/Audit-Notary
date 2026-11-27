@@ -75,6 +75,13 @@ nine threats of the checkout flow with status, treatment and transfer, its five 
 review of its last release) and the shared steps (the sheet of a model with its tables drawn, the status controls, the
 dialog that changes a threat, the bodies and the changes the mock recorded); the first test of `threat-models.spec.js`
 compares the fixtures with the mock
+
+|`tests/helpers/wizard.js`
+|The paths of the recipe wizard of a new threat model (the recipes, the recipe draft, the create), the static fixtures (the two
+recipes with their steps in English and German, the draft of `recipe-draft-saved`, the model the create makes) and the shared
+steps (sign in at the choice or at a recipe, `goOn` to the next step by its title, the rows of the form kit, the dialog of a
+threat, the walks through the quick start, `routeCreate`, which answers only the `POST` of the create); the first test of
+`threat-model-wizard.spec.js` compares the fixtures with the mock
 |===
 
 == Specs
@@ -166,13 +173,28 @@ list, the Git server down, the read-only paths, the revision picker and `?at=v<n
 first save of a review to v4, the missing fields, every refusal of the release, the word of the act only: *Release* and
 *Freigeben*), the live refresh on `document-saved` and `document-transitioned`, and English and German
 
+|`threat-model-wizard.spec.js`
+|The recipe wizard of a new threat model (UC-TM-1) for the Report scheduler, the service whose recipe draft the mock moves:
+the choice of a recipe with the number of its steps, "Started, step 3 of 4" and *Continue* for a draft, no recipe, an
+unknown recipe, a refused read; the refusals before the wizard (a person who may only read, a retired service, an unknown
+service); the steps (the guidance of the recipe, the list of the steps with its count and the steps already reached as acts,
+the form kit with its tables and dialogs, the table of the threats and the editor of the countermeasures of the sheet of a
+model, STRIDE with six steps, a field that is marked and does not go on, a draft the server refuses or cannot keep); the draft
+(written on *Next step* with the position of the step, nothing on *Back*, continued from the service page at the step it
+stopped at, the question before leaving with what is kept nowhere); the last page (a summary per step with *Change*, the
+owner and the review date of today, the reason a model without a name cannot be created, the create with its request, the
+sheet of the new model, the evaluation and the service read again, the refusal at the field in the step that holds it, the
+Git server down, the password and the identity provider before a create); the stream (a model created elsewhere changes
+nothing of what the person typed) and English and German
+
 |`theme-readability.spec.js`
 |The axe-core audit of every view in both themes, and of the states of the documents lens, the release, the palette, the
 catalogs lens, the directory pages, the SAMM completion (the forms with their refusals and notices, the targets, the
 evidence with its editor and question, the frozen practice, the refused comparison), the lens Reports (every notice,
 refusal, empty and unavailable state of its five pages, the practices of the comparison opened) and the lens Threat models
 (the evaluation and the pages of a service in each state, the sheet with its dialogs, its review, its refusals and its steps,
-the release with its seal and its refusals)
+the release with its seal and its refusals) and the recipe wizard (the choice and what stands in its place, the steps with
+their tables and dialogs, the last page, the refusals of a create and the questions it asks)
 
 |`fonts.spec.js`
 |Every request stays on the own origin, and Inter is loaded
@@ -185,8 +207,10 @@ scope are a list (no column heads), the evidence links are cards, the tables of 
 the width they have with text of at least 11 px (12 px in the dumbbell), every end value stays inside its figure, the
 dumbbell keeps its ring, its dot and its words; in the lens Threat models the evaluation and the page of a service, the
 sheet with its stacked tables and its diagram within the screen, the dialogs inside the window with their acts in reach,
-the conflict, the errors and the release, whose group summaries are 44 px targets (the release of a note as well); axe on
-each page
+the conflict, the errors and the release, whose group summaries are 44 px targets (the release of a note as well); the
+recipe wizard: the choice, a step whose list of steps gives way to the count, the dialogs of a row, a threat and a
+countermeasure inside the window, the last page with its create in reach, the refusals of a create and the questions of the
+wizard; axe on each page
 |===
 
 A new view gets its address in `navigation.spec.js` and its audit in `theme-readability.spec.js`; a new profile of
