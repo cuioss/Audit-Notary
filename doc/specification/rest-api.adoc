@@ -122,10 +122,11 @@ without a mapped right answers `"rights": []` and is a session like any other (<
 |`{"items": [{"kind", "lens", "title", "address", "due"}]}`; `kind` is `deadline`, `review` or `release`. A pending
 release request of an agent (xref:../use-cases/02-documents.adoc#UC-DOC-8[UC-DOC-8]) adds the members `requestId`,
 `requestedBy` `{"pseudonym", "name"}`, `requestedAt` and `comment` to its item (PROVISIONAL); `lens` is one of the
-lenses of the rail, `categories` for the documents of the generic lens (<<_the_document_lifecycle>>)
+lenses of the rail, `categories` for the documents of the generic lens (<<_the_document_lifecycle>>). The item of a
+deadline of an incident (<<_incident_deadlines>>) has the member `deadline` `{"rule", "status"}` (PROVISIONAL)
 |none
 |xref:web-app.adoc#AUN-WEB-9[AUN-WEB-9]
-|`SPECIFIED`; the members of a release request and the lens `categories` `PROVISIONAL`
+|`SPECIFIED`; the members of a release request, the member `deadline` and the lens `categories` `PROVISIONAL`
 
 |`GET /api/v1/events`
 |none
@@ -739,6 +740,138 @@ written; `404 NOT_FOUND`; `403 FORBIDDEN` without `edit`; `GIT_UNAVAILABLE` does
 |xref:../use-cases/02-documents.adoc#UC-DOC-3[UC-DOC-3], xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5]
 |`PROVISIONAL`
 
+6+h|Incident reports
+
+|`GET /api/v1/incidents`
+|none
+|The first column of the lens *Incidents*, the years: `{"today", "years": [{"year", "repository", "current", "incidents",
+"open", "withMissedDeadline", "retentionEnd", "address"}]}`, newest year first, one entry per repository
+`isms-incidents-<year>` the user may read. `current` is `true` for the year of today; a year with no entry marked
+`current` has no repository yet, which the page says (UC-OPS-2). The exact body is in <<_incident_years>>
+|`403 FORBIDDEN` is not answered: a user without a right on any incident repository gets `"years": []`
+(PROVISIONAL, as for the other lists). Served from the last fetched state while the Git server is unreachable
+|xref:category-incident-reports.adoc#AUN-IR-1[AUN-IR-1], xref:data-protection.adoc#AUN-DP-1[AUN-DP-1]
+|`PROVISIONAL`
+
+|`GET /api/v1/incidents/{year}`
+|none
+|The incidents of the year, the second column: `{"today", "asOf", "year", "repository", "incidents": [{"id", "title",
+"address", "state", "version", "frozen", "severity", "categories", "personalDataAffected", "nis2Significant",
+"awareAt", "resolvedAt", "stages": [{"id", "status"}], "deadlines": {"open", "met", "missed", "next"}, "requested",
+"updatedAt", "updatedBy", "release"}], "truncated"}`, newest awareness first, at most 500. The stage statuses and the
+deadline figures are the index of the use case (<<_incident_list>>)
+|`404 NOT_FOUND` for a year with no repository, or one the user may not read; `403 FORBIDDEN` is `404`
+(AUN-DP-2, PROVISIONAL)
+|xref:category-incident-reports.adoc#AUN-IR-2[AUN-IR-2], xref:../use-cases/06-incidents.adoc#UC-IR-2[UC-IR-2],
+xref:../concepts/staged-documents.adoc#_in_the_web_app[Staged Documents, In the Web App]
+|`PROVISIONAL`
+
+|`GET /api/v1/incidents/{year}/{incident}`, optional query `at=<revision>`
+|none; `at` reads the incident as it was at a release (`v1`) or a commit
+|One incident: the generic document read of <<_document_lifecycle_requests>> (`parts` with the file `data` and one part
+per stage, `state`, `version`, `frozen`, `draft`, `transitions`, `releaseRequest`, `history`, `release`; `at` for a
+revision) and the members `year`, `address`, `asOf`, `stages`, `deadlines` and `protection`. The address segment is the
+document id, a ULID. The exact body is in <<_incident_read>>
+|`404 NOT_FOUND` for a year, an incident or a revision that does not exist, or that the user may not read; `422
+VALIDATION` with the pointer `/at` and the code `FORMAT`
+|xref:category-incident-reports.adoc#AUN-IR-1[AUN-IR-1], xref:category-incident-reports.adoc#AUN-IR-4[AUN-IR-4],
+xref:../concepts/staged-documents.adoc[Staged Documents]
+|`PROVISIONAL`; the data shape is open (<<_decided_incidents>>)
+
+|`GET /api/v1/incidents/{year}/{incident}/report`, optional query `at=<revision>`
+|none
+|The generated report of the incident: `{"repository", "id", "title", "source", "asOf", "adoc"}`. `source` is `generated`
+(a fresh generation from the saved working state, a preview) or `committed` (the `report.adoc` of the release). The
+`adoc` is rendered by `POST /api/v1/render/asciidoc`. The exact body is in <<_incident_report>>
+|`404 NOT_FOUND`; `422 VALIDATION` with the pointer `/at` and the code `FORMAT`; `503 GIT_UNAVAILABLE` does not apply
+(served from the last fetched state)
+|xref:category-incident-reports.adoc#AUN-IR-1[AUN-IR-1], xref:../use-cases/06-incidents.adoc#UC-IR-3[UC-IR-3]
+|`PROVISIONAL`
+
+|`GET /api/v1/categories/incident-reports/schema`
+|none
+|The schema of the document type `incident` as the form kit reads it (<<_incident_data>>): the request of the form kit
+(<<_form_kit_requests>>) for this category; the parts of the document are the top-level properties marked `gdr-split`
+|`403 FORBIDDEN`
+|xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4], xref:category-incident-reports.adoc#AUN-IR-1[AUN-IR-1]
+|`PROVISIONAL`
+
+|`GET /api/v1/documents/isms-incidents-{year}`, `GET …/{id}`, `GET …/{id}/revisions`, `GET …/{id}/diff?from=released`
+|none
+|The generic requests of <<_the_document_lifecycle>> for the repository of the year: the list (the `address` of a row is
+`/incidents/<year>/<id>`), the document in the generic shape (the same body as the request by address above), its
+revisions and the diff against the last release, grouped by part, which is the stage (`data`, then the stages in the
+declared order), and within a part by the first segment of the pointer, the section. An incident has no earlier
+release, so `from` is `null` and every field is an addition. The release view reads these; the lens reads the requests
+by address above
+|As the generic requests; `403 FORBIDDEN` without `read`
+|xref:../use-cases/02-documents.adoc#UC-DOC-1[UC-DOC-1], xref:../use-cases/02-documents.adoc#UC-DOC-2[UC-DOC-2],
+xref:web-app.adoc#AUN-WEB-6[AUN-WEB-6]
+|`PROVISIONAL`
+
+|`POST /api/v1/documents/isms-incidents-{year}`
+|`{"kind": "incident", "parts": {"data": {"fields"}, "triage": {"fields"}}}`: the first save of a new incident, the
+generic create; `fields` as in the save, without `blob`
+|`201 {"outcome": "CREATED", "id", "repository", "address", "state": "draft", "version": 1, "at", "parts"}`: the server
+assigns the id (a ULID) and writes the first commit into the repository of the year; the part `triage` and every
+stage that carries a field are written, the others are absent until their first save
+|`422 VALIDATION` per field (`part`, `pointer`, `code`; `/title` `REQUIRED` in the part `data` is the only mandatory
+field of a first save); `404 NOT_FOUND` for a year with no repository; `403 FORBIDDEN` without `edit`; `REJECTED`;
+`GIT_UNAVAILABLE`
+|xref:../use-cases/06-incidents.adoc#UC-IR-1[UC-IR-1], xref:category-incident-reports.adoc#AUN-IR-3[AUN-IR-3]
+|`PROVISIONAL`
+
+|`PUT /api/v1/drafts/isms-incidents-{year}/{id}` and `POST /api/v1/documents/isms-incidents-{year}/{id}/save`
+|The generic body (<<_document_lifecycle_requests>>) with the parts in one request, any of `data` and the five stages;
+`fields` maps a JSON Pointer into the value of the part to its new value. Notes on the parts and on `completion`
+are in <<_incident_save>>
+|As the generic request: `DRAFT_SAVED`, `SAVED` with the new blob id of every part saved
+|`CONFLICT` per part with the fields that differ; `VALIDATION` per field, among them `REFERENCE_NOT_FOUND` for an
+affected service or a risk that is in no catalog or register and `READ_ONLY` for a pointer to `completion`;
+`409 STAGE_LOCKED` with `stages` for a write into a completed stage; `409 DOCUMENT_RELEASED` with `tag` once the
+incident is released; `FORBIDDEN` without `edit`; `REJECTED`; `GIT_UNAVAILABLE`; `STEP_UP_REQUIRED`
+|xref:web-app.adoc#AUN-WEB-5[AUN-WEB-5], xref:../concepts/staged-documents.adoc#_stage_status[Staged Documents, Stage
+Status]
+|`SPECIFIED`; body and answer `PROVISIONAL`; `STAGE_LOCKED` and the `READ_ONLY` of `completion` follow the concept
+
+|`POST /api/v1/documents/isms-incidents-{year}/{id}/stages/{stage}/complete`
+|none, or `{"blob", "password"}`: `blob` is the blob id of the part the form loaded (optional), `password` the step-up
+password of a local user
+|`200 {"outcome": "COMPLETED", "stage", "status": "completed", "at", "completion": {"at", "by"}, "parts", "stages":
+[{"id", "status"}]}`: a save of the part onto the working branch, which writes `completion` (`at`, `by`); `parts` holds
+the new blob id of the part, `stages` the statuses afterwards. With `step-up` declared for the stage (`review`) it asks
+for step-up like a release (<<_the_step_up_handler>>). The exact bodies are in <<_incident_stages_requests>>
+|`422 STAGE_NOT_COMPLETABLE` with `missing` (the JSON Pointers of the empty mandatory fields of the stage) and `open`
+(the predecessors not completed); `409 STAGE_NOT_APPLICABLE`; `409 STAGE_STATE` with `status` for a stage that is
+completed already; `409 CHANGED_SINCE_REVIEW` for a `blob` that is no longer current; `409 DOCUMENT_RELEASED` with
+`tag`; `404 NOT_FOUND` for a stage the document type does not declare; `STEP_UP_REQUIRED`, `INVALID_CREDENTIALS`,
+`TOO_MANY_LOGINS`; `FORBIDDEN` without `edit`; `REJECTED`; `GIT_UNAVAILABLE`
+|xref:../concepts/staged-documents.adoc#_stage_status[Staged Documents, Stage Status]
+|`PROVISIONAL`
+
+|`POST /api/v1/documents/isms-incidents-{year}/{id}/stages/{stage}/reopen`
+|none, or `{"blob", "password"}`
+|`200 {"outcome": "REOPENED", "stage", "status": "open", "at", "parts", "stages"}`: a save that removes `completion`;
+the earlier completion stays in the history. No other stage is reopened
+|`409 STAGE_STATE` with `status` for a stage that is not completed; `409 DOCUMENT_RELEASED` with `tag`; `404
+NOT_FOUND`; `CHANGED_SINCE_REVIEW`; `STEP_UP_REQUIRED` (not asked in the shipped workflow, PROVISIONAL); `FORBIDDEN`
+without `edit`; `REJECTED`; `GIT_UNAVAILABLE`
+|xref:../concepts/staged-documents.adoc#_stage_status[Staged Documents, Stage Status]
+|`PROVISIONAL`
+
+|`POST /api/v1/documents/isms-incidents-{year}/{id}/transitions/incident.submit` and
+`POST /api/v1/releases/isms-incidents-{year}/{id}`
+|As the generic requests: none, or `{"password"}`
+|`TRANSITIONED` (`draft` to `in-review`, right `edit`, no step-up) and `RELEASED` with the tag `incidents/<id>/v1`
+(`in-review` to `released`, right `approve`, step-up, `incident.release`); the release also commits the generated
+`report.adoc` and answers its path as `report`. An incident is released once: it is frozen afterwards
+|`422 STAGES_OPEN` with `stages`, a list of `{"stage", "missing"}` for every applicable stage that is not completed
+(PROVISIONAL, replaces `MANDATORY_FIELDS_MISSING` for a staged document, see <<_decided_incidents>>); `STEP_UP_REQUIRED`,
+`CHANGED_SINCE_REVIEW`, `DOCUMENT_RELEASED`, `FORBIDDEN`, `REJECTED`, `GIT_UNAVAILABLE`
+|xref:category-incident-reports.adoc#AUN-IR-3[AUN-IR-3], xref:../use-cases/02-documents.adoc#UC-DOC-6[UC-DOC-6],
+xref:../use-cases/02-documents.adoc#UC-DOC-7[UC-DOC-7]
+|`PROVISIONAL`
+
 6+h|ISMS
 
 |`GET /api/v1/isms/risks?as-of=<tag\|date>`
@@ -1045,6 +1178,7 @@ before `categories.document`.) The rules:
   for the four reports, each with its own pattern (<<_reports_addresses>>).
   The threat models add `at` on `threat-models.model` and the name `recipe` on the recipe wizard
   (<<_threat_model_addresses>>).
+  The incident reports add `at` and the name `stage` on `incidents.incident` (<<_incident_addresses>>).
 
 What the code does for it (built by the mock and UI steps, not by this contract):
 
@@ -2965,6 +3099,984 @@ agree with each other. For a threat model `m` of a service `s`, today `t`:
 * `address` is `/threat-models/<s>/<project.id>`, the risk that came from a threat is read from its `transferred`, and the
   reference `threat-models:threat-model/<document>#<threat id>` on that risk names the threat back.
 
+[#_incident_requests]
+== Incident Report Requests
+
+The requests of the use cases UC-IR-1, UC-IR-2 and UC-IR-3 (xref:../use-cases/06-incidents.adoc[Use Cases: Incident Response
+Reports]). The rows are in <<_requests>>, *Incident reports*; this section fixes their bodies, the data shape of an incident,
+the stages and their completion, the deadlines and the addresses of the new view. Every body is PROVISIONAL unless a row says
+otherwise; the decisions are in <<_decided_incidents>>. The values are those of the mock: the services of the catalog
+(<<_directory_and_catalog_requests>>), the people of the directory and today, 2026-11-26.
+
+An incident is a *staged document* (xref:../concepts/staged-documents.adoc[Staged Documents]) of the document type `incident`
+of the category `incident-reports`, in the repository `isms-incidents-<year>` of the year of awareness (AUN-DP-1). It uses the
+document lifecycle of <<_the_document_lifecycle>>: states `draft`, `in-review`, `released`, the transitions `incident.submit`
+(`draft` to `in-review`, right `edit`, no step-up) and `incident.release` (`in-review` to `released`, right `approve`,
+step-up; the tag is `incidents/<id>/v1`), and a save in the states `draft` and `in-review`. An incident is released once:
+afterwards it is `frozen` and every write answers `409 DOCUMENT_RELEASED` (the behaviour of a SAMM assessment). The rights are
+`read`, `edit` and `approve` on the repository of the year; completing and reopening a stage need `edit`.
+
+[#_incident_addresses]
+=== The Addresses
+
+The lens *Incidents* had `/incidents`, `/incidents/{year}`, `/incidents/{year}/{incident}` and
+`/incidents/{year}/{incident}/release`. The step adds one address, one allowed query and one placeholder pattern
+(<<_allowed_queries>>):
+
+[cols="2,3,2,3"]
+|===
+|Route id |Address |Query |Shows
+
+|`incidents`
+|`/incidents`
+|none
+|The first column: the years with a repository (`GET /api/v1/incidents`)
+
+|`incidents.year`
+|`/incidents/{year}`
+|none
+|The second column: the incidents of the year with their stage statuses and deadlines (`GET /api/v1/incidents/{year}`), and
+the act *New incident*
+
+|`incidents.new`
+|`/incidents/{year}/new`
+|none
+|The form of a new incident of the year (a sheet of the lens): the title and the triage; nothing is stored before the first
+save. The route comes before `incidents.incident` in the file
+
+|`incidents.incident`
+|`/incidents/{year}/{incident}`
+|`at`, `stage`
+|The incident sheet: the header with the state, the deadlines and the stages at a glance, the tabs, the history; `stage`
+selects the tab; with `at` the incident as it was at that revision, read-only
+
+|`incidents.release`
+|`/incidents/{year}/{incident}/release`
+|none
+|The review and release of the incident (`ReleaseFlow`: the diff by stage, then section, the report, the seal)
+|===
+
+`year` is four digits (the existing pattern). `{incident}` is a document id, a ULID, and so needs a placeholder pattern of
+its own, `incident`: `(?!new(?![0-9A-Za-z._-]))[0-9A-Za-z][0-9A-Za-z._-]{0,127}`. It is case sensitive, as the pattern
+`document` of the generic lens, and refuses the segment `new` (a segment that only begins with it, `new-2`, is an incident
+as before), so that `/incidents/{year}/new` is the new page, never an incident, and `/incidents/{year}/new/release` is
+nothing. `stage` is a stage id, `[a-z0-9][a-z0-9-]{0,63}`; `at` is the pattern of the other addresses (`v<n>` or a commit
+id). Both may be written together (`?at=v1&stage=review`, in the order of the file). A name outside the set is ignored in an
+address and refused in a login's `return` (the rules of <<_allowed_queries>>). The query `stage` is part of the canonical
+form because the step-up of a stage (`review`) leaves the page and returns to it (<<_the_step_up_handler>>): the person comes
+back to the same tab.
+
+[#_incident_data]
+=== The Data Shape of an Incident
+
+An incident is a document of the document type `incident` in the repository `isms-incidents-<year>`, collection `incidents`.
+Its schema declares one split (`gdr-split`, https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-3[GDR-FORMS-3]) per stage, so the document has
+six files and the document read six parts (the layout of
+xref:../concepts/category-incident-reports.adoc#_asciidoc_is_the_output_not_the_truth[Incident Reports, AsciiDoc Is the Output, Not the Truth]):
+
+[cols="1,2,3"]
+|===
+|Part |File |Content
+
+|`data`
+|`incidents/<ulid>/document.yaml`
+|`title`. The workflow state is the document's, not a field
+
+|`triage`
+|`incidents/<ulid>/triage.yaml`
+|The times, the classification, the affected services and the ticket ids of the stage `triage`
+
+|`privacy-assessment`
+|`incidents/<ulid>/privacy-assessment.yaml`
+|The data subjects, the assessment and the decisions of the stage of that name
+
+|`response`
+|`incidents/<ulid>/response.yaml`
+|The actions, the timeline and `resolved-at`
+
+|`notifications`
+|`incidents/<ulid>/notifications.yaml`
+|Each notification sent, with its time, recipient and channel
+
+|`review`
+|`incidents/<ulid>/review.yaml`
+|The root causes, the follow-up measures, the links to risks and the narrative. The three narrative fields (`course`,
+`root-cause-analysis`, `lessons`) are AsciiDoc fragments, `incidents/<ulid>/narrative/*.adoc`, in the repository; the
+application joins them into the value of the part `review`, where the form edits them as `x-asciidoc` strings
+|===
+
+Every stage object also carries `completion` (`at`, `by`), written only by the requests *complete* and *reopen*
+(<<_incident_stages_requests>>). The schema of the document type, `GET /api/v1/categories/incident-reports/schema`,
+`kinds[0]` (the form kit's vocabulary, xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4]; the bounds and the lists of values are
+PROVISIONAL, <<_decided_incidents>>). The `repository` member is the pattern `isms-incidents-<year>` because one kind
+addresses one repository per year (open, xref:../concepts/data-protection-and-repository-layout.adoc#_open_questions[Data
+Protection and Repository Layout, Open Questions]); the web app never reads it:
+
+[source,json]
+----
+{
+  "category": "incident-reports",
+  "kinds": [
+    {
+      "id": "incident",
+      "repository": "isms-incidents-<year>",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": {"type": "string", "maxLength": 200},
+          "triage": {
+            "type": "object",
+            "gdr-split": true,
+            "required": ["categories", "severity", "detected-at", "aware-at", "personal-data-affected", "nis2-significant"],
+            "properties": {
+              "categories": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {"type": "string", "enum": ["security-incident", "personal-data-breach"]}
+              },
+              "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+              "occurred-at": {"type": "string", "format": "date-time"},
+              "detected-at": {"type": "string", "format": "date-time"},
+              "aware-at": {"type": "string", "format": "date-time"},
+              "personal-data-affected": {"type": "boolean"},
+              "nis2-significant": {"type": "boolean"},
+              "affected-services": {
+                "type": "array",
+                "maxItems": 50,
+                "uniqueItems": true,
+                "items": {"type": "string", "format": "gdr-link", "x-catalog": "service"}
+              },
+              "tickets": {
+                "type": "array",
+                "maxItems": 20,
+                "uniqueItems": true,
+                "items": {"type": "string", "minLength": 1, "maxLength": 64}
+              },
+              "completion": {
+                "type": "object",
+                "readOnly": true,
+                "required": ["at", "by"],
+                "properties": {"at": {"type": "string", "format": "date-time"}, "by": {"type": "string", "x-person": true}}
+              }
+            }
+          },
+          "privacy-assessment": {
+            "type": "object",
+            "gdr-split": true,
+            "required": ["data-subjects", "risk", "risk-assessment", "notify-authority", "inform-data-subjects"],
+            "properties": {
+              "data-subjects": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "required": ["category", "approximate-number"],
+                  "properties": {
+                    "category": {"type": "string", "maxLength": 120},
+                    "approximate-number": {"type": "integer", "minimum": 0}
+                  }
+                }
+              },
+              "records-approximate": {"type": "integer", "minimum": 0},
+              "risk": {"type": "string", "enum": ["unlikely", "risk", "high-risk"]},
+              "risk-assessment": {"type": "string", "x-asciidoc": true},
+              "notify-authority": {"type": "boolean"},
+              "inform-data-subjects": {"type": "boolean"},
+              "reasons-for-delay": {"type": "string", "maxLength": 2000, "x-free-text": true},
+              "completion": {
+                "type": "object",
+                "readOnly": true,
+                "required": ["at", "by"],
+                "properties": {"at": {"type": "string", "format": "date-time"}, "by": {"type": "string", "x-person": true}}
+              }
+            }
+          },
+          "response": {
+            "type": "object",
+            "gdr-split": true,
+            "required": ["actions", "resolved-at"],
+            "properties": {
+              "actions": {
+                "type": "array",
+                "maxItems": 100,
+                "items": {
+                  "type": "object",
+                  "required": ["kind", "what"],
+                  "properties": {
+                    "kind": {"type": "string", "enum": ["containment", "recovery", "other"]},
+                    "what": {"type": "string", "maxLength": 200},
+                    "role": {"type": "string", "format": "gdr-link", "x-catalog": "role"},
+                    "issues": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "uniqueItems": true,
+                      "items": {"type": "string", "minLength": 1, "maxLength": 64}
+                    },
+                    "done": {"type": "boolean"}
+                  }
+                }
+              },
+              "timeline": {
+                "type": "array",
+                "maxItems": 200,
+                "items": {
+                  "type": "object",
+                  "required": ["at", "what"],
+                  "properties": {
+                    "at": {"type": "string", "format": "date-time"},
+                    "what": {"type": "string", "maxLength": 300, "x-free-text": true}
+                  }
+                }
+              },
+              "resolved-at": {"type": "string", "format": "date-time"},
+              "completion": {
+                "type": "object",
+                "readOnly": true,
+                "required": ["at", "by"],
+                "properties": {"at": {"type": "string", "format": "date-time"}, "by": {"type": "string", "x-person": true}}
+              }
+            }
+          },
+          "notifications": {
+            "type": "object",
+            "gdr-split": true,
+            "required": [],
+            "properties": {
+              "supervisory-authority": {
+                "type": "object",
+                "required": ["sent-at", "recipient", "channel"],
+                "properties": {
+                  "sent-at": {"type": "string", "format": "date-time"},
+                  "recipient": {"type": "string", "maxLength": 200},
+                  "channel": {"type": "string", "enum": ["reporting-portal", "email", "phone", "post", "other"]},
+                  "reference": {"type": "string", "maxLength": 100}
+                }
+              },
+              "data-subjects": {
+                "type": "object",
+                "required": ["sent-at", "recipient", "channel"],
+                "properties": {
+                  "sent-at": {"type": "string", "format": "date-time"},
+                  "recipient": {"type": "string", "maxLength": 200},
+                  "channel": {"type": "string", "enum": ["reporting-portal", "email", "phone", "post", "other"]},
+                  "reference": {"type": "string", "maxLength": 100}
+                }
+              },
+              "nis2-early-warning": {
+                "type": "object",
+                "required": ["sent-at", "recipient", "channel"],
+                "properties": {
+                  "sent-at": {"type": "string", "format": "date-time"},
+                  "recipient": {"type": "string", "maxLength": 200},
+                  "channel": {"type": "string", "enum": ["reporting-portal", "email", "phone", "post", "other"]},
+                  "reference": {"type": "string", "maxLength": 100}
+                }
+              },
+              "nis2-notification": {
+                "type": "object",
+                "required": ["sent-at", "recipient", "channel"],
+                "properties": {
+                  "sent-at": {"type": "string", "format": "date-time"},
+                  "recipient": {"type": "string", "maxLength": 200},
+                  "channel": {"type": "string", "enum": ["reporting-portal", "email", "phone", "post", "other"]},
+                  "reference": {"type": "string", "maxLength": 100}
+                }
+              },
+              "nis2-intermediate-reports": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "required": ["due", "sent-at", "recipient", "channel"],
+                  "properties": {
+                    "sent-at": {"type": "string", "format": "date-time"},
+                    "recipient": {"type": "string", "maxLength": 200},
+                    "channel": {"type": "string", "enum": ["reporting-portal", "email", "phone", "post", "other"]},
+                    "reference": {"type": "string", "maxLength": 100},
+                    "due": {"type": "string", "format": "date-time"}
+                  }
+                }
+              },
+              "nis2-progress-report": {
+                "type": "object",
+                "required": ["sent-at", "recipient", "channel"],
+                "properties": {
+                  "sent-at": {"type": "string", "format": "date-time"},
+                  "recipient": {"type": "string", "maxLength": 200},
+                  "channel": {"type": "string", "enum": ["reporting-portal", "email", "phone", "post", "other"]},
+                  "reference": {"type": "string", "maxLength": 100}
+                }
+              },
+              "nis2-final-report": {
+                "type": "object",
+                "required": ["sent-at", "recipient", "channel"],
+                "properties": {
+                  "sent-at": {"type": "string", "format": "date-time"},
+                  "recipient": {"type": "string", "maxLength": 200},
+                  "channel": {"type": "string", "enum": ["reporting-portal", "email", "phone", "post", "other"]},
+                  "reference": {"type": "string", "maxLength": 100}
+                }
+              },
+              "others": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "required": ["sent-at", "recipient", "channel"],
+                  "properties": {
+                    "sent-at": {"type": "string", "format": "date-time"},
+                    "recipient": {"type": "string", "maxLength": 200},
+                    "channel": {"type": "string", "enum": ["reporting-portal", "email", "phone", "post", "other"]},
+                    "reference": {"type": "string", "maxLength": 100},
+                    "comment": {"type": "string", "maxLength": 500, "x-free-text": true}
+                  }
+                }
+              },
+              "completion": {
+                "type": "object",
+                "readOnly": true,
+                "required": ["at", "by"],
+                "properties": {"at": {"type": "string", "format": "date-time"}, "by": {"type": "string", "x-person": true}}
+              }
+            }
+          },
+          "review": {
+            "type": "object",
+            "gdr-split": true,
+            "required": ["root-causes", "measures", "course", "root-cause-analysis", "lessons"],
+            "properties": {
+              "root-causes": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "required": ["category", "description"],
+                  "properties": {
+                    "category": {
+                      "type": "string",
+                      "enum": ["configuration", "software-defect", "process", "access-control", "third-party", "other"]
+                    },
+                    "description": {"type": "string", "maxLength": 500, "x-free-text": true}
+                  }
+                }
+              },
+              "measures": {
+                "type": "array",
+                "maxItems": 50,
+                "items": {
+                  "type": "object",
+                  "required": ["what"],
+                  "properties": {
+                    "what": {"type": "string", "maxLength": 200},
+                    "role": {"type": "string", "format": "gdr-link", "x-catalog": "role"},
+                    "issues": {
+                      "type": "array",
+                      "maxItems": 20,
+                      "uniqueItems": true,
+                      "items": {"type": "string", "minLength": 1, "maxLength": 64}
+                    },
+                    "due": {"type": "string", "format": "date"}
+                  }
+                }
+              },
+              "risks": {
+                "type": "array",
+                "maxItems": 20,
+                "uniqueItems": true,
+                "items": {"type": "string", "format": "gdr-link"}
+              },
+              "course": {"type": "string", "x-asciidoc": true},
+              "root-cause-analysis": {"type": "string", "x-asciidoc": true},
+              "lessons": {"type": "string", "x-asciidoc": true},
+              "completion": {
+                "type": "object",
+                "readOnly": true,
+                "required": ["at", "by"],
+                "properties": {"at": {"type": "string", "format": "date-time"}, "by": {"type": "string", "x-person": true}}
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
+----
+
+What the shape says (the rules the server enforces, and the mock follows):
+
+* *Only `title` is required of the document;* the mandatory fields are those of each stage, and the library reports them
+  per pointer (`/triage/severity`). An absent part is read as an empty part, so its mandatory fields are missing
+  (xref:../concepts/staged-documents.adoc#_stage_status[Staged Documents, Stage Status]); a part of a stage that has no
+  mandatory field (`notifications`) can be completed while absent.
+* *The times* are instants in UTC, ISO 8601 with the `Z` suffix. `occurred-at` is optional and starts no deadline,
+  `detected-at` and `aware-at` are mandatory, `aware-at` starts the deadlines (AUN-IR-1, AUN-IR-2).
+* *The classification* is `categories` (one or both of `security-incident`, `personal-data-breach`), `severity` (`low`,
+  `medium`, `high`, `critical`), and the two decisions that carry the deadlines, `personal-data-affected` and
+  `nis2-significant`. A boolean that is absent is unanswered; `false` is an answer.
+* *The affected services* are references `service:<id>` of the service catalog (AUN-IR-4); the protection needs of the
+  incident are derived (<<_incident_read>>), not stored.
+* *No person is named* (AUN-DP-5): the free-text fields carry the hint of the form kit (`x-free-text`), the narrative is
+  `x-asciidoc`; a person is a pseudonym only where a field is an `x-person` (`completion.by`). A recipient of a notification
+  is the name of an organisation or an office, not of a person.
+* *A notification* is an object with `sent-at`, `recipient`, `channel` (`reporting-portal`, `email`, `phone`, `post`,
+  `other`) and an optional `reference` (the number the authority gave). `supervisory-authority` (GDPR Art. 33),
+  `nis2-early-warning`, `nis2-notification`, `nis2-progress-report` and `nis2-final-report` are single objects;
+  `nis2-intermediate-reports` is a list whose entries also carry the `due` the authority asked for; `data-subjects`
+  (GDPR Art. 34, no deadline of the category) and `others` (a list, with a `comment`) record the other notices. The names
+  are those of the deadline rules (AUN-IR-2) with the part `notifications` as their root; the table of the lens is these
+  members, one row each, in this order.
+* *The ids of the lists* are not keys: a list is sent as a whole, as in the form kit.
+
+[#_incident_stages]
+=== The Stages
+
+The stages are declared in the workflow of the document type, `workflow.yaml`, beside its states and deadlines
+(xref:../concepts/staged-documents.adoc#_the_declaration[Staged Documents, The Declaration]). The delivered declaration of
+the incident file is that of xref:../concepts/category-incident-reports.adoc#_stages_of_an_incident[Incident Reports, Stages
+of an Incident]; the web app reads it from the member `stages` of an incident, never from the file:
+
+[source,yaml]
+----
+stages:
+  - { id: triage,             part: triage }
+  - { id: privacy-assessment, part: privacy-assessment, after: [triage],   when: /triage/personal-data-affected }
+  - { id: response,           part: response,           after: [triage] }
+  - { id: notifications,      part: notifications,      after: [triage],
+      when: { any: [/triage/personal-data-affected, /triage/nis2-significant] } }
+  - { id: review,             part: review,             after: [response],
+      narrative: [course, root-cause-analysis, lessons], complete: { step-up: true } }
+----
+
+*The member `stages`* of the read, in the order of the declaration (the order of the tabs), one object per stage:
+
+[cols="1,3"]
+|===
+|Member |Meaning
+
+|`id`, `part`, `after`
+|As declared; `after` is the list of stage ids
+
+|`when`
+|The condition as data, `null` for a stage that always applies: `{"field": "/triage/personal-data-affected"}`, or
+`{"any": [{"field": …}, {"field": …}]}` (`all` likewise). A field is true when it is `true`, or, if it is no boolean,
+present. The web app builds the sentence "Applies when …" of a stage that does not apply from its catalogue key
+`category.incident-reports.stage.<id>.when`, never from the condition
+
+|`narrative`
+|The narrative fields of the stage (`[]` or `["course", "root-cause-analysis", "lessons"]`)
+
+|`stepUp`
+|`true` when completing the stage asks for step-up
+
+|`status`
+|`not-applicable`, `open` or `completed` (derived, <<_incident_derivation>>)
+
+|`unanswered`
+|`true` for a stage that is `not-applicable` because the field of its condition is not answered yet (absent); the stage
+then reads "applies when …" and not "does not apply"
+
+|`completion`
+|`{"at", "by": {"pseudonym", "name"}}` for a completed stage, else `null`
+
+|`predecessorReopened`
+|`true` for a completed stage that has an open stage among its predecessors, directly or through the chain of `after`: it was
+signed off and a stage before it was reopened since
+
+|`missing`
+|The JSON Pointers (into the document's value, `/<part>/<field>`) of the mandatory fields of the part that are empty, for
+an `open` stage; `[]` for the others
+
+|`blockedBy`
+|The ids of the stages of `after` that are `open`, for an `open` stage; `[]` for the others
+|===
+
+[#_incident_years]
+=== The Years
+
+`GET /api/v1/incidents`:
+
+[source,json]
+----
+{
+  "today": "2026-11-26",
+  "years": [
+    { "year": 2026, "repository": "isms-incidents-2026", "current": true, "incidents": 7, "open": 6,
+      "withMissedDeadline": 1, "retentionEnd": "2031-12-31", "address": "/incidents/2026" },
+    { "year": 2025, "repository": "isms-incidents-2025", "current": false, "incidents": 2, "open": 0,
+      "withMissedDeadline": 1, "retentionEnd": "2030-12-31", "address": "/incidents/2025" }
+  ]
+}
+----
+
+`open` counts the incidents that are not released, `withMissedDeadline` those with a deadline `MISSED` at the time of the
+list (in a released one, at its release, <<_incident_deadlines>>). `retentionEnd` is 31 December of the year plus the retention
+of the repository (`P5Y` by default, AUN-DP-1, AUN-DP-4). The years are those of the repositories the user may read,
+`isms-incidents-<year>` with a year of four digits, newest first. `"years": []` is an installation without an incident
+repository (the empty state tells the person to ask for it, UC-OPS-2). When no year is `current`, the repository of the
+year of today is not configured: the lens shows the older years and says so, and offers no *New incident*; the web app
+never creates a repository (AUN-DP-1).
+
+[#_incident_list]
+=== The Incidents of a Year
+
+`GET /api/v1/incidents/2026` (shortened to two rows):
+
+[source,json]
+----
+{
+  "today": "2026-11-26", "asOf": "2026-11-26T10:00:00Z", "year": 2026, "repository": "isms-incidents-2026",
+  "incidents": [
+    { "id": "01JZA6D8F0H2K4M6P8R0T2W4Y6", "title": "Suspicious logins from an unknown network",
+      "address": "/incidents/2026/01JZA6D8F0H2K4M6P8R0T2W4Y6", "state": "draft", "version": 1, "frozen": false,
+      "severity": null, "categories": ["security-incident"], "personalDataAffected": null, "nis2Significant": null,
+      "awareAt": "2026-11-26T08:30:00Z", "resolvedAt": null,
+      "stages": [ { "id": "triage", "status": "open" }, { "id": "privacy-assessment", "status": "not-applicable" },
+                  { "id": "response", "status": "open" }, { "id": "notifications", "status": "not-applicable" },
+                  { "id": "review", "status": "open" } ],
+      "deadlines": { "open": 0, "met": 0, "missed": 0, "next": null },
+      "requested": false, "updatedAt": "2026-11-26T08:40:00Z",
+      "updatedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example" }, "release": null },
+    { "id": "01JZ9T4M6Q8S0V2X4B6D8F0H2K", "title": "Card data exposed in the checkout log",
+      "address": "/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K", "state": "draft", "version": 1, "frozen": false,
+      "severity": "high", "categories": ["security-incident", "personal-data-breach"], "personalDataAffected": true,
+      "nis2Significant": true, "awareAt": "2026-11-19T07:40:00Z", "resolvedAt": "2026-11-20T16:00:00Z",
+      "stages": [ { "id": "triage", "status": "completed" }, { "id": "privacy-assessment", "status": "open" },
+                  { "id": "response", "status": "open" }, { "id": "notifications", "status": "open" },
+                  { "id": "review", "status": "open" } ],
+      "deadlines": { "open": 1, "met": 1, "missed": 2, "next": { "rule": "nis2-final-report", "due": "2026-12-22T10:20:00Z" } },
+      "requested": false, "updatedAt": "2026-11-22T10:25:00Z",
+      "updatedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example" }, "release": null }
+  ],
+  "truncated": false
+}
+----
+
+* The rows are ordered by `awareAt`, newest first, a row without one last; `severity`, `personalDataAffected`,
+  `nis2Significant` and `resolvedAt` are `null` while unanswered. `categories` is the list of the triage.
+* `stages` has the five stages in the order of the declaration with the derived `status` (<<_incident_derivation>>), so a lens
+  can show "triage open" or list every incident whose review is open
+  (xref:../concepts/staged-documents.adoc#_in_the_web_app[Staged Documents, In the Web App]).
+* `deadlines` counts the deadlines of the incident by status at `asOf`; `next` is the open deadline with the earliest `due`
+  (`null` without a date or without an open one). `release` is `{"tag", "at"}` or `null`.
+* A year that has no repository, or that the user may not read, answers `404 NOT_FOUND`; a year with no incident answers
+  `"incidents": []`.
+
+[#_incident_read]
+=== An Incident
+
+`GET /api/v1/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K` (the parts are shortened to the members the figures need):
+
+[source,json]
+----
+{
+  "repository": "isms-incidents-2026", "id": "01JZ9T4M6Q8S0V2X4B6D8F0H2K", "category": "incident-reports", "kind": "incident",
+  "title": "Card data exposed in the checkout log", "state": "draft", "version": 1, "frozen": false,
+  "year": 2026, "address": "/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K", "asOf": "2026-11-26T10:00:00Z",
+  "parts": {
+    "data": { "blob": "5c0e2a7", "savedAt": "2026-11-19T07:55:00Z",
+              "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example", "role": "Security Champion" },
+              "value": { "title": "Card data exposed in the checkout log" } },
+    "triage": { "blob": "b81d4f3", "savedAt": "2026-11-19T09:30:00Z",
+                "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example", "role": "Security Champion" },
+                "value": { "categories": ["security-incident", "personal-data-breach"], "severity": "high",
+                           "occurred-at": "2026-11-17T22:00:00Z", "detected-at": "2026-11-19T07:10:00Z",
+                           "aware-at": "2026-11-19T07:40:00Z", "personal-data-affected": true, "nis2-significant": true,
+                           "affected-services": ["service:payment-api", "service:customer-db"], "tickets": ["SEC-2210"],
+                           "completion": { "at": "2026-11-19T09:30:00Z", "by": "p-4c1a9e" } } },
+    "privacy-assessment": { "blob": "0a97c3d", "savedAt": "2026-11-20T11:00:00Z", "savedBy": { "…": "…" },
+                            "value": { "data-subjects": [ { "category": "Customers", "approximate-number": 1200 } ],
+                                       "records-approximate": 1500 } },
+    "response": { "blob": "…", "…": "…" },
+    "notifications": { "blob": "…", "…": "…" },
+    "review": { "blob": null, "savedAt": null, "savedBy": null, "value": {} }
+  },
+  "draft": null,
+  "history": [
+    { "at": "2026-11-22T10:25:00Z", "by": { "pseudonym": "p-4c1a9e", "name": "Alex Example" }, "kind": "save",
+      "part": "notifications", "count": 1 },
+    { "at": "2026-11-19T09:30:00Z", "by": { "pseudonym": "p-4c1a9e", "name": "Alex Example" }, "kind": "complete",
+      "stage": "triage" }
+  ],
+  "release": null, "releaseRequest": null,
+  "transitions": [ { "id": "incident.submit", "to": "in-review", "right": "edit", "stepUp": false } ],
+  "stages": [
+    { "id": "triage", "part": "triage", "after": [], "when": null, "narrative": [], "stepUp": false, "status": "completed",
+      "unanswered": false, "completion": { "at": "2026-11-19T09:30:00Z", "by": { "pseudonym": "p-4c1a9e", "name": "Alex Example" } },
+      "predecessorReopened": false, "missing": [], "blockedBy": [] },
+    { "id": "privacy-assessment", "part": "privacy-assessment", "after": ["triage"],
+      "when": { "field": "/triage/personal-data-affected" }, "narrative": [], "stepUp": false, "status": "open",
+      "unanswered": false, "completion": null, "predecessorReopened": false,
+      "missing": ["/privacy-assessment/risk", "/privacy-assessment/risk-assessment", "/privacy-assessment/notify-authority",
+                  "/privacy-assessment/inform-data-subjects"], "blockedBy": [] },
+    { "…": "response, notifications" },
+    { "id": "review", "part": "review", "after": ["response"], "when": null,
+      "narrative": ["course", "root-cause-analysis", "lessons"], "stepUp": true, "status": "open", "unanswered": false,
+      "completion": null, "predecessorReopened": false,
+      "missing": ["/review/root-causes", "/review/measures", "/review/course", "/review/root-cause-analysis", "/review/lessons"],
+      "blockedBy": ["response"] }
+  ],
+  "deadlines": [ "…" ],
+  "protection": {
+    "needs": { "confidentiality": "very-high", "integrity": "very-high", "availability": "high" },
+    "decidedBy": { "confidentiality": "service:payment-api", "integrity": "service:payment-api", "availability": "service:payment-api" }
+  }
+}
+----
+
+* The members of the generic document read keep their meaning (<<_document_lifecycle_requests>>). Every part of the schema is
+  present in `parts`; a part never saved has `"blob": null`, `"savedAt": null`, `"savedBy": null` and `"value": {}`. The
+  value of a part holds `completion` as `{"at", "by"}` with the pseudonym; `stages[].completion` carries the name as well.
+* `history` adds the kinds `complete` and `reopen`, each with the `stage`; the earlier completion of a reopened stage stays
+  in it, the evidence that the stage changed after its sign-off.
+* `transitions` of an incident in `draft` is `incident.submit`, of one in `in-review` `incident.release` with
+  `"release": true`, of a released one empty. The workflow offers the transition whatever the stages are; the view
+  disables *Submit* with the reason while an applicable stage is not completed, and the request answers `STAGES_OPEN`.
+* `asOf` is the instant the deadlines were computed at: the time of the read for the working state, the release time for a
+  released incident or a revision (<<_incident_deadlines>>).
+* `protection` is derived, never stored: per dimension (`confidentiality`, `integrity`, `availability`) the highest of the
+  *effective* protection needs of the affected services (`effective.protectionNeeds` of the service entry, which already
+  include what the service depends on, AUN-DIR-5, AUN-IR-4), in the order `normal`, `high`, `very-high`; `decidedBy` is the
+  first affected service, in the order of the list, whose effective need equals that highest one. Without an affected
+  service it is `null`.
+* A revision (`?at=`) has `frozen: true`, no draft and no transitions, and the member `at` of the generic revision; its
+  `stages`, `deadlines` and `protection` are those of that revision. `GET /api/v1/documents/isms-incidents-2026/{id}` answers
+  the same body.
+* A `parts.<stage>.value` of a stage that is `not-applicable` is kept and shown as such; its data are never rewritten.
+
+[#_incident_deadlines]
+=== The Deadlines
+
+The deadlines are computed from the data of the parts and the clock, never stored (AUN-IR-2: computed from the in-memory
+index). Each row of AUN-IR-2 is one rule of `workflow.yaml`; the shipped rules, with the field paths of the parts (the
+change that moves the paths of AUN-IR-2 into the parts, which the concept announced, <<_decided_incidents>> point 1):
+
+[cols="2,3,3,3"]
+|===
+|Rule |Applies when |Due |Met by
+
+|`gdpr-art33`
+|`/triage/personal-data-affected`
+|`/triage/aware-at` + `PT72H`
+|`/notifications/supervisory-authority`
+
+|`nis2-early-warning`
+|`/triage/nis2-significant`
+|`/triage/aware-at` + `PT24H`
+|`/notifications/nis2-early-warning`
+
+|`nis2-notification`
+|`/triage/nis2-significant`
+|`/triage/aware-at` + `PT72H`
+|`/notifications/nis2-notification`
+
+|`nis2-intermediate-report`
+|`/notifications/nis2-intermediate-reports/*`, one deadline per entry
+|its `due`
+|that entry
+
+|`nis2-final-report`
+|`/notifications/nis2-notification/sent-at` is present
+|that `sent-at` + `P1M`
+|`/notifications/nis2-final-report`, or `/notifications/nis2-progress-report` while `/response/resolved-at` is absent or later than the due time
+
+|`nis2-final-report-after-handling`
+|the due time of `nis2-final-report` has passed and `/response/resolved-at` is absent or later than it
+|`/response/resolved-at` + `P1M`
+|`/notifications/nis2-final-report`
+|===
+
+The grammar is the one AUN-IR-2 describes, PROVISIONAL because the library does not offer it yet (the open question of
+https://github.com/cuioss/git-document-repository/blob/main/doc/concepts/schema-driven-documents.adoc#_open_questions[Schema-Driven
+Documents, Open Questions]); the mock reads the rules as data and holds them in the generator, not in code of a view:
+
+[source,yaml]
+----
+deadlines:
+  - id: gdpr-art33
+    when: /triage/personal-data-affected
+    due: { from: /triage/aware-at, plus: PT72H }
+    met-by: [ { field: /notifications/supervisory-authority } ]
+  - id: nis2-final-report
+    when: /notifications/nis2-notification/sent-at
+    due: { from: /notifications/nis2-notification/sent-at, plus: P1M }
+    met-by:
+      - { field: /notifications/nis2-final-report }
+      - { field: /notifications/nis2-progress-report, while-unresolved: true }
+----
+
+*The status of a deadline* at `asOf`:
+
+. A deadline whose date field is empty has `due: null` and is `OPEN`.
+. A `met-by` entry holds `sent-at`; the deadline is `MET` when one entry's `sent-at` is not after `due`.
+. Otherwise it is `MISSED` when `asOf` is after `due`, else `OPEN`. A notification sent after the due time therefore leaves
+  the deadline `MISSED` and carries its `sentAt`: it was sent late, and that stays visible.
+. A `met-by` entry marked `while-unresolved` counts only when `resolved-at` is absent or later than `due`.
+. Periods are added to the instant in UTC (`PT72H` as hours, `P1M` as a calendar month, the last day of the month when the
+  day does not exist).
+. A rule whose `when` is false is not listed; a boolean that is absent is false.
+
+*The member `deadlines`* of an incident read, in the order of the rules, the entries of a list rule in the order of the list:
+
+[source,json]
+----
+[
+  { "rule": "gdpr-art33", "element": null, "startedAt": "2026-11-19T07:40:00Z", "due": "2026-11-22T07:40:00Z",
+    "status": "MISSED", "sentAt": null, "metBy": "/notifications/supervisory-authority" },
+  { "rule": "nis2-early-warning", "element": null, "startedAt": "2026-11-19T07:40:00Z", "due": "2026-11-20T07:40:00Z",
+    "status": "MET", "sentAt": "2026-11-20T06:55:00Z", "metBy": "/notifications/nis2-early-warning" },
+  { "rule": "nis2-notification", "element": null, "startedAt": "2026-11-19T07:40:00Z", "due": "2026-11-22T07:40:00Z",
+    "status": "MISSED", "sentAt": "2026-11-22T10:20:00Z", "metBy": "/notifications/nis2-notification" },
+  { "rule": "nis2-final-report", "element": null, "startedAt": "2026-11-22T10:20:00Z", "due": "2026-12-22T10:20:00Z",
+    "status": "OPEN", "sentAt": null, "metBy": "/notifications/nis2-final-report" }
+]
+----
+
+`startedAt` is the instant the clock started from (`null` when the start field is empty), `element` the index of the entry of
+a list rule (else `null`), `metBy` the pointer of the record that meets it. The web app writes the name of a rule and the
+legal basis from its catalogue keys `category.incident-reports.deadline.<rule>` and `….basis`; the data carry no text.
+
+*At release the clock stops.* The `deadlines` of a released incident, and of every revision, are computed at the instant of the
+release (`asOf`), because the released `report.adoc` must be reproducible from the data (AUN-IR-1): a deadline that was open
+at the release stays `OPEN` in the released record, and a `MISSED` one stays `MISSED` and visible in the report (AUN-IR-2).
+A missed deadline never stops a release.
+
+*In the Due lens* (`GET /api/v1/due`, PROVISIONAL) an incident that is not released is an item of the kind `deadline`, lens
+`incidents`, for every deadline of it that is `OPEN` with a date, or `MISSED` and not sent at all (`sentAt` is `null`): a
+deadline that was sent late is no duty any more, it is only visible in the incident. The item is
+`{"kind": "deadline", "lens": "incidents", "title": "<incident title>: <rule>", "address":
+"/incidents/2026/<id>?stage=notifications", "due": "2026-11-22", "deadline": {"rule": "gdpr-art33", "status": "MISSED"}}`:
+`due` is the date of the due time in UTC, the member `deadline` is new (PROVISIONAL) so that the web app writes the
+localised name and marks a missed one without parsing the title. The items are for the users with `read` on the repository
+of the year (the incident responders, AUN-IR-2).
+
+[#_incident_stages_requests]
+=== Completing and Reopening a Stage
+
+`POST /api/v1/documents/isms-incidents-2026/01JZA2B4D6F8H0K2N4Q6S8V0X2/stages/privacy-assessment/complete`, with the body
+`{"blob": "7e13b9c"}` (the blob id of the part the form loaded; optional, without it nothing is compared), answers
+
+[source,json]
+----
+{ "outcome": "COMPLETED", "stage": "privacy-assessment", "status": "completed", "at": "2026-11-26T10:20:00Z",
+  "completion": { "at": "2026-11-26T10:20:00Z", "by": { "pseudonym": "p-4c1a9e", "name": "Alex Example" } },
+  "parts": { "privacy-assessment": { "blob": "d40c5e2", "savedAt": "2026-11-26T10:20:00Z",
+                                     "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example" } } },
+  "stages": [ { "id": "triage", "status": "completed" }, { "id": "privacy-assessment", "status": "completed" },
+              { "id": "response", "status": "open" }, { "id": "notifications", "status": "open" },
+              { "id": "review", "status": "open" } ] }
+----
+
+The completion is a save of the part onto the working branch: the signed commit names the person and `completion` records
+the time in the data. A blob id that is no longer the current one of the part answers `409 CHANGED_SINCE_REVIEW` (someone
+saved the part since the form loaded it; the person would otherwise sign off data they did not see); nothing is written.
+The event `document-saved` (`part` the stage, `by`) reaches the other tabs. `…/reopen` has the same body and answers
+
+[source,json]
+----
+{ "outcome": "REOPENED", "stage": "triage", "status": "open", "at": "2026-11-25T15:00:00Z",
+  "parts": { "triage": { "blob": "…", "savedAt": "2026-11-25T15:00:00Z", "savedBy": { "…": "…" } } },
+  "stages": [ { "id": "triage", "status": "open" }, { "id": "privacy-assessment", "status": "completed" }, "…" ] }
+----
+
+Reopening writes no other stage: the stages after it stay completed and the read marks them `predecessorReopened`.
+
+*The refusal of a completion*, `422`, names both causes at once; a list may be empty:
+
+[source,json]
+----
+{ "outcome": "STAGE_NOT_COMPLETABLE", "stage": "response",
+  "missing": ["/response/actions", "/response/resolved-at"], "open": ["triage"] }
+----
+
+`missing` are the pointers of the empty mandatory fields (the `required` of the part, an absent part read as `{}`), `open` the
+predecessors that are neither completed nor not applicable. The view lists both (the jump to a field is that of the
+shared transition bar). Nothing is written.
+
+*The other refusals:* `409` `{"outcome": "STAGE_NOT_APPLICABLE", "stage"}` for a stage whose condition is false (it cannot be
+completed, reopened is no act of it either); `409` `{"outcome": "STAGE_STATE", "stage", "status"}` for completing a
+completed stage or reopening one that is not (`status` is its status); `409 DOCUMENT_RELEASED` `{"tag"}` for a released
+incident; `404 NOT_FOUND` for a stage id the document type does not declare; `403 FORBIDDEN` without `edit`.
+
+*Step-up.* The stage `review` declares `complete: {step-up: true}`: its completion answers `403 STEP_UP_REQUIRED` with
+`stepUp` (the address of the confirmation, or, with local users, the password dialog) like a release, and `401
+INVALID_CREDENTIALS` for a wrong password; the member `password` of the body carries the confirmation
+(<<_the_step_up_handler>>). The other stages and every reopen go out without a question. The margin line of the control
+is that of the release.
+
+[#_incident_save]
+=== Creating and Saving
+
+`POST /api/v1/documents/isms-incidents-2026`, the first save of a new incident (the generic create, the example is
+shortened):
+
+[source,json]
+----
+{ "kind": "incident",
+  "parts": {
+    "data":   { "fields": { "/title": "Suspicious logins from the VPN gateway" } },
+    "triage": { "fields": { "/categories": ["security-incident"], "/detected-at": "2026-11-26T08:05:00Z",
+                            "/aware-at": "2026-11-26T08:30:00Z", "/affected-services": ["service:identity-provider"] } } } }
+----
+
+answers `201`
+
+[source,json]
+----
+{ "outcome": "CREATED", "id": "01JZA8F0H2K4M6P8R0T2W4Y6A8", "repository": "isms-incidents-2026",
+  "address": "/incidents/2026/01JZA8F0H2K4M6P8R0T2W4Y6A8", "state": "draft", "version": 1, "at": "2026-11-26T09:41:00Z",
+  "parts": { "data":   { "blob": "e51a7d3", "savedAt": "2026-11-26T09:41:00Z", "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example" } },
+             "triage": { "blob": "3a8f10c", "savedAt": "2026-11-26T09:41:00Z", "savedBy": { "pseudonym": "p-4c1a9e", "name": "Alex Example" } } } }
+----
+
+The year of the address is the repository's: the first save needs no `aware-at` and checks none against the year
+(<<_decided_incidents>>). Only `/title` is mandatory (`{"part": "data", "pointer": "/title", "code": "REQUIRED"}`); the other
+mandatory fields are asked for by the completion of the stage and by the transition. The event `document-created` (`kind`
+`incident`) reaches the other tabs.
+
+*A save and a draft* are the generic requests with the parts in one body; `fields` maps a JSON Pointer into the value of the
+part to its new value, the properties of the top level of the part as a whole (a list or a section as a whole, as everywhere):
+
+[source,json]
+----
+{ "parts": {
+    "notifications": { "blob": "9d2b6e4", "fields": {
+        "/supervisory-authority": { "sent-at": "2026-11-26T09:45:00Z", "recipient": "State data protection authority",
+                                    "channel": "reporting-portal", "reference": "2026-1187" } } },
+    "response": { "blob": "c0a3f55", "fields": { "/actions": [ { "kind": "containment", "what": "Block the exposed log index" } ] } } } }
+----
+
+* *`completion` is not a field of a save.* A save or a draft that sets, changes or removes a pointer below `/completion` of
+  a part answers `422 VALIDATION` with `{"part", "pointer": "/completion", "code": "READ_ONLY"}` and writes nothing: only
+  *complete* and *reopen* write it. This holds for every client, an agent included (xref:../concepts/staged-documents.adoc#_agents[Staged
+  Documents, Agents]).
+* *A completed stage is read-only until it is reopened.* A save or a draft with a field of a completed stage answers `409
+  {"outcome": "STAGE_LOCKED", "stages": ["triage"]}`, listing every completed stage the body touches; nothing is written,
+  not even the other parts. A stage that is `not-applicable` can be saved (the data are kept, never checked).
+* *The conflict is per part,* as for every document, and per top-level field within it
+  (`{"part": "notifications", "blob", "fields": [{"pointer": "/supervisory-authority", "own", "other", "by"}]}`); the
+  completion of another person is such a conflict for the part, not a field.
+* *The refusals* are those of the generic save with the part, for example
+  `{"part": "triage", "pointer": "/affected-services/0", "code": "REFERENCE_NOT_FOUND"}`,
+  `{"part": "notifications", "pointer": "/supervisory-authority/sent-at", "code": "FORMAT"}`,
+  `{"part": "triage", "pointer": "/completion", "code": "READ_ONLY"}`.
+* *The answers move the clocks:* a save of `/triage/aware-at` or of `/notifications/…` changes `deadlines` and `stages` at the next
+  read; the answer carries no deadlines (the web app reads the incident again, as after every save).
+
+[#_incident_submit_release]
+=== Submitting and Releasing
+
+`POST …/transitions/incident.submit` answers `200 {"outcome": "TRANSITIONED", "state": "in-review", "version": 1, "at"}` when
+every applicable stage is completed, and otherwise `422`
+
+[source,json]
+----
+{ "outcome": "STAGES_OPEN",
+  "stages": [ { "stage": "triage", "missing": [] },
+              { "stage": "review", "missing": ["/review/root-causes", "/review/lessons"] } ] }
+----
+
+with every applicable stage that is not completed and its missing mandatory fields (a stage that is `open` and complete is
+listed with `"missing": []`: it only needs its sign-off). `POST /api/v1/releases/isms-incidents-2026/{id}` answers the
+same refusal when a stage was reopened after the submission, else `200`
+
+[source,json]
+----
+{ "outcome": "RELEASED", "tag": "incidents/01JZ9V7P9S1T3W5Y7A9C1E3G5J/v1", "at": "2026-11-26T10:05:00Z",
+  "report": "incidents/01JZ9V7P9S1T3W5Y7A9C1E3G5J/report.adoc" }
+----
+
+The release is the shared flow of the release view; `CHANGED_SINCE_REVIEW`, `DOCUMENT_RELEASED`, `STEP_UP_REQUIRED` and
+`INVALID_CREDENTIALS` are those of <<_outcomes_of_the_document_requests>>. The diff `GET …/diff?from=released` is the generic one;
+for an incident `from` is `null`, the `sections` are the parts in the order `data`, `triage`, `privacy-assessment`, `response`,
+`notifications`, `review` (the stages of the declaration; a stage that does not apply is left out), and the web app groups
+the changes of a part by the first segment of the pointer. The release page shows the report beside it (<<_incident_report>>).
+
+[#_incident_report]
+=== The Report
+
+`GET /api/v1/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/report`:
+
+[source,json]
+----
+{ "repository": "isms-incidents-2026", "id": "01JZ9V7P9S1T3W5Y7A9C1E3G5J", "title": "Credential stuffing against the login form",
+  "source": "generated", "asOf": "2026-11-26T10:00:00Z",
+  "adoc": "= Credential stuffing against the login form\n\n== Summary\n\n…" }
+----
+
+* `source` is `generated` for an incident that is not released: `report.adoc` freshly generated by the template from the saved
+  working state, a preview that is never committed (it may be incomplete); `committed` for a released one or a revision: the
+  `report.adoc` that the release committed, which the CI check holds equal to a fresh generation (AUN-IR-1).
+* The `adoc` is an AsciiDoc document of at most 65,536 bytes. The web app renders it with `POST /api/v1/render/asciidoc`, like
+  every AsciiDoc text, and shows it as a read-only document; it makes no download. A PDF for authorities is made from the
+  committed file outside the web app (the concept names no export).
+* The template joins the data and the fragments in a fixed order (reproducible generation, AUN-IR-1): the title, a summary
+  table (state, severity, the three times, the classification), the affected services with the derived protection needs,
+  the deadlines table with the status of every deadline and the time it was sent (a missed one is a row like another, marked
+  `MISSED`), the notifications, one section per stage that applies in the order of the declaration, then the narrative
+  (course, root-cause analysis, lessons). Texts that the template writes (headings, labels) are in English in the file; the
+  web app does not translate a generated report.
+
+[#_incident_derivation]
+=== Where the Figures Come From
+
+Every figure of the lens is derived from the parts; the mock's files must agree with each other. For an incident `i` and
+the instant `asOf`:
+
+* *`status` of a stage* is `not-applicable` when its `when` is false for the data of the part `triage` (a field that is
+  `true`, or, if it is no boolean, present; a stage without `when` always applies), `completed` when the part holds
+  `completion`, else `open`. `unanswered` is true for a `not-applicable` stage none of whose condition fields is present.
+  `missing` is, for an `open` stage, the list of its `required` fields that are absent from the part, in the order of the
+  schema, as `/<part>/<field>`; `blockedBy` its predecessors that are `open`; `predecessorReopened` is true for a `completed`
+  stage with an `open` stage among its ancestors by `after`.
+* *The deadlines* are those of <<_incident_deadlines>>; `deadlines.open`, `.met` and `.missed` of a list row count them by
+  status, `next` is the `OPEN` deadline with a date and the earliest `due`.
+* *`withMissedDeadline`* of a year is the number of its incidents with at least one `MISSED` deadline; `open` the number of
+  incidents that are not released; `incidents` the number of rows of the year.
+* *`state`* of a row is the workflow state; a released incident has `version` 1, `frozen` true and the `release` of its tag.
+  `frozen` is `false` in `draft` and `in-review`.
+* *`protection`* is derived as in <<_incident_read>>.
+* *`awareAt`, `resolvedAt`, `severity`, `categories`, `personalDataAffected`, `nis2Significant`* of a row are the values of the
+  parts, `null` when absent. The year of every `aware-at` is the year of the repository.
+* *The Due items* are those of <<_incident_deadlines>>.
+
+[#_incident_sources]
+=== Sources of the Deadline Rules
+
+The periods are those of the concept (xref:../concepts/category-incident-reports.adoc#_the_deadline_clock[Incident
+Reports, The Deadline Clock]) and of AUN-IR-2; this step adds no legal statement to them. What was checked against its source
+while this section was written, and what was not:
+
+[cols="2,3,2"]
+|===
+|Statement |Source |Checked
+
+|The early warning within 24 hours, the notification within 72 hours of becoming aware of a significant security incident,
+and the final report within one month after the 72-hour notification, are fixed for Germany by § 32 BSIG; after a progress
+report ("Fortschrittsmeldung") for an incident that is still ongoing, the final report ("Abschlussmeldung") follows after the
+incident was handled conclusively (§ 32 para. 2)
+|https://www.gesetze-im-internet.de/bsig_2025/__32.html[§ 32 BSIG]
+|Yes, the wording of paras. 1 and 2, with the page of gesetze-im-internet.de (the law calls them "Meldung", not "report")
+
+|The notification of a personal data breach within 72 hours of becoming aware of it, with reasons for a delay, and the
+documentation of every breach
+|https://eur-lex.europa.eu/eli/reg/2016/679/oj[Regulation (EU) 2016/679], Art. 33(1) and (5)
+|No: EUR-Lex returned no text to the tool of this change. Repeated from the concept; open for the owner
+
+|The early warning within 24 hours, the notification within 72 hours, the intermediate report on request, the final report no
+later than one month after the notification, and the progress report for an incident still ongoing
+|https://eur-lex.europa.eu/eli/dir/2022/2555/oj[Directive (EU) 2022/2555], Art. 23(4)
+|No, as above; open for the owner
+|===
+
+The Art. 33(1) exception (no notification when the breach is unlikely to result in a risk to the rights and freedoms of natural
+persons) is not part of the rules: AUN-IR-2 computes the deadline whenever personal data are affected (<<_decided_incidents>>,
+for the owner).
+
+
 [#_the_step_up_handler]
 == The Step-Up Handler
 
@@ -2990,8 +4102,8 @@ shape of the web app's handling.
 |above
 
 |Completion of a stage (the stage that closes the incident review)
-|`POST /api/v1/documents/{repository}/{id}/stages/{stage}/complete` (PROVISIONAL, added with the incident reports)
-|with its step
+|`POST /api/v1/documents/{repository}/{id}/stages/{stage}/complete` (PROVISIONAL, <<_incident_stages_requests>>)
+|*Incident reports* above
 
 |Save of the configuration
 |The request that writes the configuration repository (PROVISIONAL, added with the configuration editor)
@@ -3036,7 +4148,8 @@ the dialog and is the view's. The password is never kept, logged or shown
 the view's own refusal, or `handled`) and `StepUpDialog.svelte` (the dialog and the notice). The release, the submit
 for review (`transition`) and the save for everyone of a SAMM practice send through it; `POST
 /api/v1/documents/{repository}/{id}/transitions/{t}` and `.../save` carry the member `password` like the release. The
-rows of stage completion, configuration save and category activation use it when their steps add them.
+row of stage completion (<<_incident_stages_requests>>) uses it, and the rows of configuration save and category activation
+use it when their steps add them.
 
 *The line in the margin* ("You confirm your identity once more before the release.") is shown whenever `stepUp` is not
 `off` and the control asks; the control itself names the domain act only
@@ -3890,3 +5003,136 @@ countermeasure editor should be the form kit's (21), and whether removing a thre
 start of a review should be offered in every state (24). With the recipe wizard: whether it is a sheet in the lens and not a
 `WizardPage` (27), whether the owner should be prefilled by the server (31), and whether the create should ask for a
 confirmation (32).
+
+[#_decided_incidents]
+*Decided provisionally* with the incident reports (UC-IR-1, UC-IR-2, UC-IR-3), so that no screen is blocked; the owner may
+change each one. The bodies and addresses are in <<_incident_requests>>:
+
+. *The stages are parts, and the field paths of the deadlines move into them.* AUN-IR-1 to AUN-IR-3 still describe one
+  `document.yaml` with `aware-at`, `personal-data-affected` and `nis2-significant` at its root; the concept defers the
+  change that moves them into the parts. This step takes it provisionally: `title` stays in `document.yaml` (the part
+  `data`), every other field lives in the part of its stage (`/triage/aware-at`, `/notifications/supervisory-authority`),
+  and the six deadline rules read those paths (<<_incident_deadlines>>). The specification (AUN-IR-1 to AUN-IR-3) is not
+  changed by this step; it follows when the owner accepts the layout.
+. *The addresses.* The lens *Incidents* gains `/incidents/{year}/new` (`incidents.new`) before `incidents.incident`; `new` is
+  reserved as an incident; `incidents.incident` admits `at` and `stage`; the placeholder pattern `incident` is case sensitive
+  and refuses `new`. The name `stage` is new in `queries` of `canonical-addresses.json`. A person who returns from the
+  confirmation of a stage lands on the same tab.
+. *Three domain requests and the generic lifecycle.* The years (`GET /api/v1/incidents`), the incidents of a year with their
+  stage statuses and deadlines (`GET /api/v1/incidents/{year}`) and an incident by its address, with `stages`, `deadlines` and
+  `protection` (`GET /api/v1/incidents/{year}/{incident}`), because the address names the year and the incident, never the
+  repository, and the index of the lens needs figures the generic list does not carry. The lifecycle (create, save, draft,
+  submit, release, revisions, diff) is the generic requests of the repository `isms-incidents-<year>`; only the completion
+  and the reopening of a stage and the report are requests of their own.
+. *One kind, one repository per year.* The schema answer names `isms-incidents-<year>` as the repository of the kind; the
+  web app learns the repositories from `GET /api/v1/incidents`. This does not close the open question of the library
+  (a kind is bound to one repository alias, GDR-FORMS-1).
+. *The id of an incident is a ULID,* as of every document, and is the address segment; the earlier example `inc-0007` was a
+  placeholder. There is no incident number. A readable label is the `title`.
+. *A stage is a part with its own `completion`.* `completion` is `{at, by}` in the value of the part, `by` a pseudonym; it is
+  `readOnly`. A save or a draft that touches it answers `422 VALIDATION` with the code `READ_ONLY`; a write into a
+  completed stage answers `409 STAGE_LOCKED` (new outcome) and writes nothing. Both are the rules of the concept
+  (<<_incident_save>>).
+. *Completion and reopening are two requests,* `POST …/stages/{stage}/complete` and `…/reopen`, on the document of the
+  generic lifecycle (the path is the one the step-up handler already lists). The answers are `COMPLETED` and `REOPENED` with
+  the new blob id of the part and the statuses of the stages afterwards. The optional member `blob` makes a completion
+  fail with the existing `CHANGED_SINCE_REVIEW` when the part was saved since the form loaded it.
+. *A refused completion names both causes.* `422 STAGE_NOT_COMPLETABLE` (new outcome) with `missing` and `open`; it does not
+  reuse `MANDATORY_FIELDS_MISSING`, because a completion can also fail for open predecessors alone. The new outcomes
+  `STAGE_NOT_APPLICABLE` and `STAGE_STATE` (`409`) answer a stage that does not apply and a completion or reopening that is
+  no act of the stage's status.
+. *Submitting and releasing answer `STAGES_OPEN`* (new outcome, `422`) instead of `MANDATORY_FIELDS_MISSING`: the staged
+  document's rule is that every applicable stage is completed, which includes its mandatory fields, so the refusal is the
+  list of the applicable stages that are not completed, each with its missing fields. It satisfies AUN-IR-3 ("a list of the
+  missing fields"), grouped by stage. A stage not applicable is never listed. The outcome `MANDATORY_FIELDS_MISSING` stays for
+  the documents that have no stages.
+. *Step-up asks for the completion of `review` only,* as the declaration of the concept says (`complete: {step-up: true}`);
+  reopening a stage asks for none. The reasoning is the concept's: the review closes the file.
+. *The right is `edit` to complete and reopen,* `approve` to release, on the repository of the year; the concept leaves a
+  right of its own for a stage (for example the data protection officer for the assessment) open. The mock gives the user of
+  the profile `workshop` the right `approve` on `isms-incidents-2026` and `read` on `isms-incidents-2025` (the year is
+  released), so that the release of a review can be walked through; `release` keeps no right on the incident repositories.
+. *The stages travel in the read.* The incident read carries, per stage, its declaration (`after`, `when` as data,
+  `narrative`, `stepUp`), its derived `status`, `completion`, `missing` and `blockedBy`, the flag `predecessorReopened` (a
+  completed stage that has an open stage among its ancestors) and `unanswered` (a stage that does not apply only because the
+  field of its condition is empty), so that the tabs, their markers and the disabled *Complete* need no second request. The
+  sentence of the condition is a catalogue message, not data.
+. *A stage whose condition field is absent is `not-applicable`* (a boolean that is absent is false), with `unanswered: true`,
+  so that the tab says the question is open and the stage "applies when …", and not that the stage was considered and does
+  not apply.
+. *The deadline rules are data with the grammar AUN-IR-2 describes,* and are held by the server: `when` is a field that is
+  `true`, or, if it is no boolean, present; the due time is a time field plus a period; a deadline whose time field is empty
+  is `OPEN` with `due: null`. The grammar is not offered by the library yet (GDR-FORMS-6 has three forms); the register
+  fixes the answer, not the file syntax.
+. *A deadline sent late stays `MISSED`.* `MET` needs `sent-at` not after `due`; `MISSED` is `asOf` strictly after `due`, or a
+  late `sent-at`, and the row carries `sentAt` so that the page says it was sent late. AUN-IR-2 says a missed deadline stays
+  visible; it does not say whether late sending changes the status.
+. *The clock stops at the release.* A released incident and every revision compute `deadlines` at the instant of their
+  release, so that `report.adoc` is reproducible (AUN-IR-1); a deadline that was open then stays open in the record. The
+  working state is computed at the time of the read, and the web app reads the incident again when it comes back to it:
+  there is no event for the passing of a due time and no reminder (reminders are runtime state, not persistence).
+. *The Due lens lists the deadlines that are still a duty.* One item of the kind `deadline` per `OPEN` deadline with a date
+  and per `MISSED` deadline that was not sent at all, of an incident that is not released; a late-sent one is not listed. The
+  item carries the new member `deadline` (`rule`, `status`), the address of the incident with `?stage=notifications`, and the
+  due date in UTC. An incident in review is no item of the kind `review` in this step.
+. *An incident is released once.* The document type is not released more than once (a threat model is): the release freezes
+  it (`frozen`, `DOCUMENT_RELEASED` for every write), and a change after the release is a new incident that names the earlier
+  one in the ticket or a risk link. Whether a corrected report may be released as the next version of the same incident is
+  an owner question.
+. *The protection needs are derived and not stored.* AUN-IR-1 lists `protection-needs` among the fields of the file; a
+  stored copy would drift from the catalog (AUN-DIR-5). The read carries the maximum per dimension over the effective
+  needs of the affected services and, per dimension, the first service that decides it; the released report records them
+  as of the release.
+. *The notifications are named members of the part `notifications`,* the names of AUN-IR-2 (`supervisory-authority`,
+  `nis2-early-warning`, …), each `{sent-at, recipient, channel, reference}`, plus `data-subjects` (GDPR Art. 34, no deadline in
+  the rules) and a list `others`; `nis2-intermediate-reports` is a list whose entries carry the `due` that the authority
+  asked for. The channels are `reporting-portal`, `email`, `phone`, `post`, `other`. The recipient is a short text (an
+  organisation or an office), not a catalog entry: the authorities are not in the catalog of external parties and the
+  application connects to none of them. The table of the lens is these members.
+. *The privacy assessment has the fields the concept names,* the data subjects by category with approximate numbers, the
+  approximate number of records, the level of the risk (`unlikely`, `risk`, `high-risk`), the assessment as AsciiDoc and the
+  two decisions, to notify the authority (Art. 33(1)) and to inform the data subjects (Art. 34(1)), plus an optional
+  reason for a delay. The two decisions switch no deadline: see the owner question below.
+. *The lists of values are provisional:* the severity (`low`, `medium`, `high`, `critical`), the kind of an action
+  (`containment`, `recovery`, `other`), the category of a root cause (`configuration`, `software-defect`, `process`,
+  `access-control`, `third-party`, `other`), the classification (`security-incident`, `personal-data-breach`). The bounds are
+  those of the schema above.
+. *The narrative is part of the part `review`.* The three AsciiDoc fragments of the review stage are joined by the server into
+  its value, so that the form edits them as `x-asciidoc` strings and the stage's mandatory fields include them; their files
+  stay `narrative/*.adoc`.
+. *The first save needs only a title;* the address's year chooses the repository and the server checks no time against it. A
+  report started on 2 January for an awareness of 31 December is a decision of the person (the year of awareness is the
+  rule of AUN-IR, in the repository's name); the new page offers no check of it.
+. *The report is read, not downloaded:* `GET …/report` answers the AsciiDoc source of the generated `report.adoc`
+  (`generated` for the working state, `committed` for a release), the web app renders it through the render request, and no
+  PDF or export is part of the web app. The text the template writes is English.
+. *The diff of a staged document is by part, then by section:* the generic diff, whose parts are the stages (`from` is `null`,
+  every field an addition); the release view groups by the first segment of the pointer. A stage that is `not-applicable` is
+  left out.
+. *The labels are catalogue keys relative to the document:* `category.incident-reports.incident.field.<part>.<path>`
+  (`triage.severity`, `notifications.supervisory-authority.sent-at`, `title`), the stage `category.incident-reports.stage.<id>`
+  with `.guidance` and `.when`, a deadline `category.incident-reports.deadline.<rule>` with `.basis`. The app's own catalogue
+  carries them, as for the threat models.
+. *No new event.* A completion is a save: `document-saved` with `part` the stage and `by`; a submit and a release are
+  `document-transitioned`; the creation is `document-created`.
+. *The years are the repositories the user may read,* from `GET /api/v1/incidents`; `current` says whether the year of
+  today has one. Without a right on any, the list is empty and not `403`. The lens then shows the empty state.
+. *The new incident is a sheet of the lens* (the title and the triage form), not a page of its own: the person keeps the list
+  of the year beside it; nothing is stored before the first save, so there is no draft of an incident that does not exist.
+. *Reading while the Git server is unreachable* serves the years, the lists, the incidents and the reports from the last
+  fetched state; the writes answer `503 GIT_UNAVAILABLE` and keep the draft, as everywhere.
+
+For the owner: whether the specification may follow the layout of point 1 (the stages as parts, the paths of the
+deadlines in them, which moves AUN-IR-1 to AUN-IR-3 and the deadline inputs of the concept); whether a kind may be bound to
+a repository per year (4); whether `STAGES_OPEN` may replace `MANDATORY_FIELDS_MISSING` for a staged document (9) and
+whether the completion of a stage needs its own right (11); whether reopening a stage should ask for step-up, since it
+undoes a sign-off (10); whether a deadline sent late should read `MISSED` (15) and whether the clock should stop at the
+release (16); whether the Due lens should list the deadlines as in point 17 and the incident in review; whether a corrected
+report of a released incident is the next version of the same incident (18); whether the protection needs should be stored
+at the release (19); the vocabularies of the points 20 to 22, above all the severity scale, which belongs to the incident
+process of the organisation; whether the recipient of a notification should be a catalog entry (20); whether an assessment
+that finds the breach unlikely to result in a risk (`notify-authority` is `false`) should switch the deadline `gdpr-art33` off,
+as Art. 33(1) says the notification is not due then (21; the rules of AUN-IR-2 do not know it); whether the web app should
+check the year of the awareness against the repository (24); whether a generated report may be in English only (25); and
+the two statements of <<_incident_sources>> that the tool of this change could not check against EUR-Lex (GDPR Art. 33,
+NIS2 Art. 23(4)), which the owner should verify before the rules are called `SPECIFIED`.

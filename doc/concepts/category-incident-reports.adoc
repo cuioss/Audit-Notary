@@ -220,6 +220,23 @@ them to the ISMS, the threat models and the notification duties. The gap is the 
 . Deferred: proposing further affected services along `dependsOn` of the service catalog.
 . Deferred: evaluations across incidents (median times to detection and resolution, recurring root causes).
 
+Decided provisionally with the incident reports (UC-IR-1, UC-IR-2, UC-IR-3), recorded with the bodies in
+xref:../specification/rest-api.adoc#_decided_incidents[REST API Register, Open Questions]; the owner may change each one:
+
+. The stages are parts of the document (the layout of <<_asciidoc_is_the_output_not_the_truth>>), and the deadline rules read
+  their field paths there (`/triage/aware-at`, `/notifications/supervisory-authority`); the specification (AUN-IR-1 to
+  AUN-IR-3) does not follow yet, which is the change the note above defers. This settles the first two open questions for
+  now: the schema has one object per stage, with the mandatory fields of the concept, and the delivered stages are the five.
+. A deadline is computed, never stored, at the time of the read, and at the time of the release for a released incident; a
+  notification sent after its due time leaves the deadline `MISSED` and records when it was sent. The Due lens lists a
+  deadline that is open or missed and not sent, not one that was sent late.
+. The notifications are one member each of the part `notifications`, named as the deadline rules (`supervisory-authority`,
+  `nis2-early-warning`, …), with the time, the recipient as a short text, the channel and the reference of the authority.
+. A refused completion or submission names the missing mandatory fields by stage and the stages that are not completed; the
+  review stage asks for step-up, reopening a stage does not.
+. An incident is released once and frozen; the protection needs are derived from the affected services and not stored; the
+  report is generated from the saved state as a preview and committed with the release.
+
 == Related
 
 * xref:staged-documents.adoc[Staged Documents] — stages, tabs and sign-offs of the incident file

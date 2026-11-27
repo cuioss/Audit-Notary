@@ -299,6 +299,20 @@ xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register, Op
   the review date.
 . A review of a released model starts with an act that prefills the review date with today; the first save starts the next version.
 
+Decided provisionally with the incident reports (UC-IR-1, UC-IR-2, UC-IR-3), recorded with the bodies in
+xref:../specification/rest-api.adoc#_decided_incidents[REST API Register, Open Questions]; the owner may change each one:
+
+. The lens *Incidents* has the years as its first column, the incidents of the year with their stage statuses and deadlines
+  as its second, and the incident sheet beside them: the header with the state, the deadlines and the status of every stage,
+  one tab per stage (`?stage=` selects it), a stage that does not apply greyed with its condition, a completed stage marked
+  when a stage before it was reopened, and the controls *Complete* and *Reopen* with the missing fields and the open
+  predecessors named when a completion is refused.
+. The deadline clock is a sober table row per deadline with its due time, status and the time it was sent; a missed deadline
+  is marked and stays visible, also in the released report. The notifications are a table of who was notified, when and by
+  which channel.
+. A new incident is a sheet at `/incidents/<year>/new`. The release page shows the diff by stage, then section, and the
+  generated report beside it.
+
 == Related
 
 * xref:authentication-and-identity.adoc[Authentication and Identity]

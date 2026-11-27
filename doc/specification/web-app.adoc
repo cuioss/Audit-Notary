@@ -106,6 +106,10 @@ Provisionally (decided with the threat models, xref:rest-api.adoc#_threat_model_
 Requests]): the lens *Threat models* gains `/threat-models/<service>/new` (the recipe wizard, with the allowed query `recipe`);
 the segment `new` is reserved as a model, and the address of a model admits `at`.
 
+Provisionally (decided with the incident reports, xref:rest-api.adoc#_incident_addresses[REST API Register, Incident Report
+Requests]): the lens *Incidents* gains `/incidents/<year>/new` (a new incident); the segment `new` is reserved as an incident,
+the id of an incident is a ULID (case sensitive), and the address of an incident admits `at` and `stage` (the tab).
+
 Three more addresses are shown without the shell: `/login` (local users), `/signed-out` and `/login-problem`
 (provisional, xref:rest-api.adoc#_addresses_outside_the_shell[REST API Register, Addresses Outside the Shell]). They are
 in `canonical-addresses.json` as `outsideShell`, so the web app routes them and the check of a login's `return` refuses
