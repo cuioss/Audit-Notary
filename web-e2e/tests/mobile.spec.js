@@ -1137,19 +1137,24 @@ test.describe('at 390 px', () => {
     await expectNoSideways(page);
   });
 
-  test('the sheet of a model fits: the diagram is drawn within the screen, the tables stack and the acts are targets', async ({
+  test('the sheet of a model fits: the diagram scrolls in its own region, the tables stack and the acts are targets', async ({
     page,
     request,
   }) => {
     await useScenario(request, 'workshop');
     await loginToSheet(page);
     await expectNoSideways(page);
-    // The diagram is an image of its own size, narrowed to the screen, never wider.
+    // The diagram keeps the size of its image so that its text stays readable; the region that scrolls it fits the
+    // screen, can be reached by keyboard and says that it scrolls. The page itself does not scroll sideways.
     const image = page.getByTestId('diagram-image');
     await image.scrollIntoViewIfNeeded();
-    const box = await image.boundingBox();
-    expect(box.width).toBeLessThanOrEqual(390);
-    expect(box.width).toBeGreaterThan(200);
+    const region = page.getByRole('group', { name: 'Diagram' });
+    const regionBox = await region.boundingBox();
+    expect(regionBox.width).toBeLessThanOrEqual(390);
+    expect(regionBox.width).toBeGreaterThan(200);
+    expect((await image.boundingBox()).width).toBeGreaterThan(regionBox.width);
+    await expect(region).toHaveAttribute('tabindex', '0');
+    await expect(page.getByTestId('diagram-scrolls')).toBeVisible();
     await expectStacked(page.getByTestId('threats-table'));
     await expectStacked(page.getByTestId('mitigations-table'));
     await expectTarget(page.getByTestId('start-review'));

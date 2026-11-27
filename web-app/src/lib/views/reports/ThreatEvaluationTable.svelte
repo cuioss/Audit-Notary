@@ -59,7 +59,7 @@
   let services = $derived(evaluation.models.length + evaluation.withoutModel.length > 0);
 </script>
 
-<div class="evaluation" data-testid={testId}>
+<div class="evaluation" class:in-column={offerNew} data-testid={testId}>
   <section class="part" aria-labelledby="{testId}-models">
     <h2 class="part__title sr-only" id="{testId}-models">{$t('reports.threat.table')}</h2>
     {#if evaluation.models.length === 0}
@@ -255,6 +255,12 @@
     font-weight: var(--weight-semibold);
   }
 
+  /* In the lens the column head is the title of the page; a part under it stays smaller than that title. */
+  .in-column .part__title {
+    font-size: var(--text-lg);
+    line-height: var(--line-height-lg);
+  }
+
   .summary {
     color: var(--color-text-primary);
     font-weight: var(--weight-medium);
@@ -293,5 +299,12 @@
     font-family: var(--font-serif);
     font-size: var(--text-md);
     font-weight: var(--weight-semibold);
+  }
+
+  /* Where the table has the room, a name of a row is read whole and the id of its model is never broken at its hyphen. */
+  @container (min-width: 56rem) {
+    .evaluation :global(tbody th) {
+      white-space: nowrap;
+    }
   }
 </style>

@@ -281,7 +281,10 @@
           {:else}
             <span class="meta">{$t('threats.mitigation.status.none')}</span>
           {/if}
-          <span class="meta">{$t('threats.mitigation.reduction')}: {entry.riskReduction}</span>
+          <span class="measure">
+            <span class="meta">{$t('threats.mitigation.reduction')}</span>
+            <span class="measure__value">{entry.riskReduction}</span>
+          </span>
         </span>
       {:else}
         <span class="cell cell--chips">
@@ -437,6 +440,18 @@
   .meta {
     font-size: var(--text-sm);
     color: var(--color-text-muted);
+  }
+
+  /* A figure stands under its name, so a long name in either language never leaves the figure trailing behind it. */
+  .measure {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .measure__value {
+    font-family: var(--font-serif);
+    font-weight: var(--weight-semibold);
+    font-feature-settings: 'lnum' 1;
   }
 
   .errors {

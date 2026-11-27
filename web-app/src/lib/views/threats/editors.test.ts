@@ -259,7 +259,7 @@ describe('CountermeasureEditor', () => {
     const first = screen.getByTestId('mitigation-M-01').closest('tr') as HTMLElement;
     expect(first).toHaveTextContent('Not stated');
     expect(first).toHaveTextContent('No issue named');
-    expect(first).toHaveTextContent('Risk reduction: 50');
+    expect(first).toHaveTextContent('Risk reduction 50');
     const second = screen.getByTestId('mitigation-M-02').closest('tr') as HTMLElement;
     expect(second).toHaveTextContent('Implemented');
     expect(second).toHaveTextContent('Done in the filter.');

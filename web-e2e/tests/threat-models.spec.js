@@ -421,7 +421,7 @@ test.describe('the page of a service (UC-TM-1, UC-TM-2)', () => {
     await loginToThreats(page, serviceAddress('report-scheduler'));
     await useLanguage(page, 'de');
     await expect(page.getByTestId('continue-quick-start')).toHaveText(
-      'Rezept Quick start fortsetzen',
+      'Anleitung Quick start fortsetzen',
     );
     await expect(page.getByTestId('new-threat-model-link')).toHaveText('Neues Bedrohungsmodell');
     await expect(page.getByTestId('service-no-models')).toContainText('noch kein Bedrohungsmodell');

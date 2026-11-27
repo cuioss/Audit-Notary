@@ -426,6 +426,11 @@
   let diagramSource = $derived(
     model.diagram && isDiagramUrl(model.diagram.dataUrl) ? model.diagram : null,
   );
+  /** The width the diagram has on the page; a diagram wider than that is scrolled, and the sheet says so. */
+  let diagramBox = $state(0);
+  let diagramScrolls = $derived(
+    diagramSource !== null && diagramBox > 0 && diagramSource.width > diagramBox,
+  );
 </script>
 
 <Sheet testId="threat-model-sheet" marginLabel={$t('sheet.margin')}>
@@ -565,7 +570,9 @@
       <div>
         <dt>{$t('threats.review.due')}</dt>
         <dd>
-          {#if review.status === 'overdue'}
+          {#if reading}
+            <!-- An earlier state was superseded: its due date is a fact of its time, not a deadline that asks for anything. -->
+          {:else if review.status === 'overdue'}
             <ReasonBadge
               tone="danger"
               label={$t('reports.due.overdue', { count: -(review.dueInDays ?? 0) })}
@@ -585,7 +592,7 @@
             />
           {/if}
           {#if review.reviewDue}
-            <span class="meta">{formatDate(review.reviewDue, $currentLocale)}</span>
+            <span class:meta={!reading}>{formatDate(review.reviewDue, $currentLocale)}</span>
           {/if}
         </dd>
       </div>
@@ -638,14 +645,29 @@
     <h2 class="part__title" id="tm-diagram">{$t('threats.diagram.title')}</h2>
     {#if diagramSource}
       <figure class="diagram">
-        <img
-          class="diagram__image"
-          src={diagramSource.dataUrl}
-          alt={diagramAlt}
-          width={diagramSource.width}
-          height={diagramSource.height}
-          data-testid="diagram-image"
-        />
+        <!-- The diagram keeps its own size so that its text stays readable; a narrow sheet scrolls it, by keyboard too. -->
+        <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+        <div
+          class="diagram__scroll"
+          role="group"
+          aria-label={$t('threats.diagram.title')}
+          tabindex="0"
+          bind:clientWidth={diagramBox}
+        >
+          <img
+            class="diagram__image"
+            src={diagramSource.dataUrl}
+            alt={diagramAlt}
+            width={diagramSource.width}
+            height={diagramSource.height}
+            data-testid="diagram-image"
+          />
+        </div>
+        {#if diagramScrolls}
+          <figcaption class="meta" data-testid="diagram-scrolls">
+            {$t('threats.diagram.scrolls')}
+          </figcaption>
+        {/if}
       </figure>
     {:else}
       <p class="meta" data-testid="diagram-none">{$t('threats.diagram.none')}</p>
@@ -810,6 +832,13 @@
     border-block-start: 1px solid var(--color-border);
   }
 
+  /* The head of the sheet ends in a rule of its own: a part right under it does not draw a second one. */
+  :global(.sheet-head) + :global(dialog) + .part {
+    margin-block-start: 0;
+    padding-block-start: 0;
+    border-block-start: none;
+  }
+
   .part__title {
     font-family: var(--font-serif);
     font-size: var(--text-xl);
@@ -849,16 +878,33 @@
     gap: var(--space-2);
   }
 
+  /* A disabled act and its reason stand at the start of the line like the enabled act, not in the middle of their box. */
+  .review-act :global(.btn-with-reason) {
+    align-items: flex-start;
+  }
+
   .diagram {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
     margin: 0;
+  }
+
+  .diagram__scroll {
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+  }
+
+  .diagram__scroll:focus-visible {
+    outline: 2px solid transparent;
+    box-shadow: var(--focus-ring);
   }
 
   .diagram__image {
     display: block;
-    max-inline-size: 100%;
+    max-inline-size: none;
     block-size: auto;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
   }
 
   .status {

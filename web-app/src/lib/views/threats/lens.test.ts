@@ -174,6 +174,10 @@ describe('the sheet of a model', () => {
     expect(image.getAttribute('src')).toMatch(/^data:image\/svg\+xml;base64,/);
     expect(image).toHaveAccessibleName(/Customer browser, Payment API/);
     expect(image.tagName).toBe('IMG');
+    // The diagram keeps its size; the region that scrolls it can be reached by keyboard and has a name.
+    const region = screen.getByRole('group', { name: 'Diagram' });
+    expect(region).toHaveAttribute('tabindex', '0');
+    expect(region).toContainElement(image);
   });
 
   it('shows a threat that was carried into the risk register as a link, written by no one here', async () => {
@@ -225,6 +229,9 @@ describe('the sheet of a model', () => {
     expect(screen.queryByTestId('save-everyone')).toBeNull();
     expect(screen.queryByTestId('start-review')).toBeNull();
     expect(screen.queryByTestId('transition-bar')).toBeNull();
+    // A superseded state keeps its due date as a fact, with no deadline mark.
+    expect(screen.queryByTestId('review-status')).toBeNull();
+    expect(screen.getByTestId('review-facts')).toHaveTextContent('Nov 27, 2025');
     // v1 held five threats, all open.
     expect(within(screen.getByTestId('threats-table')).getAllByRole('row')).toHaveLength(6);
     expect(screen.queryByTestId('threat-status-T-01')).toHaveTextContent('Open');

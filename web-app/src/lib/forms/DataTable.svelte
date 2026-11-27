@@ -149,7 +149,9 @@
             {#if !readonly}
               <td class="table__actions">
                 {#if flagged?.(row)}
-                  <ReasonBadge label={$t('form.table.row-error')} testId="row-error-{row}" />
+                  <span class="table__flag">
+                    <ReasonBadge label={$t('form.table.row-error')} testId="row-error-{row}" />
+                  </span>
                 {/if}
                 <span class="table__buttons">
                   <Button
@@ -168,6 +170,8 @@
                       data-move="up"
                       onclick={() => move(row, -1)}
                     />
+                  {:else if rowCount > 1}
+                    <span class="table__move-gap" aria-hidden="true"></span>
                   {/if}
                   {#if row < rowCount - 1}
                     <IconButton
@@ -178,6 +182,8 @@
                       data-move="down"
                       onclick={() => move(row, 1)}
                     />
+                  {:else if rowCount > 1}
+                    <span class="table__move-gap" aria-hidden="true"></span>
                   {/if}
                   {#if canRemove}
                     <Button
@@ -262,11 +268,24 @@
     text-align: end;
   }
 
+  /* The mark of a row that is wrong stands over its acts, so it never widens the column of the acts. */
+  .table__flag {
+    display: block;
+    margin-block-end: var(--space-1);
+  }
+
   .table__buttons {
     display: inline-flex;
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: var(--space-1);
+  }
+
+  /* The place of a move that the first or the last row does not have: the acts of every row stand in the same columns. */
+  .table__move-gap {
+    flex: 0 0 auto;
+    inline-size: var(--control-height);
+    block-size: var(--control-height);
   }
 
   .table__add {
@@ -325,6 +344,11 @@
       justify-content: flex-start;
       gap: var(--space-3);
       white-space: normal;
+    }
+
+    /* A stacked row reads its acts as a line: the empty place of a move would only be a hole. */
+    .table__move-gap {
+      display: none;
     }
   }
 </style>

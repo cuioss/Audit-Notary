@@ -287,8 +287,14 @@
         </span>
       {:else if column === 1}
         <span class="cell">
-          <span class="meta">{$t('threats.likelihood')}: {threat.risk.likelihood}</span>
-          <span class="meta">{$t('threats.impact')}: {threat.risk.impact}</span>
+          <span class="measure">
+            <span class="meta">{$t('threats.likelihood')}</span>
+            <span class="measure__value">{threat.risk.likelihood}</span>
+          </span>
+          <span class="measure">
+            <span class="meta">{$t('threats.impact')}</span>
+            <span class="measure__value">{threat.risk.impact}</span>
+          </span>
         </span>
       {:else if column === 2}
         <span class="cell">
@@ -481,6 +487,23 @@
   .meta {
     font-size: var(--text-sm);
     color: var(--color-text-muted);
+  }
+
+  /* A figure stands under its name, so a long name in either language never leaves the figure trailing behind it. */
+  .measure {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .measure__value {
+    font-family: var(--font-serif);
+    font-weight: var(--weight-semibold);
+    font-feature-settings: 'lnum' 1;
+  }
+
+  /* The id of the risk is never broken in the middle. */
+  .meta :global(.link) {
+    white-space: nowrap;
   }
 
   /* The link to the risk of a transferred threat is a target of the phone size (AUN-WEB-2). */
