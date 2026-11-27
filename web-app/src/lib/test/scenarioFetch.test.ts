@@ -192,6 +192,7 @@ describe('scenarioFetch', () => {
         'Payments 2025 Q4',
         'Payments 2026 Q2',
         'Payments 2026 Q4',
+        'Security Testing of the payments scope is below its target',
       ]);
       expect((await (await search('')).json()).errors[0].code).toBe('REQUIRED');
       expect((await (await search('?q=a')).json()).errors[0].code).toBe('MIN_LENGTH');
@@ -199,6 +200,19 @@ describe('scenarioFetch', () => {
         'MAX_LENGTH',
       );
       expect((await (await search('?q=ZZZZ')).json()).results).toEqual([]);
+    });
+
+    it('decodes a percent-encoded query key as the mock does: the origin of a risk with : / and #', async () => {
+      const scenario = scenarioFetch('workshop');
+      const draft = async (origin: string) =>
+        await scenario.fetch(`/api/v1/isms/risks/draft?origin=${origin}`);
+      const gap = await draft('samm-assessments%3Aassessment%2Fpayments-2026-q2%23sm');
+      expect(gap.status).toBe(200);
+      expect((await gap.json()).origin.kind).toBe('samm-gap');
+      const refused = await draft('samm-assessments%3Aassessment%2Fpayments-2026-q2%23st');
+      expect(refused.status).toBe(409);
+      expect((await refused.json()).risk.id).toBe('R-015');
+      expect((await scenario.fetch('/api/v1/isms/risks/draft')).status).toBe(422);
     });
 
     it('follows a link of the flow and moves on, and answers the state of the flow', async () => {

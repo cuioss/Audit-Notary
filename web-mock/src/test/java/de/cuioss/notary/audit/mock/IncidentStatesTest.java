@@ -493,7 +493,7 @@ class IncidentStatesTest {
                     () -> assertTrue(status.path("degraded").asBoolean()),
                     () -> assertEquals("DOWN", fetch.get("isms-incidents-2026")),
                     () -> assertEquals("UP", fetch.get("isms-incidents-2025")),
-                    () -> assertEquals(7, fetch.size()),
+                    () -> assertEquals(8, fetch.size()),
                     () -> assertEquals(data("incidents-year-2026.json"), get(client, "/api/v1/incidents/2026")),
                     () -> assertEquals(read("card-data"), get(client, dom("card-data"))),
                     () -> assertEquals("DRAFT_SAVED", json(client.change("PUT", "/api/v1/drafts/isms-incidents-2026/" + CARD, "{}"))

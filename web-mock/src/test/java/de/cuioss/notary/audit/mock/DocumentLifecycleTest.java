@@ -520,12 +520,16 @@ class DocumentLifecycleTest {
                 Map<String, JsonNode> byAddress = new HashMap<>();
                 items.forEach(item -> byAddress.put(item.path("address").asText(), item));
                 List<String> dates = new ArrayList<>();
-                items.forEach(item -> dates.add(item.path("due").asText()));
+                items.forEach(item -> {
+                    if (!"isms".equals(item.path("lens").asText())) {
+                        dates.add(item.path("due").asText());
+                    }
+                });
                 var review = byAddress.get("/categories/test-note/" + N4 + "/release");
                 var requested = byAddress.get("/categories/test-note/" + N5 + "/release");
                 var release = byAddress.get("/categories/test-note/" + N2);
                 assertAll(
-                        () -> assertEquals(10, items.size()),
+                        () -> assertEquals(13, items.size()),
                         () -> assertEquals("2026-11-22", dates.stream().sorted().findFirst().orElseThrow()),
                         () -> assertEquals("review", review.path("kind").asText()),
                         () -> assertEquals("categories", review.path("lens").asText()),
@@ -588,7 +592,7 @@ class DocumentLifecycleTest {
         }
 
         @Test
-        @DisplayName("finds the three Payments assessments in workshop, whatever the case, ordered by title")
+        @DisplayName("finds the three Payments assessments and the risk of the Payments scope in workshop, whatever the case, ordered by title")
         void shouldFindPayments() {
             try (var client = MockClient.start("workshop").login()) {
                 var answer = body(client, "/api/v1/search?q=PAYMENTS");
@@ -596,7 +600,8 @@ class DocumentLifecycleTest {
                 answer.path("results").forEach(hit -> titles.add(hit.path("title").asText()));
                 assertAll(
                         () -> assertEquals("PAYMENTS", answer.path("query").asText()),
-                        () -> assertEquals(List.of("Payments 2025 Q4", "Payments 2026 Q2", "Payments 2026 Q4"), titles),
+                        () -> assertEquals(List.of("Payments 2025 Q4", "Payments 2026 Q2", "Payments 2026 Q4",
+                                "Security Testing of the payments scope is below its target"), titles),
                         () -> assertEquals("samm-assessments", answer.path("results").get(0).path("repository").asText()),
                         () -> assertEquals("/samm/payments/2025-q4", answer.path("results").get(0).path("address").asText()),
                         () -> assertEquals("assessment", answer.path("results").get(0).path("kind").asText()));
@@ -644,7 +649,7 @@ class DocumentLifecycleTest {
             try (var client = MockClient.start("read-only").login()) {
                 assertAll(
                         () -> assertEquals(List.of(N9), hits(client, "checklist")),
-                        () -> assertEquals(3, hits(client, "payments").size()));
+                        () -> assertEquals(4, hits(client, "payments").size()));
             }
         }
 
@@ -1087,7 +1092,7 @@ class DocumentLifecycleTest {
                         () -> assertTrue(status.path("degraded").asBoolean()),
                         () -> assertEquals("DOWN", fetch.get("test-notes")),
                         () -> assertEquals("UP", fetch.get("samm-assessments")),
-                        () -> assertEquals(7, fetch.size()),
+                        () -> assertEquals(8, fetch.size()),
                         () -> assertEquals("DRAFT_SAVED", json(client.change("PUT", draft(N2), "{}")).path("outcome").asText()),
                         () -> assertEquals(200, client.get(LIST).statusCode()),
                         () -> assertEquals(200, client.get(doc(N6) + "/revisions").statusCode()),
@@ -1171,7 +1176,7 @@ class DocumentLifecycleTest {
                 assertAll(
                         () -> assertEquals("local", status.path("loginProvider").asText()),
                         () -> assertEquals("password", status.path("stepUp").asText()),
-                        () -> assertEquals(7, status.path("repositories").size()),
+                        () -> assertEquals(8, status.path("repositories").size()),
                         () -> assertEquals("RELEASED", json(released).path("outcome").asText()),
                         () -> assertEquals("note-release-done", afterRelease),
                         () -> assertEquals("password", wrongStatus.path("stepUp").asText()),

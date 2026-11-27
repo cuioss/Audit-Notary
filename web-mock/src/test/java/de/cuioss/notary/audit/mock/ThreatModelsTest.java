@@ -952,7 +952,8 @@ class ThreatModelsTest {
                 var reference = find(resolved.path("references"), "ref", "threat-models:threat-model/" + CHECKOUT + "#T-07");
                 var entry = hits.get(0);
                 assertAll(
-                        () -> assertEquals(1, hits.size()),
+                        () -> assertEquals(2, hits.size()),
+                        () -> assertEquals("isms-register", hits.get(1).path("repository").asText()),
                         () -> assertEquals("threat-models", entry.path("repository").asText()),
                         () -> assertEquals(CHECKOUT, entry.path("id").asText()),
                         () -> assertEquals("threat-models", entry.path("category").asText()),
