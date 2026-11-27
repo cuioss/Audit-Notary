@@ -32,6 +32,7 @@
     knownStage,
     openStages,
     releaseAddress,
+    stageNames,
     stageTabs,
     SUBMIT_TRANSITION,
   } from '../../incidents/model';
@@ -114,7 +115,16 @@
   // The step-up handler is the sheet's: every part saves through it, and so do the steps and the completion of a stage. With
   // the identity provider the changes of every part are kept as their draft before the app leaves.
   const stepUp = new StepUpHandler(apiClient, undefined, async () => {
-    await Promise.all(Object.values(controllers).map((c) => (c.dirty ? c.keepDraft(true) : null)));
+    // No part takes an edit from the moment its draft is read until the app has left, so every accepted edit is in a draft
+    // (as in the default hook of the controller); a draft that cannot be kept gives the parts back to the person.
+    const owned = Object.values(controllers);
+    for (const c of owned) c.leaving = true;
+    try {
+      await Promise.all(owned.map((c) => (c.dirty ? c.keepDraft(true) : null)));
+    } catch (error) {
+      for (const c of owned) c.leaving = false;
+      throw error;
+    }
   });
   const controllers: Record<string, DocumentController> = {};
   for (const part of parts) {
@@ -172,11 +182,7 @@
   onDestroy(() => all.forEach((controller) => controller.destroy()));
 
   let stages = $derived(incident.stages);
-  let names = $derived(
-    Object.fromEntries(
-      stages.map((entry) => [entry.id, $t(`category.${INCIDENT_CATEGORY}.stage.${entry.id}`)]),
-    ),
-  );
+  let names = $derived(stageNames(stages, (id) => $t(`category.${INCIDENT_CATEGORY}.stage.${id}`)));
   /**
    * The tab an address without a stage opens, found once when the sheet opens: a completion, or a read that brings the work
    * of someone else, never moves the person to another tab by itself.
@@ -569,9 +575,14 @@
     {:else}
       <DeadlineClock label={$t('incidents.clock.label')} {rows} testId="deadline-clock" />
     {/if}
-    {#if incident.frozen || reading}
+    {#if incident.release}
       <p class="meta" data-testid="clock-stopped">
         {$t('incidents.clock.stopped', { when: formatDateTime(incident.asOf, $currentLocale) })}
+      </p>
+    {:else if incident.frozen || reading}
+      <!-- An earlier state that is no release: the incident itself goes on, so its deadlines are not "no longer to be met". -->
+      <p class="meta" data-testid="clock-at-state">
+        {$t('incidents.clock.at-state', { when: formatDateTime(incident.asOf, $currentLocale) })}
       </p>
     {/if}
   </section>

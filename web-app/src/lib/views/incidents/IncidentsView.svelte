@@ -66,8 +66,11 @@
   let schemas = $state<CategorySchema | null>(null);
   let revisions = $state<{ list: Revision[]; truncated: boolean } | null>(null);
   let revisionsFailed = $state(false);
-  /** The address names a year or an incident that does not exist (or an earlier state that does not). */
-  let missing = $state(false);
+  /** The address names a year that does not exist. */
+  let yearMissing = $state(false);
+  /** The address names an incident that does not exist, or an earlier state that does not; it goes with the address. */
+  let incidentMissing = $state(false);
+  let missing = $derived(yearMissing || incidentMissing);
   /** The person may not read the year, or the incident. */
   let yearForbidden = $state(false);
   let incidentForbidden = $state(false);
@@ -127,7 +130,7 @@
       succeed('year');
     } catch (error) {
       if (read !== latestYear) return;
-      if (isApiError(error) && error.outcome === 'NOT_FOUND') missing = true;
+      if (isApiError(error) && error.outcome === 'NOT_FOUND') yearMissing = true;
       else if (isApiError(error) && error.outcome === 'FORBIDDEN') yearForbidden = true;
       else fail('year', error);
     }
@@ -150,7 +153,7 @@
     } catch (error) {
       if (read !== latestIncident) return;
       if (isApiError(error) && (error.outcome === 'NOT_FOUND' || error.outcome === 'VALIDATION')) {
-        missing = true;
+        incidentMissing = true;
       } else if (isApiError(error) && error.outcome === 'FORBIDDEN') {
         incidentForbidden = true;
       } else {
@@ -199,14 +202,14 @@
       latestYear += 1;
       if (!year) {
         list = null;
-        missing = false;
+        yearMissing = false;
         yearForbidden = false;
         succeed('year');
         return;
       }
       if (list !== null && String(list.year) === year) return;
       list = null;
-      missing = false;
+      yearMissing = false;
       yearForbidden = false;
       void reloadYear();
     });
@@ -223,9 +226,10 @@
       incident = null;
       revisions = null;
       revisionsFailed = false;
-      // An incident or an earlier state that was missing must not keep the page at "not found" for the next address.
+      // An incident or an earlier state that was missing must not keep the page at "not found" for the next address,
+      // nor after the person came back to the year (the year of the address did not change then); a missing year stays.
+      incidentMissing = false;
       if (route === 'incidents.incident' && year && id) {
-        missing = false;
         incidentForbidden = false;
         void readIncident();
       } else {

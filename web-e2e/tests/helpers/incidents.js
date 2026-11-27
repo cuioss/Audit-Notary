@@ -300,6 +300,14 @@ export async function tabStatuses(page) {
     .evaluateAll((tabs) => tabs.map((tab) => tab.dataset.status));
 }
 
+/** @returns the ids of the stages as the tabs stand in the tab list, in the order of the page */
+export async function tabIds(page) {
+  return page
+    .getByTestId('stage-tabs')
+    .getByRole('tab')
+    .evaluateAll((tabs) => tabs.map((tab) => tab.dataset.testid.replace(/^stage-tabs-/, '')));
+}
+
 /** The statuses of a row of the fixtures as the tabs and the rows of the list name them. */
 export function statusesOf(stages) {
   return stages.map((mark) =>

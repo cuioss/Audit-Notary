@@ -198,7 +198,11 @@
   {#if stage.part === 'notifications'}
     <section class="panel__part" aria-labelledby="incident-notices" data-testid="notices-section">
       <h3 class="panel__heading" id="incident-notices">{$t('incidents.notifications.title')}</h3>
-      <NotificationsTable value={controller.value} deadlines={incident.deadlines} />
+      <NotificationsTable
+        value={controller.value}
+        schema={formSchema}
+        deadlines={incident.deadlines}
+      />
     </section>
   {/if}
 

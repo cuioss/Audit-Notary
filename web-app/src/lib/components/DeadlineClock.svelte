@@ -1,4 +1,6 @@
 <script lang="ts" module>
+  import type { DeadlineStatus } from '../api/types';
+
   /** One deadline of the clock, worded. */
   export interface ClockRow {
     /** A stable key of the row. */
@@ -8,7 +10,7 @@
     /** The legal basis, under the name. */
     basis: string;
     /** `OPEN`, `MET` or `MISSED`. */
-    status: 'OPEN' | 'MET' | 'MISSED';
+    status: DeadlineStatus;
     /** The word of the status. */
     statusLabel: string;
     /** Whether the deadline needs the person: missed and never sent, or open and past its time. */

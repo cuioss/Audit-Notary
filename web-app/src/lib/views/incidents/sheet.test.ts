@@ -304,6 +304,18 @@ describe('the notices sent', () => {
     expect(screen.getByTestId('notification-nis2-notification')).toHaveTextContent('Sent late');
   });
 
+  it('does not judge a notice whose time was changed since the last save by the status of the saved one', async () => {
+    await open('workshop', CARD, { stage: 'notifications' });
+    const warning = screen.getByTestId('notification-nis2-early-warning');
+    expect(warning).toHaveTextContent('Met');
+    await fireEvent.input(control('/nis2-early-warning/sent-at'), {
+      target: { value: '2026-11-26T09:45' },
+    });
+    await vi.waitFor(() => expect(warning).toHaveTextContent('Judged once saved'));
+    expect(warning).not.toHaveTextContent('Met');
+    expect(screen.getByTestId('notification-unsaved')).toBeInTheDocument();
+  });
+
   it('lists the entries of a list as notices of their own, with the comment', async () => {
     await open('workshop', OUTAGE, { stage: 'notifications' });
     expect(screen.getByTestId('notification-nis2-intermediate-reports-0')).toHaveTextContent(
@@ -456,6 +468,37 @@ describe('saving a part', () => {
     await vi.waitFor(() => expect(stepUp).toHaveBeenCalledTimes(1));
     expect(save).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'changed');
+  });
+
+  it('accepts no edit in any part from the moment the drafts are kept until the app has left for the provider', async () => {
+    const kit = await open('workshop', CARD, { stage: 'triage' });
+    vi.spyOn(apiClient, 'stepUp').mockImplementation(() => {});
+    vi.spyOn(apiClient, 'saveDocument').mockRejectedValue(
+      new ApiError('STEP_UP_REQUIRED', 403, [], { stepUp: '/api/v1/auth/login?step-up=mfa' }),
+    );
+    const releases: Array<() => void> = [];
+    const draft = vi.spyOn(apiClient, 'saveDraft').mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          releases.push(() => resolve({ outcome: 'DRAFT_SAVED', at: '2026-11-26T09:00:00Z' }));
+        }),
+    );
+    await fireEvent.input(within(screen.getByTestId('title-form')).getByRole('textbox'), {
+      target: { value: 'Card data in the checkout log' },
+    });
+    await kit.show('privacy-assessment');
+    await fireEvent.input(screen.getByLabelText(/Records affected, approximate/), {
+      target: { value: '1900' },
+    });
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    await vi.waitFor(() => expect(draft).toHaveBeenCalledTimes(2));
+    // Both drafts are under way: the title and the stage take no further edit, or it would be left out of the draft.
+    expect(
+      within(screen.getByTestId('stage-form')).queryByLabelText(/Records affected, approximate/),
+    ).toBeNull();
+    await kit.show('triage');
+    expect(within(screen.getByTestId('title-form')).queryByRole('textbox')).toBeNull();
+    releases.forEach((release) => release());
   });
 
   it('reads the incident again after a save', async () => {
@@ -624,6 +667,30 @@ describe('completing a stage', () => {
   });
 
   it('asks to save first when the person has changes in the stage, and completes after the save', async () => {
+    // The save leaves a blob of its own for the part, which the sign-off must name instead of the one the form loaded.
+    const left = '9a8b7c6';
+    const save = vi.spyOn(apiClient, 'saveDocument').mockResolvedValue({
+      outcome: 'SAVED',
+      at: '2026-11-26T10:12:00Z',
+      parts: {
+        'privacy-assessment': {
+          blob: left,
+          savedAt: '2026-11-26T10:12:00Z',
+          savedBy: { pseudonym: 'p-4c1a9e', name: 'Alex Example' },
+        },
+      },
+    });
+    // The register answers the read after the save with the part as the save left it.
+    const read = apiClient.getIncident.bind(apiClient);
+    vi.spyOn(apiClient, 'getIncident').mockImplementation(async (...args) => {
+      const answer = await read(...args);
+      if (save.mock.calls.length === 0) return answer;
+      const part = answer.parts['privacy-assessment'];
+      return {
+        ...answer,
+        parts: { ...answer.parts, 'privacy-assessment': { ...part, blob: left } },
+      };
+    });
     const kit = await open('workshop', CARD, { stage: 'privacy-assessment' });
     await fireEvent.input(screen.getByLabelText(/Records affected, approximate/), {
       target: { value: '1800' },
@@ -637,10 +704,9 @@ describe('completing a stage', () => {
       expect(kit.bodies.some((e) => e.request === COMPLETE(CARD, 'privacy-assessment'))).toBe(true),
     );
     // The sign-off names the blob the save left, not the one read before it.
-    expect(bodyOf(kit, COMPLETE(CARD, 'privacy-assessment'))).toEqual({ blob: expect.any(String) });
-    expect(kit.requests.indexOf(SAVE(CARD))).toBeLessThan(
-      kit.requests.indexOf(COMPLETE(CARD, 'privacy-assessment')),
-    );
+    expect(save.mock.calls[0][2].parts['privacy-assessment'].blob).not.toBe(left);
+    expect(bodyOf(kit, COMPLETE(CARD, 'privacy-assessment'))).toEqual({ blob: left });
+    expect(save).toHaveBeenCalledTimes(1);
   });
 
   it('tells a stage someone saved since the form was read, reads it again and signs nothing off', async () => {
@@ -824,6 +890,19 @@ describe('the report', () => {
 });
 
 describe('an earlier state', () => {
+  it('says of the clock of a state that is no release only what it showed then, for the incident goes on', async () => {
+    const read = apiClient.getIncident.bind(apiClient);
+    vi.spyOn(apiClient, 'getIncident').mockImplementation(async (...args) => ({
+      ...(await read(...args)),
+      release: null,
+    }));
+    await open('workshop', OUTAGE, { at: 'v1' });
+    expect(screen.getByTestId('clock-at-state')).toHaveTextContent(
+      'These are the deadlines as they stood at',
+    );
+    expect(screen.queryByTestId('clock-stopped')).toBeNull();
+  });
+
   it('is read as it was, with no act, no step of the workflow and a way back', async () => {
     await open('workshop', OUTAGE, { at: 'v1' });
     expect(screen.getByTestId('revision-notice')).toHaveTextContent(

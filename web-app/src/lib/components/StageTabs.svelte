@@ -1,4 +1,5 @@
 <script lang="ts" module>
+  import type { StageStatus } from '../api/types';
   import type { StatusTone } from './StatusLabel.svelte';
 
   /** One tab of the stages of a staged document, with its words. */
@@ -8,7 +9,7 @@
     /** The name of the stage. */
     label: string;
     /** The status: a stage that does not apply stays a tab, greyed, so its kept data can still be read. */
-    status: 'open' | 'completed' | 'not-applicable';
+    status: StageStatus;
     /** The word of the status. */
     statusLabel: string;
     /** The condition of a stage that does not apply, or the open question; `null` for none. */

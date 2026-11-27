@@ -2,10 +2,11 @@
   import GridTable from '../../components/GridTable.svelte';
   import ReasonBadge from '../../components/ReasonBadge.svelte';
   import StatusLabel from '../../components/StatusLabel.svelte';
-  import type { IncidentDeadline, JsonObject } from '../../api/types';
+  import type { IncidentDeadline, JsonObject, JsonSchema } from '../../api/types';
   import { labelOf, optionOf } from '../../forms/texts';
   import { formatDateTime } from '../../format';
   import {
+    deadlineJudges,
     deadlineOfNotification,
     INCIDENT_CATEGORY,
     notificationRows,
@@ -24,15 +25,17 @@
   interface Props {
     /** The value of the part `notifications`, with the person's changes that are not saved. */
     value: JsonObject | undefined;
+    /** The schema of the part, which names the notices and their order. */
+    schema: JsonSchema;
     /** The deadlines of the incident. */
     deadlines: IncidentDeadline[];
   }
 
-  let { value, deadlines }: Props = $props();
+  let { value, schema, deadlines }: Props = $props();
 
   const kind = partKind('notifications');
 
-  let rows = $derived(notificationRows(value));
+  let rows = $derived(notificationRows(value, schema));
 </script>
 
 {#if rows.length === 0}
@@ -82,6 +85,11 @@
         <td data-label={$t('incidents.notifications.col.deadline')}>
           {#if deadline === null}
             <span class="meta">{$t('incidents.notifications.no-deadline')}</span>
+          {:else if !deadlineJudges(row, deadline)}
+            <!-- The notice was added or changed since the last save: the status is that of the saved one, not of this. -->
+            <span class="meta" data-testid="notification-unsaved">
+              {$t('incidents.notifications.unsaved')}
+            </span>
           {:else if deadline.status === 'MISSED' && deadline.sentAt === null}
             <ReasonBadge tone="danger" label={$t('incidents.clock.status.MISSED')} />
           {:else if deadline.status === 'MISSED'}

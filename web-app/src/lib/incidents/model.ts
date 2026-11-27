@@ -31,21 +31,6 @@ export const SUBMIT_TRANSITION = 'incident.submit';
 /** The address of the years, the first column of the lens. */
 export const INCIDENTS_ADDRESS = '/incidents';
 
-/** The notice members of the part `notifications`, in the order of the table (rest-api.adoc, The Data Shape). */
-export const NOTIFICATION_MEMBERS = [
-  'supervisory-authority',
-  'data-subjects',
-  'nis2-early-warning',
-  'nis2-notification',
-  'nis2-intermediate-reports',
-  'nis2-progress-report',
-  'nis2-final-report',
-  'others',
-] as const;
-
-/** The members that are lists: one row for each entry. */
-const LIST_MEMBERS: readonly string[] = ['nis2-intermediate-reports', 'others'];
-
 /**
  * @param year the year, four digits
  * @returns the repository of the year's incident reports
@@ -121,6 +106,24 @@ export function splitPointer(pointer: string): { part: string; pointer: string }
   return cut < 0
     ? { part: rest, pointer: '' }
     : { part: rest.slice(0, cut), pointer: rest.slice(cut) };
+}
+
+/**
+ * The name of every stage by the id of the stage and by the part that holds its data, so a line of the history that names
+ * a stage by its part (a save) is worded as the stage even where the part is not called as the stage is.
+ *
+ * @param stages the stages of the incident
+ * @param nameOf the name of a stage, by its id
+ * @returns the names, by id and by part
+ */
+export function stageNames(
+  stages: readonly { id: string; part: string }[],
+  nameOf: (id: string) => string,
+): Record<string, string> {
+  const names: Record<string, string> = {};
+  for (const entry of stages) names[entry.part] = nameOf(entry.id);
+  for (const entry of stages) names[entry.id] = nameOf(entry.id);
+  return names;
 }
 
 /**
@@ -308,10 +311,17 @@ export interface NotificationRow {
 }
 
 /**
+ * The members and their order are those of the schema of the part (rest-api.adoc, The Data Shape), so a notice the schema
+ * adds is a row without a change here; a member of type `array` is a list, one row for each entry.
+ *
  * @param value the value of the part `notifications`
+ * @param schema the schema of the part `notifications` (the `completion` is no notice and is skipped)
  * @returns one row for every notice recorded, in the order of the table: the single notices, and every entry of a list
  */
-export function notificationRows(value: JsonObject | undefined): NotificationRow[] {
+export function notificationRows(
+  value: JsonObject | undefined,
+  schema: JsonSchema | undefined,
+): NotificationRow[] {
   const rows: NotificationRow[] = [];
   if (!value) return rows;
   const text = (record: JsonObject, name: string): string | null =>
@@ -333,9 +343,10 @@ export function notificationRows(value: JsonObject | undefined): NotificationRow
       comment: text(fields, 'comment'),
     });
   };
-  for (const member of NOTIFICATION_MEMBERS) {
+  for (const [member, memberSchema] of Object.entries(propertiesOf(schema))) {
+    if (member === 'completion') continue;
     const entry = value[member];
-    if (LIST_MEMBERS.includes(member)) {
+    if (memberSchema.type === 'array') {
       if (Array.isArray(entry)) entry.forEach((item, index) => rowOf(member, index, item));
     } else {
       rowOf(member, null, entry);
@@ -354,6 +365,17 @@ export function deadlineOfNotification(
   deadlines: readonly IncidentDeadline[],
 ): IncidentDeadline | null {
   return deadlines.find((deadline) => deadline.metBy === row.pointer) ?? null;
+}
+
+/**
+ * @param row a notification, as it stands in the form (with the changes not yet saved)
+ * @param deadline the deadline it meets
+ * @returns whether the deadline was computed from this very notice: the saved time of the notice is the one the row shows,
+ *   so a notice that was added or whose time was changed since the last save is not judged by the status of the last read
+ */
+export function deadlineJudges(row: NotificationRow, deadline: IncidentDeadline): boolean {
+  if (deadline.sentAt === null) return false;
+  return new Date(deadline.sentAt).getTime() === new Date(row.sentAt).getTime();
 }
 
 /** @returns the properties of a schema, `{}` when it has none */

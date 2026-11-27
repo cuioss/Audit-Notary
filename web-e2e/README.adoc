@@ -260,13 +260,18 @@ connection, but the checks are checkpoints and not isolation: a check that names
 switched the mock to another state of that profile, and a page may read a state between two checks. Give every concurrent
 run its own ports.
 
-The mock stores nothing, and a state it has no profile for is not invented in the page: where a flow needs one (an incident the
-server does not know, a year the person may not read, a stage the page reads as open that the server knows does not apply,
-a local user who is asked for the password, a
-trend that leaves versions out, a scope whose targets another assessor saved, a scope that shows no open assessment
-while the server knows one, fifty evidence links, a sixth scope in the trend, a third released assessment, a session that
-reads no register, a register that answers `FORBIDDEN`), the test fetches the real answer and changes it with `patchRead`, and
-says so in a comment.
+The mock stores nothing, and a state it has no profile for is not invented in the page. Where a flow needs one, the test
+says so in a comment, by one of two ways:
+
+* For something the server does not hold, or a read the person may not make (an incident the server does not know, a year the
+  person may not read, an answer that fails), the test answers the read with `refuseRead`, which gives the status and the body
+  directly and fetches nothing.
+* For a state the server holds but the page must read differently, the test fetches the real answer and changes it with
+  `patchRead` (a stage the page reads as open that the server knows does not apply, a released incident with a deadline that
+  was open at the release, a local user who is asked for the password, a trend that leaves versions out, a scope whose targets
+  another assessor saved, a scope that shows no open assessment while the server knows one, fifty evidence links, a sixth scope
+  in the trend, a third released assessment, a session that reads no register, a register that answers `FORBIDDEN`). With
+  `times` only the first reads are changed, so that a read the page makes after a refusal brings the mock's own answer.
 
 == Cold start
 

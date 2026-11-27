@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { apiClient } from '../../api/client';
 import { resetKit, useProfile, type Kit } from '../documents/testkit';
 import IncidentsView from './IncidentsView.svelte';
 
@@ -194,6 +195,24 @@ describe('the incidents of a year, the second column', () => {
     expect(screen.queryByTestId('new-incident-link')).toBeNull();
   });
 
+  it('says that the list is cut where the register answers more incidents than it lists, ', async () => {
+    const read = apiClient.getIncidentYear.bind(apiClient);
+    vi.spyOn(apiClient, 'getIncidentYear').mockImplementation(async (year) => ({
+      ...(await read(year)),
+      truncated: true,
+    }));
+    await open('workshop', 'incidents.year', { year: '2026' });
+    expect(await screen.findByTestId('incident-list-truncated')).toHaveTextContent(
+      'Only the newest 7 incidents are listed.',
+    );
+  });
+
+  it('says nothing of a cut where the whole year is listed', async () => {
+    await open('workshop', 'incidents.year', { year: '2026' });
+    await screen.findByTestId('incident-list');
+    expect(screen.queryByTestId('incident-list-truncated')).toBeNull();
+  });
+
   it('is the not-found view for a year that has no repository', async () => {
     await open('workshop', 'incidents.year', { year: '2024' });
     expect(await screen.findByTestId('not-found-view')).toBeInTheDocument();
@@ -285,6 +304,25 @@ describe('the address of an incident', () => {
     expect(await screen.findByTestId('not-found-view')).toBeInTheDocument();
     await rerender({ route: 'incidents.incident', params, query: {}, onnavigate: vi.fn() });
     expect(await screen.findByTestId('incident-sheet')).toBeInTheDocument();
+    expect(screen.queryByTestId('not-found-view')).toBeNull();
+  });
+
+  it('leaves the not-found view of an incident when the address goes back to the year, which did not change', async () => {
+    await useProfile('workshop', 'en');
+    const { rerender } = render(IncidentsView, {
+      route: 'incidents.incident',
+      params: { year: '2026', incident: 'nope' },
+      query: {},
+      onnavigate: vi.fn(),
+    });
+    expect(await screen.findByTestId('not-found-view')).toBeInTheDocument();
+    await rerender({
+      route: 'incidents.year',
+      params: { year: '2026' },
+      query: {},
+      onnavigate: vi.fn(),
+    });
+    expect(await screen.findByTestId('incident-list')).toBeInTheDocument();
     expect(screen.queryByTestId('not-found-view')).toBeNull();
   });
 

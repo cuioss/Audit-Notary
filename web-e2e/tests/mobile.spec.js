@@ -1645,6 +1645,8 @@ test.describe('at 390 px', () => {
     await page.getByTestId('stage-complete').click();
     await expect(page.getByTestId('missing-fields')).toBeVisible();
     await page.getByTestId('stage-refusal').scrollIntoViewIfNeeded();
+    // The three open questions of the triage: a layout that hid them would leave nothing to measure.
+    await expect(page.getByTestId('missing-fields').getByRole('button')).toHaveCount(3);
     for (const button of await page.getByTestId('missing-fields').getByRole('button').all()) {
       await expectTarget(button);
     }

@@ -42,6 +42,7 @@ import {
   statusesOf,
   submitPath,
   tab,
+  tabIds,
   tabStatuses,
   yearAddress,
   yearPath,
@@ -61,8 +62,12 @@ import { patchRead } from './helpers/samm.js';
  * pinned to the instant the mock reads at (`NOW`, 2026-11-26T10:00:00Z); the suite pins the zone to Europe/Berlin.
  */
 
-/** @returns the ids of the rows of a list under a prefix of their test ids, in the order shown */
+/**
+ * @returns the ids of the rows of a list under a prefix of their test ids, in the order shown; waits for the list, which a
+ *   column draws only once its read has answered
+ */
 async function rowIds(page, list, prefix) {
+  await expect(page.getByTestId(list)).toBeVisible();
   return page
     .getByTestId(list)
     .locator('> li > a')
@@ -454,6 +459,9 @@ test.describe('the stages as tabs (UC-IR-1)', () => {
     await expect(tabs).toHaveAttribute('role', 'tablist');
     await expect(tabs).toHaveAccessibleName('Stages of the incident');
     await expect(tabs.getByRole('tab')).toHaveCount(STAGES.length);
+    // The tabs stand in the order of the declaration: on this incident two of them are open, so the statuses alone would
+    // not show two that changed places.
+    expect(await tabIds(page)).toEqual(STAGES);
     expect(await tabStatuses(page)).toEqual(statusesOf(CARD_DATA.stages));
     for (const [index, stage] of STAGES.entries()) {
       await expect(tab(page, stage)).toContainText(STAGE_NAMES[stage].en);
@@ -617,7 +625,9 @@ test.describe('the panel of a stage and its form (UC-IR-1)', () => {
       await expect(field(form, pointer), pointer).toBeVisible();
     }
     await expect(field(form, '/severity')).toContainText('required');
-    await expect(field(form, '/aware-at')).toContainText('The deadlines start from this time.');
+    await expect(field(form, '/aware-at')).toContainText(
+      'The first deadlines start from this time',
+    );
     // The protection needs are derived by the server: they are read here and cannot be typed.
     const needs = page.getByTestId('protection-needs');
     await expect(needs).toContainText('It is derived and cannot be changed here.');
@@ -964,6 +974,34 @@ test.describe('the deadline clock (UC-IR-1, UC-IR-2, AUN-IR-2)', () => {
     );
   });
 
+  test('a released incident keeps a deadline that was open at the release as open, though the page clock is past its time', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    // The mock holds no released incident with an open deadline: the final report is read as not yet sent, due before the
+    // release. With the clock of the page (a year later) it would read as missed; at the release it was open.
+    await patchRead(page, `**${readPath(OUTAGE)}`, (body) => ({
+      ...body,
+      deadlines: body.deadlines.map((deadline) =>
+        deadline.rule === 'nis2-final-report'
+          ? { ...deadline, status: 'OPEN', sentAt: null, due: '2026-11-19T16:00:00Z' }
+          : deadline,
+      ),
+    }));
+    await loginToIncidents(page, incidentAddress(OUTAGE));
+    await pinClock(page, '2027-12-01T00:00:00Z');
+    await page.reload();
+    await expect(page.getByTestId('incident-sheet')).toBeVisible();
+    expect(await clockStates(page)).toEqual([
+      ['nis2-early-warning-', 'MET'],
+      ['nis2-notification-', 'MET'],
+      ['nis2-intermediate-report-0', 'MET'],
+      ['nis2-final-report-', 'OPEN'],
+    ]);
+    await expect(page.getByTestId('clock-stopped')).toBeVisible();
+  });
+
   test('an earlier state of the incident has a stopped clock as well', async ({
     page,
     request,
@@ -1076,33 +1114,51 @@ test.describe('completing a stage (UC-IR-1, UC-IR-3)', () => {
     request,
   }) => {
     await useScenario(request, 'workshop');
-    // The page reads the stage as open; the server knows that it does not apply.
-    await patchRead(page, `**${readPath(SUSPICIOUS)}`, (body) => ({
-      ...body,
-      stages: body.stages.map((stage) =>
-        stage.id === 'privacy-assessment' ? { ...stage, status: 'open', unanswered: false } : stage,
-      ),
-    }));
+    // The page reads the stage as open; the server knows that it does not apply. Only the first read is stale: the read
+    // after the refusal is the mock's own, so the tab shows the server's answer only when the page read again.
+    await patchRead(
+      page,
+      `**${readPath(SUSPICIOUS)}`,
+      (body) => ({
+        ...body,
+        stages: body.stages.map((stage) =>
+          stage.id === 'privacy-assessment'
+            ? { ...stage, status: 'open', unanswered: false }
+            : stage,
+        ),
+      }),
+      { times: 1 },
+    );
     await loginToSheet(page, SUSPICIOUS, 'privacy-assessment');
+    await expect(tab(page, 'privacy-assessment')).toHaveAttribute('data-status', 'open');
     await page.getByTestId('stage-complete').click();
     await expect(page.getByTestId('stage-failure')).toHaveText(
       'This stage does not apply to the incident. The incident is read again.',
     );
+    await expect(tab(page, 'privacy-assessment')).toHaveAttribute('data-status', 'not-applicable');
   });
 
   test('a stage that was completed elsewhere is told as it is', async ({ page, request }) => {
     await useScenario(request, 'workshop');
-    await patchRead(page, `**${readPath(PHISHING)}`, (body) => ({
-      ...body,
-      stages: body.stages.map((stage) =>
-        stage.id === 'triage' ? { ...stage, status: 'open', completion: null } : stage,
-      ),
-    }));
+    // Only the first read is stale; the read after the refusal brings the stage as the server holds it.
+    await patchRead(
+      page,
+      `**${readPath(PHISHING)}`,
+      (body) => ({
+        ...body,
+        stages: body.stages.map((stage) =>
+          stage.id === 'triage' ? { ...stage, status: 'open', completion: null } : stage,
+        ),
+      }),
+      { times: 1 },
+    );
     await loginToSheet(page, PHISHING, 'triage');
+    await expect(tab(page, 'triage')).toHaveAttribute('data-status', 'open');
     await page.getByTestId('stage-complete').click();
     await expect(page.getByTestId('stage-failure')).toHaveText(
       'The stage was already in that state. The incident is read again.',
     );
+    await expect(tab(page, 'triage')).toHaveAttribute('data-status', 'completed');
   });
 
   test('completes the privacy assessment of the phishing mail: the stage is signed off, the next ones are ready', async ({
@@ -1324,7 +1380,14 @@ test.describe('the review asks the person to confirm again (UC-IR-3)', () => {
     await page.getByTestId('stage-complete').click();
     await expectNoSeriousViolations(page, 'incident: the confirmation of the review');
     await page.getByTestId('document-password').fill('local-password');
+    // The mock answers a completion whatever it carries, so the transport is read from the request itself.
+    const completing = page.waitForRequest(
+      (sentRequest) =>
+        sentRequest.method() === 'POST' &&
+        sentRequest.url().endsWith(completePath(CREDENTIAL_STUFFING, 'review')),
+    );
     await page.getByTestId('document-confirm').click();
+    expect((await completing).postDataJSON()).toMatchObject({ password: 'local-password' });
     await expect(tab(page, 'review')).toHaveAttribute('data-status', 'completed');
     const sent = sentTo(await acts(request), completePath(CREDENTIAL_STUFFING, 'review'), 'POST');
     expect(sent).toHaveLength(1);
@@ -1825,6 +1888,8 @@ test.describe('the sheet and the lists follow the stream (AUN-WEB-5)', () => {
     await expect(tab(page, 'privacy-assessment')).toHaveAttribute('data-status', 'completed');
     await expect(page.getByTestId('save-state')).not.toHaveAttribute('data-state', 'saved');
     await expect(page.getByTestId('save-state')).not.toHaveAttribute('data-state', 'clean');
+    // The refresh did not replace the choice by the saved value: it is still the one shown for the stage.
+    await expect(page.getByTestId('stage-form')).toContainText('High risk');
   });
 
   test('the year follows: a stage that was completed shows in the row', async ({

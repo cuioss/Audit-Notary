@@ -151,6 +151,11 @@
       </li>
     {/each}
   </ul>
+  {#if list.truncated}
+    <p class="column__note" data-testid="incident-list-truncated">
+      {$t('incidents.year.truncated', { count: list.incidents.length })}
+    </p>
+  {/if}
 {/if}
 
 <style>
@@ -164,6 +169,12 @@
   .column__loading,
   .column__empty {
     padding: var(--space-4);
+    color: var(--color-text-muted);
+  }
+
+  .column__note {
+    padding: var(--space-4);
+    font-size: var(--text-sm);
     color: var(--color-text-muted);
   }
 

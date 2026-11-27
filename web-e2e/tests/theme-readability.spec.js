@@ -1919,6 +1919,10 @@ const INCIDENT_STATES = [
     async (page) => {
       await pinClock(page, '2026-11-27T10:00:00Z');
       await page.reload();
+      // The audit is of the overdue state: wait for the row to stand in it.
+      const row = page.getByTestId('deadline-clock-gdpr-art33-');
+      await expect(row).toHaveAttribute('data-status', 'MISSED');
+      await expect(row).toContainText('Overdue by');
     },
   ],
   [
@@ -1930,6 +1934,10 @@ const INCIDENT_STATES = [
     async (page) => {
       await pinClock(page, '2026-11-27T10:00:00Z');
       await page.reload();
+      // The audit is of the overdue state: wait for the row to stand in it.
+      const row = page.getByTestId('deadline-clock-gdpr-art33-');
+      await expect(row).toHaveAttribute('data-status', 'MISSED');
+      await expect(row).toContainText('Overdue by');
     },
   ],
   [

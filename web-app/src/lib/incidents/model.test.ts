@@ -5,6 +5,7 @@ import { loadMessages } from '../../test/catalogue-fixture';
 import {
   allStagesDone,
   clockRow,
+  deadlineJudges,
   deadlineOfNotification,
   defaultStage,
   incidentAddress,
@@ -15,6 +16,7 @@ import {
   partKind,
   partSchema,
   releaseAddress,
+  stageNames,
   repositoryOf,
   spanOf,
   splitPointer,
@@ -116,6 +118,17 @@ describe('the stage of an address', () => {
     expect(knownStage('review', stages)).toBe('review');
     expect(knownStage('nope', stages)).toBeNull();
     expect(knownStage(undefined, stages)).toBeNull();
+  });
+
+  it('names a stage by its id and by the part that holds its data, which may be called otherwise', () => {
+    const named = stageNames(
+      [
+        { id: 'triage', part: 'triage-data' },
+        { id: 'review', part: 'review' },
+      ],
+      (id) => id.toUpperCase(),
+    );
+    expect(named).toEqual({ triage: 'TRIAGE', 'triage-data': 'TRIAGE', review: 'REVIEW' });
   });
 
   it('opens the first stage that is open and not waiting for another', () => {
@@ -322,8 +335,24 @@ describe('the notices sent', () => {
     completion: { at: '2026-11-13T10:10:00Z', by: 'p-2b7f10' },
   };
 
+  const record: JsonSchema = { type: 'object', properties: {} };
+  const schema: JsonSchema = {
+    type: 'object',
+    properties: {
+      'supervisory-authority': record,
+      'data-subjects': record,
+      'nis2-early-warning': record,
+      'nis2-notification': record,
+      'nis2-intermediate-reports': { type: 'array', items: record },
+      'nis2-progress-report': record,
+      'nis2-final-report': record,
+      others: { type: 'array', items: record },
+      completion: record,
+    },
+  };
+
   it('lists a row for each notice that has a time, in the order of the table', () => {
-    const rows = notificationRows(value);
+    const rows = notificationRows(value, schema);
     expect(rows.map((row) => row.key)).toEqual([
       'supervisory-authority',
       'nis2-early-warning',
@@ -336,11 +365,51 @@ describe('the notices sent', () => {
     });
     expect(rows[2].pointer).toBe('/notifications/nis2-intermediate-reports/0');
     expect(rows[3].comment).toBe('Status.');
-    expect(notificationRows(undefined)).toEqual([]);
+    expect(notificationRows(undefined, schema)).toEqual([]);
+  });
+
+  it('takes the members, their order and the lists from the schema, so a notice it adds is a row', () => {
+    const extended: JsonSchema = {
+      type: 'object',
+      properties: {
+        'regulator-heads-up': record,
+        'nis2-early-warning': record,
+        'customer-letters': { type: 'array', items: record },
+        completion: record,
+      },
+    };
+    const rows = notificationRows(
+      {
+        'nis2-early-warning': { 'sent-at': '2026-10-13T09:30:00Z' },
+        'regulator-heads-up': { 'sent-at': '2026-10-12T09:30:00Z' },
+        'customer-letters': [{ 'sent-at': '2026-10-14T09:30:00Z' }],
+        others: [{ 'sent-at': '2026-10-15T09:30:00Z' }],
+        completion: { 'sent-at': '2026-10-16T09:30:00Z' },
+      },
+      extended,
+    );
+    expect(rows.map((row) => row.key)).toEqual([
+      'regulator-heads-up',
+      'nis2-early-warning',
+      'customer-letters/0',
+    ]);
+    expect(notificationRows({ others: [] }, undefined)).toEqual([]);
+  });
+
+  it('judges a notice by its deadline only while the deadline was computed from this time of sending', () => {
+    const rows = notificationRows(value, schema);
+    const met = deadline({
+      metBy: '/notifications/nis2-early-warning',
+      status: 'MET',
+      sentAt: '2026-10-13T11:30:00+02:00',
+    });
+    expect(deadlineJudges(rows[1], met)).toBe(true);
+    expect(deadlineJudges({ ...rows[1], sentAt: '2026-10-13T11:30:00Z' }, met)).toBe(false);
+    expect(deadlineJudges(rows[1], { ...met, sentAt: null })).toBe(false);
   });
 
   it('finds the deadline a notice meets by the pointer of its record', () => {
-    const rows = notificationRows(value);
+    const rows = notificationRows(value, schema);
     const deadlines = [deadline({ metBy: '/notifications/nis2-early-warning', status: 'MET' })];
     expect(deadlineOfNotification(rows[1], deadlines)?.status).toBe('MET');
     expect(deadlineOfNotification(rows[0], deadlines)).toBeNull();
