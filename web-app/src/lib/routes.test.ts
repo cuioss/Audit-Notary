@@ -419,6 +419,140 @@ describe('the threat models', () => {
   });
 });
 
+describe('the incidents', () => {
+  const ULID = '01JZA4N7KQ3V8M2D6X9C1B5T0E';
+
+  it.each([
+    ['/incidents', '', 'incidents', {}, undefined],
+    ['/incidents/2026', '', 'incidents.year', { year: '2026' }, undefined],
+    ['/incidents/2026/new', '', 'incidents.new', { year: '2026' }, undefined],
+    [
+      `/incidents/2026/${ULID}`,
+      '',
+      'incidents.incident',
+      { year: '2026', incident: ULID },
+      undefined,
+    ],
+    [
+      `/incidents/2026/${ULID}`,
+      '?stage=notifications',
+      'incidents.incident',
+      { year: '2026', incident: ULID },
+      { stage: 'notifications' },
+    ],
+    [
+      `/incidents/2026/${ULID}`,
+      '?at=v1&stage=review',
+      'incidents.incident',
+      { year: '2026', incident: ULID },
+      { at: 'v1', stage: 'review' },
+    ],
+    [
+      `/incidents/2026/${ULID}/release`,
+      '',
+      'incidents.release',
+      { year: '2026', incident: ULID },
+      undefined,
+    ],
+  ])('reads %s%s as %s', (path, search, route, params, query) => {
+    const address = parseAddress(path, search);
+    expect(address?.route).toBe(route);
+    expect(address?.params).toEqual(params);
+    if (query) {
+      expect(address?.query).toEqual(query);
+    } else {
+      expect(address).not.toHaveProperty('query');
+    }
+  });
+
+  it('reads the new page before the incident, so that new is never an incident', () => {
+    expect(ROUTES.indexOf('incidents.new')).toBeLessThan(ROUTES.indexOf('incidents.incident'));
+    expect(parseAddress('/incidents/2026/new')?.route).toBe('incidents.new');
+    expect(parseAddress('/incidents/2026/new/release')).toBeNull();
+    expect(parseAddress('/incidents/2026/new-2')?.params).toEqual({
+      year: '2026',
+      incident: 'new-2',
+    });
+    expect(parseAddress('/incidents/2026/new-2/release')?.route).toBe('incidents.release');
+    expect(parseAddress('/incidents/2026/NEW')?.route).toBe('incidents.incident');
+    expect(lensOf('incidents.new')).toBe('incidents');
+    expect(routeTitleKey('incidents.new')).toBe('lens.incidents');
+    expect(routesUnder('incidents')).toEqual(
+      expect.arrayContaining([
+        'incidents',
+        'incidents.year',
+        'incidents.new',
+        'incidents.incident',
+        'incidents.release',
+      ]),
+    );
+  });
+
+  it('writes the admitted names in the order of the file and refuses a bad value', () => {
+    expect(
+      formatAddress({
+        route: 'incidents.incident',
+        params: { year: '2026', incident: ULID },
+        query: { stage: 'review', at: 'v1' },
+      }),
+    ).toBe(`/incidents/2026/${ULID}?at=v1&stage=review`);
+    expect(formatAddress({ route: 'incidents.new', params: { year: '2026' } })).toBe(
+      '/incidents/2026/new',
+    );
+    expect(() =>
+      formatAddress({
+        route: 'incidents.incident',
+        params: { year: '2026', incident: ULID },
+        query: { stage: 'Privacy Assessment' },
+      }),
+    ).toThrow('query value refused');
+  });
+
+  it('ignores a name the address does not admit and refuses a bad or repeated value', () => {
+    expect(parseAddress('/incidents/2026/new', '?stage=review')).toEqual({
+      route: 'incidents.new',
+      params: { year: '2026' },
+    });
+    expect(parseAddress(`/incidents/2026/${ULID}`, '?stage=Review')).toBeNull();
+    expect(parseAddress(`/incidents/2026/${ULID}`, '?stage=a&stage=b')).toBeNull();
+    expect(parseAddress(`/incidents/2026/${ULID}`, '?at=zzz')).toBeNull();
+    expect(parseAddress('/incidents/2026', '?stage=review')).toEqual({
+      route: 'incidents.year',
+      params: { year: '2026' },
+    });
+  });
+
+  it.each([
+    '/incidents',
+    '/incidents/2026',
+    '/incidents/2026/new',
+    `/incidents/2026/${ULID}`,
+    `/incidents/2026/${ULID}?stage=notifications`,
+    `/incidents/2026/${ULID}?at=v1`,
+    `/incidents/2026/${ULID}?stage=review&at=4be0c3a`,
+    `/incidents/2026/${ULID}/release`,
+    '/incidents/2026/inc-0007',
+  ])('lets %s pass as a return', (address) => {
+    expect(checkReturn(address)).toBe(address);
+  });
+
+  it.each([
+    '/incidents/2026/new?stage=review',
+    '/incidents/2026/new#x',
+    '/incidents/2026/new/release',
+    `/incidents/2026/${ULID}?stage=`,
+    `/incidents/2026/${ULID}?stage=Review`,
+    `/incidents/2026/${ULID}?stage=a&stage=b`,
+    `/incidents/2026/${ULID}?recipe=stride`,
+    `/incidents/2026/${ULID}?at=zzz`,
+    `/incidents/2026/${ULID}/release?stage=review`,
+    '/incidents/2026?stage=review',
+    '/incidents?at=v1',
+  ])('replaces %s by the start page', (candidate) => {
+    expect(checkReturn(candidate)).toBe('/');
+  });
+});
+
 describe('the Reports lens', () => {
   it.each([
     ['/reports', '', 'reports', {}],
