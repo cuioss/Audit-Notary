@@ -1,0 +1,64 @@
+{
+  "repository": "isms-register",
+  "id": "R-042",
+  "category": "isms",
+  "kind": "risk",
+  "title": "Unpatched build agents",
+  "state": "draft",
+  "version": 1,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "63852cd",
+      "savedAt": "2026-11-24T09:15:00Z",
+      "savedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber",
+        "role": "Developer"
+      },
+      "value": {
+        "title": "Unpatched build agents",
+        "description": "The build agents of the second pipeline are not covered by the patch cycle of the first one. Several of them run an operating system with known vulnerabilities.",
+        "rating": "high",
+        "owner": "team:security-office",
+        "issues": [
+          "SEC-401"
+        ],
+        "related": [
+          "system:core-platform"
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-24T09:15:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2026-11-24T09:00:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "isms.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB6H8K0N2Q4S6V8X0Z2C4E7",
+  "revisions": [
+    {
+      "ref": "f7c9825",
+      "commit": "f7c9825",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-20T15:10:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "ffacd19",
+      "commit": "ffacd19",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-16T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

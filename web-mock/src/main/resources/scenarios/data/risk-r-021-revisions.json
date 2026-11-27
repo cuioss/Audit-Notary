@@ -1,0 +1,55 @@
+{
+  "repository": "isms-register",
+  "id": "R-021",
+  "revisions": [
+    {
+      "ref": "v1",
+      "commit": "8a8f11c",
+      "kind": "release",
+      "tag": "risks/R-021/v1",
+      "version": 1,
+      "at": "2026-11-12T10:41:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "40a4302",
+      "commit": "40a4302",
+      "kind": "submit",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-12T10:20:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "7d4da7d",
+      "commit": "7d4da7d",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-11T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "42cab3c",
+      "commit": "42cab3c",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-10T13:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

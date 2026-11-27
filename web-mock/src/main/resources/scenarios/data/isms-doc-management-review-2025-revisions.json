@@ -1,0 +1,55 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB8K0N2Q4S6V8X0Z2C4E6G9",
+  "revisions": [
+    {
+      "ref": "v1",
+      "commit": "48b6c88",
+      "kind": "release",
+      "tag": "management-reviews/01JZB8K0N2Q4S6V8X0Z2C4E6G9/v1",
+      "version": 1,
+      "at": "2025-12-09T15:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "ff96578",
+      "commit": "ff96578",
+      "kind": "submit",
+      "tag": null,
+      "version": 1,
+      "at": "2025-12-09T14:20:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "a7286f9",
+      "commit": "a7286f9",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2025-12-08T10:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "c7d9d3f",
+      "commit": "c7d9d3f",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2025-12-02T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

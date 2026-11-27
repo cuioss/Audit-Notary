@@ -29,7 +29,15 @@
     {
       "repository": "isms-register",
       "actions": [
-        "read"
+        "read",
+        "edit"
+      ]
+    },
+    {
+      "repository": "isms-core",
+      "actions": [
+        "read",
+        "edit"
       ]
     },
     {
@@ -66,6 +74,10 @@
           },
           {
             "alias": "isms-register",
+            "fetch": "UP"
+          },
+          {
+            "alias": "isms-core",
             "fetch": "UP"
           },
           {
@@ -190,7 +202,28 @@
           {
             "kind": "review",
             "lens": "isms",
-            "title": "Risk R-012: supplier access to production",
+            "title": "Risk R-007: Signing keys held by a single administrator",
+            "address": "/isms/risks/r-007",
+            "due": "2026-11-18"
+          },
+          {
+            "kind": "review",
+            "lens": "isms",
+            "title": "Scope of the ISMS",
+            "address": "/isms/documents/01JZB4F6H8K0N2Q4S6V8X0Z2C5",
+            "due": "2026-11-20"
+          },
+          {
+            "kind": "review",
+            "lens": "isms",
+            "title": "Access control policy",
+            "address": "/isms/documents/01JZB2D4F6H8K0N2Q4S6V8X0Z3",
+            "due": "2026-12-08"
+          },
+          {
+            "kind": "review",
+            "lens": "isms",
+            "title": "Risk R-012: Supplier access to production",
             "address": "/isms/risks/r-012",
             "due": "2026-12-15"
           }
@@ -3194,11 +3227,183 @@
         "repository": "isms-incidents-2026",
         "action": "approve"
       }
+    },
+    "GET /api/v1/isms/register": {
+      "status": 200,
+      "body_file": "isms-register.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register": {
+      "status": 200,
+      "body_file": "isms-register-documents.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core": {
+      "status": 200,
+      "body_file": "isms-documents.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/isms/schema": {
+      "status": 200,
+      "body_file": "categories-isms-schema.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-012": {
+      "status": 200,
+      "body_file": "risk-r-012.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-012/revisions": {
+      "status": 200,
+      "body_file": "risk-r-012-revisions.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-012?at=v1": {
+      "status": 200,
+      "body_file": "risk-r-012-at-v1.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-012?at=v2": {
+      "status": 200,
+      "body_file": "risk-r-012-at-v2.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-018": {
+      "status": 200,
+      "body_file": "risk-r-018.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-018/revisions": {
+      "status": 200,
+      "body_file": "risk-r-018-revisions.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-018?at=v1": {
+      "status": 200,
+      "body_file": "risk-r-018-at-v1.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2": {
+      "status": 200,
+      "body_file": "isms-doc-information-security-policy.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/revisions": {
+      "status": 200,
+      "body_file": "isms-doc-information-security-policy-revisions.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/samm/payments/gaps": {
+      "status": 200,
+      "body_file": "isms-gaps-payments.json",
+      "requires": {
+        "repository": "samm-assessments",
+        "action": "read"
+      }
+    },
+    "POST /api/v1/documents/isms-register/R-012/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T10:12:00Z",
+        "parts": {
+          "data": {
+            "blob": "56d52db",
+            "savedAt": "2026-11-26T10:12:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example"
+            }
+          }
+        },
+        "state": "draft",
+        "version": 3
+      },
+      "requires": {
+        "repository": "isms-register",
+        "action": "edit"
+      }
+    },
+    "PUT /api/v1/drafts/isms-register/R-012": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T10:11:00Z"
+      },
+      "requires": {
+        "repository": "isms-register",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/documents/isms-register": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "id": "R-043",
+        "repository": "isms-register",
+        "address": "/isms/risks/r-043",
+        "state": "draft",
+        "version": 1,
+        "at": "2026-11-26T09:41:00Z",
+        "parts": {
+          "data": {
+            "blob": "0981e3d",
+            "savedAt": "2026-11-26T09:41:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example"
+            }
+          }
+        }
+      },
+      "requires": {
+        "repository": "isms-register",
+        "action": "edit"
+      }
     }
   },
   "states": {
     "unreachable": {
-      "description": "The fetch of samm-assessments, threat-models and isms-incidents-2026 fails: the status lists all three as DOWN, the reads of the threat models are served from the last fetch, and the Git writes of the threat models and of the incidents (save, completion and reopening of a stage, submit, create) answer 503 GIT_UNAVAILABLE; a draft stays 200, and the release of an incident is 403 FORBIDDEN, because the profile grants no approve.",
+      "description": "The fetch of samm-assessments, threat-models, isms-incidents-2026, isms-register and isms-core fails: the status lists all five as DOWN, the reads of the threat models are served from the last fetch, and the Git writes of the threat models, of the incidents and of the risks (save, completion and reopening of a stage, submit, create) answer 503 GIT_UNAVAILABLE; a draft stays 200, and the release of an incident is 403 FORBIDDEN, because the profile grants no approve.",
       "routes": {
         "GET /api/v1/status": {
           "status": 200,
@@ -3217,7 +3422,11 @@
               },
               {
                 "alias": "isms-register",
-                "fetch": "UP"
+                "fetch": "DOWN"
+              },
+              {
+                "alias": "isms-core",
+                "fetch": "DOWN"
               },
               {
                 "alias": "isms-incidents-2026",
@@ -3795,6 +4004,26 @@
             "repository": "isms-incidents-2026",
             "action": "edit"
           }
+        },
+        "POST /api/v1/documents/isms-register/R-012/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-register": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
         }
       }
     },
@@ -3819,6 +4048,10 @@
               },
               {
                 "alias": "isms-register",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-core",
                 "fetch": "UP"
               },
               {

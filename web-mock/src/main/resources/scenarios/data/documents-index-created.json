@@ -278,6 +278,150 @@
       "title": "Misdirected newsletter exposed the subscriber list",
       "state": "released",
       "address": "/incidents/2025/01JZ3B5D7F9H1K3N5Q7S9V1X3Z"
+    },
+    {
+      "repository": "isms-core",
+      "id": "01JZB1C3E5G7J9M1P3R5T7W9Y2",
+      "category": "isms",
+      "kind": "policy",
+      "title": "Information security policy",
+      "state": "released",
+      "address": "/isms/documents/01JZB1C3E5G7J9M1P3R5T7W9Y2"
+    },
+    {
+      "repository": "isms-core",
+      "id": "01JZB2D4F6H8K0N2Q4S6V8X0Z3",
+      "category": "isms",
+      "kind": "policy",
+      "title": "Access control policy",
+      "state": "released",
+      "address": "/isms/documents/01JZB2D4F6H8K0N2Q4S6V8X0Z3"
+    },
+    {
+      "repository": "isms-core",
+      "id": "01JZB3E5G7J9M1P3R5T7W9Y1B4",
+      "category": "isms",
+      "kind": "policy",
+      "title": "Secure development policy",
+      "state": "in-review",
+      "address": "/isms/documents/01JZB3E5G7J9M1P3R5T7W9Y1B4"
+    },
+    {
+      "repository": "isms-core",
+      "id": "01JZB4F6H8K0N2Q4S6V8X0Z2C5",
+      "category": "isms",
+      "kind": "isms-scope",
+      "title": "Scope of the ISMS",
+      "state": "released",
+      "address": "/isms/documents/01JZB4F6H8K0N2Q4S6V8X0Z2C5"
+    },
+    {
+      "repository": "isms-core",
+      "id": "01JZB5G7J9M1P3R5T7W9Y1B3D6",
+      "category": "isms",
+      "kind": "audit-report",
+      "title": "Internal audit 2025",
+      "state": "released",
+      "address": "/isms/documents/01JZB5G7J9M1P3R5T7W9Y1B3D6"
+    },
+    {
+      "repository": "isms-core",
+      "id": "01JZB6H8K0N2Q4S6V8X0Z2C4E7",
+      "category": "isms",
+      "kind": "audit-report",
+      "title": "Internal audit 2026",
+      "state": "draft",
+      "address": "/isms/documents/01JZB6H8K0N2Q4S6V8X0Z2C4E7"
+    },
+    {
+      "repository": "isms-core",
+      "id": "01JZB7J9M1P3R5T7W9Y1B3D5F8",
+      "category": "isms",
+      "kind": "management-review",
+      "title": "Management review 2026 H1",
+      "state": "released",
+      "address": "/isms/documents/01JZB7J9M1P3R5T7W9Y1B3D5F8"
+    },
+    {
+      "repository": "isms-core",
+      "id": "01JZB8K0N2Q4S6V8X0Z2C4E6G9",
+      "category": "isms",
+      "kind": "management-review",
+      "title": "Management review 2025",
+      "state": "released",
+      "address": "/isms/documents/01JZB8K0N2Q4S6V8X0Z2C4E6G9"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-004",
+      "category": "isms",
+      "kind": "risk",
+      "title": "Build agents run unpatched images",
+      "state": "released",
+      "address": "/isms/risks/r-004"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-007",
+      "category": "isms",
+      "kind": "risk",
+      "title": "Signing keys held by a single administrator",
+      "state": "released",
+      "address": "/isms/risks/r-007"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-009",
+      "category": "isms",
+      "kind": "risk",
+      "title": "Replay of payment authorisations in the checkout flow",
+      "state": "released",
+      "address": "/isms/risks/r-009"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-012",
+      "category": "isms",
+      "kind": "risk",
+      "title": "Supplier access to production",
+      "state": "released",
+      "address": "/isms/risks/r-012"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-015",
+      "category": "isms",
+      "kind": "risk",
+      "title": "Security Testing of the payments scope is below its target",
+      "state": "released",
+      "address": "/isms/risks/r-015"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-018",
+      "category": "isms",
+      "kind": "risk",
+      "title": "No tested restore of the customer database",
+      "state": "in-review",
+      "address": "/isms/risks/r-018"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-021",
+      "category": "isms",
+      "kind": "risk",
+      "title": "Personal data in application logs",
+      "state": "released",
+      "address": "/isms/risks/r-021"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-042",
+      "category": "isms",
+      "kind": "risk",
+      "title": "Unpatched build agents",
+      "state": "draft",
+      "address": "/isms/risks/r-042"
     }
   ]
 }

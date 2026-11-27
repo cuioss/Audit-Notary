@@ -1,0 +1,92 @@
+{
+  "repository": "isms-register",
+  "id": "R-021",
+  "category": "isms",
+  "kind": "risk",
+  "title": "Personal data in application logs",
+  "state": "released",
+  "version": 1,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "b16c903",
+      "savedAt": "2026-11-11T09:40:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Personal data in application logs",
+        "description": "The applications of the mobile product write e-mail addresses and device identifiers to their logs. The logs are kept for ninety days and can be read by every developer.",
+        "rating": "medium",
+        "treatment": "accept",
+        "treatment-notes": "Accepted until the logging framework masks the fields; the retention is cut to thirty days.",
+        "owner": "team:mobile",
+        "review-due": "2027-11-12",
+        "related": [
+          "isms-incidents-2026:incident/01JZ9T4M6Q8S0V2X4B6D8F0H2K"
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-12T10:41:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "risks/R-021/v1"
+    },
+    {
+      "at": "2026-11-12T10:20:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-11-11T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2026-11-10T13:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "risks/R-021/v1",
+    "at": "2026-11-12T10:41:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "at": {
+    "ref": "v1",
+    "kind": "release",
+    "commit": "8a8f11c",
+    "tag": "risks/R-021/v1",
+    "at": "2026-11-12T10:41:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  }
+}

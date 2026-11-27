@@ -1,0 +1,401 @@
+{
+  "category": "isms",
+  "kinds": [
+    {
+      "id": "policy",
+      "repository": "isms-core",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": [
+          "title",
+          "owner",
+          "statements"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "owner": {
+            "type": "string",
+            "format": "gdr-link",
+            "x-catalog": "role"
+          },
+          "purpose": {
+            "type": "string",
+            "x-asciidoc": true
+          },
+          "statements": {
+            "type": "string",
+            "x-asciidoc": true
+          },
+          "applies-to": {
+            "type": "array",
+            "maxItems": 50,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "format": "gdr-link"
+            }
+          },
+          "review-due": {
+            "type": "string",
+            "format": "date"
+          },
+          "related": {
+            "type": "array",
+            "maxItems": 50,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "format": "gdr-link"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "isms-scope",
+      "repository": "isms-core",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": [
+          "title",
+          "owner",
+          "boundaries"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "owner": {
+            "type": "string",
+            "format": "gdr-link",
+            "x-catalog": "role"
+          },
+          "boundaries": {
+            "type": "string",
+            "x-asciidoc": true
+          },
+          "exclusions": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "type": "object",
+              "required": [
+                "what",
+                "reason"
+              ],
+              "properties": {
+                "what": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "reason": {
+                  "type": "string",
+                  "maxLength": 500
+                }
+              }
+            }
+          },
+          "interested-parties": {
+            "type": "string",
+            "x-asciidoc": true
+          },
+          "review-due": {
+            "type": "string",
+            "format": "date"
+          },
+          "related": {
+            "type": "array",
+            "maxItems": 50,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "format": "gdr-link"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "audit-report",
+      "repository": "isms-core",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": [
+          "title",
+          "year",
+          "conclusion"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "year": {
+            "type": "integer",
+            "minimum": 2000,
+            "maximum": 2100
+          },
+          "period": {
+            "type": "object",
+            "required": [
+              "from",
+              "to"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "format": "date"
+              },
+              "to": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          },
+          "auditors": {
+            "type": "array",
+            "maxItems": 20,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "x-person": true
+            }
+          },
+          "audited": {
+            "type": "string",
+            "x-asciidoc": true
+          },
+          "findings": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "required": [
+                "severity",
+                "text"
+              ],
+              "properties": {
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "major",
+                    "minor",
+                    "observation"
+                  ]
+                },
+                "text": {
+                  "type": "string",
+                  "maxLength": 1000
+                },
+                "issues": {
+                  "type": "array",
+                  "maxItems": 50,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                }
+              }
+            }
+          },
+          "conclusion": {
+            "type": "string",
+            "x-asciidoc": true
+          },
+          "related": {
+            "type": "array",
+            "maxItems": 50,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "format": "gdr-link"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "management-review",
+      "repository": "isms-core",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": [
+          "title",
+          "year",
+          "held-at",
+          "conclusion"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "year": {
+            "type": "integer",
+            "minimum": 2000,
+            "maximum": 2100
+          },
+          "held-at": {
+            "type": "string",
+            "format": "date"
+          },
+          "participants": {
+            "type": "array",
+            "maxItems": 30,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "x-person": true
+            }
+          },
+          "inputs": {
+            "type": "string",
+            "x-asciidoc": true
+          },
+          "decisions": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "required": [
+                "what"
+              ],
+              "properties": {
+                "what": {
+                  "type": "string",
+                  "maxLength": 500
+                },
+                "role": {
+                  "type": "string",
+                  "format": "gdr-link",
+                  "x-catalog": "role"
+                },
+                "due": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "issues": {
+                  "type": "array",
+                  "maxItems": 50,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                }
+              }
+            }
+          },
+          "conclusion": {
+            "type": "string",
+            "x-asciidoc": true
+          },
+          "related": {
+            "type": "array",
+            "maxItems": 50,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "format": "gdr-link"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "risk",
+      "repository": "isms-register",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": [
+          "title",
+          "rating",
+          "treatment",
+          "owner"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "x-asciidoc": true
+          },
+          "rating": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
+          },
+          "treatment": {
+            "type": "string",
+            "enum": [
+              "mitigate",
+              "accept",
+              "transfer",
+              "avoid"
+            ]
+          },
+          "treatment-notes": {
+            "type": "string",
+            "x-asciidoc": true
+          },
+          "owner": {
+            "type": "string",
+            "format": "gdr-link",
+            "x-catalog": "team"
+          },
+          "owner-role": {
+            "type": "string",
+            "format": "gdr-link",
+            "x-catalog": "role"
+          },
+          "review-due": {
+            "type": "string",
+            "format": "date"
+          },
+          "issues": {
+            "type": "array",
+            "maxItems": 50,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "origin": {
+            "type": "string",
+            "format": "gdr-link",
+            "readOnly": true
+          },
+          "related": {
+            "type": "array",
+            "maxItems": 50,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "format": "gdr-link"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

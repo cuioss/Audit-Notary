@@ -1,0 +1,33 @@
+{
+  "repository": "isms-register",
+  "id": "R-018",
+  "from": "risks/R-018/v1",
+  "to": "working",
+  "sections": [
+    {
+      "part": "data",
+      "changes": [
+        {
+          "pointer": "/description",
+          "before": "Backups of the customer database are taken every night, but a restore was never tested. It is unknown whether the data can be recovered within the time that the business accepts.",
+          "after": "Backups of the customer database are taken every night, but a restore was never tested. It is unknown whether the data can be recovered within the time that the business accepts. The first restore test on a copy of the database is planned for next quarter and must show a recovery time below four hours."
+        },
+        {
+          "pointer": "/review-due",
+          "before": "2027-04-05",
+          "after": "2027-05-05"
+        },
+        {
+          "pointer": "/issues",
+          "before": [
+            "OPS-211"
+          ],
+          "after": [
+            "OPS-211",
+            "OPS-212"
+          ]
+        }
+      ]
+    }
+  ]
+}

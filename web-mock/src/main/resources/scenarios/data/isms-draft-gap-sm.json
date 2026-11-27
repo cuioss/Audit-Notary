@@ -1,0 +1,14 @@
+{
+  "origin": {
+    "ref": "samm-assessments:assessment/payments-2026-q2#sm",
+    "kind": "samm-gap",
+    "title": "Payments 2026 Q2, Strategy and Metrics",
+    "address": "/samm/payments/2026-q2/sm"
+  },
+  "fields": {
+    "/title": "Strategy and Metrics of the Payments scope is below its target",
+    "/description": "The released assessment Payments 2026 Q2 scores 1.25 for Strategy and Metrics; the target of the scope is 2.",
+    "/owner": "team:payments",
+    "/treatment": "mitigate"
+  }
+}

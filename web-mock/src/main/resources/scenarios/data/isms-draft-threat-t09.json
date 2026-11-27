@@ -1,0 +1,14 @@
+{
+  "origin": {
+    "ref": "threat-models:threat-model/payment-api-checkout-flow#T-09",
+    "kind": "threat",
+    "title": "Payment API, checkout flow: T-09",
+    "address": "/threat-models/payment-api/checkout-flow"
+  },
+  "fields": {
+    "/title": "Repudiation of a refund by a support agent",
+    "/description": "A support agent refunds a payment and later denies it, and nothing shows who did it.",
+    "/owner": "team:payments",
+    "/treatment": "accept"
+  }
+}

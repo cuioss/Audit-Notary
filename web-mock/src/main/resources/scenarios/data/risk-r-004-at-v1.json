@@ -1,0 +1,96 @@
+{
+  "repository": "isms-register",
+  "id": "R-004",
+  "category": "isms",
+  "kind": "risk",
+  "title": "Build agents run unpatched images",
+  "state": "released",
+  "version": 1,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "28e1eb6",
+      "savedAt": "2025-11-05T11:30:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Build agents run unpatched images",
+        "description": "The build agents are started from a base image that is rebuilt only when somebody asks for it. Known vulnerabilities in the image reach the agents that compile and sign our releases.",
+        "rating": "medium",
+        "treatment": "mitigate",
+        "treatment-notes": "Rebuild the base image on a schedule.",
+        "owner": "team:security-office",
+        "owner-role": "role:service-owner",
+        "review-due": "2026-05-06",
+        "issues": [
+          "SEC-312"
+        ],
+        "related": [
+          "system:core-platform"
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2025-11-06T14:02:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "risks/R-004/v1"
+    },
+    {
+      "at": "2025-11-06T13:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-11-05T11:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2025-10-29T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "risks/R-004/v1",
+    "at": "2025-11-06T14:02:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "at": {
+    "ref": "v1",
+    "kind": "release",
+    "commit": "d5ecf84",
+    "tag": "risks/R-004/v1",
+    "at": "2025-11-06T14:02:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  }
+}

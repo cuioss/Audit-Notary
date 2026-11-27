@@ -1,0 +1,143 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB1C3E5G7J9M1P3R5T7W9Y2",
+  "category": "isms",
+  "kind": "policy",
+  "title": "Information security policy",
+  "state": "released",
+  "version": 3,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "2a5b826",
+      "savedAt": "2026-05-20T13:40:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Information security policy",
+        "owner": "role:ciso",
+        "purpose": "This policy states how the organisation protects the confidentiality, integrity and availability of its information, and who is accountable for each part of that protection.",
+        "statements": "The management of the organisation is accountable for information security and reviews it every year.\n\n* Every system and every set of data has an owner who answers for its protection.\n* Access is given by need and withdrawn when the need ends.\n* Security incidents are reported to the security office without delay.\n* Suppliers that process our information are bound to the same rules.\n* A change of the security rules is released only after the review of the Chief Information Security Officer.",
+        "applies-to": [
+          "organisation"
+        ],
+        "review-due": "2027-05-20"
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-05-20T14:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "policies/01JZB1C3E5G7J9M1P3R5T7W9Y2/v3"
+    },
+    {
+      "at": "2026-05-20T13:50:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-05-20T13:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2026-05-19T10:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2025-11-18T10:30:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "policies/01JZB1C3E5G7J9M1P3R5T7W9Y2/v2"
+    },
+    {
+      "at": "2025-11-18T09:50:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-11-12T14:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 3
+    },
+    {
+      "at": "2025-03-10T09:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "policies/01JZB1C3E5G7J9M1P3R5T7W9Y2/v1"
+    },
+    {
+      "at": "2025-03-10T08:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-03-07T15:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2025-03-03T10:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "policies/01JZB1C3E5G7J9M1P3R5T7W9Y2/v3",
+    "at": "2026-05-20T14:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": []
+}

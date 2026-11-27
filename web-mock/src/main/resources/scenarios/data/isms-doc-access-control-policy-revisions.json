@@ -1,0 +1,91 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB2D4F6H8K0N2Q4S6V8X0Z3",
+  "revisions": [
+    {
+      "ref": "v2",
+      "commit": "c35e8ff",
+      "kind": "release",
+      "tag": "policies/01JZB2D4F6H8K0N2Q4S6V8X0Z3/v2",
+      "version": 2,
+      "at": "2025-10-28T08:45:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "667d964",
+      "commit": "667d964",
+      "kind": "submit",
+      "tag": null,
+      "version": 2,
+      "at": "2025-10-28T08:20:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "058a89e",
+      "commit": "058a89e",
+      "kind": "save",
+      "tag": null,
+      "version": 2,
+      "at": "2025-10-24T11:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "v1",
+      "commit": "3b8ed75",
+      "kind": "release",
+      "tag": "policies/01JZB2D4F6H8K0N2Q4S6V8X0Z3/v1",
+      "version": 1,
+      "at": "2025-04-22T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "e8403a3",
+      "commit": "e8403a3",
+      "kind": "submit",
+      "tag": null,
+      "version": 1,
+      "at": "2025-04-22T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "4dfb083",
+      "commit": "4dfb083",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2025-04-18T11:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "76d1737",
+      "commit": "76d1737",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2025-04-14T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

@@ -1,0 +1,167 @@
+{
+  "scope": "shop",
+  "today": "2026-11-26",
+  "assessment": {
+    "id": "2026-q3",
+    "document": "shop-2026-q3",
+    "title": "Web shop 2026 Q3",
+    "date": "2026-09-22",
+    "modelVersion": "v2.2.0",
+    "release": {
+      "tag": "assessments/shop-2026-q3/v1",
+      "at": "2026-09-24T10:00:00Z"
+    }
+  },
+  "gaps": [
+    {
+      "practice": "sm",
+      "function": "governance",
+      "score": 1.25,
+      "target": 2,
+      "gap": 0.75,
+      "due": null,
+      "reference": "samm-assessments:assessment/shop-2026-q3#sm",
+      "risk": null
+    },
+    {
+      "practice": "pc",
+      "function": "governance",
+      "score": 1.0,
+      "target": 2,
+      "gap": 1.0,
+      "due": null,
+      "reference": "samm-assessments:assessment/shop-2026-q3#pc",
+      "risk": null
+    },
+    {
+      "practice": "eg",
+      "function": "governance",
+      "score": 1.5,
+      "target": 2,
+      "gap": 0.5,
+      "due": null,
+      "reference": "samm-assessments:assessment/shop-2026-q3#eg",
+      "risk": null
+    },
+    {
+      "practice": "ta",
+      "function": "design",
+      "score": 1.0,
+      "target": 2,
+      "gap": 1.0,
+      "due": null,
+      "reference": "samm-assessments:assessment/shop-2026-q3#ta",
+      "risk": null
+    },
+    {
+      "practice": "sr",
+      "function": "design",
+      "score": 1.625,
+      "target": 2,
+      "gap": 0.375,
+      "due": null,
+      "reference": "samm-assessments:assessment/shop-2026-q3#sr",
+      "risk": null
+    },
+    {
+      "practice": "sa",
+      "function": "design",
+      "score": 1.625,
+      "target": 2,
+      "gap": 0.375,
+      "due": null,
+      "reference": "samm-assessments:assessment/shop-2026-q3#sa",
+      "risk": null
+    },
+    {
+      "practice": "sb",
+      "function": "implementation",
+      "score": 2.125,
+      "target": 2.5,
+      "gap": 0.375,
+      "due": null,
+      "reference": "samm-assessments:assessment/shop-2026-q3#sb",
+      "risk": null
+    },
+    {
+      "practice": "sd",
+      "function": "implementation",
+      "score": 1.75,
+      "target": 2.5,
+      "gap": 0.75,
+      "due": null,
+      "reference": "samm-assessments:assessment/shop-2026-q3#sd",
+      "risk": null
+    },
+    {
+      "practice": "dm",
+      "function": "implementation",
+      "score": 0.875,
+      "target": 2,
+      "gap": 1.125,
+      "due": null,
+      "reference": "samm-assessments:assessment/shop-2026-q3#dm",
+      "risk": null
+    },
+    {
+      "practice": "aa",
+      "function": "verification",
+      "score": 0.625,
+      "target": 2,
+      "gap": 1.375,
+      "due": null,
+      "reference": "samm-assessments:assessment/shop-2026-q3#aa",
+      "risk": null
+    },
+    {
+      "practice": "rt",
+      "function": "verification",
+      "score": 0.875,
+      "target": 2,
+      "gap": 1.125,
+      "due": null,
+      "reference": "samm-assessments:assessment/shop-2026-q3#rt",
+      "risk": null
+    },
+    {
+      "practice": "st",
+      "function": "verification",
+      "score": 1.625,
+      "target": 2,
+      "gap": 0.375,
+      "due": null,
+      "reference": "samm-assessments:assessment/shop-2026-q3#st",
+      "risk": null
+    },
+    {
+      "practice": "im",
+      "function": "operations",
+      "score": 0.875,
+      "target": 2,
+      "gap": 1.125,
+      "due": null,
+      "reference": "samm-assessments:assessment/shop-2026-q3#im",
+      "risk": null
+    },
+    {
+      "practice": "em",
+      "function": "operations",
+      "score": 1.125,
+      "target": 2,
+      "gap": 0.875,
+      "due": null,
+      "reference": "samm-assessments:assessment/shop-2026-q3#em",
+      "risk": null
+    },
+    {
+      "practice": "om",
+      "function": "operations",
+      "score": 0.625,
+      "target": 2,
+      "gap": 1.375,
+      "due": null,
+      "reference": "samm-assessments:assessment/shop-2026-q3#om",
+      "risk": null
+    }
+  ]
+}

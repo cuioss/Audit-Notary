@@ -1,0 +1,30 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB3E5G7J9M1P3R5T7W9Y1B4",
+  "from": "policies/01JZB3E5G7J9M1P3R5T7W9Y1B4/v1",
+  "to": "working",
+  "sections": [
+    {
+      "part": "data",
+      "changes": [
+        {
+          "pointer": "/statements",
+          "before": "Every change of the software is reviewed by a second person before it is released.\n\n* Dependencies are checked for known vulnerabilities at every build.\n* Secrets are never stored in the source code.",
+          "after": "Every change of the software is reviewed by a second person before it is released.\n\n* Dependencies are checked for known vulnerabilities at every build and every week.\n* Secrets are never stored in the source code; a secret that was committed is replaced at once.\n* A threat model exists for every service with a very high protection need."
+        },
+        {
+          "pointer": "/applies-to",
+          "before": [
+            "team:payments",
+            "team:identity"
+          ],
+          "after": [
+            "team:payments",
+            "team:identity",
+            "team:mobile"
+          ]
+        }
+      ]
+    }
+  ]
+}
