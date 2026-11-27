@@ -1199,8 +1199,10 @@ differs) and Jordan Weber as the other person
 |The model reads in review; the release answers `403 STEP_UP_REQUIRED` and moves to `-stepped-up`, where it answers `200
 RELEASED` and moves to `threat-model-released`
 
-|`threat-model-release-changed`
-|The model reads in review with the diff; the release answers `409 CHANGED_SINCE_REVIEW`
+|`threat-model-release-changed`, `-refused`, `-reviewed`
+|The model reads in review; the release answers `409 CHANGED_SINCE_REVIEW` and moves to `-refused`, where it stays refused
+until the diff is read (the review again); that read moves to `-reviewed`, where the release answers `200 RELEASED` and moves
+to `threat-model-released`
 
 |`threat-model-release-released-meanwhile`
 |The model reads as in `threat-model-released`; the release answers `409 DOCUMENT_RELEASED` with the tag of `v4`

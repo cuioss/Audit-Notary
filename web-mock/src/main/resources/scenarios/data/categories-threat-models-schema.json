@@ -258,7 +258,8 @@
                         },
                         "transferred": {
                           "type": "string",
-                          "format": "gdr-link"
+                          "format": "gdr-link",
+                          "readOnly": true
                         }
                       }
                     }

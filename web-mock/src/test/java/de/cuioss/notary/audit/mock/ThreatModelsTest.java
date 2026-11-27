@@ -1171,18 +1171,29 @@ class ThreatModelsTest {
         }
 
         @Test
-        @DisplayName("release-changed answers CHANGED_SINCE_REVIEW with the diff; release-released-meanwhile DOCUMENT_RELEASED with the tag")
+        @DisplayName("release-changed answers CHANGED_SINCE_REVIEW, stays refused until the diff is read, then passes; release-released-meanwhile DOCUMENT_RELEASED with the tag")
         void shouldRefuseTheRelease() {
             try (var client = start("workshop")) {
                 goTo(client, "threat-model-release-changed");
                 var changed = client.change("POST", RELEASE, "{}");
+                var afterRefusal = stateOf(client);
+                var again = client.change("POST", RELEASE, "{}");
                 var diff = get(client, DOCS + CHECKOUT + "/diff");
+                var afterReview = stateOf(client);
                 var state = get(client, CHECKOUT_ADDRESS).path("state").asText();
+                var passed = client.change("POST", RELEASE, "{}");
+                var afterRelease = stateOf(client);
                 goTo(client, "threat-model-release-released-meanwhile");
                 var meanwhile = client.change("POST", RELEASE, "{}");
                 assertAll(
                         () -> assertEquals(409, changed.statusCode()),
                         () -> assertEquals("CHANGED_SINCE_REVIEW", json(changed).path("outcome").asText()),
+                        () -> assertEquals("threat-model-release-changed-refused", afterRefusal),
+                        () -> assertEquals(409, again.statusCode()),
+                        () -> assertEquals("threat-model-release-changed-reviewed", afterReview),
+                        () -> assertEquals(200, passed.statusCode()),
+                        () -> assertEquals("RELEASED", json(passed).path("outcome").asText()),
+                        () -> assertEquals("threat-model-released", afterRelease),
                         () -> assertEquals("in-review", state),
                         () -> assertEquals("working", diff.path("to").asText()),
                         () -> assertEquals(409, meanwhile.statusCode()),

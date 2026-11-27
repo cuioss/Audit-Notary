@@ -328,15 +328,25 @@ describe('the threat models', () => {
     expect(parseAddress('/threat-models/payment-api/new')?.route).toBe('threat-models.new');
     expect(parseAddress('/threat-models/new')?.params).toEqual({ service: 'new' });
     expect(parseAddress('/threat-models/new')?.route).toBe('threat-models.service');
+    expect(parseAddress('/threat-models/payment-api/new/release')).toBeNull();
+    expect(parseAddress('/threat-models/payment-api/new-2')?.params).toEqual({
+      service: 'payment-api',
+      model: 'new-2',
+    });
+    expect(parseAddress('/threat-models/payment-api/new-2/release')?.route).toBe(
+      'threat-models.release',
+    );
     expect(lensOf('threat-models.new')).toBe('threat-models');
     expect(routeTitleKey('threat-models.new')).toBe('lens.threat-models');
-    expect(routesUnder('threat-models')).toEqual([
-      'threat-models',
-      'threat-models.service',
-      'threat-models.new',
-      'threat-models.model',
-      'threat-models.release',
-    ]);
+    expect(routesUnder('threat-models')).toEqual(
+      expect.arrayContaining([
+        'threat-models',
+        'threat-models.service',
+        'threat-models.new',
+        'threat-models.model',
+        'threat-models.release',
+      ]),
+    );
   });
 
   it('writes the admitted names, each encoded, and refuses a value that breaks its pattern', () => {

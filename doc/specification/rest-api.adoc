@@ -1064,6 +1064,11 @@ writes it; `checkReturn` splits the candidate at the first `?` and checks both p
 |`web-mock/.../runtime/CanonicalAddresses.java`
 |`of(JsonNode)` reads `queries` and `query`; `isCanonical(path)` stays; `checkReturn(candidate)` splits at the first
 `?` and applies the rules above; the mock's login keeps redirecting to the checked `return` with its query
+
+|`audit-notary/.../security/ReturnAddresses.java`
+|Not part of the mock and UI steps: it still checks the path alone and returns it without the query, for every address that
+admits one (`at`, `kind`, `recipe`, ...). It follows the rules above in the server step of the login, designed against Token
+Sheriff's session layer (ADR-0004), not before
 |===
 
 [#_release_requests]
@@ -2648,7 +2653,7 @@ xref:web-app.adoc#AUN-WEB-4[AUN-WEB-4]; the bounds are PROVISIONAL, <<_decided_t
                       "type": "object", "required": ["status"],
                       "properties": {
                         "status":      { "type": "string", "enum": ["open", "mitigated", "accepted"] },
-                        "transferred": { "type": "string", "format": "gdr-link" }
+                        "transferred": { "type": "string", "format": "gdr-link", "readOnly": true }
                       }
                     }
                   }
@@ -2695,7 +2700,9 @@ What the shape says (the rules the server enforces, and the mock follows):
   carry out the work, entered by a person or an agent; the application connects to no issue tracker (AUN-TM-4).
 * *The transfer* is the member `attributes.transferred` of a threat, the reference `isms-register:risk/<id>` of the risk it
   became (AUN-TM-4 names the reverse reference, `threat-models:threat-model/<ulid>#<threat-id>`, on the risk). The transfer
-  is a later step (UC-TM-3): this step reads the member and never writes it.
+  is a later step (UC-TM-3): this step reads the member and never writes it. The schema marks it `readOnly`, so the form does
+  not offer it, and a save keeps the stored `transferred` of every threat of the same `id` whatever the sent list carries
+  (PROVISIONAL, <<_decided_threat_models>>, point 18).
 * *The ids* of the file are chosen by the application when a person adds a row: `T-<nn>` for a threat, `M-<nn>` for a
   mitigation (the next free number, two digits at least); the reference of AUN-TM-4 ends with the threat id
   (`…#T-07`). The ids of components, data flows and trust zones are lower-case words.
@@ -2869,8 +2876,8 @@ the recipe a `description`, and every text may be given per language, so that th
 
 [source,yaml]
 ----
-title: { en: STRIDE, step by step, de: STRIDE, Schritt für Schritt }
-description: { en: Every component, every data flow, six kinds of threat., de: Jede Komponente, jeder Datenfluss, sechs Arten von Bedrohung. }
+title: { en: "STRIDE, step by step", de: "STRIDE, Schritt für Schritt" }
+description: { en: "Every component, every data flow, six kinds of threat.", de: "Jede Komponente, jeder Datenfluss, sechs Arten von Bedrohung." }
 steps:
   - id: zones
     title: { en: Trust zones, de: Vertrauenszonen }
@@ -3797,6 +3804,14 @@ change each one. The bodies and addresses are in <<_threat_model_requests>>:
   schema at `fills`. The web app shows the recipes to choose from on the page of a service that has none or wants another, and
   the recipes a person has started as *continue*.
 
+. *A save keeps the stored `transferred`.* `attributes.transferred` is `readOnly` in the schema and the server takes it from the
+  stored file by the `id` of the threat, ignoring a value in the sent `/threats` list (a refusal code would add a request outcome
+  the form kit has no text for); the transfer of UC-TM-3 is the only writer. A threat added by a save carries none.
+. *The issues of a countermeasure cannot be edited in the table yet.* `mitigations` is a `DataTable` and rule 13 of the form kit
+  (`web-app.adoc`) keeps an array inside a row read-only, so a person cannot add an issue id such as `PAY-1423` in the sheet of
+  this step; an agent enters them through the REST API (AUN-TM-4). Left open (no screen is blocked): the mechanism, a row
+  editor or a chips control in the form kit, is the owner's choice. The bounds stay `maxItems` 20, unique, 1 to 64 characters.
+
 For the owner: whether OTM as YAML is the format (4) and whether the treatment may live in `attributes` (5), given that the OTM
 README calls `attributes` a map of strings and that a threat has one status, not one per component; whether a countermeasure may
 belong to one threat only (5); the definition of `untreated` and `transferred` (6); whether the diagram is generated from the file
@@ -3804,4 +3819,5 @@ belong to one threat only (5); the definition of `untreated` and `transferred` (
 fine (9); whether the review date is the act of the person who starts the review (10); the bounds (11); whether recipe texts may
 be per language, which changes AUN-TM-5 (12); whether a recipe draft may be a draft of a model that does not exist (13), which
 the library does not offer; whether the person who edits may release in the mock (14); whether a service may have several
-models (15).
+models (15); whether a save keeps the stored `transferred` or refuses a changed one (18); how a person enters the issues of a
+countermeasure (19).

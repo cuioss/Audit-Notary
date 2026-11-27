@@ -6832,7 +6832,7 @@
       }
     },
     "threat-model-release-changed": {
-      "description": "Somebody saved the checkout flow after the review was opened: the release answers CHANGED_SINCE_REVIEW; the review reads the diff as in threat-model-in-review.",
+      "description": "Somebody saved the checkout flow after the review was opened: the release answers CHANGED_SINCE_REVIEW and moves to threat-model-release-changed-refused; the review reads the diff as in threat-model-in-review.",
       "routes": {
         "GET /api/v1/threat-models/payment-api/checkout-flow": {
           "status": 200,
@@ -6993,11 +6993,381 @@
             "repository": "threat-models",
             "action": "read"
           }
-        },
-        "POST /api/v1/releases/threat-models/payment-api-checkout-flow": {
+        }
+      },
+      "links": {
+        "release-checkout-flow": {
+          "method": "POST",
+          "path": "/api/v1/releases/threat-models/payment-api-checkout-flow",
+          "next": "threat-model-release-changed-refused",
           "status": 409,
           "body": {
             "outcome": "CHANGED_SINCE_REVIEW"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "approve"
+          }
+        }
+      }
+    },
+    "threat-model-release-changed-refused": {
+      "description": "The release was refused as changed since the review: it stays refused until the diff is read again; the next read of the diff is that review and moves to threat-model-release-changed-reviewed.",
+      "routes": {
+        "GET /api/v1/threat-models/payment-api/checkout-flow": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-in-review.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-in-review.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow/revisions": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-in-review-revisions.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api/checkout-flow?at=v1": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v1.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api/checkout-flow?at=v2": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v2.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api/checkout-flow?at=v3": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v3.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api/checkout-flow?at=v9": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api/checkout-flow?at=zzz": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/at",
+                "code": "FORMAT"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=v1": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v1.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=v2": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v2.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=v3": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v3.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=v9": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=zzz": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/at",
+                "code": "FORMAT"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api": {
+          "status": 200,
+          "body_file": "threat-model-service-payment-api-in-review.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models": {
+          "status": 200,
+          "body_file": "threat-models-index-in-review.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/reports/threat-evaluation": {
+          "status": 200,
+          "body_file": "reports-threat-evaluation-in-review.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/reports/summary": {
+          "status": 200,
+          "body_file": "reports-summary-tm-saved.json"
+        }
+      },
+      "links": {
+        "review-checkout-flow": {
+          "method": "GET",
+          "path": "/api/v1/documents/threat-models/payment-api-checkout-flow/diff",
+          "next": "threat-model-release-changed-reviewed",
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-diff.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "release-checkout-flow": {
+          "method": "POST",
+          "path": "/api/v1/releases/threat-models/payment-api-checkout-flow",
+          "next": "threat-model-release-changed-refused",
+          "status": 409,
+          "body": {
+            "outcome": "CHANGED_SINCE_REVIEW"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "approve"
+          }
+        }
+      }
+    },
+    "threat-model-release-changed-reviewed": {
+      "description": "The diff was read after the refusal: the release of the checkout flow is accepted and the mock moves to threat-model-released.",
+      "routes": {
+        "GET /api/v1/threat-models/payment-api/checkout-flow": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-in-review.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-in-review.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow/revisions": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-in-review-revisions.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api/checkout-flow?at=v1": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v1.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api/checkout-flow?at=v2": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v2.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api/checkout-flow?at=v3": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v3.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api/checkout-flow?at=v9": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api/checkout-flow?at=zzz": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/at",
+                "code": "FORMAT"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=v1": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v1.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=v2": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v2.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=v3": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v3.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=v9": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=zzz": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/at",
+                "code": "FORMAT"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api": {
+          "status": 200,
+          "body_file": "threat-model-service-payment-api-in-review.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models": {
+          "status": 200,
+          "body_file": "threat-models-index-in-review.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/reports/threat-evaluation": {
+          "status": 200,
+          "body_file": "reports-threat-evaluation-in-review.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/reports/summary": {
+          "status": 200,
+          "body_file": "reports-summary-tm-saved.json"
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow/diff": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-diff.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        }
+      },
+      "links": {
+        "release-checkout-flow": {
+          "method": "POST",
+          "path": "/api/v1/releases/threat-models/payment-api-checkout-flow",
+          "next": "threat-model-released",
+          "status": 200,
+          "body": {
+            "outcome": "RELEASED",
+            "tag": "models/payment-api-checkout-flow/v4",
+            "at": "2026-11-26T10:05:00Z"
           },
           "requires": {
             "repository": "threat-models",
