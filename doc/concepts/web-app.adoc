@@ -293,8 +293,10 @@ xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register, Op
 . The lens *Threat models* has the evaluation of every service as its first column, the models of a service as its second and
   the model sheet beside them; the sheet shows the evaluation of the model, the generated diagram, a threat table with status
   and countermeasures, and the data of the model as a generated form.
-. The recipe wizard is a `WizardPage` at `/threat-models/<service>/new?recipe=`: the guidance of a step above the sub-form
-  of the model file's node the step fills, the draft kept between steps, a last page for the owner and the review date.
+. The recipe wizard is at `/threat-models/<service>/new?recipe=`, a sheet in the last column of the lens (decided
+  provisionally, xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register], point 27): the guidance of a
+  step above the sub-form of the model file's node the step fills, the draft kept between steps, a last page for the owner and
+  the review date.
 . A review of a released model starts with an act that prefills the review date with today; the first save starts the next version.
 
 == Related

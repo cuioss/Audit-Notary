@@ -284,8 +284,7 @@ beside it; what the server refuses is said beside the field and the value stays 
 The lens *Threat models* is a chain of columns (`TriagePage`, xref:../specification/rest-api.adoc#_threat_model_requests[REST API Register, Threat Model Requests]):
 the services, the service with its models, the model as a sheet. The first column is the evaluation table of the report
 (`ThreatEvaluationTable`) in the order of the server, and a service without a model is offered the act *New threat model*
-there, in the table row, for a person who may create one. The address of a new model is routed to a calm placeholder until the
-recipe wizard is built.
+there, in the table row, for a person who may create one. The address of a new model is the recipe wizard (below).
 
 *The sheet of a model* reads in the layout of the record: the review, the diagram, the threats, the countermeasures and the data
 of the model, each a section divided by space and a hairline (no card, no sheet in a sheet), the status and the margin as every
@@ -302,6 +301,23 @@ it. `CountermeasureEditor` lists every countermeasure with the threat it treats,
 are compared and copied); one whose threat is not in the model carries the box *Unknown threat*. The acts of the rows are named
 by the id of the row (`Remove T-03`), because the page holds two tables. A list is saved as a whole and a conflict is one
 panel entry per list, told by the ids and names of its entries.
+
+*The recipe wizard* (`/threat-models/{service}/new`) is a sheet in the last column of the lens, like the sheets of a new scope and
+a new assessment, and not a page of its own: the person keeps the service beside them. Without a recipe the sheet offers the
+recipes, each with what it covers, the number of its steps and, for one the person has started, where they stopped (a dot, the
+state is information) and the act *Continue*; with one it reads the steps of the recipe. The new piece of the closed vocabulary
+is `Stepper`: the steps as a numbered list, the current one marked by `aria-current="step"` and an ink underline, the steps
+already reached by a check and as acts that go back to them (they are named "<step> (done)" for a screen reader), the steps not
+yet reached as plain text, so that the way forward is the sheet's own act and never a jump. On a phone only the count ("Step 2 of
+5") and the current step stay. A step is the heading of the step, its guidance (the recipe's AsciiDoc, rendered by the server,
+set off by a hairline at its start and never in a box), and the form of the part of the model it fills: the form kit for an object
+or a table of objects, and the table of the threats and the editor of the countermeasures where the step fills those two lists. The
+step's heading names its only part, so the form is `untitled`: the section title or the table caption it would draw a second
+time stays for a screen reader. A
+change of step moves the focus to its heading and is announced politely. The last page, *Review and create*, lists every step with
+what it holds and an act to change it, asks for the owner and the review date (prefilled with today), and carries the one primary
+act, *Create threat model*. The status of the sheet holds the save state (*Saved for you at …* once the step is kept, the same
+sentence as every draft) with the primary act and *Back*; the margin says that nothing exists for others before the create.
 
 *The diagram* is an image of the generated vector drawing, never inline markup: it is drawn only from a base64 `image/svg+xml`
 data URL, with a text alternative made from the names of the components, on its own white ground with a hairline in both themes.

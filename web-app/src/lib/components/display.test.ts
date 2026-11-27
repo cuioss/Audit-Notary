@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import { textSnippet } from '../test/snippets';
 import Avatar from './Avatar.svelte';
@@ -25,6 +25,7 @@ import ScoreMeter from './ScoreMeter.svelte';
 import Sheet from './Sheet.svelte';
 import SheetHead from './SheetHead.svelte';
 import StatusLabel from './StatusLabel.svelte';
+import Stepper from './Stepper.svelte';
 import TrendLine from './TrendLine.svelte';
 
 describe('Avatar', () => {
@@ -344,6 +345,48 @@ describe('SheetHead', () => {
     expect(container.querySelector('.sheet-head__lede')).toBeNull();
     expect(container.querySelector('.sheet-head__actions')).toBeNull();
     expect(container.querySelector('dl')).toBeNull();
+  });
+});
+
+describe('Stepper', () => {
+  const steps = [
+    { id: 'project', title: 'The service' },
+    { id: 'zones', title: 'Trust zones' },
+    { id: 'threats', title: 'Threats' },
+  ];
+  const props = {
+    label: 'Steps of the recipe',
+    steps,
+    count: 'Step 2 of 3',
+    doneLabel: '(done)',
+    testId: 'stepper',
+  };
+
+  it('marks the current step and offers the steps already reached as acts', async () => {
+    const onselect = vi.fn();
+    render(Stepper, { ...props, current: 1, furthest: 2, onselect });
+    expect(screen.getByRole('navigation', { name: 'Steps of the recipe' })).toBeInTheDocument();
+    expect(screen.getByTestId('stepper-count')).toHaveTextContent('Step 2 of 3');
+    expect(screen.getByTestId('stepper-1')).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByTestId('stepper-0')).not.toHaveAttribute('aria-current');
+    // The first step is behind the person, the third was reached before: both can be gone to, and both say they are done.
+    const first = screen.getByRole('button', { name: 'The service (done)' });
+    const third = screen.getByRole('button', { name: 'Threats (done)' });
+    expect(within(screen.getByTestId('stepper-1')).queryByRole('button')).toBeNull();
+    await fireEvent.click(first);
+    expect(onselect).toHaveBeenLastCalledWith(0);
+    await fireEvent.click(third);
+    expect(onselect).toHaveBeenLastCalledWith(2);
+  });
+
+  it('shows a step not yet reached as plain text', () => {
+    render(Stepper, { ...props, current: 0, furthest: 0, onselect: () => {} });
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+    expect(screen.getByTestId('stepper-2')).toHaveTextContent('Threats');
+    expect(screen.getByTestId('stepper-2').querySelector('[data-icon="state.check"]')).toBeNull();
+    expect(screen.getByTestId('stepper-0').querySelector('.stepper__marker')).toHaveTextContent(
+      '1',
+    );
   });
 });
 

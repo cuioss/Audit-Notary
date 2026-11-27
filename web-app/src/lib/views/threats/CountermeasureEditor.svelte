@@ -481,7 +481,7 @@
         {$t('common.cancel')}
       </Button>
       <Button variant="primary" onclick={apply} data-testid="{testId}-apply">
-        {$t('form.table.editor.apply')}
+        {editing?.index === null ? $t('form.table.editor.add-act') : $t('form.table.editor.apply')}
       </Button>
     </div>
   </div>

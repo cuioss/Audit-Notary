@@ -55,6 +55,12 @@
     showMissing?: boolean;
     /** The level of the heading of a first-level section. */
     headingLevel?: number;
+    /**
+     * Whether the heading above the form already names its only part (the title of a step of a wizard): the title of
+     * that section, or the caption of that table, then stays for a screen reader and is not drawn a second time. A form of
+     * several parts draws them all.
+     */
+    untitled?: boolean;
     /** The reading services, replaced in tests. */
     services?: FormServices;
     /** Called after every change with the new value and the state of the form. */
@@ -72,6 +78,7 @@
     errors = null,
     showMissing = false,
     headingLevel = 2,
+    untitled = false,
     services,
     onchange,
     testId,
@@ -111,6 +118,9 @@
     },
     get headingLevel() {
       return headingLevel;
+    },
+    get untitled() {
+      return untitled && fields.length === 1;
     },
     get showMissing() {
       return showMissing;

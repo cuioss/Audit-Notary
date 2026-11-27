@@ -61,9 +61,15 @@ import type {
   SearchResults,
   Session,
   Status,
+  RecipeDraftRequest,
   ThreatEvaluation,
+  ThreatModelCreate,
+  ThreatModelCreated,
   ThreatModelRead,
   ThreatModelService,
+  ThreatRecipe,
+  ThreatRecipeDraftRead,
+  ThreatRecipeList,
   Transitioned,
   JsonObject,
 } from './types';
@@ -645,6 +651,95 @@ export class ApiClient {
     return this.request<ThreatModelRead>(
       'GET',
       `/api/v1/threat-models/${seg(service)}/${seg(model)}${query}`,
+    );
+  }
+
+  /**
+   * The recipes that ship with the application, in the language of the interface (PROVISIONAL).
+   *
+   * @param lang `en` or `de`
+   * @returns the recipes with the number of their steps; none for an installation that ships none
+   * @throws ApiError `FORBIDDEN` without the right to read `threat-models`
+   */
+  getThreatRecipes(lang: string): Promise<ThreatRecipeList> {
+    return this.request<ThreatRecipeList>(
+      'GET',
+      `/api/v1/categories/threat-models/recipes?lang=${encodeURIComponent(lang)}`,
+    );
+  }
+
+  /**
+   * One recipe with its steps, their texts in the language asked for (PROVISIONAL).
+   *
+   * @param recipe the recipe's id
+   * @param lang `en` or `de`
+   * @returns the recipe
+   * @throws ApiError `NOT_FOUND` for a recipe that does not exist, `FORBIDDEN`
+   */
+  getThreatRecipe(recipe: string, lang: string): Promise<ThreatRecipe> {
+    return this.request<ThreatRecipe>(
+      'GET',
+      `/api/v1/categories/threat-models/recipes/${seg(recipe)}?lang=${encodeURIComponent(lang)}`,
+    );
+  }
+
+  /**
+   * The person's unfinished recipe for a service (PROVISIONAL): the draft of a model that does not exist yet.
+   *
+   * @param service the service's address segment
+   * @param recipe the recipe's id
+   * @returns the draft, or `draft: null` for none
+   * @throws ApiError `NOT_FOUND` for an unknown service or recipe, `FORBIDDEN`
+   */
+  getThreatRecipeDraft(service: string, recipe: string): Promise<ThreatRecipeDraftRead> {
+    return this.request<ThreatRecipeDraftRead>(
+      'GET',
+      `/api/v1/threat-models/${seg(service)}/drafts/${seg(recipe)}`,
+    );
+  }
+
+  /**
+   * Keeps what the person filled in so far, for this person only: the draft is replaced as a whole (PROVISIONAL).
+   *
+   * @param service the service's address segment
+   * @param recipe the recipe's id
+   * @param body the step the person goes on to and every field filled in so far
+   * @returns when the draft was kept
+   * @throws ApiError `VALIDATION` with `part`, `pointer` and `code` per field (nothing was written), `NOT_FOUND`,
+   * `FORBIDDEN` without `edit`
+   */
+  saveThreatRecipeDraft(
+    service: string,
+    recipe: string,
+    body: RecipeDraftRequest,
+  ): Promise<DraftSaved> {
+    return this.request<DraftSaved>(
+      'PUT',
+      `/api/v1/threat-models/${seg(service)}/drafts/${seg(recipe)}`,
+      body,
+    );
+  }
+
+  /**
+   * Creates a threat model of a service: the first save, which ends the recipe draft (PROVISIONAL). Needs `edit` on
+   * `threat-models`.
+   *
+   * @param service the service's address segment
+   * @param body the recipe and the fields of the parts `data` and `model`
+   * @param password the password of a local user, when the step-up handler collected one
+   * @returns the address segment, the document and the address of the new model
+   * @throws ApiError `VALIDATION` (`/project/name` with `REQUIRED`), `NOT_FOUND`, `SERVICE_RETIRED`, `FORBIDDEN`,
+   * `REJECTED`, `GIT_UNAVAILABLE`
+   */
+  createThreatModel(
+    service: string,
+    body: ThreatModelCreate,
+    password?: string,
+  ): Promise<ThreatModelCreated> {
+    return this.request<ThreatModelCreated>(
+      'POST',
+      `/api/v1/threat-models/${seg(service)}`,
+      password === undefined ? body : { ...body, password },
     );
   }
 

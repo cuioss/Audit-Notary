@@ -140,7 +140,7 @@ xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register, Op
   can be typed; removing a threat removes its countermeasures in the same save.
 . The act *Start the review* is offered to everyone who may edit, in every state, and sets the review date and nothing else.
 . The first column of the lens is the table of the report, a service without a model is offered *New threat model* in its row,
-  and the address of the wizard is a placeholder inside the lens until the wizard is built.
+  and the address of the wizard is the recipe wizard of the next list.
 . The labels of the form are keys of the app's own catalogue, because the server's catalogue of the document type is not
   served yet.
 . The release page reads the lists of threats and countermeasures change by change, by id. Where one change per id cannot say it
@@ -148,6 +148,20 @@ xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register, Op
   An entry in a dialog is merged with the newer list field by field: a field the person left alone keeps what someone else
   wrote, a field both changed differently is told as a conflict and nothing is applied; an entry that was gone from a list
   once stays gone for the open dialog or prompt even when another entry takes its id later (decided provisionally).
+
+Decided provisionally with the recipe wizard (UC-TM-1, the screens of the wizard), recorded in
+xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register, Open Questions]; the owner may change each one:
+
+. The wizard is a sheet in the last column of the lens, not a `WizardPage` of its own (the use case names `WizardPage` as its
+  design): the person keeps the evaluation and the service beside the steps, as with a new scope. The address without `recipe`
+  offers the recipes; there is no wizard without a recipe (a model without one is for the REST API and an agent).
+. The steps of the recipe are followed by a last page, *Review and create*, which asks for the owner and the review date and
+  creates the model; the web app does not prefill the owner (the service page names a team, no role), the review date starts as
+  today.
+. The draft is kept when the person goes on, not on every change and not on going back; leaving a page with changes that are
+  kept nowhere asks first. A draft the server refuses keeps the person on the step with the fields marked.
+. A step whose `fills` the form cannot show (a pointer that is no member of the model file) says so and can be passed.
+. The create goes through the shared step-up handler like every write, although the register lists no confirmation for it.
 
 == Related
 

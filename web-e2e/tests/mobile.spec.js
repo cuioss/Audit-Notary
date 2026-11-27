@@ -38,9 +38,24 @@ import {
   editThreat,
   loginToSheet,
   loginToThreats,
+  newAddress,
   releaseAddress,
   serviceAddress,
 } from './helpers/threats.js';
+import {
+  addRow,
+  addThreat,
+  addZone,
+  fillName,
+  goOn,
+  loginToChoice,
+  loginToWizard,
+  routeCreate,
+  stepField,
+  stepHeading,
+  walkEmpty,
+  walkQuickStart,
+} from './helpers/wizard.js';
 import {
   CANDIDATES,
   DESCRIPTOR,
@@ -1292,5 +1307,222 @@ test.describe('at 390 px', () => {
     await expectTarget(page.getByTestId('release-open'));
     await expectNoSideways(page);
     await expectNoSeriousViolations(page, 'threat model released (phone)');
+  });
+
+  test('the choice of a recipe fits: each recipe is a row and its act is a target, also for one that was started', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToChoice(page);
+    await expectNoSideways(page);
+    for (const recipe of ['quick-start', 'stride']) {
+      await expect(page.getByTestId(`recipe-${recipe}`)).toBeInViewport({ ratio: 0.1 });
+      await expectTarget(page.getByTestId(`recipe-open-${recipe}`));
+    }
+    await expectNoSeriousViolations(page, 'threat models recipe choice (phone)');
+    await useScenario(request, 'workshop#recipe-draft-saved');
+    await page.goto(newAddress('report-scheduler'));
+    await expect(page.getByTestId('recipe-started-quick-start')).toBeVisible();
+    await expectTarget(page.getByTestId('recipe-open-quick-start'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat models recipe started (phone)');
+  });
+
+  test('the refusals of the wizard fit: no right, a retired service, a recipe that does not exist, no recipe', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'read-only');
+    await loginToThreats(page, newAddress('report-scheduler', 'quick-start'));
+    await expect(page.getByTestId('new-threat-model-no-right')).toBeVisible();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat models wizard without a right (phone)');
+    await useScenario(request, 'workshop');
+    await page.goto(newAddress('ledger'));
+    await expect(page.getByTestId('new-threat-model-retired')).toBeVisible();
+    await expectNoSideways(page);
+    await page.goto(newAddress('report-scheduler', 'nope'));
+    await expect(page.getByTestId('recipe-missing')).toBeVisible();
+    await expectTarget(page.getByTestId('recipe-choose'));
+    await expectNoSideways(page);
+    await useScenario(request, 'workshop#threat-model-recipes-none');
+    await page.goto(newAddress('report-scheduler'));
+    await expect(page.getByTestId('new-threat-model-sheet')).toContainText(
+      'No recipe is available',
+    );
+    await expectNoSideways(page);
+  });
+
+  test('a step fits: the list of the steps gives way to the count, the form and the acts are targets of the phone size', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToWizard(page);
+    await expectNoSideways(page);
+    // On a phone only the step the person is on and its count stay: the list never takes the room of the form.
+    await expect(page.getByTestId('recipe-stepper-count')).toBeVisible();
+    await expect(page.getByTestId('recipe-stepper-count')).toHaveText('Step 1 of 5');
+    await expect(page.getByTestId('recipe-stepper-1')).toBeHidden();
+    await expect(page.getByTestId('recipe-stepper-4')).toBeHidden();
+    await expectTarget(stepField(page, 'Name'));
+    await expectTarget(stepField(page, 'Description'));
+    await fillName(page);
+    await expectTarget(page.getByTestId('step-next'));
+    await expect(page.getByTestId('save-state')).toBeVisible();
+    await expectNoSeriousViolations(page, 'threat models wizard first step (phone)');
+    await page.getByTestId('step-next').click();
+    await expect(stepHeading(page)).toHaveText('Trust zones');
+    await expect(page.getByTestId('recipe-stepper-count')).toHaveText('Step 2 of 5');
+    await expectTarget(page.getByTestId('step-back'));
+    await expectTarget(page.getByTestId('step-next'));
+    await expectTarget(page.getByRole('button', { name: 'Add row' }));
+    await expectNoSideways(page);
+  });
+
+  test('the dialogs of a row, of a threat and of a countermeasure of the wizard are in the viewport with targets of the phone size', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToWizard(page, 'stride');
+    await fillName(page);
+    await goOn(page, 'Trust zones');
+    await addRow(page);
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeInViewport();
+    await expectTarget(dialog.getByRole('textbox', { name: /^Id/ }));
+    await expectTarget(dialog.getByRole('textbox', { name: /^Name/ }));
+    await expectTarget(dialog.getByRole('spinbutton'));
+    await expectTarget(dialog.getByRole('button', { name: 'Add to the list' }));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat models wizard row dialog (phone)');
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+    await addZone(page);
+    // The table of the rows is a list of stacked rows with its acts as targets.
+    await expectStacked(page.getByRole('table', { name: 'Trust zones' }));
+    await expectTarget(page.getByRole('button', { name: 'Edit row 1' }));
+    await expectTarget(page.getByRole('button', { name: 'Remove row 1' }));
+    await goOn(page, 'Components');
+    await goOn(page, 'Data flows');
+    await goOn(page, 'Threats (STRIDE)');
+    await expectTarget(page.getByRole('button', { name: 'Add a threat' }));
+    await page.getByRole('button', { name: 'Add a threat' }).click();
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expectTarget(page.getByTestId('wizard-threats-field-name'));
+    await expectTarget(page.getByTestId('wizard-threats-field-likelihood'));
+    await expectTarget(page.getByTestId('wizard-threats-category-tampering'));
+    await expectTarget(page.getByTestId('wizard-threats-apply'));
+    await expectTarget(page.getByTestId('wizard-threats-cancel'));
+    await expectNoSeriousViolations(page, 'threat models wizard threat dialog (phone)');
+    await page.getByTestId('wizard-threats-cancel').click();
+    await addThreat(page);
+    await expectStacked(page.getByTestId('wizard-threats-table'));
+    await expectTarget(page.getByTestId('threat-status-T-01'));
+    await expectTarget(page.getByRole('button', { name: 'Edit T-01', exact: true }));
+    await expectNoSideways(page);
+    await goOn(page, 'Countermeasures');
+    await expectTarget(page.getByRole('button', { name: 'Add a countermeasure' }));
+    await page.getByRole('button', { name: 'Add a countermeasure' }).click();
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expectTarget(page.getByTestId('wizard-mitigations-field-threat'));
+    await expectTarget(page.getByTestId('wizard-mitigations-field-issues'));
+    await expectTarget(page.getByTestId('wizard-mitigations-apply'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat models wizard countermeasure dialog (phone)');
+  });
+
+  test('the last page fits: the summary rows and their acts, the owner, the review date and the create are targets in reach', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToWizard(page);
+    await walkQuickStart(page);
+    await expectNoSideways(page);
+    for (const step of ['project', 'zones', 'components', 'threats']) {
+      await expect(page.getByTestId(`summary-${step}`)).toBeVisible();
+      await expectTarget(page.getByTestId(`summary-change-${step}`));
+    }
+    const data = page.getByTestId('review-data');
+    await expectTarget(data.getByRole('combobox', { name: /^Owner/ }));
+    await expectTarget(data.getByLabel(/^Review date/));
+    await expectTarget(page.getByTestId('create-model'));
+    await expect(page.getByTestId('create-model')).toBeInViewport();
+    await expectTarget(page.getByTestId('step-back'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat models wizard last page (phone)');
+    await page.getByTestId('create-model').click();
+    await expect(page).toHaveURL(`/threat-models/report-scheduler/scheduler-overview`);
+    await expect(page.getByTestId('threat-model-sheet')).toBeVisible();
+    await expectNoSideways(page);
+  });
+
+  test('the reason a model cannot be created, the refusals of a create and the questions of the wizard fit', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToWizard(page);
+    await goOn(page, 'Trust zones');
+    await goOn(page, 'Components');
+    await goOn(page, 'Threats');
+    await goOn(page, 'Review and create');
+    await expect(
+      page.getByText('The model needs a name. You give it in the step "The frame".'),
+    ).toBeVisible();
+    await expect(page.getByTestId('create-model')).toBeInViewport();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat models wizard without a name (phone)');
+
+    await useScenario(request, 'workshop#threat-model-create-invalid');
+    await loginToWizard(page);
+    await walkEmpty(page);
+    await page.getByTestId('create-model').click();
+    await expect(stepHeading(page)).toHaveText('The frame');
+    await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'failed');
+    await expect(stepField(page, 'Name')).toHaveAttribute('aria-invalid', 'true');
+    await stepField(page, 'Name').scrollIntoViewIfNeeded();
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat models wizard create refused (phone)');
+
+    await useScenario(request, 'workshop#threat-model-git-unavailable');
+    await loginToWizard(page);
+    await walkEmpty(page);
+    await page.getByTestId('create-model').click();
+    await expect(page.getByTestId('new-threat-model-sheet').getByRole('alert')).toBeVisible();
+    await expectTarget(page.getByTestId('create-model'));
+    await expectNoSideways(page);
+
+    // The question before a page with what is kept nowhere is left, and the question for the password.
+    await useScenario(request, 'workshop#note-release-password');
+    await loginToWizard(page);
+    await fillName(page);
+    await page.getByTestId('bottom-more').click();
+    await page.getByRole('dialog').getByRole('link', { name: 'Settings' }).click();
+    await expect(page.getByRole('dialog')).toContainText('Leave this page?');
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expectTarget(page.getByTestId('leave-stay'));
+    await expectTarget(page.getByTestId('leave-confirm'));
+    await expectNoSeriousViolations(page, 'threat models wizard leave question (phone)');
+    await page.getByTestId('leave-stay').click();
+    await goOn(page, 'Trust zones');
+    await goOn(page, 'Components');
+    await goOn(page, 'Threats');
+    await goOn(page, 'Review and create');
+    await routeCreate(page, (route) =>
+      route.fulfill({
+        status: 403,
+        contentType: 'application/json',
+        body: JSON.stringify({ outcome: 'STEP_UP_REQUIRED' }),
+      }),
+    );
+    await page.getByTestId('create-model').click();
+    await expect(page.getByRole('dialog')).toBeInViewport();
+    await expectTarget(page.getByTestId('create-password'));
+    await expectTarget(page.getByTestId('create-confirm'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'threat models wizard password question (phone)');
   });
 });

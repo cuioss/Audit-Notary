@@ -55,7 +55,8 @@ xref:../specification/category-threat-models.adoc#AUN-TM-5[AUN-TM-5] (recipes),
 xref:../specification/category-threat-models.adoc#AUN-TM-4[AUN-TM-4] (one service),
 xref:../specification/mcp-server.adoc#AUN-MCP-6[AUN-MCP-6] (`read_recipe`).
 Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (a recipe as
-`WizardPage`).
+`WizardPage`; decided provisionally, the web app draws it as a sheet in the last column of the lens, so that the service stays
+beside the steps: xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register, Open Questions], point 27).
 
 [#UC-TM-2]
 == UC-TM-2: Review a Threat Model When It Is Due

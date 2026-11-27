@@ -653,6 +653,42 @@ describe('the SAMM and document requests', () => {
   });
 });
 
+describe('the recipe wizard requests (rest-api.adoc, The Recipes, The Recipe Draft, A New Model)', () => {
+  it('reads the recipes and the draft, keeps the draft and creates the model, with encoded paths', async () => {
+    fetchMock.mockImplementation(async (path: string) =>
+      path === '/api/v1/session' ? json(200, SESSION) : json(200, { ok: true }),
+    );
+    await client.getThreatRecipes('de');
+    await client.getThreatRecipe('quick-start', 'en');
+    await client.getThreatRecipeDraft('report scheduler', 'stride');
+    await client.saveThreatRecipeDraft('report-scheduler', 'stride', {
+      step: 1,
+      parts: { model: { fields: { '/project': { name: 'A' } } } },
+    });
+    await client.createThreatModel('report-scheduler', {
+      recipe: 'stride',
+      parts: { data: { fields: {} }, model: { fields: {} } },
+    });
+    await client.createThreatModel(
+      'report-scheduler',
+      { parts: { data: { fields: {} }, model: { fields: {} } } },
+      'secret',
+    );
+    const requests = fetchMock.mock.calls.filter((call) => call[0] !== '/api/v1/session');
+    expect(requests.map((call) => [call[1].method, call[0]])).toEqual([
+      ['GET', '/api/v1/categories/threat-models/recipes?lang=de'],
+      ['GET', '/api/v1/categories/threat-models/recipes/quick-start?lang=en'],
+      ['GET', '/api/v1/threat-models/report%20scheduler/drafts/stride'],
+      ['PUT', '/api/v1/threat-models/report-scheduler/drafts/stride'],
+      ['POST', '/api/v1/threat-models/report-scheduler'],
+      ['POST', '/api/v1/threat-models/report-scheduler'],
+    ]);
+    expect(JSON.parse(requests[3][1].body).step).toBe(1);
+    expect(JSON.parse(requests[4][1].body).password).toBeUndefined();
+    expect(JSON.parse(requests[5][1].body).password).toBe('secret');
+  });
+});
+
 describe('the local login and the start of the login', () => {
   it('posts the form to the form login without an anti-CSRF header and accepts 200', async () => {
     fetchMock.mockResolvedValue(new Response('', { status: 200 }));

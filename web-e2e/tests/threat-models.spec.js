@@ -35,7 +35,7 @@ import {
  * evaluation of the services as its first column, the page of a service, the sheet of a model with its countermeasure
  * editor, the review and the release, and the live refresh. They run against the profiles `workshop`, `read-only`,
  * `release`, `empty` and `degraded` of the mock and its `threat-model-*` states (web-mock/README.adoc, Threat Models).
- * The recipe wizard (`/threat-models/{service}/new`) is the next part of the lens: only the way to it is tested here.
+ * The recipe wizard (`/threat-models/{service}/new`) has its own spec: only the way to it is tested here.
  *
  * The figures, the services, the threats and the review are static fixtures of `helpers/threats.js` (and the models of
  * the evaluation of `helpers/reports.js`); the first test compares them with what the mock answers.
@@ -199,7 +199,7 @@ test.describe('the evaluation is the first column (UC-TM-4)', () => {
     await expect(act).toHaveAccessibleName('New threat model for Report scheduler');
     await act.click();
     await expect(page).toHaveURL(newAddress('report-scheduler'));
-    // The address of a new model is the place of the recipe wizard, routed to a sheet that says so until it is built.
+    // The address of a new model is the recipe wizard: without a recipe it offers the recipes.
     await expect(page.getByTestId('new-threat-model-sheet')).toBeVisible();
     await expect(page.getByTestId('new-threat-model-sheet')).toContainText(
       'A threat model of Report scheduler, step by step.',

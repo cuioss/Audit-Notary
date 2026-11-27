@@ -28,6 +28,7 @@ export const OUTCOMES = [
   'MANAGED_BY_SOURCE',
   'ID_TAKEN',
   'RETIRED',
+  'SERVICE_RETIRED',
 ] as const;
 
 /** An outcome of a refusal of the server. */
@@ -133,6 +134,8 @@ export function errorMessageKey(error: unknown): string {
       return 'error.id-taken';
     case 'RETIRED':
       return 'error.retired';
+    case 'SERVICE_RETIRED':
+      return 'error.service-retired';
     case 'MANAGED_BY_SOURCE':
       return 'error.managed-by-source';
     case 'NOT_BINDABLE':

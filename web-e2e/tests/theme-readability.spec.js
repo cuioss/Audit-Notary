@@ -48,9 +48,20 @@ import {
   CHECKOUT,
   LENS_ADDRESS,
   editThreat,
+  newAddress,
   releaseAddress,
   serviceAddress,
 } from './helpers/threats.js';
+import {
+  addRow,
+  addThreat,
+  fillName,
+  goOn,
+  routeCreate,
+  stepField,
+  stepHeading,
+  walkEmpty,
+} from './helpers/wizard.js';
 
 /**
  * AUN-WEB-2: axe-core on every view in both themes; no violation of impact serious or critical.
@@ -1414,6 +1425,262 @@ for (const theme of ['light', 'dark']) {
       await prepare(page, request);
       await shownInScenario(page, request, after, shown);
       await expectNoSeriousViolations(page, `threat models: ${name} (${scenario}, ${theme})`);
+    });
+  }
+}
+
+/**
+ * The recipe wizard of a new threat model (UC-TM-1) beside the views above: the choice of a recipe and what stands in its
+ * place (no right, a retired service, a recipe that does not exist, no recipe), the steps with their tables and dialogs, the
+ * last page, the refusals of the create and the questions the wizard asks. Each is reached on the page after the theme is
+ * chosen, which reloads it, so what a state needs (a step, a click, a request) is done by `prepare`.
+ */
+const NEW_ADDRESS = newAddress('report-scheduler');
+const QUICK_START = newAddress('report-scheduler', 'quick-start');
+
+/** Goes on from the step the wizard is on to the last page, step by step. */
+async function toLastPage(page, titles) {
+  for (const title of titles) await goOn(page, title);
+}
+
+const WIZARD_STATES = [
+  [
+    'the choice of a recipe that was started',
+    'workshop#recipe-draft-saved',
+    NEW_ADDRESS,
+    'new-threat-model-sheet',
+    'recipe-started-quick-start',
+    async () => {},
+  ],
+  [
+    'an installation without a recipe',
+    'workshop#threat-model-recipes-none',
+    NEW_ADDRESS,
+    'new-threat-model-sheet',
+    'new-threat-model-sheet',
+    // The sheet stands before the recipes are read: the audit waits for the empty state, not for the loading text.
+    async (page) => {
+      await expect(page.getByRole('heading', { name: 'No recipe is available' })).toBeVisible();
+    },
+  ],
+  [
+    'a recipe that does not exist',
+    'workshop',
+    newAddress('report-scheduler', 'nope'),
+    'recipe-missing',
+    'recipe-choose',
+    async () => {},
+  ],
+  [
+    'a person who may not create a model',
+    'read-only',
+    QUICK_START,
+    'new-threat-model-no-right',
+    'new-threat-model-no-right',
+    async () => {},
+  ],
+  [
+    'a retired service',
+    'workshop',
+    newAddress('ledger', 'quick-start'),
+    'new-threat-model-retired',
+    'new-threat-model-retired',
+    async () => {},
+  ],
+  [
+    'the first step of a recipe',
+    'workshop',
+    QUICK_START,
+    'recipe-step',
+    'step-guidance',
+    async () => {},
+  ],
+  [
+    'a draft that was continued',
+    'workshop#recipe-draft-saved',
+    QUICK_START,
+    'recipe-step',
+    'step-next',
+    async () => {},
+  ],
+  [
+    'a step with a field that is marked',
+    'workshop',
+    QUICK_START,
+    'recipe-step',
+    'step-next',
+    async (page) => {
+      await stepField(page, 'Name').fill('x'.repeat(201));
+      await expect(page.getByTestId('step-next')).toHaveAttribute('aria-disabled', 'true');
+    },
+  ],
+  [
+    'a step with a table and its dialog',
+    'workshop#recipe-draft-saved',
+    QUICK_START,
+    'recipe-step',
+    'step-form',
+    async (page) => {
+      await page.getByTestId('step-back').click();
+      await expect(page.getByRole('table', { name: 'Trust zones' })).toBeVisible();
+      await addRow(page);
+    },
+  ],
+  [
+    'the dialog of a threat of the wizard with its fields wrong',
+    'workshop#recipe-draft-saved',
+    QUICK_START,
+    'recipe-step',
+    'wizard-threats-field-name',
+    async (page) => {
+      await goOn(page, 'Threats');
+      await page.getByRole('button', { name: 'Add a threat' }).click();
+      await page.getByTestId('wizard-threats-field-likelihood').fill('150');
+      await page.getByTestId('wizard-threats-apply').click();
+      await expect(page.getByRole('dialog')).toContainText('Fill in this field.');
+    },
+  ],
+  [
+    'the threats of the wizard with one that nothing treats',
+    'workshop#recipe-draft-saved',
+    QUICK_START,
+    'recipe-step',
+    'threat-untreated-T-01',
+    async (page) => {
+      await goOn(page, 'Threats');
+      await addThreat(page);
+    },
+  ],
+  [
+    'the countermeasures of STRIDE with no threat to attach them to',
+    'workshop',
+    newAddress('report-scheduler', 'stride'),
+    'recipe-step',
+    'wizard-mitigations',
+    async (page) => {
+      await fillName(page);
+      await toLastPage(page, [
+        'Trust zones',
+        'Components',
+        'Data flows',
+        'Threats (STRIDE)',
+        'Countermeasures',
+      ]);
+    },
+  ],
+  [
+    'the countermeasures of STRIDE with one',
+    'workshop',
+    newAddress('report-scheduler', 'stride'),
+    'recipe-step',
+    'mitigation-M-01',
+    async (page) => {
+      await fillName(page);
+      await toLastPage(page, ['Trust zones', 'Components', 'Data flows', 'Threats (STRIDE)']);
+      await addThreat(page);
+      await goOn(page, 'Countermeasures');
+      await page.getByRole('button', { name: 'Add a countermeasure' }).click();
+      await page.getByTestId('wizard-mitigations-field-name').fill('Check the addressees');
+      await page.getByTestId('wizard-mitigations-field-threat').selectOption({ value: 'T-01' });
+      await page.getByTestId('wizard-mitigations-field-status').selectOption({ label: 'Planned' });
+      await page.getByTestId('wizard-mitigations-field-reduction').fill('50');
+      await page.getByTestId('wizard-mitigations-apply').click();
+    },
+  ],
+  [
+    'the last page with what was filled in',
+    'workshop#recipe-draft-saved',
+    QUICK_START,
+    'recipe-step',
+    'review-data',
+    async (page) => {
+      await toLastPage(page, ['Threats', 'Review and create']);
+    },
+  ],
+  [
+    'the last page of a model without a name',
+    'workshop',
+    QUICK_START,
+    'recipe-step',
+    'create-model',
+    async (page) => {
+      await toLastPage(page, ['Trust zones', 'Components', 'Threats', 'Review and create']);
+      await expect(page.getByTestId('create-model')).toHaveAttribute('aria-disabled', 'true');
+    },
+  ],
+  [
+    'a create that the server refused at a field',
+    'workshop#threat-model-create-invalid',
+    QUICK_START,
+    'recipe-step',
+    'step-form',
+    async (page) => {
+      await fillName(page);
+      await toLastPage(page, ['Trust zones', 'Components', 'Threats', 'Review and create']);
+      await page.getByTestId('create-model').click();
+      await expect(stepHeading(page)).toHaveText('The frame');
+      await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'failed');
+    },
+  ],
+  [
+    'a create while the Git server is down',
+    'workshop#threat-model-git-unavailable',
+    QUICK_START,
+    'recipe-step',
+    'create-model',
+    async (page) => {
+      await walkEmpty(page);
+      await page.getByTestId('create-model').click();
+      await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'failed');
+    },
+  ],
+  [
+    'the question before a wizard with what is kept nowhere is left',
+    'workshop',
+    QUICK_START,
+    'recipe-step',
+    'leave-stay',
+    async (page) => {
+      await fillName(page);
+      await page.getByTestId('nav-settings').click();
+      await expect(page.getByRole('dialog')).toContainText('Leave this page?');
+    },
+  ],
+  [
+    'the question for the password before a create',
+    'workshop#note-release-password',
+    QUICK_START,
+    'recipe-step',
+    'create-password',
+    async (page) => {
+      await walkEmpty(page);
+      await routeCreate(page, (route) =>
+        route.fulfill({
+          status: 403,
+          contentType: 'application/json',
+          body: JSON.stringify({ outcome: 'STEP_UP_REQUIRED' }),
+        }),
+      );
+      await page.getByTestId('create-model').click();
+      await expect(page.getByRole('dialog')).toContainText('Confirm your identity');
+    },
+  ],
+];
+
+for (const theme of ['light', 'dark']) {
+  for (const [name, scenario, address, view, shown, prepare, after = scenario] of WIZARD_STATES) {
+    test(`threat model wizard: ${name} of ${scenario} at ${address} in the ${theme} theme`, async ({
+      page,
+      request,
+    }) => {
+      await useScenario(request, scenario);
+      await login(page, address);
+      await useTheme(page, theme);
+      await expect(page.getByTestId(view)).toBeVisible();
+      await expectScenario(request, scenario);
+      await prepare(page, request);
+      await shownInScenario(page, request, after, shown);
+      await expectNoSeriousViolations(page, `threat model wizard: ${name} (${scenario}, ${theme})`);
     });
   }
 }
