@@ -914,6 +914,35 @@
             "repository": "samm-assessments",
             "action": "edit"
           }
+        },
+        "create-risk": {
+          "method": "POST",
+          "path": "/api/v1/documents/isms-register",
+          "next": "risk-created",
+          "status": 201,
+          "body": {
+            "outcome": "CREATED",
+            "id": "R-001",
+            "repository": "isms-register",
+            "address": "/isms/risks/r-001",
+            "state": "draft",
+            "version": 1,
+            "at": "2026-11-26T09:41:00Z",
+            "parts": {
+              "data": {
+                "blob": "f1276f5",
+                "savedAt": "2026-11-26T09:41:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            }
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
         }
       }
     },
@@ -1109,6 +1138,80 @@
           }
         }
       }
+    },
+    "risk-created": {
+      "description": "The first risk of a register was created (09:41): the number is R-001; the draft reads, has one create commit and is the only entry of the register list (the generic list stays empty).",
+      "routes": {
+        "GET /api/v1/documents/isms-register/R-001": {
+          "status": 200,
+          "body_file": "risk-r-001.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-001/revisions": {
+          "status": 200,
+          "body_file": "risk-r-001-revisions.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/register": {
+          "status": 200,
+          "body_file": "isms-register-empty-created.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-001/save": {
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T09:42:00Z",
+            "parts": {
+              "data": {
+                "blob": "eb40f95",
+                "savedAt": "2026-11-26T09:42:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            },
+            "state": "draft",
+            "version": 1
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "PUT /api/v1/drafts/isms-register/R-001": {
+          "status": 200,
+          "body": {
+            "outcome": "DRAFT_SAVED",
+            "at": "2026-11-26T09:42:00Z"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-created",
+          "data": {
+            "repository": "isms-register",
+            "id": "R-001",
+            "kind": "risk"
+          }
+        }
+      ]
     }
   }
 }

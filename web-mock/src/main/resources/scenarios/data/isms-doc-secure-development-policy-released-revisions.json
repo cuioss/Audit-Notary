@@ -1,0 +1,91 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB3E5G7J9M1P3R5T7W9Y1B4",
+  "revisions": [
+    {
+      "ref": "v2",
+      "commit": "58b9843",
+      "kind": "release",
+      "tag": "policies/01JZB3E5G7J9M1P3R5T7W9Y1B4/v2",
+      "version": 2,
+      "at": "2026-11-26T10:05:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "3b08eab",
+      "commit": "3b08eab",
+      "kind": "submit",
+      "tag": null,
+      "version": 2,
+      "at": "2026-11-25T16:00:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      }
+    },
+    {
+      "ref": "8cc5b91",
+      "commit": "8cc5b91",
+      "kind": "save",
+      "tag": null,
+      "version": 2,
+      "at": "2026-11-25T15:40:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      }
+    },
+    {
+      "ref": "v1",
+      "commit": "319d8bd",
+      "kind": "release",
+      "tag": "policies/01JZB3E5G7J9M1P3R5T7W9Y1B4/v1",
+      "version": 1,
+      "at": "2026-02-12T11:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "7756e75",
+      "commit": "7756e75",
+      "kind": "submit",
+      "tag": null,
+      "version": 1,
+      "at": "2026-02-12T10:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "eef88bb",
+      "commit": "eef88bb",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-02-10T14:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "db5967f",
+      "commit": "db5967f",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-02-03T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

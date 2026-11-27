@@ -1,0 +1,124 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB4F6H8K0N2Q4S6V8X0Z2C5",
+  "category": "isms",
+  "kind": "isms-scope",
+  "title": "Scope of the ISMS",
+  "state": "released",
+  "version": 2,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "411adbb",
+      "savedAt": "2026-05-19T09:30:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Scope of the ISMS",
+        "owner": "role:ciso",
+        "boundaries": "The ISMS covers the development, the operation and the support of the payment products and of the platform they run on, including the mobile apps.\n\n* The locations of the organisation and the home offices of its staff.\n* The systems of the core platform and the services of the catalog.\n* The suppliers that run a part of the operation.",
+        "exclusions": [
+          {
+            "what": "Marketing websites",
+            "reason": "They hold no customer data and run outside the production network."
+          },
+          {
+            "what": "Office printers and telephones",
+            "reason": "They process no customer data and are managed by the landlord."
+          }
+        ],
+        "interested-parties": "Customers, the supervisory authority, the payment providers and the staff.",
+        "review-due": "2026-11-20"
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-05-20T14:10:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "scope/01JZB4F6H8K0N2Q4S6V8X0Z2C5/v2"
+    },
+    {
+      "at": "2026-05-20T13:55:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-05-19T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2025-03-10T09:30:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "scope/01JZB4F6H8K0N2Q4S6V8X0Z2C5/v1"
+    },
+    {
+      "at": "2025-03-10T09:10:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-03-07T16:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2025-03-03T11:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "scope/01JZB4F6H8K0N2Q4S6V8X0Z2C5/v2",
+    "at": "2026-05-20T14:10:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "at": {
+    "ref": "v2",
+    "kind": "release",
+    "commit": "6d5ae47",
+    "tag": "scope/01JZB4F6H8K0N2Q4S6V8X0Z2C5/v2",
+    "at": "2026-05-20T14:10:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  }
+}

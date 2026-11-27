@@ -1,0 +1,93 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB2D4F6H8K0N2Q4S6V8X0Z3",
+  "category": "isms",
+  "kind": "policy",
+  "title": "Access control policy",
+  "state": "released",
+  "version": 1,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "00a0a7e",
+      "savedAt": "2025-04-18T11:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Access control policy",
+        "owner": "role:ciso",
+        "purpose": "Access to systems and data is given to people who need it for their work, and to nobody else.",
+        "statements": "Access is given by role.\n\n* The owner of a system approves every access to it.\n* Privileged access is personal and is logged.",
+        "applies-to": [
+          "organisation"
+        ],
+        "review-due": "2026-04-22",
+        "related": [
+          "isms-core:policy/01JZB1C3E5G7J9M1P3R5T7W9Y2"
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2025-04-22T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "policies/01JZB2D4F6H8K0N2Q4S6V8X0Z3/v1"
+    },
+    {
+      "at": "2025-04-22T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-04-18T11:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2025-04-14T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "policies/01JZB2D4F6H8K0N2Q4S6V8X0Z3/v1",
+    "at": "2025-04-22T10:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "at": {
+    "ref": "v1",
+    "kind": "release",
+    "commit": "3b8ed75",
+    "tag": "policies/01JZB2D4F6H8K0N2Q4S6V8X0Z3/v1",
+    "at": "2025-04-22T10:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  }
+}

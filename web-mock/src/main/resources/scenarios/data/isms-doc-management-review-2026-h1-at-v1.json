@@ -1,0 +1,111 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB7J9M1P3R5T7W9Y1B3D5F8",
+  "category": "isms",
+  "kind": "management-review",
+  "title": "Management review 2026 H1",
+  "state": "released",
+  "version": 1,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "256118a",
+      "savedAt": "2026-06-17T11:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Management review 2026 H1",
+        "year": 2026,
+        "held-at": "2026-06-16",
+        "participants": [
+          "p-7d2e58",
+          "p-4c1a9e",
+          "p-2b7f10",
+          "p-9e33a1"
+        ],
+        "inputs": "The results of the internal audit 2025 and the status of its findings.\n\n* The risk register and its ratings.\n* The incidents of the half year.\n* The assessments of the SAMM scopes.",
+        "decisions": [
+          {
+            "what": "Review the accounts of suppliers every quarter.",
+            "role": "role:ciso",
+            "due": "2026-09-30",
+            "issues": [
+              "SEC-290"
+            ]
+          },
+          {
+            "what": "Raise the target of Security Testing for the payments scope.",
+            "role": "role:service-owner",
+            "due": "2026-12-31",
+            "issues": [
+              "PAY-1477"
+            ]
+          }
+        ],
+        "conclusion": "The ISMS is suitable and effective. The decisions are followed up at the next review."
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-06-18T13:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "management-reviews/01JZB7J9M1P3R5T7W9Y1B3D5F8/v1"
+    },
+    {
+      "at": "2026-06-18T12:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-06-17T11:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2026-06-10T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "management-reviews/01JZB7J9M1P3R5T7W9Y1B3D5F8/v1",
+    "at": "2026-06-18T13:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "at": {
+    "ref": "v1",
+    "kind": "release",
+    "commit": "566ab9b",
+    "tag": "management-reviews/01JZB7J9M1P3R5T7W9Y1B3D5F8/v1",
+    "at": "2026-06-18T13:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  }
+}

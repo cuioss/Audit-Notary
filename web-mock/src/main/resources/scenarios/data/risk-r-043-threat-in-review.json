@@ -1,0 +1,61 @@
+{
+  "repository": "isms-register",
+  "id": "R-043",
+  "category": "isms",
+  "kind": "risk",
+  "title": "Account takeover by credential stuffing at checkout",
+  "state": "in-review",
+  "version": 1,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "0981e3d",
+      "savedAt": "2026-11-26T09:41:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Account takeover by credential stuffing at checkout",
+        "description": "Credentials leaked elsewhere are tried at the checkout login until one works. The checkout flow does not limit failed logins per customer, so that a list of leaked credentials can be tried at the speed of the network.",
+        "rating": "high",
+        "treatment": "mitigate",
+        "treatment-notes": "Limit failed logins per customer and refuse credentials that are known to be leaked.",
+        "owner": "team:payments",
+        "review-due": "2027-05-26",
+        "origin": "threat-models:threat-model/payment-api-checkout-flow#T-02"
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-26T09:44:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-11-26T09:41:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "isms.release",
+      "to": "released",
+      "right": "approve",
+      "stepUp": true,
+      "release": true
+    }
+  ]
+}

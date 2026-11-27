@@ -1,0 +1,53 @@
+{
+  "repository": "isms-register",
+  "id": "R-043",
+  "from": null,
+  "to": "working",
+  "sections": [
+    {
+      "part": "data",
+      "changes": [
+        {
+          "pointer": "/title",
+          "before": null,
+          "after": "Account takeover by credential stuffing at checkout"
+        },
+        {
+          "pointer": "/description",
+          "before": null,
+          "after": "Credentials leaked elsewhere are tried at the checkout login until one works. The checkout flow does not limit failed logins per customer, so that a list of leaked credentials can be tried at the speed of the network."
+        },
+        {
+          "pointer": "/rating",
+          "before": null,
+          "after": "high"
+        },
+        {
+          "pointer": "/treatment",
+          "before": null,
+          "after": "mitigate"
+        },
+        {
+          "pointer": "/treatment-notes",
+          "before": null,
+          "after": "Limit failed logins per customer and refuse credentials that are known to be leaked."
+        },
+        {
+          "pointer": "/owner",
+          "before": null,
+          "after": "team:payments"
+        },
+        {
+          "pointer": "/review-due",
+          "before": null,
+          "after": "2027-05-26"
+        },
+        {
+          "pointer": "/origin",
+          "before": null,
+          "after": "threat-models:threat-model/payment-api-checkout-flow#T-02"
+        }
+      ]
+    }
+  ]
+}

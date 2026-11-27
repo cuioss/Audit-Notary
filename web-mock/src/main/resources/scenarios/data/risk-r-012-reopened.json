@@ -1,0 +1,129 @@
+{
+  "repository": "isms-register",
+  "id": "R-012",
+  "category": "isms",
+  "kind": "risk",
+  "title": "Supplier access to production",
+  "state": "draft",
+  "version": 3,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "56d52db",
+      "savedAt": "2026-11-26T10:12:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Supplier access to production",
+        "description": "Staff of suppliers reach the production network with accounts that are not tied to a named person. The accounts are not reviewed after a project ends. The internal audit found three accounts of suppliers whose project had ended.",
+        "rating": "high",
+        "treatment": "mitigate",
+        "treatment-notes": "Tie every supplier account to a named person and review the accounts every quarter.",
+        "owner": "team:security-office",
+        "review-due": "2026-12-15",
+        "issues": [
+          "SEC-290",
+          "SEC-291"
+        ],
+        "related": [
+          "system:core-platform"
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-26T10:12:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2026-09-03T10:12:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "risks/R-012/v2"
+    },
+    {
+      "at": "2026-09-03T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-09-02T14:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2025-12-09T09:30:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "risks/R-012/v1"
+    },
+    {
+      "at": "2025-12-09T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-12-08T15:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2025-12-02T09:10:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "risks/R-012/v2",
+    "at": "2026-09-03T10:12:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "isms.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ]
+}

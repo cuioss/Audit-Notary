@@ -1,0 +1,53 @@
+{
+  "repository": "isms-register",
+  "id": "R-044",
+  "category": "isms",
+  "kind": "risk",
+  "title": "Signing keys of the release pipeline are not rotated",
+  "state": "draft",
+  "version": 1,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "5202872",
+      "savedAt": "2026-11-26T09:43:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Signing keys of the release pipeline are not rotated",
+        "description": "The keys that sign the artefacts of the release pipeline have not been replaced since they were created. A leaked key would let an attacker sign artefacts that look genuine.",
+        "rating": "medium",
+        "treatment": "mitigate",
+        "treatment-notes": "Rotate the keys every year and record each rotation.",
+        "owner": "team:security-office",
+        "issues": [
+          "SEC-418"
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-26T09:43:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "isms.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ]
+}

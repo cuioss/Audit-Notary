@@ -1,0 +1,31 @@
+{
+  "today": "2026-11-26",
+  "risks": [
+    {
+      "id": "R-001",
+      "entry": "r-001",
+      "title": "Signing keys of the release pipeline are not rotated",
+      "state": "draft",
+      "version": 1,
+      "rating": "medium",
+      "treatment": "mitigate",
+      "owner": {
+        "kind": "team",
+        "id": "security-office",
+        "name": "Security Office"
+      },
+      "reviewDue": null,
+      "reviewStatus": "none",
+      "origin": null,
+      "requested": false,
+      "updatedAt": "2026-11-26T09:41:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null,
+      "address": "/isms/risks/r-001"
+    }
+  ],
+  "truncated": false
+}

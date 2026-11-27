@@ -1,0 +1,19 @@
+{
+  "repository": "isms-register",
+  "id": "R-043",
+  "revisions": [
+    {
+      "ref": "5a292fa",
+      "commit": "5a292fa",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-26T09:41:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

@@ -1,0 +1,150 @@
+{
+  "asOf": {
+    "requested": null,
+    "date": "2026-11-26",
+    "tag": null,
+    "commit": "e41c9a8",
+    "at": "2026-11-26T10:05:00Z"
+  },
+  "tags": [
+    {
+      "tag": "management-review-2026-06",
+      "commit": "b81d4e6",
+      "at": "2026-06-18T13:05:00Z"
+    },
+    {
+      "tag": "audit-2026-03",
+      "commit": "3f9a1c2",
+      "at": "2026-02-27T16:20:00Z"
+    }
+  ],
+  "risks": [
+    {
+      "id": "R-004",
+      "entry": "r-004",
+      "title": "Build agents run unpatched images",
+      "rating": "high",
+      "treatment": "mitigate",
+      "owner": {
+        "kind": "team",
+        "id": "security-office",
+        "name": "Security Office"
+      },
+      "version": 3,
+      "releasedAt": "2026-10-21T09:14:00Z",
+      "reviewDue": "2027-04-21",
+      "reference": null,
+      "address": "/isms/risks/r-004"
+    },
+    {
+      "id": "R-007",
+      "entry": "r-007",
+      "title": "Signing keys held by a single administrator",
+      "rating": "low",
+      "treatment": "accept",
+      "owner": {
+        "kind": "team",
+        "id": "security-office",
+        "name": "Security Office"
+      },
+      "version": 1,
+      "releasedAt": "2026-02-18T11:20:00Z",
+      "reviewDue": "2026-11-18",
+      "reference": null,
+      "address": "/isms/risks/r-007"
+    },
+    {
+      "id": "R-009",
+      "entry": "r-009",
+      "title": "Replay of payment authorisations in the checkout flow",
+      "rating": "critical",
+      "treatment": "mitigate",
+      "owner": {
+        "kind": "team",
+        "id": "payments",
+        "name": "Payments"
+      },
+      "version": 2,
+      "releasedAt": "2026-08-11T08:47:00Z",
+      "reviewDue": "2027-02-11",
+      "reference": {
+        "ref": "threat-models:threat-model/payment-api-checkout-flow#T-07",
+        "title": "Payment API, checkout flow: T-07",
+        "address": "/threat-models/payment-api/checkout-flow"
+      },
+      "address": "/isms/risks/r-009"
+    },
+    {
+      "id": "R-012",
+      "entry": "r-012",
+      "title": "Supplier access to production",
+      "rating": "high",
+      "treatment": "mitigate",
+      "owner": {
+        "kind": "team",
+        "id": "security-office",
+        "name": "Security Office"
+      },
+      "version": 2,
+      "releasedAt": "2026-09-03T10:12:00Z",
+      "reviewDue": "2026-12-15",
+      "reference": null,
+      "address": "/isms/risks/r-012"
+    },
+    {
+      "id": "R-015",
+      "entry": "r-015",
+      "title": "Security Testing of the payments scope is below its target",
+      "rating": "medium",
+      "treatment": "mitigate",
+      "owner": {
+        "kind": "team",
+        "id": "payments",
+        "name": "Payments"
+      },
+      "version": 1,
+      "releasedAt": "2026-07-02T13:30:00Z",
+      "reviewDue": "2027-01-02",
+      "reference": {
+        "ref": "samm-assessments:assessment/payments-2026-q2#st",
+        "title": "Payments 2026 Q2, Security Testing",
+        "address": "/samm/payments/2026-q2/st"
+      },
+      "address": "/isms/risks/r-015"
+    },
+    {
+      "id": "R-018",
+      "entry": "r-018",
+      "title": "No tested restore of the customer database",
+      "rating": "high",
+      "treatment": "mitigate",
+      "owner": {
+        "kind": "team",
+        "id": "identity",
+        "name": "Identity Platform"
+      },
+      "version": 2,
+      "releasedAt": "2026-11-26T10:05:00Z",
+      "reviewDue": "2027-05-05",
+      "reference": null,
+      "address": "/isms/risks/r-018"
+    },
+    {
+      "id": "R-021",
+      "entry": "r-021",
+      "title": "Personal data in application logs",
+      "rating": "medium",
+      "treatment": "accept",
+      "owner": {
+        "kind": "team",
+        "id": "mobile",
+        "name": "Mobile Apps"
+      },
+      "version": 1,
+      "releasedAt": "2026-11-12T10:41:00Z",
+      "reviewDue": "2027-11-12",
+      "reference": null,
+      "address": "/isms/risks/r-021"
+    }
+  ]
+}

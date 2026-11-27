@@ -1,0 +1,90 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB1C3E5G7J9M1P3R5T7W9Y2",
+  "category": "isms",
+  "kind": "policy",
+  "title": "Information security policy",
+  "state": "released",
+  "version": 1,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "45b0e57",
+      "savedAt": "2025-03-07T15:30:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Information security policy",
+        "owner": "role:ciso",
+        "purpose": "This policy states how the organisation protects the confidentiality, integrity and availability of its information.",
+        "statements": "The management of the organisation is accountable for information security.\n\n* Every system and every set of data has an owner.\n* Access is given by need and withdrawn when the need ends.\n* Security incidents are reported to the security office without delay.",
+        "applies-to": [
+          "team:payments"
+        ],
+        "review-due": "2026-03-10"
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2025-03-10T09:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "policies/01JZB1C3E5G7J9M1P3R5T7W9Y2/v1"
+    },
+    {
+      "at": "2025-03-10T08:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-03-07T15:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2025-03-03T10:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "policies/01JZB1C3E5G7J9M1P3R5T7W9Y2/v1",
+    "at": "2025-03-10T09:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "at": {
+    "ref": "v1",
+    "kind": "release",
+    "commit": "15b5ab9",
+    "tag": "policies/01JZB1C3E5G7J9M1P3R5T7W9Y2/v1",
+    "at": "2025-03-10T09:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  }
+}

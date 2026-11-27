@@ -1,0 +1,427 @@
+{
+  "entries": [
+    {
+      "repository": "test-notes",
+      "id": "01JZ8Q4Y5N6V7X8B9C0D1E2F3G",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Key rotation, decision of 24 November",
+      "state": "released",
+      "address": "/categories/test-note/01JZ8Q4Y5N6V7X8B9C0D1E2F3G"
+    },
+    {
+      "repository": "test-notes",
+      "id": "01JZ8R7A9C1E3G5J7M9P1S3V5X",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Retention schedule for audit evidence",
+      "state": "draft",
+      "address": "/categories/test-note/01JZ8R7A9C1E3G5J7M9P1S3V5X"
+    },
+    {
+      "repository": "test-notes",
+      "id": "01JZ8S2B4D6F8H0K2N4Q6T8W0Y",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Backup restore test, Q4",
+      "state": "draft",
+      "address": "/categories/test-note/01JZ8S2B4D6F8H0K2N4Q6T8W0Y"
+    },
+    {
+      "repository": "test-notes",
+      "id": "01JZ8T5C7E9G1J3M5P7R9V1X3Z",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Supplier security questionnaire",
+      "state": "in-review",
+      "address": "/categories/test-note/01JZ8T5C7E9G1J3M5P7R9V1X3Z"
+    },
+    {
+      "repository": "test-notes",
+      "id": "01JZ8V8D0F2H4K6N8Q0S2W4Y6A",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Access review cadence",
+      "state": "in-review",
+      "address": "/categories/test-note/01JZ8V8D0F2H4K6N8Q0S2W4Y6A"
+    },
+    {
+      "repository": "test-notes",
+      "id": "01JZ8W1E3G5J7M9P1R3T5X7Z9B",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Vendor onboarding questions",
+      "state": "released",
+      "address": "/categories/test-note/01JZ8W1E3G5J7M9P1R3T5X7Z9B"
+    },
+    {
+      "repository": "test-notes",
+      "id": "01JZ8X4F6H8K0N2Q4S6V8Y0A2C",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Third-party access, annual check",
+      "state": "draft",
+      "address": "/categories/test-note/01JZ8X4F6H8K0N2Q4S6V8Y0A2C"
+    },
+    {
+      "repository": "test-notes",
+      "id": "01JZ8Y7G9J1M3P5R7T9W1Z3B5D",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Old decision",
+      "state": "draft",
+      "address": "/categories/test-note/01JZ8Y7G9J1M3P5R7T9W1Z3B5D"
+    },
+    {
+      "repository": "test-notes",
+      "id": "01JZ8Z0H2K4N6Q8S0V2X4A6C8E",
+      "category": "test-note",
+      "kind": "note",
+      "title": "Incident communication checklist",
+      "state": "draft",
+      "address": "/categories/test-note/01JZ8Z0H2K4N6Q8S0V2X4A6C8E"
+    },
+    {
+      "repository": "samm-assessments",
+      "id": "payments-2026-q4",
+      "category": "samm",
+      "kind": "assessment",
+      "title": "Payments 2026 Q4",
+      "state": "draft",
+      "address": "/samm/payments/2026-q4"
+    },
+    {
+      "repository": "samm-assessments",
+      "id": "payments-2026-q2",
+      "category": "samm",
+      "kind": "assessment",
+      "title": "Payments 2026 Q2",
+      "state": "released",
+      "address": "/samm/payments/2026-q2"
+    },
+    {
+      "repository": "samm-assessments",
+      "id": "payments-2025-q4",
+      "category": "samm",
+      "kind": "assessment",
+      "title": "Payments 2025 Q4",
+      "state": "released",
+      "address": "/samm/payments/2025-q4"
+    },
+    {
+      "repository": "samm-assessments",
+      "id": "identity-2026-q4",
+      "category": "samm",
+      "kind": "assessment",
+      "title": "Identity Platform 2026 Q4",
+      "state": "in-review",
+      "address": "/samm/identity/2026-q4"
+    },
+    {
+      "repository": "samm-assessments",
+      "id": "shop-2026-q3",
+      "category": "samm",
+      "kind": "assessment",
+      "title": "Web shop 2026 Q3",
+      "state": "released",
+      "address": "/samm/shop/2026-q3"
+    },
+    {
+      "repository": "samm-assessments",
+      "id": "organisation-2026-h1",
+      "category": "samm",
+      "kind": "assessment",
+      "title": "Organisation 2026 H1",
+      "state": "released",
+      "address": "/samm/organisation/2026-h1"
+    },
+    {
+      "repository": "threat-models",
+      "id": "payment-api-checkout-flow",
+      "category": "threat-models",
+      "kind": "threat-model",
+      "title": "Payment API, checkout flow",
+      "state": "released",
+      "address": "/threat-models/payment-api/checkout-flow"
+    },
+    {
+      "repository": "threat-models",
+      "id": "identity-provider-login-flow",
+      "category": "threat-models",
+      "kind": "threat-model",
+      "title": "Identity Provider, login flow",
+      "state": "released",
+      "address": "/threat-models/identity-provider/login-flow"
+    },
+    {
+      "repository": "threat-models",
+      "id": "customer-portal-portal",
+      "category": "threat-models",
+      "kind": "threat-model",
+      "title": "Customer Portal",
+      "state": "released",
+      "address": "/threat-models/customer-portal/portal"
+    },
+    {
+      "repository": "threat-models",
+      "id": "customer-db-storage",
+      "category": "threat-models",
+      "kind": "threat-model",
+      "title": "Customer database, storage",
+      "state": "released",
+      "address": "/threat-models/customer-db/storage"
+    },
+    {
+      "repository": "threat-models",
+      "id": "reporting-report-generation",
+      "category": "threat-models",
+      "kind": "threat-model",
+      "title": "Reporting Service, report generation",
+      "state": "released",
+      "address": "/threat-models/reporting/report-generation"
+    },
+    {
+      "repository": "threat-models",
+      "id": "notification-service-notification-flows",
+      "category": "threat-models",
+      "kind": "threat-model",
+      "title": "Notification service, notification flows",
+      "state": "draft",
+      "address": "/threat-models/notification-service/notification-flows"
+    },
+    {
+      "repository": "isms-incidents-2026",
+      "id": "01JZ9T4M6Q8S0V2X4B6D8F0H2K",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Card data exposed in the checkout log",
+      "state": "draft",
+      "address": "/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K"
+    },
+    {
+      "repository": "isms-incidents-2026",
+      "id": "01JZ9V7P9S1T3W5Y7A9C1E3G5J",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Credential stuffing against the login form",
+      "state": "draft",
+      "address": "/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J"
+    },
+    {
+      "repository": "isms-incidents-2026",
+      "id": "01JZA2B4D6F8H0K2N4Q6S8V0X2",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Phishing mail with a forged payment link",
+      "state": "draft",
+      "address": "/incidents/2026/01JZA2B4D6F8H0K2N4Q6S8V0X2"
+    },
+    {
+      "repository": "isms-incidents-2026",
+      "id": "01JZ8M3N5P7R9T1V3X5Z7B9D1F",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Notification service down after a failed deployment",
+      "state": "released",
+      "address": "/incidents/2026/01JZ8M3N5P7R9T1V3X5Z7B9D1F"
+    },
+    {
+      "repository": "isms-incidents-2026",
+      "id": "01JZ8K1M3P5R7T9V1X3Z5B7D9F",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Unauthorised access to the report archive",
+      "state": "draft",
+      "address": "/incidents/2026/01JZ8K1M3P5R7T9V1X3Z5B7D9F"
+    },
+    {
+      "repository": "isms-incidents-2026",
+      "id": "01JZ6Q8S0V2X4B6D8F0H2K4M6P",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Customer export sent to the wrong recipient",
+      "state": "draft",
+      "address": "/incidents/2026/01JZ6Q8S0V2X4B6D8F0H2K4M6P"
+    },
+    {
+      "repository": "isms-incidents-2026",
+      "id": "01JZA6D8F0H2K4M6P8R0T2W4Y6",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Suspicious logins from an unknown network",
+      "state": "draft",
+      "address": "/incidents/2026/01JZA6D8F0H2K4M6P8R0T2W4Y6"
+    },
+    {
+      "repository": "isms-incidents-2025",
+      "id": "01JZ2A4C6E8G0J2M4P6R8T0W2Y",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Laptop with customer extracts lost",
+      "state": "released",
+      "address": "/incidents/2025/01JZ2A4C6E8G0J2M4P6R8T0W2Y"
+    },
+    {
+      "repository": "isms-incidents-2025",
+      "id": "01JZ3B5D7F9H1K3N5Q7S9V1X3Z",
+      "category": "incident-reports",
+      "kind": "incident",
+      "title": "Misdirected newsletter exposed the subscriber list",
+      "state": "released",
+      "address": "/incidents/2025/01JZ3B5D7F9H1K3N5Q7S9V1X3Z"
+    },
+    {
+      "repository": "isms-core",
+      "id": "01JZB1C3E5G7J9M1P3R5T7W9Y2",
+      "category": "isms",
+      "kind": "policy",
+      "title": "Information security policy",
+      "state": "released",
+      "address": "/isms/documents/01JZB1C3E5G7J9M1P3R5T7W9Y2"
+    },
+    {
+      "repository": "isms-core",
+      "id": "01JZB2D4F6H8K0N2Q4S6V8X0Z3",
+      "category": "isms",
+      "kind": "policy",
+      "title": "Access control policy",
+      "state": "released",
+      "address": "/isms/documents/01JZB2D4F6H8K0N2Q4S6V8X0Z3"
+    },
+    {
+      "repository": "isms-core",
+      "id": "01JZB3E5G7J9M1P3R5T7W9Y1B4",
+      "category": "isms",
+      "kind": "policy",
+      "title": "Secure development policy",
+      "state": "in-review",
+      "address": "/isms/documents/01JZB3E5G7J9M1P3R5T7W9Y1B4"
+    },
+    {
+      "repository": "isms-core",
+      "id": "01JZB4F6H8K0N2Q4S6V8X0Z2C5",
+      "category": "isms",
+      "kind": "isms-scope",
+      "title": "Scope of the ISMS",
+      "state": "released",
+      "address": "/isms/documents/01JZB4F6H8K0N2Q4S6V8X0Z2C5"
+    },
+    {
+      "repository": "isms-core",
+      "id": "01JZB5G7J9M1P3R5T7W9Y1B3D6",
+      "category": "isms",
+      "kind": "audit-report",
+      "title": "Internal audit 2025",
+      "state": "released",
+      "address": "/isms/documents/01JZB5G7J9M1P3R5T7W9Y1B3D6"
+    },
+    {
+      "repository": "isms-core",
+      "id": "01JZB6H8K0N2Q4S6V8X0Z2C4E7",
+      "category": "isms",
+      "kind": "audit-report",
+      "title": "Internal audit 2026",
+      "state": "draft",
+      "address": "/isms/documents/01JZB6H8K0N2Q4S6V8X0Z2C4E7"
+    },
+    {
+      "repository": "isms-core",
+      "id": "01JZB7J9M1P3R5T7W9Y1B3D5F8",
+      "category": "isms",
+      "kind": "management-review",
+      "title": "Management review 2026 H1",
+      "state": "released",
+      "address": "/isms/documents/01JZB7J9M1P3R5T7W9Y1B3D5F8"
+    },
+    {
+      "repository": "isms-core",
+      "id": "01JZB8K0N2Q4S6V8X0Z2C4E6G9",
+      "category": "isms",
+      "kind": "management-review",
+      "title": "Management review 2025",
+      "state": "released",
+      "address": "/isms/documents/01JZB8K0N2Q4S6V8X0Z2C4E6G9"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-004",
+      "category": "isms",
+      "kind": "risk",
+      "title": "Build agents run unpatched images",
+      "state": "released",
+      "address": "/isms/risks/r-004"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-007",
+      "category": "isms",
+      "kind": "risk",
+      "title": "Signing keys held by a single administrator",
+      "state": "released",
+      "address": "/isms/risks/r-007"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-009",
+      "category": "isms",
+      "kind": "risk",
+      "title": "Replay of payment authorisations in the checkout flow",
+      "state": "released",
+      "address": "/isms/risks/r-009"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-012",
+      "category": "isms",
+      "kind": "risk",
+      "title": "Supplier access to production",
+      "state": "released",
+      "address": "/isms/risks/r-012"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-015",
+      "category": "isms",
+      "kind": "risk",
+      "title": "Security Testing of the payments scope is below its target",
+      "state": "released",
+      "address": "/isms/risks/r-015"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-018",
+      "category": "isms",
+      "kind": "risk",
+      "title": "No tested restore of the customer database",
+      "state": "in-review",
+      "address": "/isms/risks/r-018"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-021",
+      "category": "isms",
+      "kind": "risk",
+      "title": "Personal data in application logs",
+      "state": "released",
+      "address": "/isms/risks/r-021"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-042",
+      "category": "isms",
+      "kind": "risk",
+      "title": "Unpatched build agents",
+      "state": "draft",
+      "address": "/isms/risks/r-042"
+    },
+    {
+      "repository": "isms-register",
+      "id": "R-043",
+      "category": "isms",
+      "kind": "risk",
+      "title": "Signing keys of the release pipeline are not rotated",
+      "state": "draft",
+      "address": "/isms/risks/r-043"
+    }
+  ]
+}

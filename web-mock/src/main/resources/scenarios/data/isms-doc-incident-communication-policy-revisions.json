@@ -1,0 +1,19 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB9M1P3R5T7W9Y1B3D5F7H0",
+  "revisions": [
+    {
+      "ref": "3fc2dd8",
+      "commit": "3fc2dd8",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-26T09:41:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}
