@@ -65,11 +65,16 @@ import {
   STAGES,
   SUSPICIOUS,
   WRONG_RECIPIENT,
+  createPath,
   incidentAddress,
   loginToIncidents,
+  loginToNew,
+  loginToRelease,
   loginToSheet as loginToIncident,
+  newIncidentAddress,
   pinClock,
   readPath,
+  withOpenDeadlines,
 } from './helpers/incidents.js';
 import { patchRead } from './helpers/samm.js';
 import {
@@ -1760,6 +1765,188 @@ test.describe('at 390 px', () => {
     await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'read-only');
     await expectNoSideways(page);
     await expectNoSeriousViolations(page, 'incident read only (phone)');
+  });
+
+  /** Fails when a box is not wholly inside the screen of 390 px. */
+  async function expectInsideScreen(locator) {
+    const box = await locator.boundingBox();
+    expect(box.x).toBeGreaterThanOrEqual(-0.5);
+    expect(box.x + box.width).toBeLessThanOrEqual(390.5);
+  }
+
+  /** Fails when a dialog is not wholly inside the viewport, so that its acts are reachable without a scroll of the page. */
+  async function expectDialogFits(dialog) {
+    await expect(dialog).toBeVisible();
+    const box = await dialog.boundingBox();
+    expect(box.x).toBeGreaterThanOrEqual(-0.5);
+    expect(box.y).toBeGreaterThanOrEqual(-0.5);
+    expect(box.x + box.width).toBeLessThanOrEqual(390.5);
+    expect(box.y + box.height).toBeLessThanOrEqual(844.5);
+  }
+
+  test('the release of an incident fits: the record is in groups of the phone size, and the act and the way back are targets', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop#incident-submitted');
+    await loginToRelease(page, CREDENTIAL_STUFFING);
+    await expectNoSideways(page);
+    await expect(page.getByTestId('release-facts')).toBeVisible();
+    await expectInsideScreen(page.getByTestId('release-facts'));
+    for (const group of ['data', 'triage', 'response', 'review']) {
+      await page.getByTestId(`record-${group}`).scrollIntoViewIfNeeded();
+      await expectInsideScreen(page.getByTestId(`record-${group}`));
+    }
+    await expectTarget(page.getByTestId('release-act'));
+    await expectTarget(page.getByTestId('release-back'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incident release (phone)');
+  });
+
+  test('the release of an incident with deadlines still open fits: every deadline stands inside the screen, and the way to the notices is a target', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop#incident-submitted');
+    // The mock has no incident in review with a deadline still open: the read is patched.
+    await withOpenDeadlines(page, CREDENTIAL_STUFFING);
+    await loginToRelease(page, CREDENTIAL_STUFFING);
+    const open = page.getByTestId('release-deadlines');
+    await open.scrollIntoViewIfNeeded();
+    for (const row of await open.locator('li').all()) await expectInsideScreen(row);
+    await expect(page.getByTestId('release-deadlines-gdpr-art33-')).toContainText('Overdue by');
+    await expectTarget(page.getByTestId('release-record-notice'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incident release, deadlines open (phone)');
+    await expectTarget(page.getByTestId('release-act'));
+    await page.getByTestId('release-act').click();
+    await expect(page.getByTestId('release-done')).toBeVisible();
+    await expect(page.getByTestId('release-seal')).toBeVisible();
+    await page.getByTestId('release-clock-stopped').scrollIntoViewIfNeeded();
+    await expectInsideScreen(page.getByTestId('release-clock-stopped'));
+    await expectTarget(page.getByTestId('release-open'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incident released, clock stopped (phone)');
+  });
+
+  test('the refusal of a release because a stage is open fits, and its links are targets of the phone size', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop#incident-release-stages-open');
+    await loginToRelease(page, CREDENTIAL_STUFFING);
+    await page.getByTestId('release-act').click();
+    await expect(page.getByTestId('release-refusal')).toBeVisible();
+    await page.getByTestId('release-refusal').scrollIntoViewIfNeeded();
+    await expectInsideScreen(page.getByTestId('release-refusal'));
+    await expectTarget(page.getByTestId('release-refusal-review'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incident release refused (phone)');
+  });
+
+  test('the release of an incident that cannot be taken, and the confirmation of it, fit', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'read-only');
+    await loginToRelease(page, CREDENTIAL_STUFFING);
+    await expect(page.getByText('Releasing needs the approve right.')).toBeVisible();
+    await expectTarget(page.getByTestId('release-act'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incident release, no right (phone)');
+    await useScenario(request, 'workshop#incident-release-stepped-up');
+    await patchRead(page, '**/api/v1/status', (body) => ({
+      ...body,
+      loginProvider: 'local',
+      stepUp: 'password',
+    }));
+    await page.reload();
+    await expect(page.getByTestId('release-record')).toBeVisible();
+    await expectTarget(page.getByTestId('release-act'));
+    await page.getByTestId('release-act').click();
+    await expectDialogFits(page.getByRole('dialog'));
+    await expectTarget(page.getByTestId('release-password'));
+    await expectTarget(page.getByTestId('release-confirm'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'incident release password question (phone)');
+  });
+
+  test('the form of a new incident fits: the fields and the act are targets, and the reason of the act stands inside the screen', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop');
+    await loginToNew(page);
+    const sheet = page.getByTestId('new-incident-sheet');
+    await expectInsideScreen(sheet);
+    await expectTarget(sheet.getByLabel('Title'));
+    await expectTarget(sheet.getByLabel('Became aware at'));
+    await expectTarget(page.getByTestId('create-incident'));
+    await expect(sheet).toContainText('Enter a title first.');
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'new incident (phone)');
+    await sheet.getByLabel('Title').fill('Suspicious logins from the VPN gateway');
+    await expectTarget(page.getByTestId('create-incident'));
+    // The question before the form is left, and the question for the password of a create, stand inside the screen.
+    await page.getByTestId('bottom-more').click();
+    await page.getByRole('dialog').getByRole('link', { name: 'Settings' }).click();
+    await expectDialogFits(page.getByRole('dialog'));
+    await expectTarget(page.getByTestId('leave-stay'));
+    await expectTarget(page.getByTestId('leave-confirm'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'new incident leave question (phone)');
+    await page.getByTestId('leave-stay').click();
+    await expect(page).toHaveURL(newIncidentAddress(2026));
+  });
+
+  test('the refusals of a new incident fit, and so does the question for the password of a create', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'workshop#incident-create-invalid');
+    await loginToNew(page);
+    const sheet = page.getByTestId('new-incident-sheet');
+    await sheet.getByLabel('Title').fill('A title');
+    await page.getByTestId('create-incident').click();
+    await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'failed');
+    await expectInsideScreen(page.getByTestId('save-state'));
+    await expectInsideScreen(sheet.locator('[data-pointer="/title"]'));
+    await expectTarget(page.getByTestId('create-incident'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'new incident refused (phone)');
+    await useScenario(request, 'workshop');
+    await patchRead(page, '**/api/v1/status', (body) => ({
+      ...body,
+      loginProvider: 'local',
+      stepUp: 'password',
+    }));
+    // The mock has no state that asks a local user for the password on a create: the create is answered here.
+    await page.route(`**${createPath(2026)}`, (route) =>
+      route.request().method() === 'POST'
+        ? route.fulfill({ status: 403, json: { outcome: 'STEP_UP_REQUIRED' } })
+        : route.continue(),
+    );
+    await page.goto(newIncidentAddress(2026));
+    await sheet.getByLabel('Title').fill('A title');
+    await page.getByTestId('create-incident').click();
+    await expectDialogFits(page.getByRole('dialog'));
+    await expectTarget(page.getByTestId('create-password'));
+    await expectTarget(page.getByTestId('create-confirm'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'new incident password question (phone)');
+  });
+
+  test('the form of a new incident of a person who may only read fits, and its way back is a target', async ({
+    page,
+    request,
+  }) => {
+    await useScenario(request, 'read-only');
+    await loginToIncidents(page, newIncidentAddress(2026));
+    await expect(page.getByTestId('new-incident-blocked')).toBeVisible();
+    await expectInsideScreen(page.getByTestId('new-incident-blocked'));
+    await expectTarget(page.getByTestId('new-incident-back'));
+    await expectNoSideways(page);
+    await expectNoSeriousViolations(page, 'new incident blocked (phone)');
   });
 
   test('the deadlines in the Due list fit, and their links are targets of the phone size', async ({

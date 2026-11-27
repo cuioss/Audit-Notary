@@ -61,8 +61,12 @@ import {
   SUSPICIOUS,
   WRONG_RECIPIENT,
   incidentAddress,
+  createPath,
+  newIncidentAddress,
   pinClock,
   readPath,
+  releaseAddress as incidentReleaseAddress,
+  withOpenDeadlines,
   yearAddress,
   yearPath,
 } from './helpers/incidents.js';
@@ -2067,11 +2071,294 @@ const INCIDENT_STATES = [
       await page.getByTestId('stage-complete').click();
     },
   ],
+  [
+    'the release of an incident in review',
+    'workshop#incident-submitted',
+    incidentReleaseAddress(CREDENTIAL_STUFFING),
+    'release-view',
+    'release-record',
+    async () => {},
+  ],
+  [
+    'the release of an incident with deadlines still open',
+    'workshop#incident-submitted',
+    incidentReleaseAddress(CREDENTIAL_STUFFING),
+    'release-view',
+    'release-deadlines',
+    async (page) => {
+      // The mock has no incident in review with a deadline still open: the read is patched.
+      await withOpenDeadlines(page, CREDENTIAL_STUFFING);
+      await page.reload();
+      await expect(page.getByTestId('release-deadlines').locator('li')).toHaveCount(2);
+    },
+  ],
+  [
+    'the seal of the release of an incident',
+    'workshop#incident-submitted',
+    incidentReleaseAddress(CREDENTIAL_STUFFING),
+    'release-view',
+    'release-seal',
+    async (page) => {
+      await page.getByTestId('release-act').click();
+      await expect(page.getByTestId('release-done')).toBeVisible();
+    },
+    // The release moved the mock on: the state the page ends in.
+    'workshop#incident-released',
+  ],
+  [
+    'the seal of the release of an incident whose deadlines were open',
+    'workshop#incident-submitted',
+    incidentReleaseAddress(CREDENTIAL_STUFFING),
+    'release-view',
+    'release-clock-stopped',
+    async (page) => {
+      await withOpenDeadlines(page, CREDENTIAL_STUFFING);
+      await page.reload();
+      await expect(page.getByTestId('release-deadlines').locator('li')).toHaveCount(2);
+      await page.getByTestId('release-act').click();
+      await expect(page.getByTestId('release-done')).toBeVisible();
+    },
+    'workshop#incident-released',
+  ],
+  [
+    'a release refused because a stage is not completed',
+    'workshop#incident-release-stages-open',
+    incidentReleaseAddress(CREDENTIAL_STUFFING),
+    'release-view',
+    'release-refusal',
+    async (page) => {
+      await page.getByTestId('release-act').click();
+      await expect(page.getByTestId('release-refusal-review')).toBeVisible();
+    },
+    'workshop#incident-release-stages-open-refused',
+  ],
+  [
+    'a release of an incident that is to be checked again',
+    'workshop#incident-release-changed',
+    incidentReleaseAddress(CREDENTIAL_STUFFING),
+    'release-view',
+    'notice',
+    async (page) => {
+      await page.getByTestId('release-act').click();
+      await expect(page.getByTestId('release-view').getByTestId('notice').first()).toContainText(
+        'Someone saved after you opened the release.',
+      );
+    },
+    // The refused release moved the mock on: the state the page ends in.
+    'workshop#incident-release-changed-reviewed',
+  ],
+  [
+    'a release of an incident that the Git server cannot make',
+    'workshop#incident-submitted',
+    incidentReleaseAddress(CREDENTIAL_STUFFING),
+    'release-view',
+    'notice',
+    async (page, request) => {
+      await gotoState(request, 'incident-git-unavailable');
+      await page.getByTestId('release-act').click();
+      await expect(page.getByRole('alert')).toContainText('The Git server cannot be reached.');
+    },
+    'workshop#incident-git-unavailable',
+  ],
+  [
+    'the confirmation of the release of an incident',
+    'workshop#incident-release-stepped-up',
+    incidentReleaseAddress(CREDENTIAL_STUFFING),
+    'release-view',
+    'release-password',
+    async (page) => {
+      await patchRead(page, '**/api/v1/status', (body) => ({
+        ...body,
+        loginProvider: 'local',
+        stepUp: 'password',
+      }));
+      await page.reload();
+      await page.getByTestId('release-act').click();
+      await expect(page.getByRole('dialog')).toContainText('Confirm your identity');
+    },
+  ],
+  [
+    'a release that cannot be taken by a person who may only read',
+    'read-only',
+    incidentReleaseAddress(CREDENTIAL_STUFFING),
+    'release-view',
+    'release-act',
+    async () => {},
+  ],
+  [
+    'the release of an incident that is released already',
+    'workshop',
+    incidentReleaseAddress(OUTAGE),
+    'release-view',
+    'release-act',
+    async () => {},
+  ],
+  [
+    'the release of an incident that is a draft',
+    'workshop',
+    incidentReleaseAddress(CREDENTIAL_STUFFING),
+    'release-view',
+    'release-act',
+    async () => {},
+  ],
+  [
+    'the release of an incident that cannot be read',
+    'workshop#incident-submitted',
+    incidentReleaseAddress(CREDENTIAL_STUFFING),
+    'release-view',
+    'notice',
+    async (page) => {
+      await page.route(`**${readPath(CREDENTIAL_STUFFING)}`, (route) =>
+        route.fulfill({ status: 503, json: { outcome: 'GIT_UNAVAILABLE' } }),
+      );
+      await page.reload();
+    },
+  ],
+  [
+    'the form of a new incident',
+    'workshop',
+    newIncidentAddress(2026),
+    'incidents-view',
+    'new-incident-sheet',
+    async () => {},
+  ],
+  [
+    'the form of a new incident, typed',
+    'workshop',
+    newIncidentAddress(2026),
+    'incidents-view',
+    'create-incident',
+    async (page) => {
+      const sheet = page.getByTestId('new-incident-sheet');
+      await sheet.getByLabel('Title').fill('Suspicious logins from the VPN gateway');
+      await sheet.getByLabel('Became aware at').fill('2026-11-26T09:30');
+      await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'changed');
+    },
+  ],
+  [
+    'the form of a new incident, refused at the title',
+    'workshop#incident-create-invalid',
+    newIncidentAddress(2026),
+    'incidents-view',
+    'new-incident-sheet',
+    async (page) => {
+      await page.getByTestId('new-incident-sheet').getByLabel('Title').fill('A title');
+      await page.getByTestId('create-incident').click();
+      await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'failed');
+      await expect(field(page.getByTestId('new-incident-sheet'), '/title')).toContainText(
+        'Fill in this field.',
+      );
+    },
+  ],
+  [
+    'the form of a new incident, refused at the awareness',
+    'workshop',
+    newIncidentAddress(2026),
+    'incidents-view',
+    'new-incident-sheet',
+    async (page) => {
+      // The mock has no state that refuses a create for the year: the create is answered here.
+      await page.route(`**${createPath(2026)}`, (route) =>
+        route.request().method() === 'POST'
+          ? route.fulfill({
+              status: 422,
+              json: {
+                outcome: 'VALIDATION',
+                errors: [{ part: 'triage', pointer: '/aware-at', code: 'OUT_OF_YEAR' }],
+              },
+            })
+          : route.continue(),
+      );
+      const sheet = page.getByTestId('new-incident-sheet');
+      await sheet.getByLabel('Title').fill('A title');
+      await sheet.getByLabel('Became aware at').fill('2025-12-31T23:30');
+      await page.getByTestId('create-incident').click();
+      await expect(field(sheet, '/aware-at')).toContainText('not in the year of the incident');
+    },
+  ],
+  [
+    'the form of a new incident while the Git server is down',
+    'workshop#incident-git-unavailable',
+    newIncidentAddress(2026),
+    'incidents-view',
+    'new-incident-sheet',
+    async (page) => {
+      await page.getByTestId('new-incident-sheet').getByLabel('Title').fill('A title');
+      await page.getByTestId('create-incident').click();
+      await expect(page.getByRole('alert')).toContainText('The Git server cannot be reached.');
+    },
+  ],
+  [
+    'the confirmation of a new incident',
+    'workshop',
+    newIncidentAddress(2026),
+    'incidents-view',
+    'create-password',
+    async (page) => {
+      await patchRead(page, '**/api/v1/status', (body) => ({
+        ...body,
+        loginProvider: 'local',
+        stepUp: 'password',
+      }));
+      await page.reload();
+      // The mock has no state that asks a local user for the password on a create: the create is answered here.
+      await page.route(`**${createPath(2026)}`, (route) =>
+        route.request().method() === 'POST'
+          ? route.fulfill({ status: 403, json: { outcome: 'STEP_UP_REQUIRED' } })
+          : route.continue(),
+      );
+      await page.getByTestId('new-incident-sheet').getByLabel('Title').fill('A title');
+      await page.getByTestId('create-incident').click();
+      await expect(page.getByRole('dialog')).toContainText('Confirm your identity');
+    },
+  ],
+  [
+    'the question before the form of a new incident is left',
+    'workshop',
+    newIncidentAddress(2026),
+    'incidents-view',
+    'leave-stay',
+    async (page) => {
+      await page.getByTestId('new-incident-sheet').getByLabel('Title').fill('A title');
+      await page.getByTestId('nav-settings').click();
+      await expect(page.getByRole('dialog')).toContainText('Leave this page?');
+    },
+  ],
+  [
+    'a new incident of a person who may only read',
+    'read-only',
+    newIncidentAddress(2026),
+    'incidents-view',
+    'new-incident-blocked',
+    async () => {},
+  ],
+  [
+    'a new incident of a year that is not the current one',
+    'workshop',
+    newIncidentAddress(2026),
+    'incidents-view',
+    'new-incident-blocked',
+    async (page) => {
+      await patchRead(page, '**/api/v1/incidents', (body) => ({
+        ...body,
+        years: body.years.map((year) => (year.year === 2026 ? { ...year, current: false } : year)),
+      }));
+      await page.reload();
+    },
+  ],
+  [
+    'a new incident in a year without a repository',
+    'workshop#incident-year-missing',
+    newIncidentAddress(2026),
+    'not-found-view',
+    'not-found-view',
+    async () => {},
+  ],
   ['the deadlines in the Due list', 'workshop', '/', 'due-view', 'due-list', async () => {}],
 ];
 
 for (const theme of ['light', 'dark']) {
-  for (const [name, scenario, address, view, shown, prepare] of INCIDENT_STATES) {
+  for (const [name, scenario, address, view, shown, prepare, after = scenario] of INCIDENT_STATES) {
     test(`incidents: ${name} of ${scenario} at ${address} in the ${theme} theme`, async ({
       page,
       request,
@@ -2083,7 +2370,7 @@ for (const theme of ['light', 'dark']) {
       await expect(page.getByTestId(view).first()).toBeVisible();
       await expectScenario(request, scenario);
       await prepare(page, request);
-      await shownInScenario(page, request, scenario, shown);
+      await shownInScenario(page, request, after, shown);
       await expectNoSeriousViolations(page, `incidents: ${name} (${scenario}, ${theme})`);
     });
   }

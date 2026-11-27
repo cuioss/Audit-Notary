@@ -253,10 +253,10 @@ describe('AppRouter', () => {
   });
 
   it('names the route of a lens view', async () => {
-    render(AppRouter, { pathname: '/incidents/2026/inc-0007/release', onnavigate: () => {} });
+    render(AppRouter, { pathname: '/isms/documents/policy/release', onnavigate: () => {} });
     expect(await screen.findByTestId('lens-route')).toHaveAttribute(
       'data-route',
-      'incidents.release',
+      'isms.document.release',
     );
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Release');
   });

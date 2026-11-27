@@ -817,7 +817,8 @@ assigns the id (a ULID) and writes the first commit into the repository of the y
 stage that carries a field are written, the others are absent until their first save
 |`422 VALIDATION` per field (`part`, `pointer`, `code`; `/title` `REQUIRED` in the part `data` is the only mandatory
 field of a first save); `404 NOT_FOUND` for a year with no repository; `403 FORBIDDEN` without `edit`; `REJECTED`;
-`GIT_UNAVAILABLE`
+`GIT_UNAVAILABLE`; `STEP_UP_REQUIRED` and `INVALID_CREDENTIALS` as for every request that can ask, with the member `password`
+of the body (<<_decided_incidents>> point 48)
 |xref:../use-cases/06-incidents.adoc#UC-IR-1[UC-IR-1], xref:category-incident-reports.adoc#AUN-IR-3[AUN-IR-3]
 |`PROVISIONAL`
 
@@ -5198,11 +5199,43 @@ clock, the notices and the report), so that no screen is blocked; the owner may 
 . *A year or an incident the person may not read is the not-found view* (the register answers `404`); a `403 FORBIDDEN` that still
   arrives, because a right was withdrawn while the page was open, is a notice in place of the column.
 . *`New incident` is offered on the year column* to a person with `edit` on the repository of the current year (`current: true`); the
-  addresses `incidents.new` and `incidents.release` show the lens placeholder until part B builds them.
+  addresses `incidents.new` and `incidents.release` are built by part B (points 46 to 50).
 . *The Due item of a deadline is worded by the web app:* the rule is read from the member `deadline`, and the title of the incident is
   the server's `title` without its ending `: <rule>`; a title that does not end so is shown as it is.
 . *The history and the revisions carry the kinds `complete` and `reopen`* (with `stage`), as the mock does; the generic lines
   `create`, `save`, `submit` and `release` keep theirs, and a `save` of an incident names its `part`.
+
+*Decided provisionally* with the lens *Incidents*, part B (the release of an incident with its diff, and the form of a new
+incident), so that no screen is blocked; the owner may change each one (the numbering goes on):
+
+[start=46]
+. *The release lists the open deadlines and does not refuse for them.* Before the person confirms, the page lists every deadline
+  that is still a duty (`OPEN`, or `MISSED` and never sent; one sent late is a fact, a met one is done), worded as the clock of the
+  sheet words it, with the reminder that a released incident is frozen and a notice not recorded by then can no longer be recorded,
+  and a link to the tab *Notifications*. The margin counts them. Refusing the release while a deadline is open is not decided (the
+  owner question of point 16 stays); after the release the same list is told against the time of the release, under the sentence
+  that the clock has stopped (when no deadline is still a duty, neither the list nor the sentence is drawn).
+. *The release page shows the diff by stage, then by field.* The parts of the diff are the stages (the title is the part `data`,
+  its group is *Title*); a group is one stage, its rows are the changes in the order of the form, each worded as the form words
+  the field. An incident is released once, so `from` is always `null` and every change is a whole top-level field, which is why
+  the first segment of the pointer is the row (point 29). The sign-off of a stage (`/completion`) is the row *Stage signed off*
+  with the person's name, taken from the stage of the read when its time is the one of the change, else the time alone: the
+  pseudonym is never shown. A released incident has no changes to release: its record is the release it was made from.
+. *`STAGES_OPEN` is told, not forecast.* The page does not disable *Release* for an open stage (the server is the truth: a stage can
+  be reopened while the page is open); its margin says which stages are open, and a refused release (`422 STAGES_OPEN`) is a notice
+  that nothing was released with one link to the tab of every stage the server names; the incident is read again.
+. *A create may ask for step-up.* `POST /api/v1/documents/{repository}` carries the member `password` like the save (the
+  generalisation of <<_the_step_up_handler>>) and goes through the step-up handler, although the shipped workflows declare none for
+  a create. The form asks for the title (mandatory) and the time the organisation became aware (optional, `OUT_OF_YEAR` is the text
+  *This time is not in the year of the incident* at that field); a new incident is offered in the current year to a person with
+  `edit`, and for another year the sheet says that a new incident is made in the current year. The new page lands on the incident
+  with `replace`, and the year and the years are read again.
+. *The mock has one release refusal for the stages and none for the deadlines.* The state `incident-release-stages-open` answers the
+  release with `STAGES_OPEN` for the review (reopened meanwhile) and then reads with the review reopened; no incident of the mock is in review with an open deadline, so the
+  list of point 46 is driven by the unit tests with an overriding answer, and the e2e tests intercept the read of the incident.
+  The diff of the *Credential stuffing* holds the `completion` of the review, so in the base state, where the review is still open,
+  the release page of the draft shows a sign-off that the read does not yet have (the page then says that the incident must be
+  submitted first, and the diff is not released).
 
 For the owner: whether the specification may follow the layout of point 1 (the stages as parts, the paths of the
 deadlines in them, which moves AUN-IR-1 to AUN-IR-3 and the deadline inputs of the concept); whether a kind may be bound to
@@ -5226,3 +5259,12 @@ blob should send no `blob` instead of an empty one (point 34); whether the page 
 server does (point 39), or should wait for the next read; and whether the form kit should mark the inner mandatory fields of
 an optional section only once the section is started (the notices show every member's *Sent at*, *Recipient* and *Channel* as
 required, which is true only after the notice is begun, point 40).
+
+For the owner, from part B of the lens: whether a release should be refused while a deadline is open (point 46; the page lists them
+and does not block); whether a create should be able to ask for step-up at all (point 48: it is wired, the shipped workflows ask for
+none); and whether the stopped clock should be told after the release when no deadline was still a duty (point 46: the list and its
+sentence are drawn only with rows, so a release with every deadline met or sent shows the seal alone). If a create may ask for
+step-up, the multi-factor path leaves the page, and there is no draft of an incident that does not exist (point 31): the title and the
+time typed so far are lost across the redirect. Decided provisionally: leave it as it is (the password path stays on the page, and the
+shipped workflows ask for no step-up on a create); the options are a keep of its own (such as the session storage), a `beforeLeave` that
+refuses the create under multi-factor with a notice, or leaving the loss.

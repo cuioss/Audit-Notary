@@ -1500,7 +1500,14 @@ answer `409 DOCUMENT_RELEASED` with the tag. The event `document-transitioned`
 
 |`incident-release-changed`, `-refused`, `-reviewed`
 |The release answers `409 CHANGED_SINCE_REVIEW` and moves to `-refused`, where it stays refused until the diff is read again; that
-read moves to `-reviewed`, where the release answers `200 RELEASED`
+read (and the one in `-reviewed`) is the diff with the change that was saved meanwhile (`incident-credential-stuffing-diff-changed.json`: a second
+ticket, `SEC-2201`; the incident's own read keeps its one ticket, and the shared `incident-released` is not changed by it: the state
+shows the diff, not a changed incident); it moves to `-reviewed`, where the release answers `200 RELEASED`
+
+|`incident-release-stages-open`, `-refused`
+|The incident reads in review as in `incident-submitted`; the release answers `422 STAGES_OPEN` with the `review` (a stage that was reopened
+while the page was open, `missing` empty) and moves to `-refused`, where the incident, the year and the diff read with the review reopened
+(`-in-review-reopened` with its report, `-diff-reopened`) and every further release is refused again
 
 |`incident-release-released-meanwhile`
 |The incident reads released; the release, a save and a draft answer `409 DOCUMENT_RELEASED` with the tag

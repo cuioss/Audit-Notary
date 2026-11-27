@@ -10118,7 +10118,7 @@
       }
     },
     "incident-release-changed-refused": {
-      "description": "The release was refused as changed since the review: it stays refused until the diff is read again; the next read of the diff is that review and moves to incident-release-changed-reviewed.",
+      "description": "The release was refused as changed since the review: it stays refused until the diff is read again; the next read of the diff is that review, now with the change that was saved meanwhile (incident-credential-stuffing-diff-changed.json), and moves to incident-release-changed-reviewed.",
       "routes": {
         "GET /api/v1/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J": {
           "status": 200,
@@ -10159,7 +10159,7 @@
           "path": "/api/v1/documents/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/diff",
           "next": "incident-release-changed-reviewed",
           "status": 200,
-          "body_file": "incident-credential-stuffing-diff.json",
+          "body_file": "incident-credential-stuffing-diff-changed.json",
           "requires": {
             "repository": "isms-incidents-2026",
             "action": "read"
@@ -10181,7 +10181,78 @@
       }
     },
     "incident-release-changed-reviewed": {
-      "description": "The diff was read after the refusal: the release is accepted and the mock moves to incident-released.",
+      "description": "The diff was read after the refusal and carries the change saved meanwhile: the release is accepted and the mock moves to incident-released.",
+      "routes": {
+        "GET /api/v1/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J": {
+          "status": 200,
+          "body_file": "incident-credential-stuffing-in-review.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J": {
+          "status": 200,
+          "body_file": "incident-credential-stuffing-in-review.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026": {
+          "status": 200,
+          "body_file": "incidents-year-2026-b-in-review.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/diff": {
+          "status": 200,
+          "body_file": "incident-credential-stuffing-diff-changed.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/diff?from=released": {
+          "status": 200,
+          "body_file": "incident-credential-stuffing-diff-changed.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/report": {
+          "status": 200,
+          "body_file": "incident-credential-stuffing-in-review-report.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        }
+      },
+      "links": {
+        "release-b": {
+          "method": "POST",
+          "path": "/api/v1/releases/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J",
+          "next": "incident-released",
+          "status": 200,
+          "body": {
+            "outcome": "RELEASED",
+            "tag": "incidents/01JZ9V7P9S1T3W5Y7A9C1E3G5J/v1",
+            "at": "2026-11-26T10:05:00Z",
+            "report": "incidents/01JZ9V7P9S1T3W5Y7A9C1E3G5J/report.adoc"
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "approve"
+          }
+        }
+      }
+    },
+    "incident-release-stages-open": {
+      "description": "Somebody reopened a stage of the credential stuffing after the submission, while the review was open: the release answers STAGES_OPEN with the review (nothing is missing, it only needs its sign-off) and moves to incident-release-stages-open-refused; until then the incident reads as in incident-submitted.",
       "routes": {
         "GET /api/v1/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J": {
           "status": 200,
@@ -10236,13 +10307,90 @@
         "release-b": {
           "method": "POST",
           "path": "/api/v1/releases/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J",
-          "next": "incident-released",
-          "status": 200,
+          "next": "incident-release-stages-open-refused",
+          "status": 422,
           "body": {
-            "outcome": "RELEASED",
-            "tag": "incidents/01JZ9V7P9S1T3W5Y7A9C1E3G5J/v1",
-            "at": "2026-11-26T10:05:00Z",
-            "report": "incidents/01JZ9V7P9S1T3W5Y7A9C1E3G5J/report.adoc"
+            "outcome": "STAGES_OPEN",
+            "stages": [
+              {
+                "stage": "review",
+                "missing": []
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "approve"
+          }
+        }
+      }
+    },
+    "incident-release-stages-open-refused": {
+      "description": "The release was refused because a stage was reopened meanwhile: the incident, the list of the year and the diff read with the review reopened (open, not completed), and every further release is refused again with the same answer.",
+      "routes": {
+        "GET /api/v1/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J": {
+          "status": 200,
+          "body_file": "incident-credential-stuffing-in-review-reopened.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J": {
+          "status": 200,
+          "body_file": "incident-credential-stuffing-in-review-reopened.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026": {
+          "status": 200,
+          "body_file": "incidents-year-2026-b-in-review-reopened.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/diff": {
+          "status": 200,
+          "body_file": "incident-credential-stuffing-diff-reopened.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/diff?from=released": {
+          "status": 200,
+          "body_file": "incident-credential-stuffing-diff-reopened.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/incidents/2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J/report": {
+          "status": 200,
+          "body_file": "incident-credential-stuffing-in-review-reopened-report.json",
+          "requires": {
+            "repository": "isms-incidents-2026",
+            "action": "read"
+          }
+        }
+      },
+      "links": {
+        "release-b": {
+          "method": "POST",
+          "path": "/api/v1/releases/isms-incidents-2026/01JZ9V7P9S1T3W5Y7A9C1E3G5J",
+          "next": "incident-release-stages-open-refused",
+          "status": 422,
+          "body": {
+            "outcome": "STAGES_OPEN",
+            "stages": [
+              {
+                "stage": "review",
+                "missing": []
+              }
+            ]
           },
           "requires": {
             "repository": "isms-incidents-2026",

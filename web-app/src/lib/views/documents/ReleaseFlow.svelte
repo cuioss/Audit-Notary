@@ -33,6 +33,33 @@
     open?: boolean;
   }
 
+  /** A link that comes with a refusal: a place where what the refusal asks for is done. */
+  export interface ReleaseRefusalLink {
+    /** A key that is unique in the list. */
+    key: string;
+    /** The words. */
+    label: string;
+    /** The address. */
+    href: string;
+  }
+
+  /**
+   * The refusal of a release that only one document type knows: its words and where to go. The flow tells it as it tells
+   * its own refusals.
+   */
+  export interface ReleaseRefusal {
+    /** The tone: a refusal that asks the person to do something is attention. */
+    tone: 'attention' | 'danger';
+    /** The catalogue key of the title. */
+    key: string;
+    /** The sentence under the title. */
+    body?: string;
+    /** The places to go to, as links under the sentence. */
+    links?: ReleaseRefusalLink[];
+    /** Whether the document and its record are read again: the refusal says that what the person reviewed has changed. */
+    reload?: boolean;
+  }
+
   /** What the release made: the tag and the time. */
   export interface ReleaseDone {
     tag: string;
@@ -75,7 +102,7 @@
   import Sheet from '../../components/Sheet.svelte';
   import MascotFigure from '../../brand/MascotFigure.svelte';
   import { apiClient } from '../../api/client';
-  import { errorMessageKey, isApiError } from '../../api/errors';
+  import { errorMessageKey, isApiError, type ApiError } from '../../api/errors';
   import { stepUpMethodOf } from '../../access/access';
   import { formatDateTime } from '../../format';
   import { currentLocale, t } from '../../i18n';
@@ -126,6 +153,11 @@
     fieldLabel?: (pointer: string) => string;
     /** Reads the document and its record again, after a refusal that changed what the person reviews. */
     onreload: () => Promise<void>;
+    /**
+     * The words of a refusal that only this document type knows (an incident whose stages are not all completed); `null`
+     * leaves it to the flow. It is asked before the flow's own refusals.
+     */
+    explain?: (error: ApiError) => ReleaseRefusal | null;
     /** Called after the release was made. */
     onreleased?: (done: ReleaseDone) => void;
     /** The stage: the seal of the document, and what is released. It gets the release once it is made. */
@@ -136,6 +168,10 @@
     sinceTitle?: string;
     /** One side of a change. */
     value: Snippet<[ReleaseChange, 'before' | 'after']>;
+    /** Whether the notary stands beside the seal once released; a document of an incident, which the deadlines weigh on, has none. */
+    mascot?: boolean;
+    /** Whether the fields have short labels and long values (a form's fields, not a questionnaire's questions): the values get the room. */
+    shortLabels?: boolean;
   }
 
   let {
@@ -152,14 +188,22 @@
     openHref,
     fieldLabel = (pointer) => pointer,
     onreload,
+    explain,
     onreleased,
     stage,
     since,
     sinceTitle = '',
     value,
+    mascot = true,
+    shortLabels = false,
   }: Props = $props();
 
-  let notice = $state<{ tone: 'attention' | 'danger'; key: string; body?: string } | null>(null);
+  let notice = $state<{
+    tone: 'attention' | 'danger';
+    key: string;
+    body?: string;
+    links?: ReleaseRefusalLink[];
+  } | null>(null);
   let released = $state<ReleaseDone | null>(null);
   /**
    * Whether a release is under way, from the press of the act until its outcome is told and the record is read again.
@@ -202,6 +246,12 @@
       notice = { tone: 'danger', key: errorMessageKey(error) };
       return;
     }
+    const own = explain?.(error) ?? null;
+    if (own) {
+      notice = { tone: own.tone, key: own.key, body: own.body, links: own.links };
+      if (own.reload) await onreload();
+      return;
+    }
     switch (error.outcome) {
       case 'CHANGED_SINCE_REVIEW':
         notice = { tone: 'attention', key: 'error.changed-since-review' };
@@ -227,6 +277,10 @@
         };
         break;
       }
+      case 'GIT_UNAVAILABLE':
+        // Nothing of the person's is kept here to save again: the release is simply not made.
+        notice = { tone: 'danger', key: 'release.git-unavailable' };
+        break;
       default:
         notice = { tone: 'danger', key: errorMessageKey(error) };
     }
@@ -235,8 +289,8 @@
 
 <WizardPage
   wide
-  title={released ? texts.doneTitle : texts.title}
-  intro={released ? texts.doneIntro : texts.intro}
+  title={!ready ? $t('lens.release') : released ? texts.doneTitle : texts.title}
+  intro={!ready ? '' : released ? texts.doneIntro : texts.intro}
   testId="release-view"
 >
   <StepUpDialog
@@ -246,12 +300,39 @@
     testId="release"
   />
   {#if failure}
-    <Notice tone="danger" title={$t(failure)} live />
+    <Notice
+      tone="danger"
+      title={$t(failure === 'error.git-unavailable' ? 'release.read-unavailable' : failure)}
+      live
+    />
   {:else if !ready}
     <p class="muted">{$t('common.loading')}</p>
   {:else}
     {#if notice}
-      <Notice tone={notice.tone} title={$t(notice.key)} body={notice.body} live />
+      {@const links = notice.links ?? []}
+      {#if links.length > 0}
+        <div data-testid="release-refusal">
+          <Notice tone={notice.tone} title={$t(notice.key)} body={notice.body} live stacked>
+            {#snippet actions()}
+              <ul class="refusal__links" data-testid="release-refusal-links">
+                {#each links as link (link.key)}
+                  <li>
+                    <Link
+                      href={link.href}
+                      look="secondary"
+                      data-testid="release-refusal-{link.key}"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                {/each}
+              </ul>
+            {/snippet}
+          </Notice>
+        </div>
+      {:else}
+        <Notice tone={notice.tone} title={$t(notice.key)} body={notice.body} live />
+      {/if}
     {/if}
     {#if released}
       <div class="done" data-testid="release-done">
@@ -270,7 +351,7 @@
         </h2>
         <div class="stage" class:stage--done={!!released}>
           {@render stage(released)}
-          {#if released}
+          {#if released && mascot}
             <div class="stage__mascot"><MascotFigure pose="done" /></div>
           {/if}
         </div>
@@ -297,7 +378,11 @@
               {/snippet}
               <ul class="changes">
                 {#each group.changes as change (change.key)}
-                  <li class="change" class:change--bare={change.label === ''}>
+                  <li
+                    class="change"
+                    class:change--bare={change.label === ''}
+                    class:change--short={shortLabels}
+                  >
                     {#if change.label !== ''}
                       <span class="change__question">{change.label}</span>
                     {/if}
@@ -386,6 +471,13 @@
 
   .done {
     margin-block-end: var(--space-2);
+  }
+
+  .refusal__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    list-style: none;
   }
 
   .section + .section {
@@ -478,6 +570,10 @@
     grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
     gap: var(--space-4);
     font-size: var(--text-sm);
+  }
+
+  .change--short {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   }
 
   .change--bare {

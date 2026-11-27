@@ -6,6 +6,7 @@
  * Nothing here touches the network or a component.
  */
 import type {
+  CreateRequest,
   IncidentDeadline,
   JsonSchema,
   IncidentStage,
@@ -412,5 +413,34 @@ export function titleSchema(schema: JsonSchema): JsonSchema {
     type: 'object',
     required: ['title'],
     properties: title ? { title } : {},
+  };
+}
+
+/** The part of the document that holds the triage, the first stage: the awareness of a new incident is written there. */
+export const TRIAGE_PART = 'triage';
+
+/**
+ * @param schema the schema of the document type
+ * @returns the schema of the form of the awareness of a new incident: the one field of the triage the first save takes
+ *   besides the title, never required (the other fields are asked for by the stage)
+ */
+export function awareSchema(schema: JsonSchema): JsonSchema {
+  const aware = propertiesOf(partSchema(schema, TRIAGE_PART))['aware-at'];
+  return { type: 'object', properties: aware ? { 'aware-at': aware } : {} };
+}
+
+/**
+ * @param title the title, as typed
+ * @param awareAt the time the organisation became aware, `null` for none yet
+ * @returns the first save of a new incident (rest-api.adoc, Creating and Saving): the title, and the awareness when it is
+ *   known; the year of the repository is the year of the awareness
+ */
+export function newIncidentRequest(title: string, awareAt: string | null): CreateRequest {
+  return {
+    kind: INCIDENT_KIND,
+    parts: {
+      [DATA_PART]: { fields: { '/title': title.trim() } },
+      ...(awareAt ? { [TRIAGE_PART]: { fields: { '/aware-at': awareAt } } } : {}),
+    },
   };
 }

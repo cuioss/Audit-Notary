@@ -59,7 +59,7 @@ A document without a rosette, a note of the generic documents lens, wears the sa
 (`ReleaseSeal`): the scalloped ring of gold, the word "Released" and the version in the serif, pressed in once when the
 release is made, in the same motion. It appears only after the release; before it, the release view shows the facts of
 the document and the changes. After the release the record folds, so that the seal is the one bold thing on the page,
-and the margin tells what was done; where the release cannot be taken, it tells why and promises nothing. The notary stands beside either seal, because a finished release is a calm surface.
+and the margin tells what was done; where the release cannot be taken, it tells why and promises nothing. The notary stands beside either seal, because a finished release is a calm surface; the release of an incident has none, because its deadlines weigh on the page.
 
 === The Daybook
 
@@ -361,6 +361,20 @@ which stage comes first. The stage that asks for the confirmation of the identit
 *The notices* are a table over the form: every notice that was sent with its time, recipient and channel and the deadline it
 meets, and under it the form of the part (*Record a notice*), where each notice has its own section. *The report* is read on the page,
 section by section, only when the person asks, with the note that it is a preview from the saved state and written in English.
+
+*The release of an incident* is `IncidentReleaseView` on `ReleaseFlow` and adds no component. It is a sheet in the order of what the
+approver decides: the facts of the incident (the seal after the release, never before), the deadlines that are still a duty
+(`DeadlineClock`, with the sentence that a released incident is frozen and a link to the tab *Notifications*; after the release the
+sentence that the clock has stopped and the same rows told against the time of the release), then the record by stage: one group for
+the title and one for each stage that applies, each field worded as its form words it, the sign-off of a stage as the row *Stage
+signed off* with the person's name. The act reads *Release*; the margin counts the open stages and deadlines and promises nothing
+where the act is disabled. A release the server refuses because a stage is not completed is a notice that nothing was released, with
+a link of the secondary look for each stage (`ReleaseFlow` takes `explain`, the refusal only one document type knows). The deadlines
+do not block the release.
+
+*A new incident* is a sheet in the last column (`NewIncidentSheet`, `/incidents/{year}/new`): the title and the time the organisation
+became aware as two forms of the form kit, the primary act *Create incident* with the reason it waits (the title), and the leave guard
+of the unsaved. A person without the right, or a year that is not the current one, gets a sentence and the way back to the year.
 
 == The Pages of the Directory
 
