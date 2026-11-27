@@ -89,6 +89,29 @@ class CanonicalAddressesTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {"/threat-models", "/threat-models/payment-api", "/threat-models/payment-api/new",
+            "/threat-models/payment-api/new?recipe=stride-light", "/threat-models/payment-api/checkout-flow",
+            "/threat-models/payment-api/checkout-flow?at=v2", "/threat-models/payment-api/checkout-flow?at=4be0c3a",
+            "/threat-models/payment-api/checkout-flow/release", "/threat-models/new",
+            "/threat-models/payment-api/new-2", "/threat-models/payment-api/new-2/release"})
+    @DisplayName("keeps a return address of the threat models, with its allowed query")
+    void shouldKeepThreatModelAddressesWithAllowedQuery(String address) {
+        assertEquals(address, addresses.checkReturn(address));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/threat-models/payment-api/new?recipe=", "/threat-models/payment-api/new?recipe=Stride",
+            "/threat-models/payment-api/new?recipe=a&recipe=b", "/threat-models/payment-api/new?at=v1",
+            "/threat-models/payment-api/new#x", "/threat-models/payment-api/checkout-flow?recipe=stride-light",
+            "/threat-models/payment-api/checkout-flow?at=zzz", "/threat-models/payment-api/checkout-flow/release?at=v1",
+            "/threat-models/payment-api?recipe=stride-light", "/threat-models?at=v1",
+            "/threat-models/payment-api/new/release"})
+    @DisplayName("replaces a return address of the threat models with a name it does not admit or a bad value by /")
+    void shouldReplaceThreatModelAddressesWithOtherQueries(String candidate) {
+        assertEquals(CanonicalAddresses.FALLBACK, addresses.checkReturn(candidate));
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"/reports", "/reports/samm-trend", "/reports/samm-trend?scope=payments",
             "/reports/samm-compare", "/reports/samm-compare?scope=payments",
             "/reports/samm-compare?scope=payments&from=2026-q2&to=2026-q4",

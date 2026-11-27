@@ -1,0 +1,45 @@
+{
+  "today": "2026-11-26",
+  "service": {
+    "id": "notification-service",
+    "name": "Notification service",
+    "lifecycle": "planned",
+    "retired": false,
+    "owner": {
+      "kind": "team",
+      "id": "mobile",
+      "name": "Mobile Apps"
+    },
+    "protectionNeed": "normal",
+    "reviewInterval": "P24M"
+  },
+  "reviewIntervals": {
+    "very-high": "P6M",
+    "high": "P12M",
+    "normal": "P24M"
+  },
+  "models": [
+    {
+      "model": "notification-flows",
+      "document": "notification-service-notification-flows",
+      "title": "Notification service, notification flows",
+      "address": "/threat-models/notification-service/notification-flows",
+      "state": "draft",
+      "version": null,
+      "lastReview": null,
+      "daysSinceReview": null,
+      "reviewDue": null,
+      "dueInDays": null,
+      "status": "unreleased",
+      "threats": {
+        "total": 3,
+        "open": 3,
+        "untreated": 3,
+        "transferred": 0
+      },
+      "requested": false,
+      "updatedAt": "2026-11-20T10:05:00Z"
+    }
+  ],
+  "drafts": []
+}

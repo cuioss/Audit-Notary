@@ -66,7 +66,8 @@ Without the scripts: `java -cp … de.cuioss.notary.audit.mock.cli.WebMockCli --
 `scope-invalid`, `targets-saved`, `targets-invalid`, `targets-conflict`, `targets-conflict-resolved`,
 `shop-assessment-created`, `organisation-assessment-created`, `assessment-invalid`, `assessment-released-meanwhile`,
 `evidence-invalid`, `model-versions-differ`, `models-none`, `samm-git-unavailable`) and the report states of _Reports_
-(`trend-mixed-models`, `no-threat-models`, `risk-register-git-unavailable`, `risk-register-empty`)
+(`trend-mixed-models`, `no-threat-models`, `risk-register-git-unavailable`, `risk-register-empty`) and the
+`threat-model-*` and `recipe-draft-saved` states of _Threat Models_
 |An assessor in a populated installation: Due list with every kind, catalogs, and the SAMM lens — four scopes, the
 open workshop *Payments 2026 Q4* (draft, eleven practices answered) and released assessments to compare with; a draft
 and a save for everyone succeed. `saved-by-other` pushes a `document-saved` event and serves the assessment with
@@ -87,7 +88,10 @@ entry with `422`, `entry-git-unavailable` answers saving and confirming `503 GIT
 pinned models, the trend of every scope, the create of a scope and of an assessment, the save of the targets of a scope,
 the evidence of an assessment and the refusal of every write to a released one (_SAMM Completion_); it answers the four
 requests of the lens *Reports* (the dashboard summary, the trend of every scope, the threat evaluation and the risk
-register as of a date) and the comparison pair of the report page (_Reports_)
+register as of a date) and the comparison pair of the report page (_Reports_). The user holds `read`, `edit` and `approve`
+on `threat-models`: the lens reads six models, the nine services, the schema and the two recipes in English and German,
+and the lifecycle of the *Payment API, checkout flow* (save, submit, release with step-up), a conflict, refusals and the
+create of a model of the *Report scheduler* are walked through by states (_Threat Models_)
 
 |`first-login`
 |`form`, `invalid-team`, `registered`, `registered-bound`, `candidates`, `candidates-chosen`, `candidates-not-bindable`, `candidates-refused`
@@ -107,7 +111,9 @@ holds the SAMM assessments too); the writes of the own entry (`PUT /api/v1/direc
 and the person directory as `workshop` does (_Directory and Catalogs_); every catalog and directory write answers
 `403 FORBIDDEN` (`requires`, no right `administer-catalogs`). It reads the pinned models and the four trends of the SAMM
 lens; creating a scope, creating an assessment and saving the targets answer `403 FORBIDDEN` (`requires`, no right `edit`
-on `samm-assessments`). It answers the reports of `workshop` (_Reports_)
+on `samm-assessments`). It answers the reports of `workshop` (_Reports_). It reads the schema, the recipes, the six
+threat models with their revisions and the nine service pages of `workshop`; saving, drafting, submitting, releasing and
+creating a threat model answer `403 FORBIDDEN` (`requires`, no right `edit` or `approve` on `threat-models`) (_Threat Models_)
 
 |`degraded`
 |`unreachable`, `recovered`
@@ -115,7 +121,10 @@ on `samm-assessments`). It answers the reports of `workshop` (_Reports_)
 so do creating a scope, creating an assessment and saving the targets; the models and the trends stay readable;
 `recovered` pushes the `status` event with the healthy status, and the creates and the save answer as in `workshop`; the
 reports answer as in `workshop`, except that the risk register as of a past date or tag answers `503 GIT_UNAVAILABLE` in
-`unreachable` and its data after `recovered` (_Reports_)
+`unreachable` and its data after `recovered` (_Reports_). The threat models read as in `workshop` and `threat-models` is `DOWN`
+in the status of `unreachable`; in `unreachable` a save,
+a submit and a create of a threat model answer `503 GIT_UNAVAILABLE` (a draft stays `200`), after `recovered` they answer
+as in `workshop`; the user holds no `approve`, so the release is `403 FORBIDDEN` (_Threat Models_)
 
 |`empty`
 |`ready`, `scope-created`, `assessment-created`, `no-model`
@@ -125,7 +134,9 @@ reports answer as in `workshop`, except that the risk register as of a past date
 writes answer as in `catalog-admin` `ready` (_Directory and Catalogs_). No scope exists and one model is pinned; creating
 the scope *Mobile Apps* (`scope-created`) and then its first assessment (`assessment-created`) is the flow of a first
 user, `no-model` pins none (_SAMM Completion_). The reports are empty and follow that chain: zeros in the summary, no
-scope in the trend (then *Mobile Apps* without a point), no threat model, no risk (_Reports_)
+scope in the trend (then *Mobile Apps* without a point), no threat model, no risk (_Reports_). No service is in the
+catalog: the page of a service and a threat model answer `404 NOT_FOUND`, the list of the threat models is empty, and
+the schema and the recipes are served as in `workshop` (_Threat Models_)
 
 |`no-rights`
 |`ready`
@@ -155,14 +166,17 @@ stays the one of the identity provider; `changed` answers `CHANGED_SINCE_REVIEW`
 `released-meanwhile` answers the release, a draft, a save and a submit `409 DOCUMENT_RELEASED` with that tag and serves the released reads (assessment,
 scope, list, trend, and the summary and the trend report). The models and the four trends are read in every state. The
 user holds no right on `threat-models`: the summary has no `threatModels` section and the threat evaluation answers `403 FORBIDDEN`; the
-trend report, the risk register and the comparison pair answer as in `workshop` (_Reports_)
+trend report, the risk register and the comparison pair answer as in `workshop` (_Reports_); the schema, the recipes, the
+page of the *Payment API* and its threat model answer `403 FORBIDDEN` (_Threat Models_)
 
 |`local`
 |`ready`
 |The login provider is `local`: `GET /api/v1/auth/login` answers `302` to the web app's page `/login?return=<address>`
 and `POST /j_security_check` with the user `alex` and the password `local-password` signs in (`Origin` required); the
 status names `loginProvider: local` and `stepUp: off`. The data and the user are those of `workshop`; of the SAMM
-completion it answers the models and the four trends only, and it answers the reports of `workshop` (_Reports_)
+completion it answers the models and the four trends only, and it answers the reports of `workshop` (_Reports_). It reads
+the threat models as `workshop` does and has no write route for them: the user holds no `approve`, and a local release of a
+threat model is not walked through (_Threat Models_)
 
 |`catalog-admin`
 |`ready`, `service-created`, `service-retired`, `catalog-invalid`, `catalog-id-taken`, `catalog-rejected`,
@@ -355,6 +369,24 @@ the empty assessment of `empty`
 |`reports-threat-evaluation*.json`
 |The threat evaluation: six models and two services without a model; `-none` for the state `no-threat-models` (_Reports_)
 
+|`categories-threat-models-schema.json`, `threat-model-recipes*.json`, `threat-model-recipe-<recipe>*.json`
+|The schema of the threat models (the JSON of the register) and the two recipes, the list and each recipe in English and
+German (`-de`) (_Threat Models_)
+
+|`threat-model-<document>*.json`
+|The six models, their `-revisions` and the revision reads (`checkout-flow` `-at-v1` to `-at-v4`, `login-flow` `-at-v1`),
+the states `-reopened`, `-in-review`, `-released` (each with `-revisions`) and the `-diff` of the checkout flow, the created
+`report-scheduler-scheduler-overview` (_Threat Models_)
+
+|`threat-model-service-<service>*.json`, `threat-models-index*.json`
+|The nine service pages (also `-none`, `-reopened`, `-in-review`, `-released`, `-created` and `-draft` for the states of the
+checkout flow, the wizard and the draft) and the list of the documents (also `-reopened`, `-in-review`, `-released`,
+`-created`) (_Threat Models_)
+
+|`reports-threat-evaluation-<state>.json`, `reports-summary-tm-<state>.json`
+|The evaluation and the summary of the states of the threat models: `-reopened`, `-in-review`, `-reviewed` (after the
+release), `-created`; `-tm-saved` (for `reopened` and `in-review`), `-tm-released`, `-tm-created` (_Threat Models_)
+
 |`reports-risks-*.json`
 |The risk register: `-now` and the answers as of `2026-03-01`, `audit-2026-03`, `2026-06-30`,
 `management-review-2026-06` and `2025-06-01` (`-before-first`), `-empty` (_Reports_)
@@ -421,7 +453,7 @@ The scenario files and their data files are static fixtures, and the format has 
 (no generator, no `derive_from`). Where a fixture mirrors another source (the catalog lists and the entries behind them,
 the service states and their baseline, the retired snapshot and the dependency graph, the outage refusals and the write
 routes, the reserved ids and the routes, the handler ids and `Handler`), a test reads both and fails on drift
-(`DirectoryAndCatalogsTest`, `SammCompletionTest`, `ReportsLensTest`, `scenarioFetch.test.ts`). That is the accepted guard (decided provisionally; the
+(`DirectoryAndCatalogsTest`, `SammCompletionTest`, `ReportsLensTest`, `ThreatModelsTest`, `scenarioFetch.test.ts`). That is the accepted guard (decided provisionally; the
 alternative is a scenario-format change that derives the lists when a scenario is loaded).
 
 == Fixture Categories
@@ -963,11 +995,262 @@ too.
 * *In the state `risk-register-empty` and in `empty` the keys are repeated for the same reason* (the keyless route of the
 state would answer every value), the `422` values included.
 * *`trend-mixed-models` contradicts the data:* the assessments of `shop` still say `v2.2.0`.
-* *The evaluation's data must be reproduced by the threat models of the next step* (the figures above); the Due items of
+* *The evaluation's data are reproduced by the threat models* (the figures above; _Threat Models_); the Due items of
 the threat models name `payment-api` (title *Payment API: checkout flow*, due 2026-12-01) in `workshop`, `degraded`
 and `local`.
 * The report routes are static: no request body or `Accept-Language` changes an answer, and nothing in them is derived at
 run time (_Fixtures and Drift Tests_: `ReportsLensTest` reads the data files and fails on drift).
+
+== Threat Models
+
+The requests of the lens *Threat models* (UC-TM-1, UC-TM-2, UC-TM-4; `doc/specification/rest-api.adoc`, _Threat Model
+Requests_; everything PROVISIONAL). Today is the fixed 2026-11-26. The data files are maintained by hand; no generator
+writes them. `ThreatModelsTest` reads them and fails on drift: it derives the counts and the review dates of the six models
+and compares them with the threat evaluation and the summary of _Reports_, asserts the transfer `T-07` to `R-009`, checks
+the diagram of each model as well-formed SVG and compares the lists and the pages with the reads.
+
+*The rights.* Alex Example (`workshop`) holds `read`, `edit` and `approve` on `threat-models` (it was `read` and `edit`: a
+person who edits may release in the mock, so that the review and the release can be walked through); Kim Reader keeps
+`read`; Noor Haddad (`release`) holds no right on `threat-models`; Sam (`empty`) holds all rights and has no service;
+`degraded` and `local` keep `read` and `edit` (no release there). Jordan Weber (`p-2b7f10`, *Developer*) is the other
+person of the conflict. Working saves are by Alex Example (role *Security Champion*), releases by Noor Haddad.
+
+*The six models* (the document id is `<service>-<model>`, the address `/threat-models/<service>/<model>`; `v` is the
+version of the last release, the dates are those of the evaluation):
+
+[cols="3,2,1,1,1,1,1,1,1"]
+|===
+|Document (title) |Recipe |Total |Open (untreated) |Mitigated |Accepted |Transferred |`v`, last review |Due
+
+|`payment-api-checkout-flow` (Payment API, checkout flow)
+|`stride`
+|9
+|3 (2)
+|4
+|2
+|1 (`T-07`)
+|3, 2026-06-01
+|2026-12-01
+
+|`identity-provider-login-flow` (Identity Provider, login flow)
+|`stride`
+|7
+|4 (3)
+|3
+|0
+|0
+|2, 2026-04-14
+|2026-10-14
+
+|`customer-portal-portal` (Customer Portal)
+|`quick-start`
+|6
+|2 (2)
+|3
+|1
+|0
+|2, 2025-12-02
+|2026-06-02
+
+|`customer-db-storage` (Customer database, storage)
+|`quick-start`
+|5
+|1 (0)
+|3
+|1
+|0
+|1, 2026-09-29
+|2027-03-29
+
+|`reporting-report-generation` (Reporting Service, report generation)
+|`quick-start`
+|4
+|0 (0)
+|3
+|1
+|0
+|1, 2025-03-10
+|2027-03-10
+
+|`notification-service-notification-flows` (Notification service, notification flows)
+|`quick-start`
+|3
+|3 (3)
+|0
+|0
+|0
+|never released (`last-review` 2026-11-20)
+|none
+|===
+
+The *threats of `checkout-flow`*: `T-01` tampering with the amount (open, untreated), `T-02` account takeover by
+credential stuffing (open, untreated), `T-03` card data in the application log (open, `M-03` planned, `PAY-1423`), `T-04`
+forged callback of the provider, `T-05` a payment submitted twice and `T-06` denial of service on the authorisation
+endpoint (mitigated), `T-07` replay of a payment authorisation (accepted, transferred as `isms-register:risk/R-009`: the
+origin of the risk, whose reference names `T-07` back), `T-08` stored tokens read by an administrator (mitigated) and
+`T-09` repudiation of a refund (accepted). The countermeasure of `T-nn` is `M-nn`. The releases are `v1` 2025-05-28, `v2`
+2025-11-26 and `v3` 2026-06-02 (the revision `v1` holds `T-01` to `T-05`, all open, `v2` holds `T-01` to `T-08`); the
+revisions of `login-flow` are `v1` 2025-10-08 (five threats) and `v2` 2026-04-15.
+
+*The routes.* Every route has a `requires`: `read` on `threat-models`, or `edit` or `approve` for a write. Two requests are
+no route guard: `GET /api/v1/references/resolve` serves a shared fixture without a `requires`, and `GET /api/v1/search`
+has none either (the engine filters its results by the rights of the repositories).
+
+[cols="2,3"]
+|===
+|Request |Answer
+
+|`GET /api/v1/categories/threat-models/schema`
+|`categories-threat-models-schema.json`: the JSON of the register, `gdr-split` on `model`
+
+|`GET …/categories/threat-models/recipes`, `?lang=en`, `?lang=de`
+|`threat-model-recipes.json` (the keyless and the English key), `threat-model-recipes-de.json`: `quick-start` (4 steps)
+and `stride` (6 steps). `?lang=fr` answers `400 VALIDATION` (`/lang`, `ENUM`); any other value falls to the keyless route
+
+|`GET …/recipes/quick-start`, `…/recipes/stride`, the same keys; `…/recipes/nope`
+|`threat-model-recipe-<recipe>.json` and `-de`; `404 NOT_FOUND`. The steps are `project` `/project`, `zones` `/trustZones`,
+`components` `/components`, `threats` `/threats` and for `stride` also `dataflows` `/dataflows` before `threats` and
+`mitigations` `/mitigations` after it
+
+|`GET /api/v1/threat-models/<service>`
+|`threat-model-service-<service>.json` for the nine services of the catalog: one model each for the six, `"models": []` for
+`report-scheduler` and `notification-gateway`, and the retired `ledger` (`"retired": true`, `deprecated`, no model); any other
+service answers `404 NOT_FOUND` (a template route)
+
+|`GET /api/v1/threat-models/<service>/<model>` and `GET /api/v1/documents/threat-models/<document>`
+|`threat-model-<document>.json` (the same file for both); `?at=v1` and `?at=v2` (`checkout-flow`, also `v3`) and `?at=v1`
+(`login-flow`) answer the revision files, `frozen: true`, no draft, no transition; `?at=v9` answers `404 NOT_FOUND`, `?at=zzz`
+`422 VALIDATION` (`/at`, `FORMAT`); any other revision falls to the keyless read. An unknown model, service or document
+answers `404 NOT_FOUND`
+
+|`GET …/documents/threat-models/<document>/revisions`, `GET /api/v1/documents/threat-models`
+|`threat-model-<document>-revisions.json`; `threat-models-index.json`: the six documents, the newest change first
+
+|`GET /api/v1/threat-models/<service>/drafts/<recipe>`
+|`{"service", "recipe", "draft": null}` for the six services and for `report-scheduler` and `notification-gateway`, with both
+recipes (16 routes); any other service falls to `404 MOCK_NO_ROUTE`
+
+|`PUT …/threat-models/<service>/drafts/<recipe>`
+|`200 DRAFT_SAVED` (`2026-11-26T09:20:00Z`) for `report-scheduler` and `notification-gateway` with both recipes; it changes
+no state
+
+|`PUT /api/v1/drafts/threat-models/<document>`, `POST …/documents/threat-models/<document>/save`
+|`200 DRAFT_SAVED`, `200 SAVED` with the new blob ids of both parts, `"state": "draft"` and the next version (the checkout
+flow: 4)
+
+|`POST …/transitions/threat-model.submit`, `POST /api/v1/releases/threat-models/<document>`
+|`200 TRANSITIONED` (the checkout flow and the notification flows), `200 RELEASED` (the checkout flow, `approve`); static
+in the base, the states below walk them
+
+|`POST /api/v1/threat-models/<service>`
+|`201 CREATED` for `report-scheduler` (the link of `ready`, below) and `notification-gateway` (static: that model is not
+readable afterwards); `409 SERVICE_RETIRED` for `ledger`; `404 NOT_FOUND` for any other service
+
+|`GET /api/v1/references/resolve`, `GET /api/v1/search?q=`
+|`references-resolve.json` also holds `threat-models:threat-model/payment-api-checkout-flow#T-07` (found, title *Payment
+API, checkout flow: T-07*, address `/threat-models/payment-api/checkout-flow`); the search index lists the six models
+(category `threat-models`, kind `threat-model`, the state and the address of the model), so `q=checkout` finds one
+|===
+
+*The diagram* of a model is generated from its zones, components and data flows by the generator: zones side by side, the
+components stacked in their zone, the flows as arrows, as a data URL (`image/svg+xml`, `width` and `height` of the image).
+It is a fixed drawing, no script, link or image inside, and at most 8 KB.
+
+*The states of `workshop`.* The first three walk the lifecycle of the *Payment API, checkout flow*: the save of the model
+(`POST …/documents/threat-models/payment-api-checkout-flow/save`) in `ready` moves to `threat-model-reopened`, the submit
+there to `threat-model-in-review`, the release there to `threat-model-released`. A state overrides the model (both
+addresses and the keyed revisions), its revisions, the page of the *Payment API*, the list, the evaluation and the summary.
+
+[cols="1,3"]
+|===
+|State |What changes
+
+|`threat-model-reopened`
+|The model was saved after its release `v3`: `draft`, version 4, the last review 2026-11-26, `T-03` mitigated with `M-03`
+implemented (9 threats, 2 open, 2 untreated, 1 transferred). The evaluation row reads `draft`, version 3, the review dates
+of `v3`; the summary counts 12 open and 10 untreated threats. The diff against `v3` is served. The event `document-saved`
+(part `model`, by Alex)
+
+|`threat-model-in-review`
+|The model was submitted: `in-review`, the transition `threat-model.release` (`release: true`), the diff
+(`threat-model-payment-api-checkout-flow-diff.json`: `from` `models/payment-api-checkout-flow/v3`, `to` `working`, the sections
+`data` (`/last-review`) and `model` (`/threats`, `/mitigations`) with the whole lists), the evaluation row `in-review`. The event
+`document-transitioned` (`in-review`, version 4)
+
+|`threat-model-released`
+|The model was released as `v4` (`models/payment-api-checkout-flow/v4`, `2026-11-26T10:05:00Z`, by Noor Haddad): last review
+2026-11-26, due 2027-05-26 in 181 days (`ok`); the evaluation orders the rows by the due date (portal, login flow, report
+generation, storage, checkout flow, then the unreleased model) and the summary reads 12 open, 10 untreated, 2 overdue, 0 due
+soon; `?at=v4` is the frozen release. The event `document-transitioned` (`released`, by Noor)
+
+|`threat-model-saved-by-other`
+|The save answers `409 CONFLICT` for the list `/threats` of the part `model` with the first two threats of each side (`T-01`
+differs) and Jordan Weber as the other person
+
+|`threat-model-invalid`
+|The save and the draft of the checkout flow answer `422 VALIDATION` with `REFERENCE_NOT_FOUND` at
+`/mitigations/0/attributes/threat`, `MAXIMUM` at `/threats/0/risk/impact` (part `model`) and `REFERENCE_NOT_FOUND` at `/owner`
+(part `data`)
+
+|`threat-model-git-unavailable`
+|The status is `degraded` with `threat-models` `DOWN`; a save (the six models), a create, a submit and the release answer
+`503 GIT_UNAVAILABLE`; the reads and the recipe draft stay `200`
+
+|`threat-model-submit-incomplete`
+|The submit answers `422 MANDATORY_FIELDS_MISSING` with `/model/project/name`; the model reads as in `threat-model-reopened`
+
+|`threat-model-release-step-up`, `threat-model-release-stepped-up`
+|The model reads in review; the release answers `403 STEP_UP_REQUIRED` and moves to `-stepped-up`, where it answers `200
+RELEASED` and moves to `threat-model-released`
+
+|`threat-model-release-changed`, `-refused`, `-reviewed`
+|The model reads in review; the release answers `409 CHANGED_SINCE_REVIEW` and moves to `-refused`, where it stays refused
+until the diff is read (the review again); that read moves to `-reviewed`, where the release answers `200 RELEASED` and moves
+to `threat-model-released`
+
+|`threat-model-release-released-meanwhile`
+|The model reads as in `threat-model-released`; the release answers `409 DOCUMENT_RELEASED` with the tag of `v4`
+
+|`recipe-draft-saved`
+|`GET …/threat-models/report-scheduler/drafts/quick-start` answers the draft at step 2 with `/project` (*Scheduler overview*) and
+`/trustZones` (the zone `internal`, 80), `2026-11-26T09:20:00Z`; the page of `report-scheduler` lists it in `drafts`
+
+|`threat-model-created`
+|The create (`POST /api/v1/threat-models/report-scheduler` in `ready`, a link) answers `201 CREATED` and moves here: the model
+`report-scheduler-scheduler-overview` (`quick-start`, one zone, one component, no threat) reads as a draft, version 1, with its
+revisions, the page of `report-scheduler` lists it, the list holds seven documents, the evaluation a seventh row (`unreleased`,
+0 threats; only `notification-gateway` is without a model) and the summary 7 with a model and 1 without. The event
+`document-created`
+
+|`threat-model-create-invalid`
+|The create answers `422 VALIDATION`: `REQUIRED` at `/project/name` (part `model`)
+
+|`threat-model-recipes-none`
+|The list of the recipes is empty in every language and a recipe by its id answers `404 NOT_FOUND`
+
+|`no-threat-models`
+|(_Reports_) also the page of the *Payment API* lists no model; the other pages keep the base
+|===
+
+*Limits.*
+
+* *The answers are static.* A save changes no state except the first one of the checkout flow (the link of `ready`); a `PUT`
+of a recipe draft changes none (the draft the wizard reads back is the state `recipe-draft-saved`); the create of the
+*Report scheduler* is the only create that moves; creating a model of `notification-gateway` answers `201` and the model is
+not readable.
+* *A state replaces the keyless route of the model*, so every state of the lifecycle repeats the keyed revisions
+(`?at=v1` to `?at=v3`, `v4` in `threat-model-released`, `v9`, `zzz`); a state does not carry the mock's other overrides
+(for example the evaluation of `no-threat-models` and a lifecycle state do not combine).
+* *The recipe drafts of other services* are `404 MOCK_NO_ROUTE`; `no-threat-models` overrides only the page of the
+*Payment API*; the Due list is not derived: the item of the checkout flow stays after the release.
+* *`degraded` and `local` do not walk the lifecycle* (no `approve`, no state); `degraded` names `samm-assessments` and, in
+`unreachable`, `threat-models` `DOWN` in its status, and refuses the threat model writes there. `local` grants `read` only
+on `threat-models`, so its web app offers no edit.
+* *A save or a submit after the release is not mocked.* `threat-model-released` reads released as v4; a save or a submit that
+reaches the base route there still answers as in `ready` (the opening of v5 is not mocked, and the contract does not yet
+define the submit of a released model).
+* *The diagram is a fixed drawing*, the evaluation must keep reproducing the figures of _Reports_ (`ThreatModelsTest`
+asserts it), and the revision reads exist for the checkout flow (`v1` to `v4`) and the login flow (`v1`) only.
 
 == Query-Keyed Routes
 

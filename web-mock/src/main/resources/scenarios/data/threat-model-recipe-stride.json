@@ -1,0 +1,43 @@
+{
+  "id": "stride",
+  "title": "STRIDE, step by step",
+  "description": "Every component, every data flow, six kinds of threat.",
+  "steps": [
+    {
+      "id": "project",
+      "title": "The service",
+      "guidance": "Describe what the model covers: the part of the service and the question the model answers.\n\n* Give the model a name that people will find again.\n* Say what is inside the model and what is left out.",
+      "fills": "/project"
+    },
+    {
+      "id": "zones",
+      "title": "Trust zones",
+      "guidance": "Name the areas that trust each other, for example the internet, a DMZ and the internal network.\n\n* Give each zone a trust rating from 0 (nobody is trusted) to 100 (fully trusted).\n* Parts in one zone may rely on each other; a line between two zones is where the trust changes.",
+      "fills": "/trustZones"
+    },
+    {
+      "id": "components",
+      "title": "Components",
+      "guidance": "List every process, data store and outside party that takes part.\n\n* *Process*: code that runs.\n* *Data store*: a place where data rests.\n* *External entity*: a person or a system that is not yours.\n\nPut each component in the zone it runs in.",
+      "fills": "/components"
+    },
+    {
+      "id": "dataflows",
+      "title": "Data flows",
+      "guidance": "Draw every path between two components. Each flow has a source and a destination.\n\n* Name the flow after what it carries.\n* Mark a flow that works in both directions as bidirectional.",
+      "fills": "/dataflows"
+    },
+    {
+      "id": "threats",
+      "title": "Threats (STRIDE)",
+      "guidance": "For every component and every data flow ask the six STRIDE questions.\n\n* *S*poofing: can someone pretend to be someone else?\n* *T*ampering: can data be changed?\n* *R*epudiation: can someone deny what they did?\n* *I*nformation disclosure: can data leak?\n* *D*enial of service: can it be made unavailable?\n* *E*levation of privilege: can someone get rights they do not have?",
+      "fills": "/threats"
+    },
+    {
+      "id": "mitigations",
+      "title": "Countermeasures",
+      "guidance": "For each threat you do not accept, name a countermeasure and the threat it belongs to.\n\n* Say how much it reduces the risk, from 0 to 100.\n* Add the ids of the issues that carry out the work.\n* A threat you live with is marked *accepted* instead.",
+      "fills": "/mitigations"
+    }
+  ]
+}

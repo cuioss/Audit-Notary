@@ -1,0 +1,301 @@
+{
+  "repository": "threat-models",
+  "id": "reporting-report-generation",
+  "category": "threat-models",
+  "kind": "threat-model",
+  "title": "Reporting Service, report generation",
+  "state": "released",
+  "version": 1,
+  "frozen": false,
+  "service": {
+    "id": "reporting",
+    "name": "Reporting Service"
+  },
+  "model": "report-generation",
+  "address": "/threat-models/reporting/report-generation",
+  "parts": {
+    "data": {
+      "blob": "2e9ef31",
+      "savedAt": "2025-03-10T09:40:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "service": "service:reporting",
+        "owner": "role:service-owner",
+        "last-review": "2025-03-10",
+        "recipe": "quick-start"
+      }
+    },
+    "model": {
+      "blob": "4faaf8c",
+      "savedAt": "2025-03-10T09:40:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "otmVersion": "0.2.0",
+        "project": {
+          "id": "report-generation",
+          "name": "Reporting Service, report generation",
+          "description": "How a report is requested, rendered and archived."
+        },
+        "trustZones": [
+          {
+            "id": "internal",
+            "name": "Internal network",
+            "risk": {
+              "trustRating": 80
+            }
+          }
+        ],
+        "components": [
+          {
+            "id": "requester",
+            "name": "Requester",
+            "type": "external-entity",
+            "parent": {
+              "trustZone": "internal"
+            }
+          },
+          {
+            "id": "report-engine",
+            "name": "Report engine",
+            "type": "process",
+            "parent": {
+              "trustZone": "internal"
+            }
+          },
+          {
+            "id": "template-store",
+            "name": "Template store",
+            "type": "data-store",
+            "parent": {
+              "trustZone": "internal"
+            }
+          },
+          {
+            "id": "archive",
+            "name": "Report archive",
+            "type": "data-store",
+            "parent": {
+              "trustZone": "internal"
+            }
+          }
+        ],
+        "dataflows": [
+          {
+            "id": "request",
+            "name": "Request",
+            "source": "requester",
+            "destination": "report-engine"
+          },
+          {
+            "id": "render",
+            "name": "Render",
+            "source": "report-engine",
+            "destination": "template-store"
+          },
+          {
+            "id": "archive",
+            "name": "Archive",
+            "source": "report-engine",
+            "destination": "archive"
+          }
+        ],
+        "threats": [
+          {
+            "id": "T-01",
+            "name": "A report contains data the requester may not see",
+            "description": "A report is built from more data than the rights of the requester allow.",
+            "categories": [
+              "Information Disclosure"
+            ],
+            "risk": {
+              "likelihood": 40,
+              "impact": 75
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          },
+          {
+            "id": "T-02",
+            "name": "Template injection in a report layout",
+            "description": "A layout with code in it runs on the server when the report is rendered.",
+            "categories": [
+              "Tampering"
+            ],
+            "risk": {
+              "likelihood": 30,
+              "impact": 90
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          },
+          {
+            "id": "T-03",
+            "name": "Large reports exhaust memory",
+            "description": "A very large report uses up the memory of the engine and stops the others.",
+            "categories": [
+              "Denial of Service"
+            ],
+            "risk": {
+              "likelihood": 40,
+              "impact": 50
+            },
+            "attributes": {
+              "status": "mitigated"
+            }
+          },
+          {
+            "id": "T-04",
+            "name": "The report archive can be changed by an operator",
+            "description": "An operator with access to the archive can change a report after it was sent.",
+            "categories": [
+              "Tampering"
+            ],
+            "risk": {
+              "likelihood": 20,
+              "impact": 50
+            },
+            "attributes": {
+              "status": "accepted"
+            }
+          }
+        ],
+        "mitigations": [
+          {
+            "id": "M-01",
+            "name": "Filter every report by the rights of the requester",
+            "description": "The query runs with the rights of the requester.",
+            "riskReduction": 85,
+            "attributes": {
+              "threat": "T-01",
+              "status": "implemented",
+              "issues": [
+                "REP-120"
+              ]
+            }
+          },
+          {
+            "id": "M-02",
+            "name": "Templates without code, checked before they are stored",
+            "description": "A template with code in it is refused.",
+            "riskReduction": 90,
+            "attributes": {
+              "threat": "T-02",
+              "status": "implemented",
+              "issues": [
+                "REP-133"
+              ]
+            }
+          },
+          {
+            "id": "M-03",
+            "name": "A size limit and streaming output",
+            "description": "A report is cut off at a limit and written in pieces.",
+            "riskReduction": 80,
+            "attributes": {
+              "threat": "T-03",
+              "status": "implemented",
+              "issues": [
+                "REP-141"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2025-03-11T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "models/reporting-report-generation/v1"
+    },
+    {
+      "at": "2025-03-11T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-03-10T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "model",
+      "count": 5
+    },
+    {
+      "at": "2025-03-10T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2025-03-05T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "models/reporting-report-generation/v1",
+    "at": "2025-03-11T10:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "review": {
+    "today": "2026-11-26",
+    "protectionNeed": "normal",
+    "reviewInterval": "P24M",
+    "reviewIntervals": {
+      "very-high": "P6M",
+      "high": "P12M",
+      "normal": "P24M"
+    },
+    "lastReview": "2025-03-10",
+    "daysSinceReview": 626,
+    "reviewDue": "2027-03-10",
+    "dueInDays": 104,
+    "status": "ok"
+  },
+  "threats": {
+    "total": 4,
+    "open": 0,
+    "untreated": 0,
+    "transferred": 0
+  },
+  "diagram": {
+    "mediaType": "image/svg+xml",
+    "width": 280,
+    "height": 384,
+    "dataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyODAiIGhlaWdodD0iMzg0IiB2aWV3Qm94PSIwIDAgMjgwIDM4NCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiPgo8ZGVmcz48bWFya2VyIGlkPSJhcnJvdyIgdmlld0JveD0iMCAwIDEwIDEwIiByZWZYPSI5IiByZWZZPSI1IiBtYXJrZXJXaWR0aD0iNyIgbWFya2VySGVpZ2h0PSI3IiBvcmllbnQ9ImF1dG8tc3RhcnQtcmV2ZXJzZSI+PHBhdGggZD0iTTAgMEwxMCA1TDAgMTB6IiBmaWxsPSIjMzc0MTUxIi8+PC9tYXJrZXI+PC9kZWZzPgo8cmVjdCB3aWR0aD0iMjgwIiBoZWlnaHQ9IjM4NCIgZmlsbD0iI2ZmZmZmZiIvPgo8cmVjdCB4PSI0MCIgeT0iNDAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMzA0IiByeD0iMTAiIGZpbGw9IiNmM2Y0ZjYiIHN0cm9rZT0iIzljYTNhZiIvPgo8dGV4dCB4PSI1MiIgeT0iNTgiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMzc0MTUxIj5JbnRlcm5hbCBuZXR3b3JrPC90ZXh0Pgo8cmVjdCB4PSI2MCIgeT0iNzAiIHdpZHRoPSIxNjAiIGhlaWdodD0iNDQiIHJ4PSI0IiBmaWxsPSIjZjlmYWZiIiBzdHJva2U9IiM2YjcyODAiLz4KPHRleHQgeD0iMTQwIiB5PSI5NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzExMTgyNyI+UmVxdWVzdGVyPC90ZXh0Pgo8cmVjdCB4PSI2MCIgeT0iMTQwIiB3aWR0aD0iMTYwIiBoZWlnaHQ9IjQ0IiByeD0iNCIgZmlsbD0iI2RiZTdmYiIgc3Ryb2tlPSIjMmY1ZmIzIi8+Cjx0ZXh0IHg9IjE0MCIgeT0iMTY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMTExODI3Ij5SZXBvcnQgZW5naW5lPC90ZXh0Pgo8cmVjdCB4PSI2MCIgeT0iMjEwIiB3aWR0aD0iMTYwIiBoZWlnaHQ9IjQ0IiByeD0iNCIgZmlsbD0iI2QxZDVkYiIgc3Ryb2tlPSIjNmI3MjgwIi8+Cjx0ZXh0IHg9IjE0MCIgeT0iMjM2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMTExODI3Ij5UZW1wbGF0ZSBzdG9yZTwvdGV4dD4KPHJlY3QgeD0iNjAiIHk9IjI4MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI0NCIgcng9IjQiIGZpbGw9IiNkMWQ1ZGIiIHN0cm9rZT0iIzZiNzI4MCIvPgo8dGV4dCB4PSIxNDAiIHk9IjMwNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzExMTgyNyI+UmVwb3J0IGFyY2hpdmU8L3RleHQ+CjxsaW5lIHgxPSIxMjQiIHkxPSIxMTQiIHgyPSIxMjQiIHkyPSIxNDAiIHN0cm9rZT0iIzM3NDE1MSIgc3Ryb2tlLXdpZHRoPSIxLjUiIG1hcmtlci1lbmQ9InVybCgjYXJyb3cpIi8+Cjx0ZXh0IHg9IjEyOSIgeT0iMTMxIiBmaWxsPSIjMzc0MTUxIj5SZXF1ZXN0PC90ZXh0Pgo8bGluZSB4MT0iMTQwIiB5MT0iMTg0IiB4Mj0iMTQwIiB5Mj0iMjEwIiBzdHJva2U9IiMzNzQxNTEiIHN0cm9rZS13aWR0aD0iMS41IiBtYXJrZXItZW5kPSJ1cmwoI2Fycm93KSIvPgo8dGV4dCB4PSIxNDUiIHk9IjIwMSIgZmlsbD0iIzM3NDE1MSI+UmVuZGVyPC90ZXh0Pgo8bGluZSB4MT0iMTU2IiB5MT0iMTg0IiB4Mj0iMTU2IiB5Mj0iMjgwIiBzdHJva2U9IiMzNzQxNTEiIHN0cm9rZS13aWR0aD0iMS41IiBtYXJrZXItZW5kPSJ1cmwoI2Fycm93KSIvPgo8dGV4dCB4PSIxNjEiIHk9IjIzNiIgZmlsbD0iIzM3NDE1MSI+QXJjaGl2ZTwvdGV4dD4KPC9zdmc+"
+  }
+}

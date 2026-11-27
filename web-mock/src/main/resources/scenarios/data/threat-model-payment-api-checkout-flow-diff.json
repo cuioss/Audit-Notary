@@ -1,0 +1,443 @@
+{
+  "repository": "threat-models",
+  "id": "payment-api-checkout-flow",
+  "from": "models/payment-api-checkout-flow/v3",
+  "to": "working",
+  "sections": [
+    {
+      "part": "data",
+      "changes": [
+        {
+          "pointer": "/last-review",
+          "before": "2026-06-01",
+          "after": "2026-11-26"
+        }
+      ]
+    },
+    {
+      "part": "model",
+      "changes": [
+        {
+          "pointer": "/threats",
+          "before": [
+            {
+              "id": "T-01",
+              "name": "Tampering with the amount in the checkout request",
+              "description": "An attacker changes the amount in the request and pays less than the order is worth.",
+              "categories": [
+                "Tampering"
+              ],
+              "risk": {
+                "likelihood": 60,
+                "impact": 75
+              },
+              "attributes": {
+                "status": "open"
+              }
+            },
+            {
+              "id": "T-02",
+              "name": "Account takeover by credential stuffing at checkout",
+              "description": "Credentials leaked elsewhere are tried at the checkout login until one works.",
+              "categories": [
+                "Spoofing"
+              ],
+              "risk": {
+                "likelihood": 75,
+                "impact": 75
+              },
+              "attributes": {
+                "status": "open"
+              }
+            },
+            {
+              "id": "T-03",
+              "name": "Card data in the application log",
+              "description": "A card number written to the log can be read by everyone who can read the logs.",
+              "categories": [
+                "Information Disclosure"
+              ],
+              "risk": {
+                "likelihood": 50,
+                "impact": 75
+              },
+              "attributes": {
+                "status": "open"
+              }
+            },
+            {
+              "id": "T-04",
+              "name": "Payment provider callback is forged",
+              "description": "A third party sends a callback that says an unpaid order was paid.",
+              "categories": [
+                "Spoofing"
+              ],
+              "risk": {
+                "likelihood": 40,
+                "impact": 90
+              },
+              "attributes": {
+                "status": "mitigated"
+              }
+            },
+            {
+              "id": "T-05",
+              "name": "A payment is submitted twice",
+              "description": "A retry or a double click charges the customer twice.",
+              "categories": [
+                "Tampering"
+              ],
+              "risk": {
+                "likelihood": 50,
+                "impact": 50
+              },
+              "attributes": {
+                "status": "mitigated"
+              }
+            },
+            {
+              "id": "T-06",
+              "name": "Denial of service on the authorisation endpoint",
+              "description": "A flood of requests keeps customers from paying.",
+              "categories": [
+                "Denial of Service"
+              ],
+              "risk": {
+                "likelihood": 60,
+                "impact": 50
+              },
+              "attributes": {
+                "status": "mitigated"
+              }
+            },
+            {
+              "id": "T-07",
+              "name": "Replay of a payment authorisation",
+              "description": "A recorded authorisation is sent again and charges the customer twice.",
+              "categories": [
+                "Spoofing",
+                "Tampering"
+              ],
+              "risk": {
+                "likelihood": 50,
+                "impact": 100
+              },
+              "attributes": {
+                "status": "accepted",
+                "transferred": "isms-register:risk/R-009"
+              }
+            },
+            {
+              "id": "T-08",
+              "name": "Stored payment tokens read by an administrator",
+              "description": "An administrator with access to the database reads the tokens and uses them.",
+              "categories": [
+                "Information Disclosure"
+              ],
+              "risk": {
+                "likelihood": 25,
+                "impact": 90
+              },
+              "attributes": {
+                "status": "mitigated"
+              }
+            },
+            {
+              "id": "T-09",
+              "name": "Repudiation of a refund by a support agent",
+              "description": "A support agent refunds a payment and later denies it, and nothing shows who did it.",
+              "categories": [
+                "Repudiation"
+              ],
+              "risk": {
+                "likelihood": 25,
+                "impact": 50
+              },
+              "attributes": {
+                "status": "accepted"
+              }
+            }
+          ],
+          "after": [
+            {
+              "id": "T-01",
+              "name": "Tampering with the amount in the checkout request",
+              "description": "An attacker changes the amount in the request and pays less than the order is worth.",
+              "categories": [
+                "Tampering"
+              ],
+              "risk": {
+                "likelihood": 60,
+                "impact": 75
+              },
+              "attributes": {
+                "status": "open"
+              }
+            },
+            {
+              "id": "T-02",
+              "name": "Account takeover by credential stuffing at checkout",
+              "description": "Credentials leaked elsewhere are tried at the checkout login until one works.",
+              "categories": [
+                "Spoofing"
+              ],
+              "risk": {
+                "likelihood": 75,
+                "impact": 75
+              },
+              "attributes": {
+                "status": "open"
+              }
+            },
+            {
+              "id": "T-03",
+              "name": "Card data in the application log",
+              "description": "A card number written to the log can be read by everyone who can read the logs.",
+              "categories": [
+                "Information Disclosure"
+              ],
+              "risk": {
+                "likelihood": 50,
+                "impact": 75
+              },
+              "attributes": {
+                "status": "mitigated"
+              }
+            },
+            {
+              "id": "T-04",
+              "name": "Payment provider callback is forged",
+              "description": "A third party sends a callback that says an unpaid order was paid.",
+              "categories": [
+                "Spoofing"
+              ],
+              "risk": {
+                "likelihood": 40,
+                "impact": 90
+              },
+              "attributes": {
+                "status": "mitigated"
+              }
+            },
+            {
+              "id": "T-05",
+              "name": "A payment is submitted twice",
+              "description": "A retry or a double click charges the customer twice.",
+              "categories": [
+                "Tampering"
+              ],
+              "risk": {
+                "likelihood": 50,
+                "impact": 50
+              },
+              "attributes": {
+                "status": "mitigated"
+              }
+            },
+            {
+              "id": "T-06",
+              "name": "Denial of service on the authorisation endpoint",
+              "description": "A flood of requests keeps customers from paying.",
+              "categories": [
+                "Denial of Service"
+              ],
+              "risk": {
+                "likelihood": 60,
+                "impact": 50
+              },
+              "attributes": {
+                "status": "mitigated"
+              }
+            },
+            {
+              "id": "T-07",
+              "name": "Replay of a payment authorisation",
+              "description": "A recorded authorisation is sent again and charges the customer twice.",
+              "categories": [
+                "Spoofing",
+                "Tampering"
+              ],
+              "risk": {
+                "likelihood": 50,
+                "impact": 100
+              },
+              "attributes": {
+                "status": "accepted",
+                "transferred": "isms-register:risk/R-009"
+              }
+            },
+            {
+              "id": "T-08",
+              "name": "Stored payment tokens read by an administrator",
+              "description": "An administrator with access to the database reads the tokens and uses them.",
+              "categories": [
+                "Information Disclosure"
+              ],
+              "risk": {
+                "likelihood": 25,
+                "impact": 90
+              },
+              "attributes": {
+                "status": "mitigated"
+              }
+            },
+            {
+              "id": "T-09",
+              "name": "Repudiation of a refund by a support agent",
+              "description": "A support agent refunds a payment and later denies it, and nothing shows who did it.",
+              "categories": [
+                "Repudiation"
+              ],
+              "risk": {
+                "likelihood": 25,
+                "impact": 50
+              },
+              "attributes": {
+                "status": "accepted"
+              }
+            }
+          ]
+        },
+        {
+          "pointer": "/mitigations",
+          "before": [
+            {
+              "id": "M-03",
+              "name": "Mask card numbers before logging",
+              "description": "The logging filter keeps the last four digits.",
+              "riskReduction": 75,
+              "attributes": {
+                "threat": "T-03",
+                "status": "planned",
+                "issues": [
+                  "PAY-1423"
+                ]
+              }
+            },
+            {
+              "id": "M-04",
+              "name": "Check the signature of the callback",
+              "description": "Every callback is verified with the key of the provider.",
+              "riskReduction": 90,
+              "attributes": {
+                "threat": "T-04",
+                "status": "implemented",
+                "issues": [
+                  "PAY-1301"
+                ]
+              }
+            },
+            {
+              "id": "M-05",
+              "name": "Idempotency key on every payment request",
+              "description": "A repeated request with the same key charges once.",
+              "riskReduction": 85,
+              "attributes": {
+                "threat": "T-05",
+                "status": "implemented",
+                "issues": [
+                  "PAY-1288"
+                ]
+              }
+            },
+            {
+              "id": "M-06",
+              "name": "Rate limiting at the gateway",
+              "description": "The gateway limits the requests per client and per minute.",
+              "riskReduction": 70,
+              "attributes": {
+                "threat": "T-06",
+                "status": "implemented",
+                "issues": [
+                  "PAY-1355",
+                  "PAY-1356"
+                ]
+              }
+            },
+            {
+              "id": "M-08",
+              "name": "Encrypt tokens with a key outside the database",
+              "description": "The key lives in the key service, not next to the data.",
+              "riskReduction": 90,
+              "attributes": {
+                "threat": "T-08",
+                "status": "implemented",
+                "issues": [
+                  "PAY-1190"
+                ]
+              }
+            }
+          ],
+          "after": [
+            {
+              "id": "M-03",
+              "name": "Mask card numbers before logging",
+              "description": "The logging filter keeps the last four digits.",
+              "riskReduction": 75,
+              "attributes": {
+                "threat": "T-03",
+                "status": "implemented",
+                "issues": [
+                  "PAY-1423"
+                ]
+              }
+            },
+            {
+              "id": "M-04",
+              "name": "Check the signature of the callback",
+              "description": "Every callback is verified with the key of the provider.",
+              "riskReduction": 90,
+              "attributes": {
+                "threat": "T-04",
+                "status": "implemented",
+                "issues": [
+                  "PAY-1301"
+                ]
+              }
+            },
+            {
+              "id": "M-05",
+              "name": "Idempotency key on every payment request",
+              "description": "A repeated request with the same key charges once.",
+              "riskReduction": 85,
+              "attributes": {
+                "threat": "T-05",
+                "status": "implemented",
+                "issues": [
+                  "PAY-1288"
+                ]
+              }
+            },
+            {
+              "id": "M-06",
+              "name": "Rate limiting at the gateway",
+              "description": "The gateway limits the requests per client and per minute.",
+              "riskReduction": 70,
+              "attributes": {
+                "threat": "T-06",
+                "status": "implemented",
+                "issues": [
+                  "PAY-1355",
+                  "PAY-1356"
+                ]
+              }
+            },
+            {
+              "id": "M-08",
+              "name": "Encrypt tokens with a key outside the database",
+              "description": "The key lives in the key service, not next to the data.",
+              "riskReduction": 90,
+              "attributes": {
+                "threat": "T-08",
+                "status": "implemented",
+                "issues": [
+                  "PAY-1190"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

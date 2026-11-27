@@ -314,6 +314,46 @@
     "GET /api/v1/categories": {
       "status": 200,
       "body_file": "categories-none.json"
+    },
+    "GET /api/v1/categories/threat-models/schema": {
+      "status": 200,
+      "body_file": "categories-threat-models-schema.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes": {
+      "status": 200,
+      "body_file": "threat-model-recipes.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/payment-api": {
+      "status": 200,
+      "body_file": "threat-model-service-payment-api.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/payment-api/checkout-flow": {
+      "status": 200,
+      "body_file": "threat-model-payment-api-checkout-flow.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/payment-api-checkout-flow": {
+      "status": 200,
+      "body_file": "threat-model-payment-api-checkout-flow.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
     }
   },
   "states": {

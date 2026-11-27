@@ -1,0 +1,163 @@
+{
+  "repository": "threat-models",
+  "id": "payment-api-checkout-flow",
+  "revisions": [
+    {
+      "ref": "v4",
+      "commit": "9841c79",
+      "kind": "release",
+      "tag": "models/payment-api-checkout-flow/v4",
+      "version": 4,
+      "at": "2026-11-26T10:05:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "4efb716",
+      "commit": "4efb716",
+      "kind": "submit",
+      "tag": null,
+      "version": 4,
+      "at": "2026-11-26T09:50:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "e8a61e6",
+      "commit": "e8a61e6",
+      "kind": "save",
+      "tag": null,
+      "version": 4,
+      "at": "2026-11-26T09:45:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "v3",
+      "commit": "10757fe",
+      "kind": "release",
+      "tag": "models/payment-api-checkout-flow/v3",
+      "version": 3,
+      "at": "2026-06-02T09:30:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "b47218d",
+      "commit": "b47218d",
+      "kind": "submit",
+      "tag": null,
+      "version": 3,
+      "at": "2026-06-02T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "5db2c48",
+      "commit": "5db2c48",
+      "kind": "save",
+      "tag": null,
+      "version": 3,
+      "at": "2026-06-01T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "v2",
+      "commit": "12e3922",
+      "kind": "release",
+      "tag": "models/payment-api-checkout-flow/v2",
+      "version": 2,
+      "at": "2025-11-26T11:15:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "18c7984",
+      "commit": "18c7984",
+      "kind": "submit",
+      "tag": null,
+      "version": 2,
+      "at": "2025-11-26T10:45:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "35fe8b2",
+      "commit": "35fe8b2",
+      "kind": "save",
+      "tag": null,
+      "version": 2,
+      "at": "2025-11-25T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "v1",
+      "commit": "376dbc7",
+      "kind": "release",
+      "tag": "models/payment-api-checkout-flow/v1",
+      "version": 1,
+      "at": "2025-05-28T09:30:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "0d8afb4",
+      "commit": "0d8afb4",
+      "kind": "submit",
+      "tag": null,
+      "version": 1,
+      "at": "2025-05-28T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "dc1f857",
+      "commit": "dc1f857",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2025-05-27T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "9288221",
+      "commit": "9288221",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2025-05-22T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

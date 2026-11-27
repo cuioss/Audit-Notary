@@ -104,8 +104,18 @@ pair `2025-q4` to `2026-q2`, with the fixed today 2026-11-26; `workshop` carries
 `no-threat-models`, `risk-register-git-unavailable` (the register as of a past commit answers `503 GIT_UNAVAILABLE`) and
 `risk-register-empty`; `release` answers the summary without the section `threatModels` and the threat evaluation
 `403 FORBIDDEN` (no right on `threat-models`); `empty` answers zeros and empty lists, which follow its chain; `degraded` answers
-the register as of a past commit `503 GIT_UNAVAILABLE` until `recovered`; a request about a document that no route names
-answers `404 NOT_FOUND` for a repository of the scenario's rights
+the register as of a past commit `503 GIT_UNAVAILABLE` until `recovered`; the lens *Threat models*: `workshop`, `read-only`,
+`degraded` and `local` answer the schema, the two recipes in English and German (`?lang=`, `400` for another value), the six
+models with their revisions (`?at=`, `404` and `422`), the nine pages of the services and the list of the documents;
+`workshop` holds the right `approve` on `threat-models` and carries the states of the checkout flow (`threat-model-reopened`,
+`-in-review` and `-released`: save, submit and release with step-up, the evaluation and the summary follow) and the refusals
+(`threat-model-saved-by-other`, `-invalid`, `-git-unavailable`, `-submit-incomplete`, `-release-step-up`, `-release-changed`,
+`-release-released-meanwhile`), the wizard (`recipe-draft-saved`, `threat-model-created`, `-create-invalid`,
+`-recipes-none`); `read-only` answers every write `403 FORBIDDEN`, `release` (no right on `threat-models`) answers the
+schema, the recipes, a page and a model `403 FORBIDDEN`, `empty` has no service (`404 NOT_FOUND`) and serves the schema and
+the recipes, `degraded` answers a save, a submit and a create `503 GIT_UNAVAILABLE` until `recovered`, and `local` has no
+write route; a request about a document that no route names answers `404 NOT_FOUND` for a repository of the scenario's
+rights
 
 |Control
 |`GET /mock/state`, `POST /mock/scenario`, `POST /mock/goto/{state}`, `POST /mock/reset`, `POST /mock/broadcast`,

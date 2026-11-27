@@ -287,6 +287,16 @@ xref:../specification/rest-api.adoc#_decided_reports[REST API Register, Open Que
 . The table of the threat evaluation is one component: the lens *Threat models* shows the same.
 . A report is read-only and has no export.
 
+Decided provisionally with the threat models (UC-TM-1, UC-TM-2, UC-TM-4), recorded with the bodies in
+xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register, Open Questions]; the owner may change each one:
+
+. The lens *Threat models* has the evaluation of every service as its first column, the models of a service as its second and
+  the model sheet beside them; the sheet shows the evaluation of the model, the generated diagram, a threat table with status
+  and countermeasures, and the data of the model as a generated form.
+. The recipe wizard is a `WizardPage` at `/threat-models/<service>/new?recipe=`: the guidance of a step above the sub-form
+  of the model file's node the step fills, the draft kept between steps, a last page for the owner and the review date.
+. A review of a released model starts with an act that prefills the review date with today; the first save starts the next version.
+
 == Related
 
 * xref:authentication-and-identity.adoc[Authentication and Identity]

@@ -1,0 +1,336 @@
+{
+  "category": "threat-models",
+  "kinds": [
+    {
+      "id": "threat-model",
+      "repository": "threat-models",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": [
+          "service",
+          "owner",
+          "last-review",
+          "model"
+        ],
+        "properties": {
+          "service": {
+            "type": "string",
+            "format": "gdr-link",
+            "x-catalog": "service"
+          },
+          "owner": {
+            "type": "string",
+            "format": "gdr-link",
+            "x-catalog": "role"
+          },
+          "last-review": {
+            "type": "string",
+            "format": "date"
+          },
+          "recipe": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,63}$",
+            "readOnly": true
+          },
+          "model": {
+            "type": "object",
+            "gdr-split": true,
+            "required": [
+              "otmVersion",
+              "project"
+            ],
+            "properties": {
+              "otmVersion": {
+                "type": "string",
+                "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+                "readOnly": true
+              },
+              "project": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+                    "readOnly": true
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "x-free-text": true
+                  }
+                }
+              },
+              "trustZones": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "risk"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+                    },
+                    "name": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "risk": {
+                      "type": "object",
+                      "required": [
+                        "trustRating"
+                      ],
+                      "properties": {
+                        "trustRating": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 100
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "components": {
+                "type": "array",
+                "maxItems": 200,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "type",
+                    "parent"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+                    },
+                    "name": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "external-entity",
+                        "process",
+                        "data-store"
+                      ]
+                    },
+                    "description": {
+                      "type": "string",
+                      "maxLength": 2000,
+                      "x-free-text": true
+                    },
+                    "parent": {
+                      "type": "object",
+                      "required": [
+                        "trustZone"
+                      ],
+                      "properties": {
+                        "trustZone": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "dataflows": {
+                "type": "array",
+                "maxItems": 400,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "source",
+                    "destination"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+                    },
+                    "name": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "destination": {
+                      "type": "string"
+                    },
+                    "bidirectional": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "threats": {
+                "type": "array",
+                "maxItems": 200,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "risk",
+                    "attributes"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+                    },
+                    "name": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "description": {
+                      "type": "string",
+                      "maxLength": 2000,
+                      "x-free-text": true
+                    },
+                    "categories": {
+                      "type": "array",
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "Spoofing",
+                          "Tampering",
+                          "Repudiation",
+                          "Information Disclosure",
+                          "Denial of Service",
+                          "Elevation of Privilege"
+                        ]
+                      }
+                    },
+                    "risk": {
+                      "type": "object",
+                      "required": [
+                        "likelihood",
+                        "impact"
+                      ],
+                      "properties": {
+                        "likelihood": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        "impact": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 100
+                        }
+                      }
+                    },
+                    "attributes": {
+                      "type": "object",
+                      "required": [
+                        "status"
+                      ],
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "open",
+                            "mitigated",
+                            "accepted"
+                          ]
+                        },
+                        "transferred": {
+                          "type": "string",
+                          "format": "gdr-link",
+                          "readOnly": true
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "mitigations": {
+                "type": "array",
+                "maxItems": 400,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "riskReduction",
+                    "attributes"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+                    },
+                    "name": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "description": {
+                      "type": "string",
+                      "maxLength": 2000,
+                      "x-free-text": true
+                    },
+                    "riskReduction": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 100
+                    },
+                    "attributes": {
+                      "type": "object",
+                      "required": [
+                        "threat"
+                      ],
+                      "properties": {
+                        "threat": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "planned",
+                            "implemented"
+                          ]
+                        },
+                        "issues": {
+                          "type": "array",
+                          "maxItems": 20,
+                          "uniqueItems": true,
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 64
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

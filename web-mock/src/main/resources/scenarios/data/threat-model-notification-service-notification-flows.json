@@ -1,0 +1,222 @@
+{
+  "repository": "threat-models",
+  "id": "notification-service-notification-flows",
+  "category": "threat-models",
+  "kind": "threat-model",
+  "title": "Notification service, notification flows",
+  "state": "draft",
+  "version": 1,
+  "frozen": false,
+  "service": {
+    "id": "notification-service",
+    "name": "Notification service"
+  },
+  "model": "notification-flows",
+  "address": "/threat-models/notification-service/notification-flows",
+  "parts": {
+    "data": {
+      "blob": "76c998c",
+      "savedAt": "2026-11-20T10:05:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "service": "service:notification-service",
+        "owner": "role:service-owner",
+        "last-review": "2026-11-20",
+        "recipe": "quick-start"
+      }
+    },
+    "model": {
+      "blob": "7a08570",
+      "savedAt": "2026-11-20T10:05:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "otmVersion": "0.2.0",
+        "project": {
+          "id": "notification-flows",
+          "name": "Notification service, notification flows",
+          "description": "How a message gets from the service to the subscribers."
+        },
+        "trustZones": [
+          {
+            "id": "internal",
+            "name": "Internal network",
+            "risk": {
+              "trustRating": 80
+            }
+          },
+          {
+            "id": "internet",
+            "name": "Internet",
+            "risk": {
+              "trustRating": 20
+            }
+          }
+        ],
+        "components": [
+          {
+            "id": "sender",
+            "name": "Notification sender",
+            "type": "process",
+            "parent": {
+              "trustZone": "internal"
+            }
+          },
+          {
+            "id": "queue",
+            "name": "Message queue",
+            "type": "data-store",
+            "parent": {
+              "trustZone": "internal"
+            }
+          },
+          {
+            "id": "subscribers",
+            "name": "Subscribers",
+            "type": "external-entity",
+            "parent": {
+              "trustZone": "internet"
+            }
+          }
+        ],
+        "dataflows": [
+          {
+            "id": "enqueue",
+            "name": "Enqueue",
+            "source": "sender",
+            "destination": "queue"
+          },
+          {
+            "id": "deliver",
+            "name": "Deliver",
+            "source": "queue",
+            "destination": "subscribers"
+          }
+        ],
+        "threats": [
+          {
+            "id": "T-01",
+            "name": "A notification leaks personal data to the wrong recipient",
+            "description": "A message is addressed with a wrong or stale recipient and shows personal data to someone else.",
+            "categories": [
+              "Information Disclosure"
+            ],
+            "risk": {
+              "likelihood": 50,
+              "impact": 75
+            },
+            "attributes": {
+              "status": "open"
+            }
+          },
+          {
+            "id": "T-02",
+            "name": "A spoofed sender",
+            "description": "A message that looks like ours is sent by someone else and asks the recipient to act.",
+            "categories": [
+              "Spoofing"
+            ],
+            "risk": {
+              "likelihood": 50,
+              "impact": 75
+            },
+            "attributes": {
+              "status": "open"
+            }
+          },
+          {
+            "id": "T-03",
+            "name": "A flood of notifications",
+            "description": "A fault or an attack sends thousands of messages to the same recipients.",
+            "categories": [
+              "Denial of Service"
+            ],
+            "risk": {
+              "likelihood": 40,
+              "impact": 50
+            },
+            "attributes": {
+              "status": "open"
+            }
+          }
+        ],
+        "mitigations": []
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-20T10:05:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "model",
+      "count": 3
+    },
+    {
+      "at": "2026-11-20T10:05:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2026-11-20T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "threat-model.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ],
+  "review": {
+    "today": "2026-11-26",
+    "protectionNeed": "normal",
+    "reviewInterval": "P24M",
+    "reviewIntervals": {
+      "very-high": "P6M",
+      "high": "P12M",
+      "normal": "P24M"
+    },
+    "lastReview": null,
+    "daysSinceReview": null,
+    "reviewDue": null,
+    "dueInDays": null,
+    "status": "unreleased"
+  },
+  "threats": {
+    "total": 3,
+    "open": 3,
+    "untreated": 3,
+    "transferred": 0
+  },
+  "diagram": {
+    "mediaType": "image/svg+xml",
+    "width": 520,
+    "height": 244,
+    "dataUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MjAiIGhlaWdodD0iMjQ0IiB2aWV3Qm94PSIwIDAgNTIwIDI0NCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiPgo8ZGVmcz48bWFya2VyIGlkPSJhcnJvdyIgdmlld0JveD0iMCAwIDEwIDEwIiByZWZYPSI5IiByZWZZPSI1IiBtYXJrZXJXaWR0aD0iNyIgbWFya2VySGVpZ2h0PSI3IiBvcmllbnQ9ImF1dG8tc3RhcnQtcmV2ZXJzZSI+PHBhdGggZD0iTTAgMEwxMCA1TDAgMTB6IiBmaWxsPSIjMzc0MTUxIi8+PC9tYXJrZXI+PC9kZWZzPgo8cmVjdCB3aWR0aD0iNTIwIiBoZWlnaHQ9IjI0NCIgZmlsbD0iI2ZmZmZmZiIvPgo8cmVjdCB4PSI0MCIgeT0iNDAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMTY0IiByeD0iMTAiIGZpbGw9IiNmM2Y0ZjYiIHN0cm9rZT0iIzljYTNhZiIvPgo8dGV4dCB4PSI1MiIgeT0iNTgiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMzc0MTUxIj5JbnRlcm5hbCBuZXR3b3JrPC90ZXh0Pgo8cmVjdCB4PSIyODAiIHk9IjQwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE2NCIgcng9IjEwIiBmaWxsPSIjZjNmNGY2IiBzdHJva2U9IiM5Y2EzYWYiLz4KPHRleHQgeD0iMjkyIiB5PSI1OCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiMzNzQxNTEiPkludGVybmV0PC90ZXh0Pgo8cmVjdCB4PSI2MCIgeT0iNzAiIHdpZHRoPSIxNjAiIGhlaWdodD0iNDQiIHJ4PSI0IiBmaWxsPSIjZGJlN2ZiIiBzdHJva2U9IiMyZjVmYjMiLz4KPHRleHQgeD0iMTQwIiB5PSI5NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzExMTgyNyI+Tm90aWZpY2F0aW9uIHNlbmRlcjwvdGV4dD4KPHJlY3QgeD0iNjAiIHk9IjE0MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI0NCIgcng9IjQiIGZpbGw9IiNkMWQ1ZGIiIHN0cm9rZT0iIzZiNzI4MCIvPgo8dGV4dCB4PSIxNDAiIHk9IjE2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzExMTgyNyI+TWVzc2FnZSBxdWV1ZTwvdGV4dD4KPHJlY3QgeD0iMzAwIiB5PSI3MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSI0NCIgcng9IjQiIGZpbGw9IiNmOWZhZmIiIHN0cm9rZT0iIzZiNzI4MCIvPgo8dGV4dCB4PSIzODAiIHk9Ijk2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMTExODI3Ij5TdWJzY3JpYmVyczwvdGV4dD4KPGxpbmUgeDE9IjE0MCIgeTE9IjExNCIgeDI9IjE0MCIgeTI9IjE0MCIgc3Ryb2tlPSIjMzc0MTUxIiBzdHJva2Utd2lkdGg9IjEuNSIgbWFya2VyLWVuZD0idXJsKCNhcnJvdykiLz4KPHRleHQgeD0iMTQ1IiB5PSIxMzEiIGZpbGw9IiMzNzQxNTEiPkVucXVldWU8L3RleHQ+CjxsaW5lIHgxPSIyMjAiIHkxPSIxNjIiIHgyPSIzMDAiIHkyPSI5MiIgc3Ryb2tlPSIjMzc0MTUxIiBzdHJva2Utd2lkdGg9IjEuNSIgbWFya2VyLWVuZD0idXJsKCNhcnJvdykiLz4KPHRleHQgeD0iMjYwIiB5PSIxMjMiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiMzNzQxNTEiPkRlbGl2ZXI8L3RleHQ+Cjwvc3ZnPg=="
+  }
+}

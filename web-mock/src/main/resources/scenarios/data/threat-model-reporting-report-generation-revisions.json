@@ -1,0 +1,55 @@
+{
+  "repository": "threat-models",
+  "id": "reporting-report-generation",
+  "revisions": [
+    {
+      "ref": "v1",
+      "commit": "edab70a",
+      "kind": "release",
+      "tag": "models/reporting-report-generation/v1",
+      "version": 1,
+      "at": "2025-03-11T10:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "d5e3916",
+      "commit": "d5e3916",
+      "kind": "submit",
+      "tag": null,
+      "version": 1,
+      "at": "2025-03-11T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "baba887",
+      "commit": "baba887",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2025-03-10T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "6784f88",
+      "commit": "6784f88",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2025-03-05T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

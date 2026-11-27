@@ -1,0 +1,110 @@
+{
+  "repository": "threat-models",
+  "documents": [
+    {
+      "id": "payment-api-checkout-flow",
+      "kind": "threat-model",
+      "title": "Payment API, checkout flow",
+      "state": "released",
+      "version": 4,
+      "updatedAt": "2026-11-26T10:05:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "models/payment-api-checkout-flow/v4",
+        "at": "2026-11-26T10:05:00Z"
+      },
+      "requested": false,
+      "address": "/threat-models/payment-api/checkout-flow"
+    },
+    {
+      "id": "notification-service-notification-flows",
+      "kind": "threat-model",
+      "title": "Notification service, notification flows",
+      "state": "draft",
+      "version": 1,
+      "updatedAt": "2026-11-20T10:05:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null,
+      "requested": false,
+      "address": "/threat-models/notification-service/notification-flows"
+    },
+    {
+      "id": "customer-db-storage",
+      "kind": "threat-model",
+      "title": "Customer database, storage",
+      "state": "released",
+      "version": 1,
+      "updatedAt": "2026-09-30T10:00:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "models/customer-db-storage/v1",
+        "at": "2026-09-30T10:00:00Z"
+      },
+      "requested": false,
+      "address": "/threat-models/customer-db/storage"
+    },
+    {
+      "id": "identity-provider-login-flow",
+      "kind": "threat-model",
+      "title": "Identity Provider, login flow",
+      "state": "released",
+      "version": 2,
+      "updatedAt": "2026-04-15T10:00:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "models/identity-provider-login-flow/v2",
+        "at": "2026-04-15T10:00:00Z"
+      },
+      "requested": false,
+      "address": "/threat-models/identity-provider/login-flow"
+    },
+    {
+      "id": "customer-portal-portal",
+      "kind": "threat-model",
+      "title": "Customer Portal",
+      "state": "released",
+      "version": 2,
+      "updatedAt": "2025-12-03T10:00:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "models/customer-portal-portal/v2",
+        "at": "2025-12-03T10:00:00Z"
+      },
+      "requested": false,
+      "address": "/threat-models/customer-portal/portal"
+    },
+    {
+      "id": "reporting-report-generation",
+      "kind": "threat-model",
+      "title": "Reporting Service, report generation",
+      "state": "released",
+      "version": 1,
+      "updatedAt": "2025-03-11T10:00:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "models/reporting-report-generation/v1",
+        "at": "2025-03-11T10:00:00Z"
+      },
+      "requested": false,
+      "address": "/threat-models/reporting/report-generation"
+    }
+  ]
+}

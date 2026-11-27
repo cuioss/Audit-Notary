@@ -1,0 +1,45 @@
+{
+  "today": "2026-11-26",
+  "service": {
+    "id": "reporting",
+    "name": "Reporting Service",
+    "lifecycle": "active",
+    "retired": false,
+    "owner": {
+      "kind": "team",
+      "id": "security-office",
+      "name": "Security Office"
+    },
+    "protectionNeed": "normal",
+    "reviewInterval": "P24M"
+  },
+  "reviewIntervals": {
+    "very-high": "P6M",
+    "high": "P12M",
+    "normal": "P24M"
+  },
+  "models": [
+    {
+      "model": "report-generation",
+      "document": "reporting-report-generation",
+      "title": "Reporting Service, report generation",
+      "address": "/threat-models/reporting/report-generation",
+      "state": "released",
+      "version": 1,
+      "lastReview": "2025-03-10",
+      "daysSinceReview": 626,
+      "reviewDue": "2027-03-10",
+      "dueInDays": 104,
+      "status": "ok",
+      "threats": {
+        "total": 4,
+        "open": 0,
+        "untreated": 0,
+        "transferred": 0
+      },
+      "requested": false,
+      "updatedAt": "2025-03-11T10:00:00Z"
+    }
+  ],
+  "drafts": []
+}

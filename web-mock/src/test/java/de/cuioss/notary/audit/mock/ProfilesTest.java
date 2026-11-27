@@ -104,6 +104,20 @@ class ProfilesTest {
         }
 
         @Test
+        @DisplayName("grants read, edit and approve on the threat models, so that the release of a review can be walked through")
+        void shouldGrantApproveOnTheThreatModels() {
+            try (var client = MockClient.start("workshop").login()) {
+                List<String> actions = new ArrayList<>();
+                json(client.get("/api/v1/session")).path("rights").forEach(right -> {
+                    if ("threat-models".equals(right.path("repository").asText())) {
+                        right.path("actions").forEach(action -> actions.add(action.asText()));
+                    }
+                });
+                assertEquals(List.of("read", "edit", "approve"), actions);
+            }
+        }
+
+        @Test
         @DisplayName("serves the SAMM model, the scopes and the open assessment from the data files")
         void shouldServeSamm() {
             try (var client = MockClient.start("workshop").login()) {
@@ -199,6 +213,22 @@ class ProfilesTest {
     class Release {
 
         private static final String RELEASE = "/api/v1/releases/samm-assessments/payments-2026-q4";
+
+        @Test
+        @DisplayName("holds no right on the threat models, which the lens answers with FORBIDDEN")
+        void shouldHoldNoRightOnTheThreatModels() {
+            try (var client = MockClient.start("release").login()) {
+                List<String> repositories = new ArrayList<>();
+                var session = client.get("/api/v1/session");
+                var rights = json(session).path("rights");
+                rights.forEach(right -> repositories.add(right.path("repository").asText()));
+                assertAll(
+                        () -> assertEquals(200, session.statusCode()),
+                        () -> assertTrue(rights.isArray() && !rights.isEmpty()),
+                        () -> assertFalse(repositories.contains("threat-models")),
+                        () -> assertEquals(403, client.get("/api/v1/threat-models/payment-api").statusCode()));
+            }
+        }
 
         @Test
         @DisplayName("asks for step-up first, then releases and serves the frozen assessment")

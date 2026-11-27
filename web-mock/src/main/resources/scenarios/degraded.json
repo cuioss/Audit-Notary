@@ -450,11 +450,1403 @@
         "repository": "samm-assessments",
         "action": "edit"
       }
+    },
+    "GET /api/v1/categories/threat-models/schema": {
+      "status": 200,
+      "body_file": "categories-threat-models-schema.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes": {
+      "status": 200,
+      "body_file": "threat-model-recipes.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes?lang=en": {
+      "status": 200,
+      "body_file": "threat-model-recipes.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes?lang=de": {
+      "status": 200,
+      "body_file": "threat-model-recipes-de.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes?lang=fr": {
+      "status": 400,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/lang",
+            "code": "ENUM"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/quick-start": {
+      "status": 200,
+      "body_file": "threat-model-recipe-quick-start.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/quick-start?lang=en": {
+      "status": 200,
+      "body_file": "threat-model-recipe-quick-start.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/quick-start?lang=de": {
+      "status": 200,
+      "body_file": "threat-model-recipe-quick-start-de.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/quick-start?lang=fr": {
+      "status": 400,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/lang",
+            "code": "ENUM"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/stride": {
+      "status": 200,
+      "body_file": "threat-model-recipe-stride.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/stride?lang=en": {
+      "status": 200,
+      "body_file": "threat-model-recipe-stride.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/stride?lang=de": {
+      "status": 200,
+      "body_file": "threat-model-recipe-stride-de.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/stride?lang=fr": {
+      "status": 400,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/lang",
+            "code": "ENUM"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/threat-models/recipes/nope": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/payment-api": {
+      "status": 200,
+      "body_file": "threat-model-service-payment-api.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/customer-portal": {
+      "status": 200,
+      "body_file": "threat-model-service-customer-portal.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/identity-provider": {
+      "status": 200,
+      "body_file": "threat-model-service-identity-provider.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/customer-db": {
+      "status": 200,
+      "body_file": "threat-model-service-customer-db.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/reporting": {
+      "status": 200,
+      "body_file": "threat-model-service-reporting.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/notification-service": {
+      "status": 200,
+      "body_file": "threat-model-service-notification-service.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/report-scheduler": {
+      "status": 200,
+      "body_file": "threat-model-service-report-scheduler.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/notification-gateway": {
+      "status": 200,
+      "body_file": "threat-model-service-notification-gateway.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/ledger": {
+      "status": 200,
+      "body_file": "threat-model-service-ledger.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/{service}": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/{service}/{model}": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models": {
+      "status": 200,
+      "body_file": "threat-models-index.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/payment-api/checkout-flow": {
+      "status": 200,
+      "body_file": "threat-model-payment-api-checkout-flow.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/payment-api-checkout-flow": {
+      "status": 200,
+      "body_file": "threat-model-payment-api-checkout-flow.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/payment-api-checkout-flow/revisions": {
+      "status": 200,
+      "body_file": "threat-model-payment-api-checkout-flow-revisions.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/payment-api/checkout-flow?at=v1": {
+      "status": 200,
+      "body_file": "threat-model-payment-api-checkout-flow-at-v1.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/payment-api/checkout-flow?at=v2": {
+      "status": 200,
+      "body_file": "threat-model-payment-api-checkout-flow-at-v2.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/payment-api/checkout-flow?at=v3": {
+      "status": 200,
+      "body_file": "threat-model-payment-api-checkout-flow-at-v3.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/payment-api/checkout-flow?at=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/payment-api/checkout-flow?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=v1": {
+      "status": 200,
+      "body_file": "threat-model-payment-api-checkout-flow-at-v1.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=v2": {
+      "status": 200,
+      "body_file": "threat-model-payment-api-checkout-flow-at-v2.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=v3": {
+      "status": 200,
+      "body_file": "threat-model-payment-api-checkout-flow-at-v3.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/identity-provider/login-flow": {
+      "status": 200,
+      "body_file": "threat-model-identity-provider-login-flow.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/identity-provider-login-flow": {
+      "status": 200,
+      "body_file": "threat-model-identity-provider-login-flow.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/identity-provider-login-flow/revisions": {
+      "status": 200,
+      "body_file": "threat-model-identity-provider-login-flow-revisions.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/identity-provider/login-flow?at=v1": {
+      "status": 200,
+      "body_file": "threat-model-identity-provider-login-flow-at-v1.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/identity-provider/login-flow?at=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/identity-provider/login-flow?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/identity-provider-login-flow?at=v1": {
+      "status": 200,
+      "body_file": "threat-model-identity-provider-login-flow-at-v1.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/identity-provider-login-flow?at=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/identity-provider-login-flow?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/customer-portal/portal": {
+      "status": 200,
+      "body_file": "threat-model-customer-portal-portal.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/customer-portal-portal": {
+      "status": 200,
+      "body_file": "threat-model-customer-portal-portal.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/customer-portal-portal/revisions": {
+      "status": 200,
+      "body_file": "threat-model-customer-portal-portal-revisions.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/customer-portal/portal?at=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/customer-portal/portal?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/customer-portal-portal?at=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/customer-portal-portal?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/customer-db/storage": {
+      "status": 200,
+      "body_file": "threat-model-customer-db-storage.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/customer-db-storage": {
+      "status": 200,
+      "body_file": "threat-model-customer-db-storage.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/customer-db-storage/revisions": {
+      "status": 200,
+      "body_file": "threat-model-customer-db-storage-revisions.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/customer-db/storage?at=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/customer-db/storage?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/customer-db-storage?at=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/customer-db-storage?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/reporting/report-generation": {
+      "status": 200,
+      "body_file": "threat-model-reporting-report-generation.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/reporting-report-generation": {
+      "status": 200,
+      "body_file": "threat-model-reporting-report-generation.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/reporting-report-generation/revisions": {
+      "status": 200,
+      "body_file": "threat-model-reporting-report-generation-revisions.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/reporting/report-generation?at=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/reporting/report-generation?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/reporting-report-generation?at=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/reporting-report-generation?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/notification-service/notification-flows": {
+      "status": 200,
+      "body_file": "threat-model-notification-service-notification-flows.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/notification-service-notification-flows": {
+      "status": 200,
+      "body_file": "threat-model-notification-service-notification-flows.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/notification-service-notification-flows/revisions": {
+      "status": 200,
+      "body_file": "threat-model-notification-service-notification-flows-revisions.json",
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/notification-service/notification-flows?at=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/notification-service/notification-flows?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/notification-service-notification-flows?at=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/threat-models/notification-service-notification-flows?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/payment-api/drafts/quick-start": {
+      "status": 200,
+      "body": {
+        "service": "payment-api",
+        "recipe": "quick-start",
+        "draft": null
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/payment-api/drafts/stride": {
+      "status": 200,
+      "body": {
+        "service": "payment-api",
+        "recipe": "stride",
+        "draft": null
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/identity-provider/drafts/quick-start": {
+      "status": 200,
+      "body": {
+        "service": "identity-provider",
+        "recipe": "quick-start",
+        "draft": null
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/identity-provider/drafts/stride": {
+      "status": 200,
+      "body": {
+        "service": "identity-provider",
+        "recipe": "stride",
+        "draft": null
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/customer-portal/drafts/quick-start": {
+      "status": 200,
+      "body": {
+        "service": "customer-portal",
+        "recipe": "quick-start",
+        "draft": null
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/customer-portal/drafts/stride": {
+      "status": 200,
+      "body": {
+        "service": "customer-portal",
+        "recipe": "stride",
+        "draft": null
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/customer-db/drafts/quick-start": {
+      "status": 200,
+      "body": {
+        "service": "customer-db",
+        "recipe": "quick-start",
+        "draft": null
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/customer-db/drafts/stride": {
+      "status": 200,
+      "body": {
+        "service": "customer-db",
+        "recipe": "stride",
+        "draft": null
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/reporting/drafts/quick-start": {
+      "status": 200,
+      "body": {
+        "service": "reporting",
+        "recipe": "quick-start",
+        "draft": null
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/reporting/drafts/stride": {
+      "status": 200,
+      "body": {
+        "service": "reporting",
+        "recipe": "stride",
+        "draft": null
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/notification-service/drafts/quick-start": {
+      "status": 200,
+      "body": {
+        "service": "notification-service",
+        "recipe": "quick-start",
+        "draft": null
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/notification-service/drafts/stride": {
+      "status": 200,
+      "body": {
+        "service": "notification-service",
+        "recipe": "stride",
+        "draft": null
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/report-scheduler/drafts/quick-start": {
+      "status": 200,
+      "body": {
+        "service": "report-scheduler",
+        "recipe": "quick-start",
+        "draft": null
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/report-scheduler/drafts/stride": {
+      "status": 200,
+      "body": {
+        "service": "report-scheduler",
+        "recipe": "stride",
+        "draft": null
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/notification-gateway/drafts/quick-start": {
+      "status": 200,
+      "body": {
+        "service": "notification-gateway",
+        "recipe": "quick-start",
+        "draft": null
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/threat-models/notification-gateway/drafts/stride": {
+      "status": 200,
+      "body": {
+        "service": "notification-gateway",
+        "recipe": "stride",
+        "draft": null
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "read"
+      }
+    },
+    "PUT /api/v1/drafts/threat-models/payment-api-checkout-flow": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/documents/threat-models/payment-api-checkout-flow/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "9b4469a",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          },
+          "model": {
+            "blob": "1e81610",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        },
+        "state": "draft",
+        "version": 4
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "PUT /api/v1/drafts/threat-models/identity-provider-login-flow": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/documents/threat-models/identity-provider-login-flow/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "02d21eb",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          },
+          "model": {
+            "blob": "1194080",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        },
+        "state": "draft",
+        "version": 3
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "PUT /api/v1/drafts/threat-models/customer-portal-portal": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/documents/threat-models/customer-portal-portal/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "58e21b4",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          },
+          "model": {
+            "blob": "5deeb23",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        },
+        "state": "draft",
+        "version": 3
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "PUT /api/v1/drafts/threat-models/customer-db-storage": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/documents/threat-models/customer-db-storage/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "e5de0b3",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          },
+          "model": {
+            "blob": "0477c47",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        },
+        "state": "draft",
+        "version": 2
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "PUT /api/v1/drafts/threat-models/reporting-report-generation": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/documents/threat-models/reporting-report-generation/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "255ba54",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          },
+          "model": {
+            "blob": "80b2d40",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        },
+        "state": "draft",
+        "version": 2
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "PUT /api/v1/drafts/threat-models/notification-service-notification-flows": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:44:00Z"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/documents/threat-models/notification-service-notification-flows/save": {
+      "status": 200,
+      "body": {
+        "outcome": "SAVED",
+        "at": "2026-11-26T09:45:00Z",
+        "parts": {
+          "data": {
+            "blob": "76c998c",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          },
+          "model": {
+            "blob": "7a08570",
+            "savedAt": "2026-11-26T09:45:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example",
+              "role": "Security Champion"
+            }
+          }
+        },
+        "state": "draft",
+        "version": 1
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/documents/threat-models/notification-service-notification-flows/transitions/threat-model.submit": {
+      "status": 200,
+      "body": {
+        "outcome": "TRANSITIONED",
+        "state": "in-review",
+        "version": 1,
+        "at": "2026-11-26T09:50:00Z"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/documents/threat-models/payment-api-checkout-flow/transitions/threat-model.submit": {
+      "status": 200,
+      "body": {
+        "outcome": "TRANSITIONED",
+        "state": "in-review",
+        "version": 4,
+        "at": "2026-11-26T09:50:00Z"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/releases/threat-models/payment-api-checkout-flow": {
+      "status": 200,
+      "body": {
+        "outcome": "RELEASED",
+        "tag": "models/payment-api-checkout-flow/v4",
+        "at": "2026-11-26T10:05:00Z"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "approve"
+      }
+    },
+    "PUT /api/v1/threat-models/report-scheduler/drafts/quick-start": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:20:00Z"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "PUT /api/v1/threat-models/report-scheduler/drafts/stride": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:20:00Z"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "PUT /api/v1/threat-models/notification-gateway/drafts/quick-start": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:20:00Z"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "PUT /api/v1/threat-models/notification-gateway/drafts/stride": {
+      "status": 200,
+      "body": {
+        "outcome": "DRAFT_SAVED",
+        "at": "2026-11-26T09:20:00Z"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/threat-models/report-scheduler": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "model": "scheduler-overview",
+        "document": "report-scheduler-scheduler-overview",
+        "address": "/threat-models/report-scheduler/scheduler-overview",
+        "state": "draft",
+        "version": 1,
+        "at": "2026-11-26T09:41:00Z",
+        "parts": {
+          "data": {
+            "blob": "2fe521c",
+            "savedAt": "2026-11-26T09:41:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example"
+            }
+          },
+          "model": {
+            "blob": "0e45836",
+            "savedAt": "2026-11-26T09:41:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example"
+            }
+          }
+        }
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/threat-models/notification-gateway": {
+      "status": 201,
+      "body": {
+        "outcome": "CREATED",
+        "model": "gateway-overview",
+        "document": "notification-gateway-gateway-overview",
+        "address": "/threat-models/notification-gateway/gateway-overview",
+        "state": "draft",
+        "version": 1,
+        "at": "2026-11-26T09:43:00Z",
+        "parts": {
+          "data": {
+            "blob": "99c1ac9",
+            "savedAt": "2026-11-26T09:43:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example"
+            }
+          },
+          "model": {
+            "blob": "50d2688",
+            "savedAt": "2026-11-26T09:43:00Z",
+            "savedBy": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example"
+            }
+          }
+        }
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/threat-models/ledger": {
+      "status": 409,
+      "body": {
+        "outcome": "SERVICE_RETIRED"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "POST /api/v1/threat-models/{service}": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "threat-models",
+        "action": "edit"
+      }
+    },
+    "GET /api/v1/references/resolve": {
+      "status": 200,
+      "body_file": "references-resolve.json"
+    },
+    "GET /api/v1/search": {
+      "handler": "search-documents",
+      "data_file": "documents-index.json"
     }
   },
   "states": {
     "unreachable": {
-      "description": "The fetch of samm-assessments fails.",
+      "description": "The fetch of samm-assessments and of threat-models fails: the status lists both as DOWN, the reads of the threat models are served from the last fetch, and every write of the threat models answers 503 GIT_UNAVAILABLE.",
       "routes": {
         "GET /api/v1/status": {
           "status": 200,
@@ -469,7 +1861,7 @@
               },
               {
                 "alias": "threat-models",
-                "fetch": "UP"
+                "fetch": "DOWN"
               },
               {
                 "alias": "isms-register",
@@ -576,6 +1968,106 @@
           "requires": {
             "repository": "isms-register",
             "action": "read"
+          }
+        },
+        "POST /api/v1/documents/threat-models/payment-api-checkout-flow/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/threat-models/identity-provider-login-flow/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/threat-models/customer-portal-portal/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/threat-models/customer-db-storage/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/threat-models/reporting-report-generation/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/threat-models/notification-service-notification-flows/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/threat-models/payment-api-checkout-flow/transitions/threat-model.submit": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/threat-models/notification-service-notification-flows/transitions/threat-model.submit": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/threat-models/report-scheduler": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/threat-models/notification-gateway": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "edit"
           }
         }
       }

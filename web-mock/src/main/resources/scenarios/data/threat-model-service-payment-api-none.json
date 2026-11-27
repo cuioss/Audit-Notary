@@ -1,0 +1,23 @@
+{
+  "today": "2026-11-26",
+  "service": {
+    "id": "payment-api",
+    "name": "Payment API",
+    "lifecycle": "active",
+    "retired": false,
+    "owner": {
+      "kind": "team",
+      "id": "payments",
+      "name": "Payments"
+    },
+    "protectionNeed": "very-high",
+    "reviewInterval": "P6M"
+  },
+  "reviewIntervals": {
+    "very-high": "P6M",
+    "high": "P12M",
+    "normal": "P24M"
+  },
+  "models": [],
+  "drafts": []
+}

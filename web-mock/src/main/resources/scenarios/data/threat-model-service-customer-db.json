@@ -1,0 +1,45 @@
+{
+  "today": "2026-11-26",
+  "service": {
+    "id": "customer-db",
+    "name": "Customer database",
+    "lifecycle": "active",
+    "retired": false,
+    "owner": {
+      "kind": "team",
+      "id": "identity",
+      "name": "Identity Platform"
+    },
+    "protectionNeed": "very-high",
+    "reviewInterval": "P6M"
+  },
+  "reviewIntervals": {
+    "very-high": "P6M",
+    "high": "P12M",
+    "normal": "P24M"
+  },
+  "models": [
+    {
+      "model": "storage",
+      "document": "customer-db-storage",
+      "title": "Customer database, storage",
+      "address": "/threat-models/customer-db/storage",
+      "state": "released",
+      "version": 1,
+      "lastReview": "2026-09-29",
+      "daysSinceReview": 58,
+      "reviewDue": "2027-03-29",
+      "dueInDays": 123,
+      "status": "ok",
+      "threats": {
+        "total": 5,
+        "open": 1,
+        "untreated": 0,
+        "transferred": 0
+      },
+      "requested": false,
+      "updatedAt": "2026-09-30T10:00:00Z"
+    }
+  ],
+  "drafts": []
+}

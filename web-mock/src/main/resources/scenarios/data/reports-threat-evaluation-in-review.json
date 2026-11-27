@@ -1,0 +1,173 @@
+{
+  "today": "2026-11-26",
+  "models": [
+    {
+      "service": {
+        "id": "customer-portal",
+        "name": "Customer Portal"
+      },
+      "protectionNeed": "very-high",
+      "reviewInterval": "P6M",
+      "model": "portal",
+      "address": "/threat-models/customer-portal/portal",
+      "state": "released",
+      "version": 2,
+      "lastReview": "2025-12-02",
+      "daysSinceReview": 359,
+      "reviewDue": "2026-06-02",
+      "dueInDays": -177,
+      "status": "overdue",
+      "threats": {
+        "total": 6,
+        "open": 2,
+        "untreated": 2,
+        "transferred": 0
+      }
+    },
+    {
+      "service": {
+        "id": "identity-provider",
+        "name": "Identity Provider"
+      },
+      "protectionNeed": "very-high",
+      "reviewInterval": "P6M",
+      "model": "login-flow",
+      "address": "/threat-models/identity-provider/login-flow",
+      "state": "released",
+      "version": 2,
+      "lastReview": "2026-04-14",
+      "daysSinceReview": 226,
+      "reviewDue": "2026-10-14",
+      "dueInDays": -43,
+      "status": "overdue",
+      "threats": {
+        "total": 7,
+        "open": 4,
+        "untreated": 3,
+        "transferred": 0
+      }
+    },
+    {
+      "service": {
+        "id": "payment-api",
+        "name": "Payment API"
+      },
+      "protectionNeed": "very-high",
+      "reviewInterval": "P6M",
+      "model": "checkout-flow",
+      "address": "/threat-models/payment-api/checkout-flow",
+      "state": "in-review",
+      "version": 3,
+      "lastReview": "2026-06-01",
+      "daysSinceReview": 178,
+      "reviewDue": "2026-12-01",
+      "dueInDays": 5,
+      "status": "due-soon",
+      "threats": {
+        "total": 9,
+        "open": 2,
+        "untreated": 2,
+        "transferred": 1
+      }
+    },
+    {
+      "service": {
+        "id": "reporting",
+        "name": "Reporting Service"
+      },
+      "protectionNeed": "normal",
+      "reviewInterval": "P24M",
+      "model": "report-generation",
+      "address": "/threat-models/reporting/report-generation",
+      "state": "released",
+      "version": 1,
+      "lastReview": "2025-03-10",
+      "daysSinceReview": 626,
+      "reviewDue": "2027-03-10",
+      "dueInDays": 104,
+      "status": "ok",
+      "threats": {
+        "total": 4,
+        "open": 0,
+        "untreated": 0,
+        "transferred": 0
+      }
+    },
+    {
+      "service": {
+        "id": "customer-db",
+        "name": "Customer database"
+      },
+      "protectionNeed": "very-high",
+      "reviewInterval": "P6M",
+      "model": "storage",
+      "address": "/threat-models/customer-db/storage",
+      "state": "released",
+      "version": 1,
+      "lastReview": "2026-09-29",
+      "daysSinceReview": 58,
+      "reviewDue": "2027-03-29",
+      "dueInDays": 123,
+      "status": "ok",
+      "threats": {
+        "total": 5,
+        "open": 1,
+        "untreated": 0,
+        "transferred": 0
+      }
+    },
+    {
+      "service": {
+        "id": "notification-service",
+        "name": "Notification service"
+      },
+      "protectionNeed": "normal",
+      "reviewInterval": "P24M",
+      "model": "notification-flows",
+      "address": "/threat-models/notification-service/notification-flows",
+      "state": "draft",
+      "version": null,
+      "lastReview": null,
+      "daysSinceReview": null,
+      "reviewDue": null,
+      "dueInDays": null,
+      "status": "unreleased",
+      "threats": {
+        "total": 3,
+        "open": 3,
+        "untreated": 3,
+        "transferred": 0
+      }
+    }
+  ],
+  "withoutModel": [
+    {
+      "service": {
+        "id": "notification-gateway",
+        "name": "Notification gateway"
+      },
+      "lifecycle": "planned",
+      "owner": {
+        "kind": "team",
+        "id": "mobile",
+        "name": "Mobile Apps"
+      },
+      "protectionNeed": "normal",
+      "address": "/threat-models/notification-gateway"
+    },
+    {
+      "service": {
+        "id": "report-scheduler",
+        "name": "Report scheduler"
+      },
+      "lifecycle": "active",
+      "owner": {
+        "kind": "team",
+        "id": "security-office",
+        "name": "Security Office"
+      },
+      "protectionNeed": "normal",
+      "address": "/threat-models/report-scheduler"
+    }
+  ]
+}

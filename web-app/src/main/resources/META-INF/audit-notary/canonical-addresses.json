@@ -3,7 +3,8 @@
   "segment": "[a-z0-9][a-z0-9._-]{0,127}",
   "params": {
     "year": "[0-9]{4}",
-    "document": "[0-9A-Za-z][0-9A-Za-z._-]{0,127}"
+    "document": "[0-9A-Za-z][0-9A-Za-z._-]{0,127}",
+    "model": "(?!new(?![a-z0-9._-]))[a-z0-9][a-z0-9._-]{0,127}"
   },
   "queries": {
     "at": "(v[0-9]{1,4}|[0-9a-f]{7,40})",
@@ -11,6 +12,7 @@
     "scope": "[a-z0-9][a-z0-9._-]{0,127}",
     "from": "[a-z0-9][a-z0-9._-]{0,127}",
     "to": "[a-z0-9][a-z0-9._-]{0,127}",
+    "recipe": "[a-z0-9][a-z0-9-]{0,63}",
     "as-of": "[A-Za-z0-9][A-Za-z0-9._/-]{0,127}"
   },
   "addresses": [
@@ -25,7 +27,16 @@
     { "route": "samm.practice", "pattern": "/samm/{scope}/{assessment}/{practice}" },
     { "route": "threat-models", "pattern": "/threat-models" },
     { "route": "threat-models.service", "pattern": "/threat-models/{service}" },
-    { "route": "threat-models.model", "pattern": "/threat-models/{service}/{model}" },
+    {
+      "route": "threat-models.new",
+      "pattern": "/threat-models/{service}/new",
+      "query": ["recipe"]
+    },
+    {
+      "route": "threat-models.model",
+      "pattern": "/threat-models/{service}/{model}",
+      "query": ["at"]
+    },
     { "route": "threat-models.release", "pattern": "/threat-models/{service}/{model}/release" },
     { "route": "incidents", "pattern": "/incidents" },
     { "route": "incidents.year", "pattern": "/incidents/{year}" },

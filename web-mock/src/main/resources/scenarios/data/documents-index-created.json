@@ -143,6 +143,60 @@
       "title": "Organisation 2026 H1",
       "state": "released",
       "address": "/samm/organisation/2026-h1"
+    },
+    {
+      "repository": "threat-models",
+      "id": "payment-api-checkout-flow",
+      "category": "threat-models",
+      "kind": "threat-model",
+      "title": "Payment API, checkout flow",
+      "state": "released",
+      "address": "/threat-models/payment-api/checkout-flow"
+    },
+    {
+      "repository": "threat-models",
+      "id": "identity-provider-login-flow",
+      "category": "threat-models",
+      "kind": "threat-model",
+      "title": "Identity Provider, login flow",
+      "state": "released",
+      "address": "/threat-models/identity-provider/login-flow"
+    },
+    {
+      "repository": "threat-models",
+      "id": "customer-portal-portal",
+      "category": "threat-models",
+      "kind": "threat-model",
+      "title": "Customer Portal",
+      "state": "released",
+      "address": "/threat-models/customer-portal/portal"
+    },
+    {
+      "repository": "threat-models",
+      "id": "customer-db-storage",
+      "category": "threat-models",
+      "kind": "threat-model",
+      "title": "Customer database, storage",
+      "state": "released",
+      "address": "/threat-models/customer-db/storage"
+    },
+    {
+      "repository": "threat-models",
+      "id": "reporting-report-generation",
+      "category": "threat-models",
+      "kind": "threat-model",
+      "title": "Reporting Service, report generation",
+      "state": "released",
+      "address": "/threat-models/reporting/report-generation"
+    },
+    {
+      "repository": "threat-models",
+      "id": "notification-service-notification-flows",
+      "category": "threat-models",
+      "kind": "threat-model",
+      "title": "Notification service, notification flows",
+      "state": "draft",
+      "address": "/threat-models/notification-service/notification-flows"
     }
   ]
 }

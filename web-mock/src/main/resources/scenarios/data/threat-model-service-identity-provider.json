@@ -1,0 +1,45 @@
+{
+  "today": "2026-11-26",
+  "service": {
+    "id": "identity-provider",
+    "name": "Identity Provider",
+    "lifecycle": "active",
+    "retired": false,
+    "owner": {
+      "kind": "team",
+      "id": "identity",
+      "name": "Identity Platform"
+    },
+    "protectionNeed": "very-high",
+    "reviewInterval": "P6M"
+  },
+  "reviewIntervals": {
+    "very-high": "P6M",
+    "high": "P12M",
+    "normal": "P24M"
+  },
+  "models": [
+    {
+      "model": "login-flow",
+      "document": "identity-provider-login-flow",
+      "title": "Identity Provider, login flow",
+      "address": "/threat-models/identity-provider/login-flow",
+      "state": "released",
+      "version": 2,
+      "lastReview": "2026-04-14",
+      "daysSinceReview": 226,
+      "reviewDue": "2026-10-14",
+      "dueInDays": -43,
+      "status": "overdue",
+      "threats": {
+        "total": 7,
+        "open": 4,
+        "untreated": 3,
+        "transferred": 0
+      },
+      "requested": false,
+      "updatedAt": "2026-04-15T10:00:00Z"
+    }
+  ],
+  "drafts": []
+}
