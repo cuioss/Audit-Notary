@@ -67,7 +67,7 @@ Without the scripts: `java -cp … de.cuioss.notary.audit.mock.cli.WebMockCli --
 `shop-assessment-created`, `organisation-assessment-created`, `assessment-invalid`, `assessment-released-meanwhile`,
 `evidence-invalid`, `model-versions-differ`, `models-none`, `samm-git-unavailable`) and the report states of _Reports_
 (`trend-mixed-models`, `no-threat-models`, `risk-register-git-unavailable`, `risk-register-empty`) and the
-`threat-model-*` and `recipe-draft-saved` states of _Threat Models_
+`threat-model-*` and `recipe-draft-saved` states of _Threat Models_ and the `incident-*` states of _Incident Reports_
 |An assessor in a populated installation: Due list with every kind, catalogs, and the SAMM lens — four scopes, the
 open workshop *Payments 2026 Q4* (draft, eleven practices answered) and released assessments to compare with; a draft
 and a save for everyone succeed. `saved-by-other` pushes a `document-saved` event and serves the assessment with
@@ -91,7 +91,9 @@ requests of the lens *Reports* (the dashboard summary, the trend of every scope,
 register as of a date) and the comparison pair of the report page (_Reports_). The user holds `read`, `edit` and `approve`
 on `threat-models`: the lens reads six models, the nine services, the schema and the two recipes in English and German,
 and the lifecycle of the *Payment API, checkout flow* (save, submit, release with step-up), a conflict, refusals and the
-create of a model of the *Report scheduler* are walked through by states (_Threat Models_)
+create of a model of the *Report scheduler* are walked through by states (_Threat Models_). The user holds `read`, `edit`
+and `approve` on `isms-incidents-2026` and `read` on `isms-incidents-2025`: the lens reads two years and nine incidents and
+walks the stages, the submit and the release of the *Credential stuffing* by states (_Incident Reports_)
 
 |`first-login`
 |`form`, `invalid-team`, `registered`, `registered-bound`, `candidates`, `candidates-chosen`, `candidates-not-bindable`, `candidates-refused`
@@ -113,7 +115,10 @@ and the person directory as `workshop` does (_Directory and Catalogs_); every ca
 lens; creating a scope, creating an assessment and saving the targets answer `403 FORBIDDEN` (`requires`, no right `edit`
 on `samm-assessments`). It answers the reports of `workshop` (_Reports_). It reads the schema, the recipes, the six
 threat models with their revisions and the nine service pages of `workshop`; saving, drafting, submitting, releasing and
-creating a threat model answer `403 FORBIDDEN` (`requires`, no right `edit` or `approve` on `threat-models`) (_Threat Models_)
+creating a threat model answer `403 FORBIDDEN` (`requires`, no right `edit` or `approve` on `threat-models`) (_Threat Models_).
+It reads the years, both lists, the nine incidents with their revisions and reports, the diff and the schema of the incident
+reports (right `read` on both years); every write (save, draft, complete, reopen, submit, release, create) answers
+`403 FORBIDDEN` (_Incident Reports_)
 
 |`degraded`
 |`unreachable`, `recovered`
@@ -124,7 +129,10 @@ reports answer as in `workshop`, except that the risk register as of a past date
 `unreachable` and its data after `recovered` (_Reports_). The threat models read as in `workshop` and `threat-models` is `DOWN`
 in the status of `unreachable`; in `unreachable` a save,
 a submit and a create of a threat model answer `503 GIT_UNAVAILABLE` (a draft stays `200`), after `recovered` they answer
-as in `workshop`; the user holds no `approve`, so the release is `403 FORBIDDEN` (_Threat Models_)
+as in `workshop`; the user holds no `approve`, so the release is `403 FORBIDDEN` (_Threat Models_). The incidents read as in `workshop` (`edit` on the year of today, `read` on
+the year before); `isms-incidents-2026` is `DOWN` in the status of `unreachable`, where a save, the completion of a stage
+and the create answer `503 GIT_UNAVAILABLE` (the draft stays `200`), and after `recovered` they answer as in `workshop`
+(_Incident Reports_)
 
 |`empty`
 |`ready`, `scope-created`, `assessment-created`, `no-model`
@@ -136,7 +144,8 @@ the scope *Mobile Apps* (`scope-created`) and then its first assessment (`assess
 user, `no-model` pins none (_SAMM Completion_). The reports are empty and follow that chain: zeros in the summary, no
 scope in the trend (then *Mobile Apps* without a point), no threat model, no risk (_Reports_). No service is in the
 catalog: the page of a service and a threat model answer `404 NOT_FOUND`, the list of the threat models is empty, and
-the schema and the recipes are served as in `workshop` (_Threat Models_)
+the schema and the recipes are served as in `workshop` (_Threat Models_). There is no incident repository: the years are
+`[]`, the year 2026 answers `404 NOT_FOUND`, the schema is served and no write route exists (_Incident Reports_)
 
 |`no-rights`
 |`ready`
@@ -167,7 +176,9 @@ stays the one of the identity provider; `changed` answers `CHANGED_SINCE_REVIEW`
 scope, list, trend, and the summary and the trend report). The models and the four trends are read in every state. The
 user holds no right on `threat-models`: the summary has no `threatModels` section and the threat evaluation answers `403 FORBIDDEN`; the
 trend report, the risk register and the comparison pair answer as in `workshop` (_Reports_); the schema, the recipes, the
-page of the *Payment API* and its threat model answer `403 FORBIDDEN` (_Threat Models_)
+page of the *Payment API* and its threat model answer `403 FORBIDDEN` (_Threat Models_). It holds no right on the incident
+repositories either: the years are `[]` and the year, an incident, its report and the schema answer `403 FORBIDDEN`
+(_Incident Reports_)
 
 |`local`
 |`ready`
@@ -176,7 +187,9 @@ and `POST /j_security_check` with the user `alex` and the password `local-passwo
 status names `loginProvider: local` and `stepUp: off`. The data and the user are those of `workshop`; of the SAMM
 completion it answers the models and the four trends only, and it answers the reports of `workshop` (_Reports_). It reads
 the threat models as `workshop` does and has no write route for them: the user holds no `approve`, and a local release of a
-threat model is not walked through (_Threat Models_)
+threat model is not walked through (_Threat Models_). The user holds `read` and `edit` on `isms-incidents-2026` and `read`
+on `isms-incidents-2025`: the years, both lists, the nine incidents and the report of the *Credential stuffing* are read,
+no incident write has a route (_Incident Reports_)
 
 |`catalog-admin`
 |`ready`, `service-created`, `service-retired`, `catalog-invalid`, `catalog-id-taken`, `catalog-rejected`,
@@ -382,6 +395,20 @@ the states `-reopened`, `-in-review`, `-released` (each with `-revisions`) and t
 |The nine service pages (also `-none`, `-reopened`, `-in-review`, `-released`, `-created` and `-draft` for the states of the
 checkout flow, the wizard and the draft) and the list of the documents (also `-reopened`, `-in-review`, `-released`,
 `-created`) (_Threat Models_)
+
+|`categories-incident-reports-schema.json`, `incidents-years*.json`, `incidents-year-<year>*.json`, `incidents-documents-<year>*.json`
+|The schema of the incident reports (the JSON of the register), the years (`-no-current`, `-b-released`, `-clock`, `-created`),
+the incidents of a year and the generic lists of the repositories, with the variants of the states (_Incident Reports_)
+
+|`incident-<slug>*.json`
+|The nine incidents, each with `-revisions` and `-report`; `notification-outage` `-at-v1`; `credential-stuffing` `-diff`
+and its states `-reopened`, `-review-completed`, `-in-review`, `-released` (with `-released-revisions`, `-released-report`,
+`-released-at-v1`); `wrong-recipient-recompleted`, `phishing-link-privacy-completed`, `-recorded`, `-missed`; the created
+`suspicious-vpn` with its `-revisions` (_Incident Reports_)
+
+|`due-incident-<state>.json`, `documents-index-incident-created.json`
+|The Due list of the states `incident-notification-recorded` and `incident-clock-advanced`; the search index of
+`incident-created` (_Incident Reports_)
 
 |`reports-threat-evaluation-<state>.json`, `reports-summary-tm-<state>.json`
 |The evaluation and the summary of the states of the threat models: `-reopened`, `-in-review`, `-reviewed` (after the
@@ -1251,6 +1278,301 @@ reaches the base route there still answers as in `ready` (the opening of v5 is n
 define the submit of a released model).
 * *The diagram is a fixed drawing*, the evaluation must keep reproducing the figures of _Reports_ (`ThreatModelsTest`
 asserts it), and the revision reads exist for the checkout flow (`v1` to `v4`) and the login flow (`v1`) only.
+
+== Incident Reports
+
+The requests of the lens *Incident reports* (UC-IR-1, UC-IR-2, UC-IR-3; `doc/specification/rest-api.adoc`, _Incident Report
+Requests_; everything PROVISIONAL). Today is the fixed 2026-11-26, the base `asOf` is `2026-11-26T10:00:00Z`. The data files are
+static: they were written by a script that is not part of the repository (it asserted every consistency rule of the contract) and are
+maintained by hand from now on; `IncidentsTest` and
+`IncidentStatesTest` read them, recompute the stages, the missing fields, the deadlines, the protection, the rows of the lists,
+the years, the Due items and the reports from the parts of each incident (the six deadline rules a second time, in Java) and
+fail on drift.
+
+*The rights.* Alex Example (`workshop`) holds `read`, `edit` and `approve` on `isms-incidents-2026` and `read` on
+`isms-incidents-2025` (the decision of the contract, point 11: a person who edits may release in the mock, so that the review and
+the release of the *Credential stuffing* can be walked through; the year 2025 is released and frozen, so `read` is enough: a save
+there answers `403 FORBIDDEN`). Kim Reader (`read-only`) holds `read` on both; Noor Haddad (`release`) and Sam (`empty`) hold no right on the incident repositories;
+`degraded` and `local` hold `read` and `edit` on the year of today and `read` on the year before (no release). Jordan Weber
+(`p-2b7f10`, *Developer*) is the other person of the conflict and completes the response and the notifications of
+`notification-outage` and of the 2025 incidents; releases are by Noor Haddad. The repositories are `isms-incidents-2026` and
+`isms-incidents-2025`, the transitions `incident.submit` and `incident.release`, the tag `incidents/<id>/v1`.
+
+*The nine incidents* (the id is a ULID and the address segment, `/incidents/<year>/<id>`; the stages are triage, privacy
+assessment, response, notifications, review: `C` completed, `O` open, `N` not applicable, `N*` not applicable and unanswered, `^`
+completed with a reopened predecessor; deadlines at `asOf`, open/met/missed):
+
+[cols="2,2,1,3,2,2"]
+|===
+|Slug and id |Title |Year |Stages |Deadlines |Walk-through
+
+|`card-data` `01JZ9T4M6Q8S0V2X4B6D8F0H2K`
+|Card data exposed in the checkout log
+|2026
+|C, O (4 missing), O, O, O (5 missing, blocked by response)
+|`gdpr-art33` MISSED (not sent), `nis2-early-warning` MET, `nis2-notification` MISSED (sent late), `nis2-final-report` OPEN; 1/1/2, next `nis2-final-report`
+|the missed deadline and the refusal with missing fields
+
+|`credential-stuffing` `01JZ9V7P9S1T3W5Y7A9C1E3G5J`
+|Credential stuffing against the login form
+|2026
+|C, N, C, N, O (completable, step-up)
+|none
+|the walk to the release: complete the review with step-up, submit, release, the diff, the report
+
+|`phishing-link` `01JZA2B4D6F8H0K2N4Q6S8V0X2`
+|Phishing mail with a forged payment link
+|2026
+|C, O (completable), O (missing `/response/resolved-at`), O, O
+|`gdpr-art33` OPEN, due 2026-11-27T09:10Z; 1/0/0
+|the privacy assessment completed, the notification recorded, the clock
+
+|`notification-outage` `01JZ8M3N5P7R9T1V3X5Z7B9D1F`
+|Notification service down after a failed deployment
+|2026
+|C, N, C, C, C; released `v1` 2026-11-18T10:00Z by Noor, frozen
+|four, all MET, frozen at the release (one intermediate report, one notice in `others`); 0/4/0
+|the released incident and the revision picker `v1`
+
+|`archive-access` `01JZ8K1M3P5R7T9V1X3Z5B7D9F`
+|Unauthorised access to the report archive
+|2026
+|C, N, O (missing `/response/resolved-at`), O, O
+|`nis2-final-report` MET by the progress report; `nis2-final-report-after-handling` OPEN without a date; 1/3/0, next `null`
+|the progress report and a deadline without a date
+
+|`wrong-recipient` `01JZ6Q8S0V2X4B6D8F0H2K4M6P`
+|Customer export sent to the wrong recipient
+|2026
+|O (reopened 2026-11-25T15:00Z, the earlier completion stays in the history), C^, C^, C^, O
+|`gdpr-art33` MET; 0/1/0
+|the markers `predecessorReopened`
+
+|`suspicious-logins` `01JZA6D8F0H2K4M6P8R0T2W4Y6`
+|Suspicious logins from an unknown network
+|2026
+|O (3 missing), N*, O, N*, O
+|none
+|a refusal on every stage, two stages unanswered
+
+|`lost-laptop` `01JZ2A4C6E8G0J2M4P6R8T0W2Y`
+|Laptop with customer extracts lost
+|2025
+|C, C, C, C, C; released `v1` 2025-04-30T09:00Z
+|`gdpr-art33` MET; 0/1/0
+|a released report with a risk link (`R-021`)
+
+|`newsletter-list` `01JZ3B5D7F9H1K3N5Q7S9V1X3Z`
+|Misdirected newsletter exposed the subscriber list
+|2025
+|C, C, C, C, C; released `v1` 2025-10-20T10:00Z
+|`gdpr-art33` MISSED, sent late; 0/0/1
+|a missed deadline in a released report, `reasons-for-delay`
+|===
+
+The state `incident-created` adds a tenth incident, `01JZA8F0H2K4M6P8R0T2W4Y6A8`, *Suspicious logins from the VPN gateway*.
+
+*The routes* (`requires` `read` on the repository of the year unless named):
+
+[cols="2,3"]
+|===
+|Request |Answer
+
+|`GET /api/v1/incidents`
+|`incidents-years.json`: 2026 (7 incidents, 6 open, 1 with a missed deadline, `retentionEnd` 2031-12-31) and 2025 (2, 0 open, 1,
+2030-12-31); no `requires` (a user without a right gets `"years": []`)
+
+|`GET /api/v1/incidents/2026`, `…/2025`
+|The rows of the year, newest awareness first, with `stages`, `deadlines` (`open`, `met`, `missed`, `next`), `updatedAt` and `release`.
+`…/2024` and `…/2026/nope` answer `404 NOT_FOUND`
+
+|`GET /api/v1/incidents/<year>/<id>`, `GET /api/v1/documents/isms-incidents-<year>/<id>`
+|The same file, `incident-<slug>.json`: `parts` (`data` and the five stages), `history` (at most 20, newest first), `transitions`,
+`stages`, `deadlines`, `protection`. `?at=v1` of `notification-outage` is the frozen release (`-at-v1`), `?at=v9` is `404`,
+`?at=zzz` is `422` (`/at`, `FORMAT`); the other incidents ignore `at`
+
+|`GET …/documents/isms-incidents-<year>/<id>/revisions`
+|The commits newest first; a release is `v1`
+
+|`GET /api/v1/incidents/<year>/<id>/report`
+|The generated report (`source` `generated`; `committed` for the three released incidents and, in `incident-released`, the
+*Credential stuffing*)
+
+|`GET …/documents/isms-incidents-2026/<credential-stuffing>/diff?from=released`
+|`from` `null`, `to` `working`, the sections `data`, `triage`, `response`, `review`, each change an addition at the first segment
+of the pointer; no other incident has one (`404 NOT_FOUND`)
+
+|`GET /api/v1/documents/isms-incidents-<year>`
+|The generic list, `kind` `incident`, newest change first
+
+|`GET /api/v1/categories/incident-reports/schema`
+|The JSON of the register (`incident`, five stages with `gdr-split` and a read-only `completion`)
+
+|`GET /api/v1/search?q=card`
+|One hit, the card data; `documents-index*.json` list the nine incidents (category `incident-reports`, kind `incident`)
+
+|`GET /api/v1/references/resolve`
+|`references-resolve.json` also holds `isms-incidents-2026:incident/01JZ9T4M6Q8S0V2X4B6D8F0H2K`
+
+|`GET /api/v1/due`
+|Three items of the kind `deadline`, lens `incidents`, replace the placeholder `inc-0007`: `card-data` `gdpr-art33` MISSED (due
+2026-11-22), `phishing-link` `gdpr-art33` OPEN (2026-11-27), `card-data` `nis2-final-report` OPEN (2026-12-22). The member
+`deadline` is `{rule, status}`; the address is `/incidents/2026/<id>?stage=notifications`. A met or late-sent deadline and one
+without a date is no item (_Limits_)
+|===
+
+*The refusals of the base state* (`requires` `edit`):
+
+[cols="2,3"]
+|===
+|Request |Answer
+
+|`POST …/<suspicious-logins>/stages/triage/complete`, `…/response/…`, `…/review/…`
+|`422 STAGE_NOT_COMPLETABLE` with the pointers of the missing fields and the open predecessors (`[]`; `["triage"]`; `["response"]`)
+
+|`POST …/<suspicious-logins>/stages/privacy-assessment/complete`
+|`409 STAGE_NOT_APPLICABLE`
+
+|`POST …/<card-data>/stages/privacy-assessment/complete`, `…/review/complete`
+|`422 STAGE_NOT_COMPLETABLE` (four and five missing fields; `[]` and `["response"]` open); `…/privacy-assessment/reopen` is `409 STAGE_STATE` (`open`)
+
+|`POST …/<phishing-link>/stages/triage/complete`, `…/response/complete`
+|`409 STAGE_STATE` (`completed`); `422` with `/response/resolved-at`
+
+|`POST …/<wrong-recipient>/stages/review/complete`
+|`422 STAGE_NOT_COMPLETABLE`, five missing, nothing open
+
+|`POST …/<credential-stuffing>/stages/nope/complete`
+|`404 NOT_FOUND`
+
+|`POST` and `PUT` on `notification-outage`: every `complete`, `reopen`, the `save`, the draft
+|`409 DOCUMENT_RELEASED` with the tag `incidents/<id>/v1`
+
+|`POST …/<credential-stuffing>/transitions/incident.submit`, `…/<card-data>/…`
+|`422 STAGES_OPEN` (`review`; `privacy-assessment`, `response`, `notifications`, `review`, each with its missing fields)
+
+|`POST …/save` of the card data, the credential stuffing, the archive access, the wrong recipient, the suspicious logins; `PUT …/drafts/…` of these and of the phishing mail
+|`200 SAVED` and `200 DRAFT_SAVED`, static, no state change; the saves of the two 2025 incidents answer `403 FORBIDDEN` (`edit` on `isms-incidents-2025`)
+|===
+
+*The states of `workshop`* (a state overrides only the files named; the base answers everything else). The writes that move
+are links of `ready`: `complete-privacy-c`, `complete-review-b`, `reopen-triage-b`, `recomplete-triage-f`,
+`record-notification-c` (the `save` of the phishing mail) and `create-incident` (the create).
+
+[cols="1,3"]
+|===
+|State |What changes
+
+|`incident-triage-reopened`
+|`reopen-triage-b` (`200 REOPENED`, 10:15): the *Credential stuffing* has the triage open (its completion stays in the history as
+a `complete` entry before the `reopen`), the response completed and marked `predecessorReopened`, the review open and not blocked.
+The read and the list of the year. The event `document-saved` (part `triage`)
+
+|`incident-triage-recompleted`
+|`recomplete-triage-f` (`200 COMPLETED`, 10:25): the triage of the *Wrong recipient* is completed again, the three markers are gone.
+The event `document-saved`
+
+|`incident-privacy-completed`
+|`complete-privacy-c` (`200 COMPLETED`, 10:20): the privacy assessment of the *Phishing mail* is completed; the response stays open
+and not blocked, the review is blocked by the response. The event `document-saved`
+
+|`incident-review-completed`
+|`complete-review-b` (`200 COMPLETED`, 10:02): every applicable stage of the *Credential stuffing* is completed, `incident.submit`
+is offered. The submit (`submit-b`, `200 TRANSITIONED`, 10:03) moves to `incident-submitted`. The event `document-saved` (part `review`)
+
+|`incident-review-step-up`, `incident-review-stepped-up`
+|By `goto`: completing the review answers `403 STEP_UP_REQUIRED` (`stepUp` `/api/v1/auth/login?step-up=mfa`) and moves to `-stepped-up`,
+where it answers `200 COMPLETED` and moves to `incident-review-completed`
+
+|`incident-submitted`
+|`in-review`, `incident.release` (`release: true`), the diff; the release (`release-b`, `200 RELEASED`, tag
+`incidents/01JZ9V7P9S1T3W5Y7A9C1E3G5J/v1`, 10:05, with the `report`) moves to `incident-released`. The event `document-transitioned`
+
+|`incident-released`
+|Released `v1` by Noor Haddad, frozen, the clock stopped (`asOf` 10:05, no deadline), `transitions` empty; the report is `committed`; the
+revisions end with `v1` (`?at=v1` is the frozen release); the year has 5 open incidents. The event `document-transitioned`
+
+|`incident-release-step-up`, `incident-release-stepped-up`
+|By `goto`, the incident reads in review: the release answers `403 STEP_UP_REQUIRED` and moves to `-stepped-up`, where it answers `200 RELEASED`
+
+|`incident-release-changed`, `-refused`, `-reviewed`
+|The release answers `409 CHANGED_SINCE_REVIEW` and moves to `-refused`, where it stays refused until the diff is read again; that
+read moves to `-reviewed`, where the release answers `200 RELEASED`
+
+|`incident-release-released-meanwhile`
+|The incident reads released; the release answers `409 DOCUMENT_RELEASED` with the tag
+
+|`incident-notification-recorded`
+|`record-notification-c` (`200 SAVED`, 10:12): the supervisory authority of the *Phishing mail* was notified at 09:45 (`reporting-portal`):
+`gdpr-art33` is MET, 0/1/0, the Due list drops the item; the notifications stay open. The event `document-saved` (part `notifications`)
+
+|`incident-clock-advanced`
+|By `goto`: `asOf` and today are 2026-11-27T10:00Z: `gdpr-art33` of the *Phishing mail* is MISSED and not sent, the year has two
+incidents with a missed deadline, the Due item reads MISSED; the other incidents keep what they read
+
+|`incident-saved-by-other`
+|The save of the card data answers `409 CONFLICT` for `/supervisory-authority` of the part `notifications` (own: sent 09:45; other: sent 09:20 by email, Jordan Weber)
+
+|`incident-stage-locked`
+|The save and the draft of the card data answer `409 STAGE_LOCKED` (`["triage"]`)
+
+|`incident-invalid`
+|The save and the draft of the card data answer `422 VALIDATION`: `READ_ONLY` at `/completion` and `REFERENCE_NOT_FOUND` at
+`/affected-services/0` (part `triage`), `FORMAT` at `/supervisory-authority/sent-at` (part `notifications`)
+
+|`incident-git-unavailable`
+|The status is `degraded` with `isms-incidents-2026` `DOWN`; every write (save, complete, reopen, submit, release, create) answers `503 GIT_UNAVAILABLE`;
+the reads and the draft `PUT` stay `200`
+
+|`incident-complete-changed`
+|Completing the privacy assessment of the phishing mail answers `409 CHANGED_SINCE_REVIEW`
+
+|`incident-created`
+|`create-incident` (`POST /api/v1/documents/isms-incidents-2026`, `201 CREATED`, `01JZA8F0H2K4M6P8R0T2W4Y6A8`, 09:41): the incident
+reads as a draft (triage with the categories, the detection 08:05, the awareness 08:30 and the affected service `identity-provider`; no
+deadline; two stages unanswered), has one `create` revision, heads the list of the year (eight rows), the years (8 incidents, 7 open),
+the generic list and the search index (`q=vpn`). The event `document-created`
+
+|`incident-create-invalid`
+|The create answers `422 VALIDATION`: `REQUIRED` at `/title` (part `data`)
+
+|`incident-year-missing`
+|`GET /api/v1/incidents` lists 2025 only (`current: false`), `GET /api/v1/incidents/2026` and the create answer `404 NOT_FOUND`
+|===
+
+*The report* is built by one template from the data of the read (a test checks the order of the headings): `= <title>`, `== Summary` (a
+two-column table: State, Severity, Occurred, Detected, Aware, Resolved, Classification, Personal data affected, NIS2 significant;
+"not answered" for a missing value), `== Affected services` (`<name> (service:<id>)` and one line `Protection needs: …`),
+`== Deadlines` (`Deadline | Due | Status | Sent`, `*MISSED*` in bold, "No deadline applies."), `== Notifications` (`Notice | Sent |
+Recipient | Channel | Reference`, "Nothing recorded."), one section for each stage that applies (`Triage`, `Privacy assessment`, `Response`,
+`Review`; "Nothing recorded." for an empty one), and `== Course`, `== Root-cause analysis`, `== Lessons` where the review has them. It names
+no person, holds no script and no link, is English, and is at most 8 KB. The rules of the deadlines are the six of the contract; the
+labels of the template are English.
+
+*Limits.*
+
+* *The answers are static.* A save changes no state except the notification of the phishing mail (a link of `ready`); a `PUT` of a
+draft changes none; the answer of a save carries a fixed `parts` (the part `data`), not a computed blob; the create is the only create
+that moves. A completion answers the new blob id, which the read of its state repeats; the blob of a part is the first seven hex digits
+of the hash of `<id>/<part>/<n>`, `n` being the saves, the completions and the reopenings of the part (the create counts as the first
+save of `data` and `triage`).
+* *A state overrides only what it names.* The revisions of the states between the submit and the release, the generic lists, the report of
+the *Phishing mail* after the notification and the search index are those of the base (the exceptions are the revisions of
+`incident-released` and the generic list and the search index of `incident-created`); the clock moves only in `incident-clock-advanced`, and there only the
+*Phishing mail* is read at the new instant; `today` of the year lists in that state is 2026-11-27, every other lens keeps 2026-11-26.
+* *The row of a list shows the newest write of a part,* or the release, as `updatedAt`: a submit alone changes no row.
+* *The diff and `?at` are for one incident each:* `credential-stuffing` has a diff (that of the review; it holds the `completion` of the
+review, so in `ready` it is a little ahead of the read), `notification-outage` the revision read `v1` and, in `incident-released`,
+the *Credential stuffing* too; another incident ignores `at` and answers its working state; another diff is `404 NOT_FOUND`.
+* *The Due list is derived once, for the base:* the three items are the open and the missed-and-not-sent deadlines of the incidents that
+are not released, and the lists of `degraded` and `local` carry the same three; `read-only` and `release` keep the lists they had. The
+states `incident-notification-recorded` and `incident-clock-advanced` have a list of their own; every other state keeps the base
+list, so the items of the *Credential stuffing* (it has no deadline) are not affected.
+* *`degraded` and `local` do not walk the lifecycle* (no `approve`, no state): `degraded` reads, refuses the saves, the completion of the
+review and the create in `unreachable` (`isms-incidents-2026` `DOWN`) and answers them statically after `recovered`; `local` has no write
+route, so a write answers `404 NOT_FOUND` for the repository of its rights.
+* *The status lists `isms-incidents-2025`* next to `isms-incidents-2026` in `workshop`, `read-only`, `degraded` and `local`; `release` and
+`empty` list what they listed before.
 
 == Query-Keyed Routes
 
