@@ -160,7 +160,7 @@ describe('the tabs', () => {
       ['Notifications', 'Does not apply'],
     ]);
     expect(tabs[0].note).toBeNull();
-    expect(tabs[1].note).toBe('Does not apply: it applies when personal data is affected');
+    expect(tabs[1].note).toBe('Applies when personal data is affected');
     expect(tabs[2].note).toBe(
       'Not answered yet: applies when personal data is affected or the incident is significant under NIS2',
     );
@@ -183,7 +183,7 @@ describe('the tabs', () => {
     const [tab] = stageTabs([stage('privacy-assessment', { status: 'not-applicable' })], german);
     expect(tab.label).toBe('Datenschutzbewertung');
     expect(tab.statusLabel).toBe('Entfällt');
-    expect(tab.note).toBe('Entfällt: gilt, wenn personenbezogene Daten betroffen sind');
+    expect(tab.note).toBe('Gilt, wenn personenbezogene Daten betroffen sind');
   });
 });
 

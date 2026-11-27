@@ -141,7 +141,7 @@
     <div data-testid="stage-predecessor-reopened">
       <Notice
         tone="attention"
-        title={$t('incidents.stage.predecessor-reopened')}
+        title={$t('incidents.stage.predecessor-reopened.title')}
         body={$t('incidents.stage.predecessor-reopened.body')}
       />
     </div>
@@ -175,10 +175,9 @@
   {#if isTriage}
     <section
       class="panel__part"
-      aria-labelledby="incident-title-heading"
+      aria-label={$t('incidents.title.heading')}
       data-testid="title-section"
     >
-      <h3 class="panel__heading" id="incident-title-heading">{$t('incidents.title.heading')}</h3>
       <SchemaForm
         bind:this={titleForm}
         schema={titleSchema(schema)}
@@ -203,17 +202,18 @@
     </section>
   {/if}
 
+  <!-- The form of a stage needs a heading only where something else stands above it (the notices): the stage's own name is
+       the heading of the rest. -->
   <section
     class="panel__part"
-    aria-labelledby="stage-form-heading"
+    aria-label={stage.part === 'notifications' ? undefined : $t('incidents.stage.form')}
+    aria-labelledby={stage.part === 'notifications' ? 'stage-form-heading' : undefined}
     data-testid="stage-form-section"
   >
-    <h3 class="panel__heading" id="stage-form-heading">
-      {stage.part === 'notifications'
-        ? $t('incidents.notifications.record')
-        : $t('incidents.stage.form')}
-    </h3>
     {#if stage.part === 'notifications'}
+      <h3 class="panel__heading" id="stage-form-heading">
+        {$t('incidents.notifications.record')}
+      </h3>
       <p class="panel__hint">{$t('incidents.notifications.record.hint')}</p>
     {/if}
     <SchemaForm
@@ -292,5 +292,12 @@
     font-size: var(--text-lg);
     line-height: var(--line-height-lg);
     font-weight: var(--weight-semibold);
+  }
+
+  /* The sections of the form stand under the heading of the part, so they are smaller than it and never larger than the name
+     of the stage above. */
+  .panel__part :global(.section__title) {
+    font-size: var(--text-md);
+    line-height: var(--line-height-md);
   }
 </style>

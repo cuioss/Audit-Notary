@@ -31,6 +31,13 @@
     };
   });
 
+  /** The service that decides every dimension, when one does; `null` when the dimensions have their own. */
+  let sole = $derived.by(() => {
+    if (protection === null) return null;
+    const ids = new Set(PROTECTION_DIMENSIONS.map((dimension) => protection.decidedBy[dimension]));
+    return ids.size === 1 ? [...ids][0] : null;
+  });
+
   /** @returns the name of the service a reference names, its id while the catalog is not read */
   function nameOf(ref: string): string {
     const parts = parseCatalogRef(ref);
@@ -45,17 +52,24 @@
     <p class="needs__note" data-testid="protection-none">{$t('incidents.protection.none')}</p>
   {:else}
     <p class="needs__note">{$t('incidents.protection.note')}</p>
+    {#if sole !== null}
+      <p class="needs__note" data-testid="protection-sole">
+        {$t('incidents.protection.decided-by-all', { service: nameOf(sole) })}
+      </p>
+    {/if}
     <dl class="needs__list">
       {#each PROTECTION_DIMENSIONS as dimension (dimension)}
         <div data-testid="protection-{dimension}">
           <dt>{$t(`catalogs.dimension.${dimension}`)}</dt>
           <dd>
             {$t(`reports.need.${protection.needs[dimension]}`)}
-            <span class="needs__by">
-              {$t('incidents.protection.decided-by', {
-                service: nameOf(protection.decidedBy[dimension]),
-              })}
-            </span>
+            {#if sole === null}
+              <span class="needs__by">
+                {$t('incidents.protection.decided-by', {
+                  service: nameOf(protection.decidedBy[dimension]),
+                })}
+              </span>
+            {/if}
           </dd>
         </div>
       {/each}

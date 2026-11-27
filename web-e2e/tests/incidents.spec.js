@@ -528,11 +528,9 @@ test.describe('the stages as tabs (UC-IR-1)', () => {
     await expect(privacy).toHaveAttribute('data-status', 'not-applicable');
     await expect(privacy).toHaveClass(/stage-tab--na/);
     await expect(privacy).toContainText('Does not apply');
-    await expect(privacy).toContainText(
-      'Does not apply: it applies when personal data is affected',
-    );
+    await expect(privacy).toContainText('Applies when personal data is affected');
     await expect(tab(page, 'notifications')).toContainText(
-      'it applies when personal data is affected or the incident is significant under NIS2',
+      'Applies when personal data is affected or the incident is significant under NIS2',
     );
     // The tab opens: what was entered there stays in the record, and nothing is offered to complete.
     await privacy.click();
@@ -578,7 +576,7 @@ test.describe('the stages as tabs (UC-IR-1)', () => {
     await expect(tab(page, 'review')).not.toContainText(marker);
     await chooseStage(page, 'response');
     const notice = page.getByTestId('stage-predecessor-reopened');
-    await expect(notice).toContainText(marker);
+    await expect(notice).toContainText('Check this stage again');
     await expect(notice).toContainText(
       'Check that this stage still holds, then complete it again if you want to sign it off again.',
     );
@@ -624,8 +622,9 @@ test.describe('the panel of a stage and its form (UC-IR-1)', () => {
     const needs = page.getByTestId('protection-needs');
     await expect(needs).toContainText('It is derived and cannot be changed here.');
     await expect(page.getByTestId('protection-confidentiality')).toContainText('Very high');
-    await expect(page.getByTestId('protection-confidentiality')).toContainText(
-      'decided by Identity Provider',
+    // One service decides all three, which is said once.
+    await expect(page.getByTestId('protection-sole')).toHaveText(
+      'All three are decided by Identity Provider.',
     );
     await expect(page.getByTestId('protection-availability')).toContainText('High');
     await expect(needs.locator('input, select, textarea')).toHaveCount(0);
@@ -700,11 +699,13 @@ test.describe('the notices sent (UC-IR-2)', () => {
     await expect(early).toContainText('Joint reporting office BSI and BBK');
     await expect(early).toContainText('Reporting portal');
     await expect(early).toContainText('Met');
-    // A notice that was sent after its deadline is told as such, in a box: it is a fact the person has to know.
+    // A notice that was sent after its deadline is told as such, as the clock tells it: a dot and its words, no box, for the
+    // deadline is a fact of the record and nothing is left to do.
     const late = page.getByTestId('notification-nis2-notification');
     await expect(late).toContainText('Nov 22, 2026, 11:20 AM');
     await expect(late).toContainText('Sent late');
-    await expect(late.locator('.reason')).toHaveCount(1);
+    await expect(late.locator('.reason')).toHaveCount(0);
+    await expect(late.locator('[data-tone="danger"]')).toHaveCount(1);
     await expect(early.locator('.reason')).toHaveCount(0);
     await expect(page.getByTestId('notifications-none')).toHaveCount(0);
     // The way to record a notice is the form under the table, with its words.
@@ -959,7 +960,7 @@ test.describe('the deadline clock (UC-IR-1, UC-IR-2, AUN-IR-2)', () => {
     );
     await expect(page.getByTestId('released-notice')).toContainText('Released as v1');
     await expect(page.getByTestId('released-notice')).toContainText(
-      'A released incident is frozen. A change is a new incident that names this one.',
+      'A change is a new incident that names this one.',
     );
   });
 
@@ -1667,9 +1668,7 @@ test.describe('the report preview (UC-IR-3, AUN-IR-1)', () => {
     });
     await loginToSheet(page, CARD_DATA);
     const block = page.getByTestId('report-block');
-    await expect(block).toContainText(
-      'The report is generated from the saved data. It is read here and not downloaded.',
-    );
+    await expect(block).toContainText('The report is read here, not downloaded.');
     await expect(page.getByTestId('report-preview')).toHaveCount(0);
     await page.getByTestId('report-toggle').click();
     const preview = page.getByTestId('report-preview');
@@ -2025,7 +2024,7 @@ test.describe('the lens is written in German', () => {
     );
     await page.goto(incidentAddress(WRONG_RECIPIENT, { stage: 'response' }));
     await expect(page.getByTestId('stage-predecessor-reopened')).toContainText(
-      'Abgeschlossen, bevor eine frühere Phase wieder geöffnet wurde',
+      'Diese Phase erneut prüfen',
     );
   });
 
@@ -2087,7 +2086,7 @@ test.describe('the lens is written in German', () => {
     );
     await page.goto(incidentAddress(OUTAGE));
     await expect(page.getByTestId('released-notice')).toContainText(
-      'Ein freigegebener Vorfall ist eingefroren. Eine Änderung ist ein neuer Vorfall, der diesen nennt.',
+      'Eine Änderung ist ein neuer Vorfall, der diesen nennt.',
     );
     await expect(page.getByTestId('save-state')).toContainText(
       'Freigegeben und eingefroren. Hier kann sich nichts mehr ändern.',

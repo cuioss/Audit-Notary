@@ -165,6 +165,10 @@
     align-items: flex-start;
   }
 
+  .bar__acts :global(.btn__reason) {
+    text-align: start;
+  }
+
   .missing__acts {
     display: flex;
     flex-wrap: wrap;

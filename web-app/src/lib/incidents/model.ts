@@ -205,7 +205,7 @@ export function stageTabs(
     note:
       stage.status !== 'not-applicable'
         ? null
-        : t(stage.unanswered ? 'incidents.stage.applies-when' : 'incidents.stage.not-applicable', {
+        : t(stage.unanswered ? 'incidents.stage.applies-when' : 'incidents.stage.tab-condition', {
             condition: t(`category.${INCIDENT_CATEGORY}.stage.${stage.id}.when`),
           }),
     marker: stage.predecessorReopened ? t('incidents.stage.predecessor-reopened') : null,

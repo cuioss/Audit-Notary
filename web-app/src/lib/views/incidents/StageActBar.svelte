@@ -196,6 +196,23 @@
     align-items: flex-start;
   }
 
+  .bar__act :global(.btn__reason) {
+    text-align: start;
+  }
+
+  /* The act of a notice names the stage, so in a long language it can be wider than a phone: it wraps and keeps the notice. */
+  .bar :global(.notice__actions) {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  .bar :global(.notice__actions .btn) {
+    max-inline-size: 100%;
+    white-space: normal;
+    text-align: start;
+  }
+
   .bar__note {
     font-size: var(--text-xs);
     line-height: var(--line-height-xs);

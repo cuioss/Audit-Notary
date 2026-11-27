@@ -117,9 +117,8 @@
 <style>
   .stage-tabs {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
     gap: 0;
-    border-block-end: 1px solid var(--color-border);
   }
 
   .stage-tab {
@@ -128,13 +127,17 @@
     align-items: flex-start;
     gap: var(--space-1);
     min-block-size: 44px;
+    /* A long word of a long language (Datenschutzbewertung) breaks at its syllables, at worst anywhere, never over its neighbour. */
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    hyphens: auto;
     padding: var(--space-3) var(--space-4);
     font: inherit;
     text-align: start;
     color: var(--color-text-primary);
     background: none;
     border: none;
-    border-block-end: 3px solid transparent;
+    border-block-end: 1px solid var(--color-border);
     border-inline-end: 1px solid var(--color-border);
     cursor: pointer;
   }
@@ -149,8 +152,9 @@
     position: relative;
   }
 
+  /* The tabs wrap into rows: each one carries its own hairline, and the chosen one a heavier line in the ink. */
   .stage-tab--selected {
-    border-block-end-color: var(--color-brand);
+    border-block-end: 3px solid var(--color-brand);
     background-color: var(--color-bg-subtle);
   }
 
@@ -187,7 +191,6 @@
   @media (max-width: 767px) {
     .stage-tabs {
       grid-template-columns: minmax(0, 1fr);
-      border-block-end: none;
     }
 
     .stage-tab {
@@ -198,7 +201,7 @@
     }
 
     .stage-tab--selected {
-      border-block-end-color: var(--color-border);
+      border-block-end: 1px solid var(--color-border);
       border-inline-start-color: var(--color-brand);
     }
 

@@ -165,7 +165,7 @@ describe('the head and the tabs', () => {
     await open('workshop', WRONG, { stage: 'response' });
     expect(tab('response')).toHaveTextContent('Signed off before an earlier stage was reopened');
     expect(screen.getByTestId('stage-predecessor-reopened')).toHaveTextContent(
-      'Signed off before an earlier stage was reopened',
+      'Check this stage again',
     );
     expect(tab('triage')).toHaveTextContent('Open');
   });
@@ -181,8 +181,8 @@ describe('the head and the tabs', () => {
     expect(within(needs).getByTestId('protection-confidentiality')).toHaveTextContent('Very high');
     expect(within(needs).getByTestId('protection-availability')).toHaveTextContent('High');
     await vi.waitFor(() =>
-      expect(within(needs).getByTestId('protection-confidentiality')).toHaveTextContent(
-        'decided by Payment API',
+      expect(within(needs).getByTestId('protection-sole')).toHaveTextContent(
+        'All three are decided by Payment API.',
       ),
     );
   });
@@ -816,7 +816,7 @@ describe('the report', () => {
   it('is introduced in German', async () => {
     await open('workshop', STUFFING, {}, 'de');
     expect(screen.getByTestId('report-block')).toHaveTextContent(
-      'Der Bericht wird aus den gespeicherten Daten erzeugt.',
+      'Der Bericht wird hier gelesen, nicht heruntergeladen.',
     );
     await fireEvent.click(screen.getByTestId('report-toggle'));
     expect(await screen.findByTestId('report-english')).toHaveTextContent('auf Englisch verfasst');

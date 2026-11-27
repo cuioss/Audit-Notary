@@ -5,6 +5,9 @@
  */
 import { fieldLabel } from './categories';
 import { optionOf } from '../forms/texts';
+import { formatDate, formatDateTime } from '../format';
+import { currentLocale } from '../i18n';
+import { get } from 'svelte/store';
 import { pointerTokens } from '../forms/schema';
 import type { Translate } from './saveLabel';
 
@@ -13,6 +16,12 @@ import type { Translate } from './saveLabel';
  * list inside a row of a list (a countermeasure's issues), which two lists of the same size would otherwise not tell apart.
  */
 const SPELLED_DEPTH = 4;
+
+/** An instant as the documents store it: ISO 8601 in UTC. */
+const INSTANT = /^\d{4}-\d{2}-\d{2}T[\d:.]{5,18}Z$/;
+
+/** A day as the documents store it. */
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * @param messages the catalogue
@@ -68,6 +77,11 @@ function line(
       })
       .join(', ');
     return t('documents.value.with-content', { size, content });
+  }
+  if (typeof value === 'string') {
+    // A moment or a day is told as the person reads it, never as the ISO text the document stores.
+    if (INSTANT.test(value)) return formatDateTime(value, get(currentLocale));
+    if (DAY.test(value)) return formatDate(value, get(currentLocale));
   }
   const path = pointerTokens(pointer).filter((token) => !/^\d+$/.test(token));
   return optionOf(messages, category, kind, path, value as string | number);

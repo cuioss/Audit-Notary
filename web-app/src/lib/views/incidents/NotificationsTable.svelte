@@ -82,15 +82,10 @@
         <td data-label={$t('incidents.notifications.col.deadline')}>
           {#if deadline === null}
             <span class="meta">{$t('incidents.notifications.no-deadline')}</span>
+          {:else if deadline.status === 'MISSED' && deadline.sentAt === null}
+            <ReasonBadge tone="danger" label={$t('incidents.clock.status.MISSED')} />
           {:else if deadline.status === 'MISSED'}
-            <ReasonBadge
-              tone="danger"
-              label={$t(
-                deadline.sentAt !== null
-                  ? 'incidents.notifications.late'
-                  : 'incidents.clock.status.MISSED',
-              )}
-            />
+            <StatusLabel tone="danger" label={$t('incidents.notifications.late')} />
           {:else}
             <StatusLabel
               tone={deadline.status === 'MET' ? 'success' : 'running'}
