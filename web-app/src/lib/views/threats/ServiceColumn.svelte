@@ -166,6 +166,16 @@
     display: block;
   }
 
+  /* The links of the page are targets of the phone size (AUN-WEB-2). */
+  @media (max-width: 767px) {
+    .column__drafts :global(.link),
+    .column__act :global(.link) {
+      display: inline-flex;
+      align-items: center;
+      min-block-size: 44px;
+    }
+  }
+
   .row__title {
     font-weight: var(--weight-medium);
   }

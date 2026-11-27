@@ -483,6 +483,16 @@
     color: var(--color-text-muted);
   }
 
+  /* The link to the risk of a transferred threat is a target of the phone size (AUN-WEB-2). */
+  @media (max-width: 767px) {
+    .meta :global(.link) {
+      display: inline-flex;
+      align-items: center;
+      min-block-size: 44px;
+      min-inline-size: 44px;
+    }
+  }
+
   .errors {
     display: flex;
     flex-direction: column;

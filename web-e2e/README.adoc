@@ -35,8 +35,9 @@ It then warms the dev server up: a browser loads `/login` and the shell once and
 the first test of a run does not pay for the first transform of every module (see _Cold start_)
 
 |`tests/helpers/mock.js`
-|The control routes: `useScenario` (profile, optionally `name#state`), `gotoState`, `broadcast` (an event on the
-stream)
+|The control routes: `useScenario` (profile, optionally `name#state`; it checks that the answer of the mock names the
+profile and the state), `expectScenario` (the same check later, for the audit rows: a mock that is no longer in the
+profile is named, not drawn), `gotoState`, `broadcast` (an event on the stream)
 
 |`tests/helpers/login.js`
 |The login through the mock, which signs in without a form
@@ -67,6 +68,13 @@ the order of their series colours, the pair of the comparison, the threat models
 risks now and as of a day or a tag, the refused values), and the shared steps: the rows of a table as text, the colour a
 token resolves to, and the check that no text of a chart is smaller than a given size at the width it is drawn; the first
 test of `reports.spec.js` compares the fixtures with the mock
+
+|`tests/helpers/threats.js`
+|The addresses and paths of the lens Threat models, the static fixtures (the nine services with their need and models, the
+nine threats of the checkout flow with status, treatment and transfer, its five countermeasures with their issue ids, the
+review of its last release) and the shared steps (the sheet of a model with its tables drawn, the status controls, the
+dialog that changes a threat, the bodies and the changes the mock recorded); the first test of `threat-models.spec.js`
+compares the fixtures with the mock
 |===
 
 == Specs
@@ -145,11 +153,26 @@ are overdue or due soon, as of a day and of a tag with the commit read and the l
 `FUTURE`, `PATTERN` and `UNKNOWN_TAG` beside the field with the value kept, a value the page refuses without a request, the
 `503` with the way back, the empty register), no request that changes anything, and English and German
 
+|`threat-models.spec.js`
+|The lens Threat models as far as it is built (UC-TM-1, UC-TM-2, UC-TM-4): the evaluation as the first column (the rows and
+their reviews, the services without a model with *New threat model* only for a person who may edit, `release`, `empty`,
+`no-threat-models`), the page of a service (the models with state, review and threats, the review interval of the need, the
+recipe that was started as a link to continue it, the retired service, the unknown one), the sheet of a model (the review,
+the diagram from its data URL, the threats with their status and the transfer as a link to the risk that nothing here
+writes, the countermeasures with their issue ids typed as one list separated by commas, a threat that is added, changed or
+removed with the countermeasures that go with it, the lists saved as wholes, the review started with today and the next due
+date, the data of the document and the model saved as two changes, the refusals at their rows and fields, the conflict per
+list, the Git server down, the read-only paths, the revision picker and `?at=v<n>`), submit and release (the walk from the
+first save of a review to v4, the missing fields, every refusal of the release, the word of the act only: *Release* and
+*Freigeben*), the live refresh on `document-saved` and `document-transitioned`, and English and German
+
 |`theme-readability.spec.js`
 |The axe-core audit of every view in both themes, and of the states of the documents lens, the release, the palette, the
 catalogs lens, the directory pages, the SAMM completion (the forms with their refusals and notices, the targets, the
-evidence with its editor and question, the frozen practice, the refused comparison) and the lens Reports (every notice,
-refusal, empty and unavailable state of its five pages, the practices of the comparison opened)
+evidence with its editor and question, the frozen practice, the refused comparison), the lens Reports (every notice,
+refusal, empty and unavailable state of its five pages, the practices of the comparison opened) and the lens Threat models
+(the evaluation and the pages of a service in each state, the sheet with its dialogs, its review, its refusals and its steps,
+the release with its seal and its refusals)
 
 |`fonts.spec.js`
 |Every request stays on the own origin, and Inter is loaded
@@ -160,11 +183,20 @@ the notices, the documents lens, the catalogs lens, the directory pages, the SAM
 390 px: nothing scrolls sideways, the acts are in reach and the controls hold the target size of 44 px, the targets of a
 scope are a list (no column heads), the evidence links are cards, the tables of the reports stack, the charts are drawn at
 the width they have with text of at least 11 px (12 px in the dumbbell), every end value stays inside its figure, the
-dumbbell keeps its ring, its dot and its words, axe
+dumbbell keeps its ring, its dot and its words; in the lens Threat models the evaluation and the page of a service, the
+sheet with its stacked tables and its diagram within the screen, the dialogs inside the window with their acts in reach,
+the conflict, the errors and the release, whose group summaries are 44 px targets (the release of a note as well); axe on
+each page
 |===
 
 A new view gets its address in `navigation.spec.js` and its audit in `theme-readability.spec.js`; a new profile of
 `web-mock` gets the spec of the flow it exists for.
+
+A test that depends on the state of the mock says so: `useScenario` checks that the mock answered the profile and the
+state it was asked for, and the audit rows of `theme-readability.spec.js` that read what a state answers check it again
+(`expectScenario`) once the page is up. The mock is one shared instance and `web-mock/stop.sh` stops the one in its PID
+file, so two runs that use one mock (or one that stops it under another) show up as a named mismatch, or as a refused
+connection, and not as a page that drew the data of another state; give every concurrent run its own ports.
 
 The mock stores nothing, and a state it has no profile for is not invented in the page: where a flow needs one (a
 trend that leaves versions out, a scope whose targets another assessor saved, a scope that shows no open assessment

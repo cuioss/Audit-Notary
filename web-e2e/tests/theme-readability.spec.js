@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { expectNoSeriousViolations, useTheme } from './helpers/a11y.js';
-import { gotoState, useScenario } from './helpers/mock.js';
+import { expectScenario, gotoState, useScenario } from './helpers/mock.js';
 import { login, loginLocal } from './helpers/login.js';
 import { NOTES, field, noteAddress } from './helpers/documents.js';
 import {
@@ -43,6 +43,14 @@ import {
   risksAddress,
   trendAddress,
 } from './helpers/reports.js';
+
+import {
+  CHECKOUT,
+  LENS_ADDRESS,
+  editThreat,
+  releaseAddress,
+  serviceAddress,
+} from './helpers/threats.js';
 
 /**
  * AUN-WEB-2: axe-core on every view in both themes; no violation of impact serious or critical.
@@ -1100,11 +1108,288 @@ for (const theme of ['light', 'dark']) {
     }) => {
       await useScenario(request, scenario);
       await login(page, address);
+      // The page reads what the profile answers: a mock that is no longer in it is named, not drawn.
+      await expectScenario(request, scenario);
       await useTheme(page, theme);
       await expect(page.getByTestId(view)).toBeVisible();
       await prepare(page);
       await expect(page.getByTestId(shown).first()).toBeVisible();
       await expectNoSeriousViolations(page, `reports: ${name} (${scenario}, ${theme})`);
+    });
+  }
+}
+
+/**
+ * The states of the lens Threat models (UC-TM-1, UC-TM-2, UC-TM-4) beside the views above: the evaluation of a person who
+ * may only read and of an installation without a model or a service, the pages of a service, the sheet with its dialogs, its
+ * review, its refusals and its steps, and the release with its refusals. Each is reached on the page after the theme is
+ * chosen, which reloads it, so what a state needs (a change, a save, a click) is done by `prepare`.
+ */
+const THREAT_ADDRESS = CHECKOUT.address;
+const RELEASE_ADDRESS = releaseAddress(CHECKOUT.service, CHECKOUT.model);
+
+/** Changes a threat and saves for everyone: the way to the refusals of a save. */
+async function changeAndSave(page) {
+  await page.getByTestId('threat-status-T-01').selectOption({ label: 'Mitigated' });
+  await page.getByTestId('save-everyone').click();
+}
+
+const THREAT_STATES = [
+  [
+    'the evaluation of a person who may only read',
+    'read-only',
+    LENS_ADDRESS,
+    'threat-models-view',
+    'threat-evaluation-without-table',
+    async () => {},
+  ],
+  [
+    'the lens without threat models',
+    'workshop#no-threat-models',
+    LENS_ADDRESS,
+    'threat-models-view',
+    'threat-evaluation-none',
+    async () => {},
+  ],
+  [
+    'the lens of the empty installation',
+    'empty',
+    LENS_ADDRESS,
+    'threat-models-view',
+    'evaluation-column',
+    async () => {},
+  ],
+  [
+    'a service with a recipe that was started',
+    'workshop#recipe-draft-saved',
+    serviceAddress('report-scheduler'),
+    'threat-models-view',
+    'recipe-drafts',
+    async () => {},
+  ],
+  [
+    'a service without a model',
+    'workshop',
+    serviceAddress('notification-gateway'),
+    'threat-models-view',
+    'service-no-models',
+    async () => {},
+  ],
+  [
+    'a service that is retired',
+    'workshop',
+    serviceAddress('ledger'),
+    'threat-models-view',
+    'service-retired',
+    async () => {},
+  ],
+  [
+    'a model that was never released',
+    'workshop',
+    '/threat-models/notification-service/notification-flows',
+    'threat-model-sheet',
+    'review-status',
+    async () => {},
+  ],
+  [
+    'the review that was started',
+    'workshop',
+    THREAT_ADDRESS,
+    'threat-model-sheet',
+    'review-next-due',
+    async (page) => {
+      await page.getByTestId('start-review').click();
+    },
+  ],
+  [
+    'the dialog of a threat with its fields wrong',
+    'workshop',
+    THREAT_ADDRESS,
+    'threat-model-sheet',
+    'threats-field-name',
+    async (page) => {
+      await page.getByRole('button', { name: 'Add a threat' }).click();
+      await page.getByTestId('threats-field-likelihood').fill('150');
+      await page.getByTestId('threats-apply').click();
+      await expect(page.getByRole('dialog')).toContainText('Fill in this field.');
+    },
+  ],
+  [
+    'the dialog that changes a threat',
+    'workshop',
+    THREAT_ADDRESS,
+    'threat-model-sheet',
+    'threats-field-status',
+    async (page) => {
+      await editThreat(page, 'T-02');
+    },
+  ],
+  [
+    'the question before a threat and its countermeasures are removed',
+    'workshop',
+    THREAT_ADDRESS,
+    'threat-model-sheet',
+    'threats-remove-treatments',
+    async (page) => {
+      await page.getByRole('button', { name: 'Remove T-03', exact: true }).click();
+    },
+  ],
+  [
+    'the dialog of a countermeasure with its fields wrong',
+    'workshop',
+    THREAT_ADDRESS,
+    'threat-model-sheet',
+    'mitigations-field-issues',
+    async (page) => {
+      await page.getByRole('button', { name: 'Add a countermeasure' }).click();
+      await page.getByTestId('mitigations-field-issues').fill('X'.repeat(65));
+      await page.getByTestId('mitigations-apply').click();
+      await expect(page.getByRole('dialog')).toContainText('Fill in this field.');
+    },
+  ],
+  [
+    'the question before a countermeasure is removed',
+    'workshop',
+    THREAT_ADDRESS,
+    'threat-model-sheet',
+    'mitigations-remove-confirm',
+    async (page) => {
+      await page.getByRole('button', { name: 'Remove M-03', exact: true }).click();
+    },
+  ],
+  [
+    'a model with a threat that was added and not saved',
+    'workshop',
+    THREAT_ADDRESS,
+    'threat-model-sheet',
+    'threat-untreated-T-10',
+    async (page) => {
+      await page.getByRole('button', { name: 'Add a threat' }).click();
+      await page.getByTestId('threats-field-name').fill('Log injection');
+      await page.getByTestId('threats-apply').click();
+    },
+  ],
+  [
+    'a model saved after its release',
+    'workshop#threat-model-reopened',
+    THREAT_ADDRESS,
+    'threat-model-sheet',
+    'transition-threat-model.submit',
+    async () => {},
+  ],
+  [
+    'a model in review',
+    'workshop#threat-model-in-review',
+    THREAT_ADDRESS,
+    'threat-model-sheet',
+    'transition-threat-model.release',
+    async () => {},
+  ],
+  [
+    'a model after its release',
+    'workshop#threat-model-released',
+    THREAT_ADDRESS,
+    'threat-model-sheet',
+    'release-block',
+    async () => {},
+  ],
+  [
+    'a model with rows and fields the server refused',
+    'workshop#threat-model-invalid',
+    THREAT_ADDRESS,
+    'threat-model-sheet',
+    'threats-errors',
+    async (page) => {
+      await page.getByTestId('start-review').click();
+      await changeAndSave(page);
+    },
+  ],
+  [
+    'a model with a conflict to decide',
+    'workshop#threat-model-saved-by-other',
+    THREAT_ADDRESS,
+    'threat-model-sheet',
+    'conflict-/threats',
+    changeAndSave,
+  ],
+  [
+    'a model while the Git server is down',
+    'workshop#threat-model-git-unavailable',
+    THREAT_ADDRESS,
+    'threat-model-sheet',
+    'failure-notice',
+    changeAndSave,
+  ],
+  [
+    'a model submitted with fields missing',
+    'workshop#threat-model-submit-incomplete',
+    THREAT_ADDRESS,
+    'threat-model-sheet',
+    'missing-fields',
+    async (page) => {
+      await page.getByTestId('transition-threat-model.submit').click();
+    },
+  ],
+  [
+    'the release of a model that is released already',
+    'workshop',
+    RELEASE_ADDRESS,
+    'release-view',
+    'release-act',
+    async () => {},
+  ],
+  [
+    'the seal of a release',
+    'workshop#threat-model-in-review',
+    RELEASE_ADDRESS,
+    'release-view',
+    'release-seal',
+    async (page) => {
+      await page.getByTestId('release-act').click();
+      await expect(page.getByTestId('release-done')).toBeVisible();
+    },
+  ],
+  [
+    'a release that is to be checked again',
+    'workshop#threat-model-release-changed',
+    RELEASE_ADDRESS,
+    'release-view',
+    'notice',
+    async (page) => {
+      await page.getByTestId('release-act').click();
+      await expect(page.getByTestId('release-view').getByTestId('notice').first()).toContainText(
+        'Someone saved after you opened the release.',
+      );
+    },
+  ],
+  [
+    'a release the Git server cannot make',
+    'workshop#threat-model-in-review',
+    RELEASE_ADDRESS,
+    'release-view',
+    'notice',
+    async (page, request) => {
+      await gotoState(request, 'threat-model-git-unavailable');
+      await page.getByTestId('release-act').click();
+      await expect(page.getByRole('alert')).toContainText('The Git server cannot be reached.');
+    },
+  ],
+];
+
+for (const theme of ['light', 'dark']) {
+  for (const [name, scenario, address, view, shown, prepare] of THREAT_STATES) {
+    test(`threat models: ${name} of ${scenario} at ${address} in the ${theme} theme`, async ({
+      page,
+      request,
+    }) => {
+      await useScenario(request, scenario);
+      await login(page, address);
+      await expectScenario(request, scenario);
+      await useTheme(page, theme);
+      await expect(page.getByTestId(view)).toBeVisible();
+      await prepare(page, request);
+      await expect(page.getByTestId(shown).first()).toBeVisible();
+      await expectNoSeriousViolations(page, `threat models: ${name} (${scenario}, ${theme})`);
     });
   }
 }

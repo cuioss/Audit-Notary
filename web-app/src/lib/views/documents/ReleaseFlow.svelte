@@ -579,6 +579,11 @@
       grid-template-columns: 1fr;
       gap: var(--space-1);
     }
+
+    /* The summary of a group of the record is a target: 44 px on a phone (AUN-WEB-2). */
+    .record :global(.disclosure__summary) {
+      min-block-size: 44px;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
