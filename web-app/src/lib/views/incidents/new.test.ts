@@ -192,6 +192,9 @@ describe('the create', () => {
       });
     status.update((held) => (held ? { ...held, stepUp: 'password' } : held));
     await typeTitle('Card data exposed');
+    await fireEvent.input(screen.getByLabelText(/Became aware at/), {
+      target: { value: '2026-11-26T09:30' },
+    });
     await fireEvent.click(screen.getByTestId('create-incident'));
     await fireEvent.input(await screen.findByTestId('create-password'), {
       target: { value: 'secret' },
@@ -200,11 +203,67 @@ describe('the create', () => {
     await vi.waitFor(() =>
       expect(kit.onnavigate).toHaveBeenCalledWith(`/incidents/2026/${NEW_ID}`, { replace: true }),
     );
-    expect(create).toHaveBeenLastCalledWith(
-      'isms-incidents-2026',
-      expect.objectContaining({ kind: 'incident' }),
-      'secret',
+    // Two requests with the same data: the password is the only thing the second adds.
+    expect(create).toHaveBeenCalledTimes(2);
+    const [first, second] = create.mock.calls;
+    expect(first?.[0]).toBe('isms-incidents-2026');
+    expect(first?.[1]).toMatchObject({
+      kind: 'incident',
+      parts: {
+        data: { fields: { '/title': 'Card data exposed' } },
+        triage: { fields: { '/aware-at': '2026-11-26T08:30:00Z' } },
+      },
+    });
+    expect(first?.[2]).toBeUndefined();
+    expect(second?.[0]).toBe(first?.[0]);
+    expect(second?.[1]).toEqual(first?.[1]);
+    expect(second?.[2]).toBe('secret');
+  });
+
+  it('does not move the person to the incident of an earlier year once they opened the form of another', async () => {
+    await useProfile('workshop');
+    status.set(await apiClient.getStatus());
+    session.update((held) =>
+      held
+        ? {
+            ...held,
+            rights: held.rights.map((right) =>
+              right.repository === 'isms-incidents-2025'
+                ? { ...right, actions: ['read', 'edit'] }
+                : right,
+            ),
+          }
+        : held,
     );
+    const onnavigate = vi.fn();
+    const view = render(IncidentsView, {
+      route: 'incidents.new',
+      params: { year: '2026' },
+      onnavigate,
+    });
+    let answer: (value: Awaited<ReturnType<typeof apiClient.createDocument>>) => void = () => {};
+    vi.spyOn(apiClient, 'createDocument').mockReturnValue(
+      new Promise((resolve) => {
+        answer = resolve;
+      }),
+    );
+    await typeTitle('Card data exposed');
+    await fireEvent.click(screen.getByTestId('create-incident'));
+    await view.rerender({ route: 'incidents.new', params: { year: '2025' }, onnavigate });
+    expect(await screen.findByTestId('new-incident-blocked')).toBeInTheDocument();
+    answer({
+      outcome: 'CREATED',
+      id: NEW_ID,
+      repository: 'isms-incidents-2026',
+      address: `/incidents/2026/${NEW_ID}`,
+      state: 'draft',
+      version: 1,
+      at: '2026-11-26T09:41:00Z',
+      parts: {},
+    });
+    // The answer is taken by the handler; give it the time to act on it.
+    await vi.advanceTimersByTimeAsync(100);
+    expect(onnavigate).not.toHaveBeenCalled();
   });
 });
 
@@ -242,6 +301,15 @@ describe('when a new incident cannot be made', () => {
     expect(await screen.findByTestId('new-incident-blocked')).toHaveTextContent(
       'A new incident is made in the current year',
     );
+  });
+
+  it('tells a refusal that is known although the schema could not be read, and does not wait for it', async () => {
+    vi.spyOn(apiClient, 'getCategorySchema').mockRejectedValue(
+      new ApiError('GIT_UNAVAILABLE', 503),
+    );
+    await open('read-only');
+    expect(await screen.findByTestId('new-incident-blocked')).toBeInTheDocument();
+    expect(screen.queryByTestId('new-incident-loading')).toBeNull();
   });
 
   it('is the not-found view for a year that has no repository', async () => {

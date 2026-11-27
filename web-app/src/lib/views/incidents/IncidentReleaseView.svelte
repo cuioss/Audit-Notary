@@ -228,14 +228,21 @@
   let stoppedAt = $derived(done?.at ?? (incident?.state === 'released' ? incident.asOf : null));
   /** The instant the clock is told against: the present while it runs, the release once it has stopped. */
   let clockAt = $derived(stoppedAt !== null ? new Date(stoppedAt) : $now);
-  /** The deadlines that are still a duty, as the clock words them. */
-  let dueRows = $derived(
-    (incident?.deadlines ?? [])
-      .filter(stillDue)
-      .map((deadline) =>
-        clockRow(deadline, clockAt, $t, (instant) => formatDateTime(instant, $currentLocale)),
-      ),
+  /** Every deadline as the clock words it, at the instant the clock is told against, with whether it is still a duty. */
+  let clockRows = $derived(
+    (incident?.deadlines ?? []).map((deadline) => ({
+      row: clockRow(deadline, clockAt, $t, (instant) => formatDateTime(instant, $currentLocale)),
+      due: stillDue(deadline),
+    })),
   );
+  /** The deadlines that are still a duty, as the clock words them. */
+  let dueRows = $derived(clockRows.filter((entry) => entry.due).map((entry) => entry.row));
+  /** How many deadlines are open, met and missed for the clock of the page, so the facts never disagree with the rows. */
+  let deadlineCounts = $derived({
+    open: clockRows.filter((entry) => entry.row.status === 'OPEN').length,
+    met: clockRows.filter((entry) => entry.row.status === 'MET').length,
+    missed: clockRows.filter((entry) => entry.row.status === 'MISSED').length,
+  });
   let stagesWaiting = $derived(openStages(incident?.stages ?? []));
   let counts = $derived(stageCounts(incident?.stages ?? []));
 
@@ -355,11 +362,7 @@
         <dd>
           {incident.deadlines.length === 0
             ? $t('incidents.row.no-deadlines')
-            : $t('incidents.release.fact.deadlines', {
-                open: incident.deadlines.filter((entry) => entry.status === 'OPEN').length,
-                met: incident.deadlines.filter((entry) => entry.status === 'MET').length,
-                missed: incident.deadlines.filter((entry) => entry.status === 'MISSED').length,
-              })}
+            : $t('incidents.release.fact.deadlines', deadlineCounts)}
         </dd>
       </div>
     </dl>

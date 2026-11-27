@@ -5231,7 +5231,7 @@ incident), so that no screen is blocked; the owner may change each one (the numb
   `edit`, and for another year the sheet says that a new incident is made in the current year. The new page lands on the incident
   with `replace`, and the year and the years are read again.
 . *The mock has one release refusal for the stages and none for the deadlines.* The state `incident-release-stages-open` answers the
-  release with `STAGES_OPEN` for the review (reopened meanwhile); no incident of the mock is in review with an open deadline, so the
+  release with `STAGES_OPEN` for the review (reopened meanwhile) and then reads with the review reopened; no incident of the mock is in review with an open deadline, so the
   list of point 46 is driven by the unit tests with an overriding answer, and the e2e tests intercept the read of the incident.
   The diff of the *Credential stuffing* holds the `completion` of the review, so in the base state, where the review is still open,
   the release page of the draft shows a sign-off that the read does not yet have (the page then says that the incident must be

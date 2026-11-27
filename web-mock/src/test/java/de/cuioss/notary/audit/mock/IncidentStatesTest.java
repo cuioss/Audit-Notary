@@ -41,6 +41,7 @@ import static de.cuioss.notary.audit.mock.MockClient.json;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -540,8 +541,11 @@ class IncidentStatesTest {
             assertEquals("incident-release-changed-refused", stateOf(client));
             post(client, "/api/v1/releases/isms-incidents-2026/" + K, 409, "CHANGED_SINCE_REVIEW");
             assertEquals("incident-release-changed-refused", stateOf(client));
-            assertEquals(data("incident-credential-stuffing-diff.json"), get(client, doc("credential-stuffing") + "/diff"));
+            var reviewed = get(client, doc("credential-stuffing") + "/diff");
+            assertEquals(data("incident-credential-stuffing-diff-changed.json"), reviewed);
+            assertNotEquals(data("incident-credential-stuffing-diff.json"), reviewed);
             assertEquals("incident-release-changed-reviewed", stateOf(client));
+            assertEquals(reviewed, get(client, doc("credential-stuffing") + "/diff"));
             post(client, "/api/v1/releases/isms-incidents-2026/" + K, 200, "RELEASED");
             assertEquals("incident-released", stateOf(client));
         }
@@ -562,15 +566,35 @@ class IncidentStatesTest {
             goTo(client, "incident-release-stages-open");
             var inReview = get(client, dom("credential-stuffing"));
             var refused = post(client, "/api/v1/releases/isms-incidents-2026/" + K, 422, "STAGES_OPEN");
+            var missing = refused.path("stages").get(0).path("missing");
             assertAll(
                     () -> assertEquals("in-review", inReview.path("state").asText()),
+                    () -> assertEquals("completed", stageStatus(inReview, "review")),
                     () -> assertEquals(1, refused.path("stages").size()),
                     () -> assertEquals("review", refused.path("stages").get(0).path("stage").asText()),
-                    () -> assertEquals(0, refused.path("stages").get(0).path("missing").size()),
-                    () -> assertEquals("incident-release-stages-open", stateOf(client)));
+                    () -> assertTrue(missing.isArray()),
+                    () -> assertEquals(0, missing.size()),
+                    () -> assertEquals("incident-release-stages-open-refused", stateOf(client)));
+            // After the refusal the page reads the review as reopened, and every further release is refused again.
+            var reopened = get(client, dom("credential-stuffing"));
+            assertAll(
+                    () -> assertEquals("in-review", reopened.path("state").asText()),
+                    () -> assertEquals("open", stageStatus(reopened, "review")),
+                    () -> assertEquals(data("incident-credential-stuffing-diff-reopened.json"),
+                            get(client, doc("credential-stuffing") + "/diff")));
             post(client, "/api/v1/releases/isms-incidents-2026/" + K, 422, "STAGES_OPEN");
-            assertEquals("incident-release-stages-open", stateOf(client));
+            assertEquals("incident-release-stages-open-refused", stateOf(client));
         }
+    }
+
+    /** @return the status of a stage of an incident as it reads */
+    private static String stageStatus(JsonNode incident, String stage) {
+        for (var entry : incident.path("stages")) {
+            if (stage.equals(entry.path("id").asText())) {
+                return entry.path("status").asText();
+            }
+        }
+        throw new AssertionError("no stage " + stage);
     }
 
     @Test

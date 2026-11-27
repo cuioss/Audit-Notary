@@ -278,12 +278,17 @@ test.describe('the release (UC-IR-3, AUN-WEB-6)', () => {
     await useScenario(request, 'workshop#incident-release-step-up');
     await clearActs(request);
     await loginToRelease(page, CREDENTIAL_STUFFING);
+    // A mark on this document: it is gone once the browser has left for the identity provider and come back to a new page.
+    await page.evaluate(() => {
+      window.__beforeStepUp = true;
+    });
     const demanded = page.waitForResponse(
       (response) => response.url().includes('/api/v1/releases/') && response.status() === 403,
     );
     await page.getByTestId('release-act').click();
     await demanded;
-    // The step-up address returns to the release page; the act is chosen again.
+    // The step-up address returns to the release page, which is read again; only then is the act chosen again.
+    await page.waitForFunction(() => window.__beforeStepUp === undefined);
     await expect(page).toHaveURL(releaseAddress(CREDENTIAL_STUFFING));
     await expect(page.getByTestId('release-record')).toBeVisible();
     await expect(page.getByTestId('release-act')).not.toHaveAttribute('aria-busy', 'true');
@@ -336,6 +341,9 @@ test.describe('the release (UC-IR-3, AUN-WEB-6)', () => {
     await useScenario(request, 'workshop#incident-release-changed');
     await clearActs(request);
     await loginToRelease(page, CREDENTIAL_STUFFING);
+    const record = page.getByTestId('release-record');
+    await expect(record).toContainText('SEC-2188');
+    await expect(record).not.toContainText('SEC-2201');
     let diffReads = 0;
     page.on('request', (sent) => {
       if (
@@ -354,6 +362,8 @@ test.describe('the release (UC-IR-3, AUN-WEB-6)', () => {
       'Someone saved after you opened the release. Check the changes again.',
     );
     await expect.poll(() => diffReads).toBeGreaterThan(0);
+    // What was saved meanwhile (a second ticket of the triage) is on the page before the release is chosen again.
+    await expect(record).toContainText('SEC-2201');
     await expect(page.getByTestId('release-done')).toHaveCount(0);
     await expectNoSeriousViolations(page, 'incident release: changed since the review');
     // The record that was read again is the one the release goes through with.
@@ -411,12 +421,16 @@ test.describe('the release (UC-IR-3, AUN-WEB-6)', () => {
       incidentAddress(CREDENTIAL_STUFFING, { stage: 'review' }),
     );
     await expect.poll(() => reads).toBeGreaterThan(0);
+    // The incident is read again, and it reads as the refusal says: the review is not completed.
+    await expect(page.getByText('One stage is not completed: Review')).toBeVisible();
     await expect(page.getByTestId('release-done')).toHaveCount(0);
     await expectNoSeriousViolations(page, 'incident release: stages open');
-    // The link leads to the stage to complete.
+    // The link leads to the stage to complete, which is open to be completed.
     await link.click();
     await expect(page).toHaveURL(incidentAddress(CREDENTIAL_STUFFING, { stage: 'review' }));
     await expect(page.getByTestId('stage-panel')).toHaveAttribute('data-stage', 'review');
+    await expect(page.getByTestId('stage-complete')).toBeVisible();
+    await expect(page.getByTestId('stage-reopen')).toHaveCount(0);
   });
 
   test('the refusal of a stage that is open is German, with the name of the stage in the link', async ({
@@ -661,8 +675,17 @@ test.describe('a new incident (UC-IR-1, AUN-WEB-4)', () => {
     await expect(sheet.getByLabel('Became aware at')).toHaveValue('2026-11-26T09:30');
     await expect(page).toHaveURL(newIncidentAddress(2026));
     await expectNoSeriousViolations(page, 'incident new: the title is refused');
-    // Typing again and trying again sends the request again: the form is not stuck.
+    // Trying again sends the request again, and the refusal that answers it is the one that is shown: the form is not stuck.
+    const again = page.waitForResponse(
+      (response) =>
+        response.url().endsWith(createPath(2026)) &&
+        response.request().method() === 'POST' &&
+        response.status() === 422,
+    );
     await page.getByTestId('create-incident').click();
+    await again;
+    expect(sentTo(await acts(request), createPath(2026), 'POST')).toHaveLength(2);
+    await expect(field(sheet, '/title')).toContainText('Fill in this field.');
     await expect(page.getByTestId('save-state')).toHaveAttribute('data-state', 'failed');
   });
 

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect } from '@playwright/test';
 import { patchRead } from './samm.js';
 
@@ -422,48 +423,20 @@ export async function loginToNew(page, year = 2026) {
 }
 
 /**
- * The deadlines of the card data as the mock reads them (`incident-card-data.json`): one missed and never sent, one met, one
- * missed and sent late, one open. The mock has no incident in review that has a deadline still open, so the tests of the
- * release page that need one give the *Credential stuffing* these (see `withOpenDeadlines`).
+ * The deadlines of the card data, read from the mock's own fixture (`incident-card-data.json`) when the suite loads, so a
+ * change of the fixture is a change of the tests: one missed and never sent, one met, one missed and sent late, one open.
+ * The mock has no incident in review that has a deadline still open, so the tests of the release page that need one give the
+ * *Credential stuffing* these (see `withOpenDeadlines`).
  */
-export const OPEN_DEADLINES = [
-  {
-    rule: 'gdpr-art33',
-    element: null,
-    startedAt: '2026-11-19T07:40:00Z',
-    due: '2026-11-22T07:40:00Z',
-    status: 'MISSED',
-    sentAt: null,
-    metBy: '/notifications/supervisory-authority',
-  },
-  {
-    rule: 'nis2-early-warning',
-    element: null,
-    startedAt: '2026-11-19T07:40:00Z',
-    due: '2026-11-20T07:40:00Z',
-    status: 'MET',
-    sentAt: '2026-11-20T06:55:00Z',
-    metBy: '/notifications/nis2-early-warning',
-  },
-  {
-    rule: 'nis2-notification',
-    element: null,
-    startedAt: '2026-11-19T07:40:00Z',
-    due: '2026-11-22T07:40:00Z',
-    status: 'MISSED',
-    sentAt: '2026-11-22T10:20:00Z',
-    metBy: '/notifications/nis2-notification',
-  },
-  {
-    rule: 'nis2-final-report',
-    element: null,
-    startedAt: '2026-11-22T10:20:00Z',
-    due: '2026-12-22T10:20:00Z',
-    status: 'OPEN',
-    sentAt: null,
-    metBy: '/notifications/nis2-final-report',
-  },
-];
+export const OPEN_DEADLINES = JSON.parse(
+  readFileSync(
+    new URL(
+      '../../../web-mock/src/main/resources/scenarios/data/incident-card-data.json',
+      import.meta.url,
+    ),
+    'utf8',
+  ),
+).deadlines;
 
 /**
  * Gives the incident the deadlines of `OPEN_DEADLINES` in the read of the page: a patch of the answer of the mock for the

@@ -372,16 +372,19 @@
           <YearColumn {list} year={yearId ?? ''} selected={incidentId ?? null} {canCreate} />
         {/if}
       {:else if level.key === 'new'}
-        <NewIncidentSheet
-          year={yearId ?? ''}
-          access={newAccess}
-          {schema}
-          {onnavigate}
-          oncreated={() => {
-            reloadYears();
-            void reloadYear();
-          }}
-        />
+        <!-- Another year is another form: a create still running for the earlier year navigates nowhere (the sheet is gone). -->
+        {#key yearId}
+          <NewIncidentSheet
+            year={yearId ?? ''}
+            access={newAccess}
+            {schema}
+            {onnavigate}
+            oncreated={() => {
+              reloadYears();
+              void reloadYear();
+            }}
+          />
+        {/key}
       {:else if incidentForbidden}
         {@render blocked()}
       {:else if incident && schema}

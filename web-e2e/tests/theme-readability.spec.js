@@ -2130,6 +2130,7 @@ const INCIDENT_STATES = [
       await page.getByTestId('release-act').click();
       await expect(page.getByTestId('release-refusal-review')).toBeVisible();
     },
+    'workshop#incident-release-stages-open-refused',
   ],
   [
     'a release of an incident that is to be checked again',

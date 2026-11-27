@@ -210,6 +210,15 @@ describe('the deadlines that are still open', () => {
     );
   });
 
+  it('counts the deadlines as the clock words them: an open one the page has overtaken is missed', async () => {
+    const overtaken = { ...DUE[0], due: '2026-11-26T09:00:00Z' };
+    await open('workshop#incident-submitted', 'en', PARAMS, {
+      [READ]: inReviewWith([overtaken, DUE[2]]),
+    });
+    expect(screen.getByTestId('release-deadlines')).toHaveTextContent('Overdue by 1 hour');
+    expect(screen.getByTestId('release-facts')).toHaveTextContent('0 open, 0 met, 2 missed');
+  });
+
   it('does not refuse the release for an open deadline: the act stays available', async () => {
     await open('workshop#incident-submitted', 'en', PARAMS, { [READ]: inReviewWith(DUE) });
     expect(screen.getByTestId('release-act')).not.toHaveAttribute('aria-disabled', 'true');
@@ -375,7 +384,9 @@ describe('the release', () => {
       'href',
       `/incidents/2026/${STUFFING}?stage=review`,
     );
-    expect(kit.scenario.state()).toBe('incident-release-stages-open');
+    expect(kit.scenario.state()).toBe('incident-release-stages-open-refused');
+    // The page reads the incident again, and the review reads as the refusal says: open, not completed.
+    expect(await screen.findByText('One stage is not completed: Review')).toBeInTheDocument();
     expect(screen.queryByTestId('release-done')).toBeNull();
   });
 

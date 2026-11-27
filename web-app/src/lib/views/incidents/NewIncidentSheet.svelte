@@ -126,9 +126,8 @@
   }
 </script>
 
-{#if access === 'loading' || schema === null}
-  <Sheet testId="new-incident-loading"><p class="muted">{$t('common.loading')}</p></Sheet>
-{:else if access !== 'allowed'}
+{#if access === 'right' || access === 'year'}
+  <!-- A refusal that is already known is told even when the schema could not be read: only an allowed person waits for it. -->
   <Sheet testId="new-incident-blocked">
     <EmptyState
       icon="state.lock"
@@ -141,6 +140,8 @@
       {/snippet}
     </EmptyState>
   </Sheet>
+{:else if access === 'loading' || schema === null}
+  <Sheet testId="new-incident-loading"><p class="muted">{$t('common.loading')}</p></Sheet>
 {:else}
   <LeaveGuard dirty={() => dirty && !created} />
   <StepUpDialog
