@@ -1,0 +1,47 @@
+{
+  "repository": "isms-register",
+  "id": "R-042",
+  "from": null,
+  "to": "working",
+  "sections": [
+    {
+      "part": "data",
+      "changes": [
+        {
+          "pointer": "/title",
+          "before": null,
+          "after": "Unpatched build agents"
+        },
+        {
+          "pointer": "/description",
+          "before": null,
+          "after": "The build agents of the second pipeline are not covered by the patch cycle of the first one. Several of them run an operating system with known vulnerabilities."
+        },
+        {
+          "pointer": "/rating",
+          "before": null,
+          "after": "high"
+        },
+        {
+          "pointer": "/owner",
+          "before": null,
+          "after": "team:security-office"
+        },
+        {
+          "pointer": "/issues",
+          "before": null,
+          "after": [
+            "SEC-401"
+          ]
+        },
+        {
+          "pointer": "/related",
+          "before": null,
+          "after": [
+            "system:core-platform"
+          ]
+        }
+      ]
+    }
+  ]
+}

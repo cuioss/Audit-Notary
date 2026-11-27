@@ -211,7 +211,10 @@ Flow::
 Outcome:: the gap is known, and where chosen it is a risk of the register that refers to the assessment.
 Requirements:: xref:../specification/category-samm.adoc#AUN-SAMM-6[AUN-SAMM-6] (gaps, create risk),
 xref:../specification/data-protection.adoc#AUN-DP-2[AUN-DP-2] (the reference).
-Design:: xref:../concepts/category-isms.adoc#_the_bridge_to_samm[ISMS, The Bridge to SAMM].
+Design:: xref:../concepts/category-isms.adoc#_the_bridge_to_samm[ISMS, The Bridge to SAMM]. Decided provisionally for the web
+app: the gaps of a scope are read with `GET /api/v1/samm/{scope}/gaps` and shown in the scope sheet; *Create risk* opens
+`/isms/risks/new?origin=` prefilled by the server, and the risk is saved by the person
+(xref:../specification/rest-api.adoc#_decided_isms[REST API Register, Open Questions]).
 
 [#UC-SAMM-7]
 == UC-SAMM-7: Pin a SAMM Model Version

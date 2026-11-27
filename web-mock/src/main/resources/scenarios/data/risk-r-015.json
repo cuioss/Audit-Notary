@@ -1,0 +1,85 @@
+{
+  "repository": "isms-register",
+  "id": "R-015",
+  "category": "isms",
+  "kind": "risk",
+  "title": "Security Testing of the payments scope is below its target",
+  "state": "released",
+  "version": 1,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "6f2ba22",
+      "savedAt": "2026-07-01T16:15:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Security Testing of the payments scope is below its target",
+        "description": "The released assessment Payments 2026 Q2 scores 1.25 for Security Testing; the target of the scope is 2. The checkout flow is tested by hand before a release and by no automated test.",
+        "rating": "medium",
+        "treatment": "mitigate",
+        "treatment-notes": "Add an automated test of the checkout flow to the pipeline and plan a penetration test every year.",
+        "owner": "team:payments",
+        "review-due": "2027-01-02",
+        "issues": [
+          "PAY-1477"
+        ],
+        "origin": "samm-assessments:assessment/payments-2026-q2#st",
+        "related": [
+          "service:payment-api"
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-07-02T13:30:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "risks/R-015/v1"
+    },
+    {
+      "at": "2026-07-02T13:05:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-07-01T16:15:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2026-06-30T10:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "risks/R-015/v1",
+    "at": "2026-07-02T13:30:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": []
+}

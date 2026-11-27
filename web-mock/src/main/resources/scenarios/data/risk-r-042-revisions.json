@@ -1,0 +1,31 @@
+{
+  "repository": "isms-register",
+  "id": "R-042",
+  "revisions": [
+    {
+      "ref": "2a58c13",
+      "commit": "2a58c13",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-24T09:15:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      }
+    },
+    {
+      "ref": "9b22245",
+      "commit": "9b22245",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-24T09:00:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      }
+    }
+  ],
+  "truncated": false
+}

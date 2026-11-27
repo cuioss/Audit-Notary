@@ -1,0 +1,67 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB6H8K0N2Q4S6V8X0Z2C4E7",
+  "from": null,
+  "to": "working",
+  "sections": [
+    {
+      "part": "data",
+      "changes": [
+        {
+          "pointer": "/title",
+          "before": null,
+          "after": "Internal audit 2026"
+        },
+        {
+          "pointer": "/year",
+          "before": null,
+          "after": 2026
+        },
+        {
+          "pointer": "/period",
+          "before": null,
+          "after": {
+            "from": "2026-09-01",
+            "to": "2026-11-15"
+          }
+        },
+        {
+          "pointer": "/auditors",
+          "before": null,
+          "after": [
+            "p-9e33a1",
+            "p-61c0d4"
+          ]
+        },
+        {
+          "pointer": "/audited",
+          "before": null,
+          "after": "The development process, the key management and the response to incidents."
+        },
+        {
+          "pointer": "/findings",
+          "before": null,
+          "after": [
+            {
+              "severity": "minor",
+              "text": "The signing keys are held by one administrator.",
+              "issues": []
+            },
+            {
+              "severity": "minor",
+              "text": "The patch cycle does not cover the second pipeline.",
+              "issues": [
+                "SEC-401"
+              ]
+            },
+            {
+              "severity": "observation",
+              "text": "The incident reports are complete, but two were written late.",
+              "issues": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

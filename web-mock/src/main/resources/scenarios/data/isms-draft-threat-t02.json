@@ -1,0 +1,13 @@
+{
+  "origin": {
+    "ref": "threat-models:threat-model/payment-api-checkout-flow#T-02",
+    "kind": "threat",
+    "title": "Payment API, checkout flow: T-02",
+    "address": "/threat-models/payment-api/checkout-flow"
+  },
+  "fields": {
+    "/title": "Account takeover by credential stuffing at checkout",
+    "/description": "Credentials leaked elsewhere are tried at the checkout login until one works.",
+    "/owner": "team:payments"
+  }
+}

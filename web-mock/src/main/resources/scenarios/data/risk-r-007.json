@@ -1,0 +1,82 @@
+{
+  "repository": "isms-register",
+  "id": "R-007",
+  "category": "isms",
+  "kind": "risk",
+  "title": "Signing keys held by a single administrator",
+  "state": "released",
+  "version": 1,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "76f7da2",
+      "savedAt": "2026-02-17T14:20:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Signing keys held by a single administrator",
+        "description": "The keys that sign our release artefacts are held by one administrator. If that person is not available, or the key is lost, no release can be signed.",
+        "rating": "low",
+        "treatment": "accept",
+        "treatment-notes": "Accepted until the key service of the core platform can hold the keys with two custodians.",
+        "owner": "team:security-office",
+        "owner-role": "role:ciso",
+        "review-due": "2026-11-18",
+        "related": [
+          "system:core-platform"
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-02-18T11:20:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "risks/R-007/v1"
+    },
+    {
+      "at": "2026-02-18T10:55:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-02-17T14:20:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2026-02-10T10:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "risks/R-007/v1",
+    "at": "2026-02-18T11:20:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": []
+}

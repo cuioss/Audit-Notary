@@ -489,6 +489,408 @@
       "body": {
         "outcome": "NOT_FOUND"
       }
+    },
+    "GET /api/v1/isms/register": {
+      "status": 200,
+      "body_file": "isms-register.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register": {
+      "status": 200,
+      "body_file": "isms-register-documents.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/isms/schema": {
+      "status": 200,
+      "body_file": "categories-isms-schema.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core": {
+      "status": 200,
+      "body_file": "isms-documents.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-004": {
+      "status": 200,
+      "body_file": "risk-r-004.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-004/revisions": {
+      "status": 200,
+      "body_file": "risk-r-004-revisions.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-004?at=v1": {
+      "status": 200,
+      "body_file": "risk-r-004-at-v1.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-004?at=v2": {
+      "status": 200,
+      "body_file": "risk-r-004-at-v2.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-004?at=v3": {
+      "status": 200,
+      "body_file": "risk-r-004-at-v3.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-004?at=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-004?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-007": {
+      "status": 200,
+      "body_file": "risk-r-007.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-007/revisions": {
+      "status": 200,
+      "body_file": "risk-r-007-revisions.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-007?at=v1": {
+      "status": 200,
+      "body_file": "risk-r-007-at-v1.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-009": {
+      "status": 200,
+      "body_file": "risk-r-009.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-009/revisions": {
+      "status": 200,
+      "body_file": "risk-r-009-revisions.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-009?at=v1": {
+      "status": 200,
+      "body_file": "risk-r-009-at-v1.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-009?at=v2": {
+      "status": 200,
+      "body_file": "risk-r-009-at-v2.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-012": {
+      "status": 200,
+      "body_file": "risk-r-012.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-012/revisions": {
+      "status": 200,
+      "body_file": "risk-r-012-revisions.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-012?at=v1": {
+      "status": 200,
+      "body_file": "risk-r-012-at-v1.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-012?at=v2": {
+      "status": 200,
+      "body_file": "risk-r-012-at-v2.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-015": {
+      "status": 200,
+      "body_file": "risk-r-015.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-015/revisions": {
+      "status": 200,
+      "body_file": "risk-r-015-revisions.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-015?at=v1": {
+      "status": 200,
+      "body_file": "risk-r-015-at-v1.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-018": {
+      "status": 200,
+      "body_file": "risk-r-018.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-018/revisions": {
+      "status": 200,
+      "body_file": "risk-r-018-revisions.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-018?at=v1": {
+      "status": 200,
+      "body_file": "risk-r-018-at-v1.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-021": {
+      "status": 200,
+      "body_file": "risk-r-021.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-021/revisions": {
+      "status": 200,
+      "body_file": "risk-r-021-revisions.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-021?at=v1": {
+      "status": 200,
+      "body_file": "risk-r-021-at-v1.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-042": {
+      "status": 200,
+      "body_file": "risk-r-042.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register/R-042/revisions": {
+      "status": 200,
+      "body_file": "risk-r-042-revisions.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2": {
+      "status": 200,
+      "body_file": "isms-doc-information-security-policy.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/revisions": {
+      "status": 200,
+      "body_file": "isms-doc-information-security-policy-revisions.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB2D4F6H8K0N2Q4S6V8X0Z3": {
+      "status": 200,
+      "body_file": "isms-doc-access-control-policy.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB2D4F6H8K0N2Q4S6V8X0Z3/revisions": {
+      "status": 200,
+      "body_file": "isms-doc-access-control-policy-revisions.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB3E5G7J9M1P3R5T7W9Y1B4": {
+      "status": 200,
+      "body_file": "isms-doc-secure-development-policy.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB3E5G7J9M1P3R5T7W9Y1B4/revisions": {
+      "status": 200,
+      "body_file": "isms-doc-secure-development-policy-revisions.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB4F6H8K0N2Q4S6V8X0Z2C5": {
+      "status": 200,
+      "body_file": "isms-doc-isms-scope.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB4F6H8K0N2Q4S6V8X0Z2C5/revisions": {
+      "status": 200,
+      "body_file": "isms-doc-isms-scope-revisions.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB5G7J9M1P3R5T7W9Y1B3D6": {
+      "status": 200,
+      "body_file": "isms-doc-internal-audit-2025.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB5G7J9M1P3R5T7W9Y1B3D6/revisions": {
+      "status": 200,
+      "body_file": "isms-doc-internal-audit-2025-revisions.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB6H8K0N2Q4S6V8X0Z2C4E7": {
+      "status": 200,
+      "body_file": "isms-doc-internal-audit-2026.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB6H8K0N2Q4S6V8X0Z2C4E7/revisions": {
+      "status": 200,
+      "body_file": "isms-doc-internal-audit-2026-revisions.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB7J9M1P3R5T7W9Y1B3D5F8": {
+      "status": 200,
+      "body_file": "isms-doc-management-review-2026-h1.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB7J9M1P3R5T7W9Y1B3D5F8/revisions": {
+      "status": 200,
+      "body_file": "isms-doc-management-review-2026-h1-revisions.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB8K0N2Q4S6V8X0Z2C4E6G9": {
+      "status": 200,
+      "body_file": "isms-doc-management-review-2025.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB8K0N2Q4S6V8X0Z2C4E6G9/revisions": {
+      "status": 200,
+      "body_file": "isms-doc-management-review-2025-revisions.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
     }
   },
   "states": {

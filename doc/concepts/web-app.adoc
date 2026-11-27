@@ -313,6 +313,18 @@ xref:../specification/rest-api.adoc#_decided_incidents[REST API Register, Open Q
 . A new incident is a sheet at `/incidents/<year>/new`. The release page shows the diff by stage, then section, and the
   generated report beside it.
 
+Decided provisionally with the ISMS (UC-ISMS-1, UC-ISMS-2, UC-SAMM-6, UC-TM-3), recorded with the bodies in
+xref:../specification/rest-api.adoc#_decided_isms[REST API Register, Open Questions]; the owner may change each one:
+
+. The lens *ISMS* has two areas in its first column: the document types with their documents, and the risk register; the
+  sheet of a document or a risk stands beside them. Two releases of a document are compared at
+  `/isms/documents/<id>/compare`; the register as of a date stays in the lens *Reports*.
+. A new risk is the page `/isms/risks/new`, a sheet of the lens: nothing is stored and no number is shown until the first save
+  assigns it, and then the page moves to the entry.
+. The scope sheet of the lens *SAMM* shows the gaps of the latest released assessment and offers *Create risk* for each; a
+  threat of the lens *Threat models* offers *Transfer to risk register*. Both open the new risk prefilled, with the origin as a
+  link, and the person completes and saves it.
+
 == Related
 
 * xref:authentication-and-identity.adoc[Authentication and Identity]

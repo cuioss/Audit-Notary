@@ -5,7 +5,9 @@
     "year": "[0-9]{4}",
     "document": "[0-9A-Za-z][0-9A-Za-z._-]{0,127}",
     "model": "(?!new(?![a-z0-9._-]))[a-z0-9][a-z0-9._-]{0,127}",
-    "incident": "(?!new(?![0-9A-Za-z._-]))[0-9A-Za-z][0-9A-Za-z._-]{0,127}"
+    "incident": "(?!new(?![0-9A-Za-z._-]))[0-9A-Za-z][0-9A-Za-z._-]{0,127}",
+    "entry": "(?!new(?![a-z0-9._-]))[a-z0-9][a-z0-9._-]{0,127}",
+    "ismsdocument": "(?!new(?![0-9A-Za-z._-]))[0-9A-Za-z][0-9A-Za-z._-]{0,127}"
   },
   "queries": {
     "at": "(v[0-9]{1,4}|[0-9a-f]{7,40})",
@@ -15,7 +17,8 @@
     "to": "[a-z0-9][a-z0-9._-]{0,127}",
     "recipe": "[a-z0-9][a-z0-9-]{0,63}",
     "stage": "[a-z0-9][a-z0-9-]{0,63}",
-    "as-of": "[A-Za-z0-9][A-Za-z0-9._/-]{0,127}"
+    "as-of": "[A-Za-z0-9][A-Za-z0-9._/-]{0,127}",
+    "origin": "(samm-assessments:assessment|threat-models:threat-model)/[A-Za-z0-9][A-Za-z0-9._-]{0,127}#[A-Za-z0-9][A-Za-z0-9._-]{0,63}"
   },
   "addresses": [
     { "route": "due", "pattern": "/" },
@@ -51,11 +54,18 @@
     { "route": "incidents.release", "pattern": "/incidents/{year}/{incident}/release" },
     { "route": "isms", "pattern": "/isms" },
     { "route": "isms.risks", "pattern": "/isms/risks" },
+    { "route": "isms.risks.new", "pattern": "/isms/risks/new", "query": ["origin"] },
     { "route": "isms.risk", "pattern": "/isms/risks/{entry}", "query": ["at"] },
     { "route": "isms.risk.release", "pattern": "/isms/risks/{entry}/release" },
-    { "route": "isms.documents", "pattern": "/isms/documents" },
-    { "route": "isms.document", "pattern": "/isms/documents/{id}" },
-    { "route": "isms.document.release", "pattern": "/isms/documents/{id}/release" },
+    { "route": "isms.documents", "pattern": "/isms/documents", "query": ["kind"] },
+    { "route": "isms.documents.new", "pattern": "/isms/documents/new", "query": ["kind"] },
+    { "route": "isms.document", "pattern": "/isms/documents/{ismsdocument}", "query": ["at"] },
+    {
+      "route": "isms.document.compare",
+      "pattern": "/isms/documents/{ismsdocument}/compare",
+      "query": ["from", "to"]
+    },
+    { "route": "isms.document.release", "pattern": "/isms/documents/{ismsdocument}/release" },
     { "route": "categories", "pattern": "/categories" },
     { "route": "categories.category", "pattern": "/categories/{category}" },
     { "route": "categories.new", "pattern": "/categories/{category}/new", "query": ["kind"] },

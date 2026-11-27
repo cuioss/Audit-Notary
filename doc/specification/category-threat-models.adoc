@@ -108,3 +108,12 @@ xref:rest-api.adoc#_decided_threat_models[REST API Register, Open Questions]; th
   table is served as `reviewIntervals`.
 . *Draft of a new model* (UC-TM-1): the recipe wizard keeps its steps in a draft of a model that does not exist yet, one per
   person, service and recipe, until the last step creates it.
+
+Decided provisionally with the transfer (UC-TM-3), recorded in
+xref:rest-api.adoc#_decided_isms[REST API Register, Open Questions]; the owner may change each one:
+
+. *Transfer* (AUN-TM-4): `GET /api/v1/isms/risks/draft?origin=threat-models:threat-model/<id>%23<threat>` prepares a risk (the `#` is
+  percent-encoded, otherwise it starts the URL fragment and the server never receives the threat; nothing is stored); the first save of the risk, `POST /api/v1/documents/isms-register` with `origin`, creates it with the reference
+  and sets `transferred` on the threat in a second commit. An `accepted` threat is transferable, with or without a
+  countermeasure; an `open` threat with a countermeasure, a mitigated threat and a threat that is transferred already are
+  refused (`ORIGIN_NOT_TRANSFERABLE`, `ORIGIN_HAS_RISK`).

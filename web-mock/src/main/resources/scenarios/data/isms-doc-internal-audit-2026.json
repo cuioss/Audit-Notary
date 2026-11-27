@@ -1,0 +1,84 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB6H8K0N2Q4S6V8X0Z2C4E7",
+  "category": "isms",
+  "kind": "audit-report",
+  "title": "Internal audit 2026",
+  "state": "draft",
+  "version": 1,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "e304e94",
+      "savedAt": "2026-11-20T15:10:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Internal audit 2026",
+        "year": 2026,
+        "period": {
+          "from": "2026-09-01",
+          "to": "2026-11-15"
+        },
+        "auditors": [
+          "p-9e33a1",
+          "p-61c0d4"
+        ],
+        "audited": "The development process, the key management and the response to incidents.",
+        "findings": [
+          {
+            "severity": "minor",
+            "text": "The signing keys are held by one administrator.",
+            "issues": []
+          },
+          {
+            "severity": "minor",
+            "text": "The patch cycle does not cover the second pipeline.",
+            "issues": [
+              "SEC-401"
+            ]
+          },
+          {
+            "severity": "observation",
+            "text": "The incident reports are complete, but two were written late.",
+            "issues": []
+          }
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-20T15:10:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 3
+    },
+    {
+      "at": "2026-11-16T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "isms.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ]
+}

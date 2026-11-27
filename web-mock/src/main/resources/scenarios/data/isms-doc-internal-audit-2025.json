@@ -1,0 +1,114 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB5G7J9M1P3R5T7W9Y1B3D6",
+  "category": "isms",
+  "kind": "audit-report",
+  "title": "Internal audit 2025",
+  "state": "released",
+  "version": 1,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "32cc46f",
+      "savedAt": "2025-12-10T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Internal audit 2025",
+        "year": 2025,
+        "period": {
+          "from": "2025-09-01",
+          "to": "2025-11-30"
+        },
+        "auditors": [
+          "p-9e33a1",
+          "p-61c0d4"
+        ],
+        "audited": "The access control, the handling of incidents and the management of suppliers.",
+        "findings": [
+          {
+            "severity": "major",
+            "text": "The accounts of suppliers are not reviewed when a project ends.",
+            "issues": [
+              "SEC-290"
+            ]
+          },
+          {
+            "severity": "minor",
+            "text": "Two of five sampled access reviews were not documented.",
+            "issues": [
+              "SEC-281"
+            ]
+          },
+          {
+            "severity": "minor",
+            "text": "The contact list for incidents was out of date.",
+            "issues": []
+          },
+          {
+            "severity": "observation",
+            "text": "The restore of a backup was never tested.",
+            "issues": [
+              "OPS-211"
+            ]
+          }
+        ],
+        "conclusion": "The ISMS works as designed. One major finding, the review of supplier accounts, is to be closed before the next audit.",
+        "related": [
+          "isms-register:risk/R-009"
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2025-12-16T13:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "audits/01JZB5G7J9M1P3R5T7W9Y1B3D6/v1"
+    },
+    {
+      "at": "2025-12-16T12:20:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-12-10T10:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 3
+    },
+    {
+      "at": "2025-11-24T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "audits/01JZB5G7J9M1P3R5T7W9Y1B3D6/v1",
+    "at": "2025-12-16T13:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": []
+}

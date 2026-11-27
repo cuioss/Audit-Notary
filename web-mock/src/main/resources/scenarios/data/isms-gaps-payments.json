@@ -1,0 +1,172 @@
+{
+  "scope": "payments",
+  "today": "2026-11-26",
+  "assessment": {
+    "id": "2026-q2",
+    "document": "payments-2026-q2",
+    "title": "Payments 2026 Q2",
+    "date": "2026-06-16",
+    "modelVersion": "v2.2.0",
+    "release": {
+      "tag": "assessments/payments-2026-q2/v1",
+      "at": "2026-06-18T11:20:00Z"
+    }
+  },
+  "gaps": [
+    {
+      "practice": "sm",
+      "function": "governance",
+      "score": 1.25,
+      "target": 2,
+      "gap": 0.75,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q2#sm",
+      "risk": null
+    },
+    {
+      "practice": "pc",
+      "function": "governance",
+      "score": 1.125,
+      "target": 2,
+      "gap": 0.875,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q2#pc",
+      "risk": null
+    },
+    {
+      "practice": "eg",
+      "function": "governance",
+      "score": 1.875,
+      "target": 2,
+      "gap": 0.125,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q2#eg",
+      "risk": null
+    },
+    {
+      "practice": "ta",
+      "function": "design",
+      "score": 1.25,
+      "target": 2.5,
+      "gap": 1.25,
+      "due": "2027-03-31",
+      "reference": "samm-assessments:assessment/payments-2026-q2#ta",
+      "risk": null
+    },
+    {
+      "practice": "sr",
+      "function": "design",
+      "score": 1.875,
+      "target": 2,
+      "gap": 0.125,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q2#sr",
+      "risk": null
+    },
+    {
+      "practice": "sa",
+      "function": "design",
+      "score": 1.875,
+      "target": 2,
+      "gap": 0.125,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q2#sa",
+      "risk": null
+    },
+    {
+      "practice": "sb",
+      "function": "implementation",
+      "score": 2.125,
+      "target": 2.5,
+      "gap": 0.375,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q2#sb",
+      "risk": null
+    },
+    {
+      "practice": "sd",
+      "function": "implementation",
+      "score": 1.5,
+      "target": 2.5,
+      "gap": 1.0,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q2#sd",
+      "risk": null
+    },
+    {
+      "practice": "dm",
+      "function": "implementation",
+      "score": 1.0,
+      "target": 2,
+      "gap": 1.0,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q2#dm",
+      "risk": null
+    },
+    {
+      "practice": "aa",
+      "function": "verification",
+      "score": 0.75,
+      "target": 1.5,
+      "gap": 0.75,
+      "due": "2027-06-30",
+      "reference": "samm-assessments:assessment/payments-2026-q2#aa",
+      "risk": null
+    },
+    {
+      "practice": "rt",
+      "function": "verification",
+      "score": 0.875,
+      "target": 1.5,
+      "gap": 0.625,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q2#rt",
+      "risk": null
+    },
+    {
+      "practice": "st",
+      "function": "verification",
+      "score": 1.25,
+      "target": 2,
+      "gap": 0.75,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q2#st",
+      "risk": {
+        "id": "R-015",
+        "entry": "r-015",
+        "title": "Security Testing of the payments scope is below its target",
+        "address": "/isms/risks/r-015"
+      }
+    },
+    {
+      "practice": "im",
+      "function": "operations",
+      "score": 1.0,
+      "target": 2,
+      "gap": 1.0,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q2#im",
+      "risk": null
+    },
+    {
+      "practice": "em",
+      "function": "operations",
+      "score": 1.75,
+      "target": 2,
+      "gap": 0.25,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q2#em",
+      "risk": null
+    },
+    {
+      "practice": "om",
+      "function": "operations",
+      "score": 0.875,
+      "target": 1.5,
+      "gap": 0.625,
+      "due": null,
+      "reference": "samm-assessments:assessment/payments-2026-q2#om",
+      "risk": null
+    }
+  ]
+}

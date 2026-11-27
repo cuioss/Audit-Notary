@@ -36,7 +36,10 @@ Flow::
 Outcome:: the current version of each ISMS document is released, and every earlier version stays comparable.
 Requirements:: xref:../specification/category-isms.adoc#AUN-ISMS-1[AUN-ISMS-1] (the documents, release with
 step-up).
-Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *ISMS*).
+Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *ISMS*). Decided
+provisionally for the web app: the four types are documents of `isms-core`, each released more than once, listed by type at
+`/isms/documents`, created at `/isms/documents/new?kind=`, and two releases are compared at `/isms/documents/<id>/compare`
+(xref:../specification/rest-api.adoc#_decided_isms[REST API Register, Open Questions]).
 
 [#UC-ISMS-2]
 == UC-ISMS-2: Maintain the Risk Register
@@ -75,8 +78,10 @@ the register is built (xref:../concepts/category-isms.adoc[ISMS]); further regis
 Requirements:: xref:../specification/category-isms.adoc#AUN-ISMS-2[AUN-ISMS-2] (register, running numbers),
 xref:../specification/category-isms.adoc#AUN-ISMS-4[AUN-ISMS-4] (operational data by reference); library:
 https://github.com/cuioss/git-document-repository/blob/main/doc/specification/git-forms.adoc#GDR-FORMS-9[GDR-FORMS-9].
-Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *ISMS*).
-
+Design:: xref:../concepts/web-app.adoc#_structure_of_the_app[Web App, Structure of the App] (lens *ISMS*). Decided
+provisionally for the web app: the register is at `/isms/risks`, a new risk at `/isms/risks/new`, which stores nothing and shows no
+number until the first save assigns it, the owner is a team, and the origin of a risk from a gap or a threat is a read-only
+reference (xref:../specification/rest-api.adoc#_decided_isms[REST API Register, Open Questions]).
 [#UC-ISMS-3]
 == UC-ISMS-3: See the Risk Register as of a Reporting Date
 

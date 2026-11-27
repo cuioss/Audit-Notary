@@ -42,7 +42,7 @@ describe('parseAddress', () => {
     ],
     ['/incidents/2026/inc-0007', 'incidents.incident', { year: '2026', incident: 'inc-0007' }],
     ['/isms/risks/r-012', 'isms.risk', { entry: 'r-012' }],
-    ['/isms/documents/policy-1', 'isms.document', { id: 'policy-1' }],
+    ['/isms/documents/policy-1', 'isms.document', { ismsdocument: 'policy-1' }],
     ['/catalogs/team/payments', 'catalogs.entry', { catalog: 'team', id: 'payments' }],
     ['/reports/trends', 'reports.report', { report: 'trends' }],
     ['/settings/appearance', 'settings.section', { section: 'appearance' }],
@@ -548,6 +548,190 @@ describe('the incidents', () => {
     `/incidents/2026/${ULID}/release?stage=review`,
     '/incidents/2026?stage=review',
     '/incidents?at=v1',
+  ])('replaces %s by the start page', (candidate) => {
+    expect(checkReturn(candidate)).toBe('/');
+  });
+});
+
+describe('the ISMS lens', () => {
+  const DOCUMENT = '01JZB1C3E5G7J9M1P3R5T7W9Y2';
+  const GAP = 'samm-assessments:assessment/payments-2026-q2#st';
+  const THREAT = 'threat-models:threat-model/payment-api-checkout-flow#T-03';
+
+  it.each([
+    ['/isms', '', 'isms', {}, undefined],
+    ['/isms/risks', '', 'isms.risks', {}, undefined],
+    ['/isms/risks/new', '', 'isms.risks.new', {}, undefined],
+    ['/isms/risks/r-043', '', 'isms.risk', { entry: 'r-043' }, undefined],
+    ['/isms/risks/r-004', '?at=v2', 'isms.risk', { entry: 'r-004' }, { at: 'v2' }],
+    ['/isms/risks/r-018/release', '', 'isms.risk.release', { entry: 'r-018' }, undefined],
+    ['/isms/documents', '', 'isms.documents', {}, undefined],
+    ['/isms/documents', '?kind=policy', 'isms.documents', {}, { kind: 'policy' }],
+    [
+      '/isms/documents/new',
+      '?kind=audit-report',
+      'isms.documents.new',
+      {},
+      { kind: 'audit-report' },
+    ],
+    [`/isms/documents/${DOCUMENT}`, '', 'isms.document', { ismsdocument: DOCUMENT }, undefined],
+    [
+      `/isms/documents/${DOCUMENT}`,
+      '?at=v2',
+      'isms.document',
+      { ismsdocument: DOCUMENT },
+      { at: 'v2' },
+    ],
+    [
+      `/isms/documents/${DOCUMENT}/compare`,
+      '?from=v1&to=v3',
+      'isms.document.compare',
+      { ismsdocument: DOCUMENT },
+      { from: 'v1', to: 'v3' },
+    ],
+    [
+      `/isms/documents/${DOCUMENT}/release`,
+      '',
+      'isms.document.release',
+      { ismsdocument: DOCUMENT },
+      undefined,
+    ],
+  ])('reads %s%s as %s', (path, search, route, params, query) => {
+    const address = parseAddress(path, search);
+    expect(address?.route).toBe(route);
+    expect(address?.params).toEqual(params);
+    if (query) {
+      expect(address?.query).toEqual(query);
+    } else {
+      expect(address).not.toHaveProperty('query');
+    }
+  });
+
+  it('reads the new pages before the entry and the document, so that new is never one', () => {
+    expect(ROUTES.indexOf('isms.risks.new')).toBeLessThan(ROUTES.indexOf('isms.risk'));
+    expect(ROUTES.indexOf('isms.documents.new')).toBeLessThan(ROUTES.indexOf('isms.document'));
+    expect(parseAddress('/isms/risks/new')?.route).toBe('isms.risks.new');
+    expect(parseAddress('/isms/risks/new/release')).toBeNull();
+    expect(parseAddress('/isms/risks/new-2')?.params).toEqual({ entry: 'new-2' });
+    expect(parseAddress('/isms/risks/new-2/release')?.route).toBe('isms.risk.release');
+    expect(parseAddress('/isms/documents/new')?.route).toBe('isms.documents.new');
+    expect(parseAddress('/isms/documents/new/release')).toBeNull();
+    expect(parseAddress('/isms/documents/new/compare')).toBeNull();
+    expect(parseAddress('/isms/documents/new-2')?.params).toEqual({ ismsdocument: 'new-2' });
+    expect(parseAddress('/isms/documents/NEW')?.route).toBe('isms.document');
+    expect(lensOf('isms.risks.new')).toBe('isms');
+    expect(lensOf('isms.document.compare')).toBe('isms');
+    expect(routeTitleKey('isms.documents.new')).toBe('lens.isms');
+    expect(routeTitleKey('isms.document.compare')).toBe('lens.isms');
+    expect(routeTitleKey('isms.document.release')).toBe('lens.release');
+    expect(routesUnder('isms')).toEqual(
+      expect.arrayContaining([
+        'isms',
+        'isms.risks',
+        'isms.risks.new',
+        'isms.risk',
+        'isms.risk.release',
+        'isms.documents',
+        'isms.documents.new',
+        'isms.document',
+        'isms.document.compare',
+        'isms.document.release',
+      ]),
+    );
+  });
+
+  it('keeps an origin of a gap or a threat as a query value, written percent-encoded', () => {
+    const gap = parseAddress('/isms/risks/new', `?origin=${encodeURIComponent(GAP)}`);
+    expect(gap).toEqual({ route: 'isms.risks.new', params: {}, query: { origin: GAP } });
+    expect(formatAddress({ route: 'isms.risks.new', params: {}, query: { origin: GAP } })).toBe(
+      '/isms/risks/new?origin=samm-assessments%3Aassessment%2Fpayments-2026-q2%23st',
+    );
+    expect(formatAddress({ route: 'isms.risks.new', params: {}, query: { origin: THREAT } })).toBe(
+      `/isms/risks/new?origin=${encodeURIComponent(THREAT)}`,
+    );
+    expect(() =>
+      formatAddress({
+        route: 'isms.risks.new',
+        params: {},
+        query: { origin: 'service:payment-api' },
+      }),
+    ).toThrow('query value refused');
+  });
+
+  it('writes the admitted names in the order of the file and refuses a bad value', () => {
+    expect(
+      formatAddress({
+        route: 'isms.document.compare',
+        params: { ismsdocument: DOCUMENT },
+        query: { to: 'v3', from: 'v1' },
+      }),
+    ).toBe(`/isms/documents/${DOCUMENT}/compare?from=v1&to=v3`);
+    expect(() =>
+      formatAddress({
+        route: 'isms.documents',
+        params: {},
+        query: { kind: 'Policy' },
+      }),
+    ).toThrow('query value refused');
+  });
+
+  it('ignores a name the address does not admit and refuses a bad or repeated value', () => {
+    expect(parseAddress('/isms/risks', '?kind=policy')).toEqual({
+      route: 'isms.risks',
+      params: {},
+    });
+    expect(parseAddress('/isms/documents', '?at=v1')).toEqual({
+      route: 'isms.documents',
+      params: {},
+    });
+    expect(parseAddress('/isms/documents', '?kind=Policy')).toBeNull();
+    expect(parseAddress('/isms/documents', '?kind=a&kind=b')).toBeNull();
+    expect(parseAddress('/isms/risks/new', '?origin=service%3Apayment-api')).toBeNull();
+    expect(parseAddress(`/isms/documents/${DOCUMENT}`, '?at=zzz')).toBeNull();
+  });
+
+  it.each([
+    '/isms',
+    '/isms/risks',
+    '/isms/risks/new',
+    `/isms/risks/new?origin=${encodeURIComponent(GAP)}`,
+    `/isms/risks/new?origin=${encodeURIComponent(THREAT)}`,
+    '/isms/risks/r-043',
+    '/isms/risks/r-004?at=v3',
+    '/isms/risks/r-018/release',
+    '/isms/documents',
+    '/isms/documents?kind=management-review',
+    '/isms/documents/new?kind=policy',
+    `/isms/documents/${DOCUMENT}`,
+    `/isms/documents/${DOCUMENT}?at=4be0c3a`,
+    `/isms/documents/${DOCUMENT}/compare`,
+    `/isms/documents/${DOCUMENT}/compare?from=v2&to=v3`,
+    `/isms/documents/${DOCUMENT}/release`,
+  ])('lets %s pass as a return', (address) => {
+    expect(checkReturn(address)).toBe(address);
+  });
+
+  it.each([
+    '/isms/risks/new#x',
+    '/isms/risks/new/release',
+    '/isms/risks/new?kind=policy',
+    '/isms/risks/new?origin=',
+    '/isms/risks/new?origin=service%3Apayment-api',
+    `/isms/risks/new?origin=${encodeURIComponent(GAP)}&origin=${encodeURIComponent(GAP)}`,
+    '/isms/risks?at=v1',
+    '/isms/risks/r-004?at=zzz',
+    '/isms/risks/r-004?origin=x',
+    '/isms/risks/r-018/release?at=v1',
+    '/isms/documents?kind=Policy',
+    '/isms/documents?at=v1',
+    '/isms/documents/new/release',
+    '/isms/documents/new/compare',
+    `/isms/documents/${DOCUMENT}?kind=policy`,
+    `/isms/documents/${DOCUMENT}?from=v1`,
+    `/isms/documents/${DOCUMENT}/compare?at=v1`,
+    `/isms/documents/${DOCUMENT}/compare?from=V1`,
+    `/isms/documents/${DOCUMENT}/compare?from=v1&from=v2`,
+    `/isms/documents/${DOCUMENT}/release?from=v1`,
   ])('replaces %s by the start page', (candidate) => {
     expect(checkReturn(candidate)).toBe('/');
   });

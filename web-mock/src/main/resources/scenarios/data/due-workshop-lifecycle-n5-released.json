@@ -57,7 +57,28 @@
     {
       "kind": "review",
       "lens": "isms",
-      "title": "Risk R-012: supplier access to production",
+      "title": "Risk R-007: Signing keys held by a single administrator",
+      "address": "/isms/risks/r-007",
+      "due": "2026-11-18"
+    },
+    {
+      "kind": "review",
+      "lens": "isms",
+      "title": "Scope of the ISMS",
+      "address": "/isms/documents/01JZB4F6H8K0N2Q4S6V8X0Z2C5",
+      "due": "2026-11-20"
+    },
+    {
+      "kind": "review",
+      "lens": "isms",
+      "title": "Access control policy",
+      "address": "/isms/documents/01JZB2D4F6H8K0N2Q4S6V8X0Z3",
+      "due": "2026-12-08"
+    },
+    {
+      "kind": "review",
+      "lens": "isms",
+      "title": "Risk R-012: Supplier access to production",
       "address": "/isms/risks/r-012",
       "due": "2026-12-15"
     },

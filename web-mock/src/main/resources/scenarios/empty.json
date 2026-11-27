@@ -38,6 +38,15 @@
       ]
     },
     {
+      "repository": "isms-core",
+      "actions": [
+        "read",
+        "edit",
+        "approve",
+        "administer-catalogs"
+      ]
+    },
+    {
       "repository": "directory",
       "actions": [
         "read",
@@ -793,6 +802,76 @@
     "GET /api/v1/categories/incident-reports/schema": {
       "status": 200,
       "body_file": "categories-incident-reports-schema.json"
+    },
+    "GET /api/v1/isms/register": {
+      "status": 200,
+      "body": {
+        "today": "2026-11-26",
+        "risks": [],
+        "truncated": false
+      },
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-register": {
+      "status": 200,
+      "body": {
+        "repository": "isms-register",
+        "documents": [],
+        "truncated": false
+      },
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core": {
+      "status": 200,
+      "body": {
+        "repository": "isms-core",
+        "documents": [],
+        "truncated": false
+      },
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/categories/isms/schema": {
+      "status": 200,
+      "body_file": "categories-isms-schema.json",
+      "requires": {
+        "repository": "isms-register",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/isms/risks/draft": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/origin",
+            "code": "REQUIRED"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "isms-register",
+        "action": "edit"
+      }
+    },
+    "GET /api/v1/isms/risks/draft?origin=threat-models%3Athreat-model%2Fpayment-api-checkout-flow%23T-99": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "isms-register",
+        "action": "edit"
+      }
     }
   },
   "states": {

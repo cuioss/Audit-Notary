@@ -146,6 +146,26 @@ xref:../specification/rest-api.adoc#_decided_reports[REST API Register, Open Que
   time, review date, origin) that opens the entry as it was then. The fields of a risk are fixed with the ISMS lens.
 . The application creates no reporting tag; the picker lists the tags that exist.
 
+Decided provisionally with the ISMS lens (UC-ISMS-1, UC-ISMS-2, UC-SAMM-6, UC-TM-3), recorded with the bodies in
+xref:../specification/rest-api.adoc#_decided_isms[REST API Register, Open Questions]; the owner may change each one:
+
+. The four document types and the risk are documents of the generic lifecycle, each released more than once and under one
+  workflow (`isms.submit`, `isms.release` with step-up); a document is a single file with its AsciiDoc fragments as fields, and
+  the generated output is not part of the web app. The fields are provisional: an owner role, the main text and a review date
+  for a document, an owning team, a rating, a treatment and measures as issue ids for a risk. Two versions are compared with the
+  diff of the document lifecycle, at `/isms/documents/<id>/compare`.
+. The first save of a risk assigns its running number and nothing is stored before it: the page `/isms/risks/new` shows no
+  number, never predicts one, and moves to the entry when the number is known; numbers are never reused and need not be
+  consecutive. The register as it is worked on (every state) is `GET /api/v1/isms/register`; the register as of a date is
+  unchanged.
+. A gap of a scope and a threat become a risk through a prefilled form, never without the person saving it: the risk keeps the
+  reference to the practice or the threat as a read-only `origin`, one risk at a time per origin, and the rating is the person's.
+  The transfer of a threat is recorded in the threat model by the application when the risk is saved for the first time, which
+  makes a released model a draft; the alternative is to derive it from the register.
+. The register has no deletion, retirement or closing of a risk, and no acceptance by a manager before the release; whether
+  the standard asks for the acceptance of a residual risk by the risk owner is not checked here. A review date is typed, not
+  computed, and the Due lens lists the reviews of released entries only.
+
 == Related
 
 * xref:category-samm.adoc[SAMM], xref:category-incident-reports.adoc[Incident Reports],

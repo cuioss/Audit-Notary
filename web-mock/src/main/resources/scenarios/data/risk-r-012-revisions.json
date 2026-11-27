@@ -1,0 +1,91 @@
+{
+  "repository": "isms-register",
+  "id": "R-012",
+  "revisions": [
+    {
+      "ref": "v2",
+      "commit": "b0a9860",
+      "kind": "release",
+      "tag": "risks/R-012/v2",
+      "version": 2,
+      "at": "2026-09-03T10:12:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "8842c9d",
+      "commit": "8842c9d",
+      "kind": "submit",
+      "tag": null,
+      "version": 2,
+      "at": "2026-09-03T09:40:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "d855681",
+      "commit": "d855681",
+      "kind": "save",
+      "tag": null,
+      "version": 2,
+      "at": "2026-09-02T14:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "v1",
+      "commit": "b2a26c0",
+      "kind": "release",
+      "tag": "risks/R-012/v1",
+      "version": 1,
+      "at": "2025-12-09T09:30:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "b45341d",
+      "commit": "b45341d",
+      "kind": "submit",
+      "tag": null,
+      "version": 1,
+      "at": "2025-12-09T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "f415805",
+      "commit": "f415805",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2025-12-08T15:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "15269ae",
+      "commit": "15269ae",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2025-12-02T09:10:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

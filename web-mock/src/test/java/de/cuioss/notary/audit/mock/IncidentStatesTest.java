@@ -90,6 +90,12 @@ class IncidentStatesTest {
         return json(response);
     }
 
+    private static java.util.Set<String> aliasesOf(JsonNode status) {
+        java.util.Set<String> aliases = new java.util.TreeSet<>();
+        status.path("repositories").forEach(repository -> aliases.add(repository.path("alias").asText()));
+        return aliases;
+    }
+
     private static void goTo(MockClient client, String state) {
         assertEquals(200, client.send("POST", "/mock/goto/" + state, null, Map.of()).statusCode(), state);
     }
@@ -485,6 +491,7 @@ class IncidentStatesTest {
     @DisplayName("incident-git-unavailable: the status is degraded with the repository DOWN, every write is 503, the reads and the draft stay 200")
     void shouldBeUnavailable() {
         try (var client = start()) {
+            var ready = aliasesOf(get(client, "/api/v1/status"));
             goTo(client, "incident-git-unavailable");
             var status = get(client, "/api/v1/status");
             Map<String, String> fetch = new java.util.HashMap<>();
@@ -493,7 +500,7 @@ class IncidentStatesTest {
                     () -> assertTrue(status.path("degraded").asBoolean()),
                     () -> assertEquals("DOWN", fetch.get("isms-incidents-2026")),
                     () -> assertEquals("UP", fetch.get("isms-incidents-2025")),
-                    () -> assertEquals(7, fetch.size()),
+                    () -> assertEquals(ready, fetch.keySet(), "the repositories of the ready status"),
                     () -> assertEquals(data("incidents-year-2026.json"), get(client, "/api/v1/incidents/2026")),
                     () -> assertEquals(read("card-data"), get(client, dom("card-data"))),
                     () -> assertEquals("DRAFT_SAVED", json(client.change("PUT", "/api/v1/drafts/isms-incidents-2026/" + CARD, "{}"))

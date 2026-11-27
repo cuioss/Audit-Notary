@@ -1,0 +1,91 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB4F6H8K0N2Q4S6V8X0Z2C5",
+  "revisions": [
+    {
+      "ref": "v2",
+      "commit": "6d5ae47",
+      "kind": "release",
+      "tag": "scope/01JZB4F6H8K0N2Q4S6V8X0Z2C5/v2",
+      "version": 2,
+      "at": "2026-05-20T14:10:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "86b7e6a",
+      "commit": "86b7e6a",
+      "kind": "submit",
+      "tag": null,
+      "version": 2,
+      "at": "2026-05-20T13:55:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "59d5230",
+      "commit": "59d5230",
+      "kind": "save",
+      "tag": null,
+      "version": 2,
+      "at": "2026-05-19T09:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "v1",
+      "commit": "aa458a0",
+      "kind": "release",
+      "tag": "scope/01JZB4F6H8K0N2Q4S6V8X0Z2C5/v1",
+      "version": 1,
+      "at": "2025-03-10T09:30:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "bb23206",
+      "commit": "bb23206",
+      "kind": "submit",
+      "tag": null,
+      "version": 1,
+      "at": "2025-03-10T09:10:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "484a563",
+      "commit": "484a563",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2025-03-07T16:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "d015ed5",
+      "commit": "d015ed5",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2025-03-03T11:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

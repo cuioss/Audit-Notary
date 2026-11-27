@@ -1,0 +1,96 @@
+{
+  "repository": "isms-register",
+  "id": "R-018",
+  "category": "isms",
+  "kind": "risk",
+  "title": "No tested restore of the customer database",
+  "state": "released",
+  "version": 1,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "4923e87",
+      "savedAt": "2026-10-02T11:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "No tested restore of the customer database",
+        "description": "Backups of the customer database are taken every night, but a restore was never tested. It is unknown whether the data can be recovered within the time that the business accepts.",
+        "rating": "high",
+        "treatment": "mitigate",
+        "treatment-notes": "Run a restore test every quarter and write down the time it takes.",
+        "owner": "team:identity",
+        "owner-role": "role:service-owner",
+        "review-due": "2027-04-05",
+        "issues": [
+          "OPS-211"
+        ],
+        "related": [
+          "service:customer-db"
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-10-05T15:02:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "risks/R-018/v1"
+    },
+    {
+      "at": "2026-10-05T14:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-10-02T11:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2026-09-28T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "risks/R-018/v1",
+    "at": "2026-10-05T15:02:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "at": {
+    "ref": "v1",
+    "kind": "release",
+    "commit": "b8bb46f",
+    "tag": "risks/R-018/v1",
+    "at": "2026-10-05T15:02:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  }
+}

@@ -76,6 +76,104 @@
       "title": "Card data exposed in the checkout log",
       "address": "/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K",
       "retired": false
+    },
+    {
+      "ref": "isms-register:risk/R-009",
+      "found": true,
+      "title": "Replay of payment authorisations in the checkout flow",
+      "address": "/isms/risks/r-009",
+      "retired": false
+    },
+    {
+      "ref": "isms-register:risk/R-015",
+      "found": true,
+      "title": "Security Testing of the payments scope is below its target",
+      "address": "/isms/risks/r-015",
+      "retired": false
+    },
+    {
+      "ref": "isms-register:risk/R-043",
+      "found": false,
+      "title": null,
+      "address": null,
+      "retired": false
+    },
+    {
+      "ref": "isms-core:policy/01JZB1C3E5G7J9M1P3R5T7W9Y2",
+      "found": true,
+      "title": "Information security policy",
+      "address": "/isms/documents/01JZB1C3E5G7J9M1P3R5T7W9Y2",
+      "retired": false
+    },
+    {
+      "ref": "samm-assessments:assessment/payments-2026-q2#st",
+      "found": true,
+      "title": "Payments 2026 Q2, Security Testing",
+      "address": "/samm/payments/2026-q2/st",
+      "retired": false
+    },
+    {
+      "ref": "samm-assessments:assessment/payments-2026-q2#sm",
+      "found": true,
+      "title": "Payments 2026 Q2, Strategy and Metrics",
+      "address": "/samm/payments/2026-q2/sm",
+      "retired": false
+    },
+    {
+      "ref": "threat-models:threat-model/payment-api-checkout-flow#T-02",
+      "found": true,
+      "title": "Payment API, checkout flow: T-02",
+      "address": "/threat-models/payment-api/checkout-flow",
+      "retired": false
+    },
+    {
+      "ref": "team:identity",
+      "found": true,
+      "title": "Identity Platform",
+      "address": "/catalogs/team/identity",
+      "retired": false
+    },
+    {
+      "ref": "team:mobile",
+      "found": true,
+      "title": "Mobile Apps",
+      "address": "/catalogs/team/mobile",
+      "retired": false
+    },
+    {
+      "ref": "team:security-office",
+      "found": true,
+      "title": "Security Office",
+      "address": "/catalogs/team/security-office",
+      "retired": false
+    },
+    {
+      "ref": "role:ciso",
+      "found": true,
+      "title": "Chief Information Security Officer",
+      "address": "/catalogs/role/ciso",
+      "retired": false
+    },
+    {
+      "ref": "role:service-owner",
+      "found": true,
+      "title": "Service Owner",
+      "address": "/catalogs/role/service-owner",
+      "retired": false
+    },
+    {
+      "ref": "service:customer-db",
+      "found": true,
+      "title": "Customer database",
+      "address": "/catalogs/service/customer-db",
+      "retired": false
+    },
+    {
+      "ref": "system:core-platform",
+      "found": true,
+      "title": "Core platform",
+      "address": "/catalogs/system/core-platform",
+      "retired": false
     }
   ]
 }
