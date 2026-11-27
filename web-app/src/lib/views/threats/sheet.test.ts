@@ -340,32 +340,52 @@ describe('the steps of the workflow', () => {
 });
 
 describe('the live refresh', () => {
-  it('reads the model again when the stream names a save of it, and refreshes what was not edited', async () => {
+  const MODEL_READ = 'GET /api/v1/threat-models/payment-api/checkout-flow';
+  const EVALUATION_READ = 'GET /api/v1/reports/threat-evaluation';
+  const SERVICE_READ = 'GET /api/v1/threat-models/payment-api';
+
+  /** Answers the next reads of the model with a model whose review date is another one, as a save by someone else would. */
+  function answerWithReviewOf(lastReview: string) {
+    const inner = globalThis.fetch;
+    vi.stubGlobal('fetch', (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(input instanceof Request ? input.url : String(input), 'http://localhost');
+      const answer = await inner(input, init);
+      if ((init?.method ?? 'GET').toUpperCase() !== 'GET' || url.pathname !== MODEL_READ.slice(4)) {
+        return answer;
+      }
+      const body = await answer.json();
+      return Response.json({ ...body, review: { ...body.review, lastReview } });
+    }) as typeof fetch);
+  }
+
+  it('reads the model again when the stream names a save of it, and shows what the read answers', async () => {
     const kit = await open();
-    const before = kit.requests.filter((request) =>
-      request.startsWith('GET /api/v1/threat-models/payment-api/checkout-flow'),
-    ).length;
+    const reads = () => kit.requests.filter((request) => request === MODEL_READ).length;
+    const before = reads();
+    expect(screen.getByTestId('review-facts')).not.toHaveTextContent('Oct 1, 2026');
+    answerWithReviewOf('2026-10-01');
     kit.emit('document-saved', { repository: 'threat-models', id: DOCUMENT, fields: ['/threats'] });
+    await vi.waitFor(() => expect(reads()).toBe(before + 1));
     await vi.waitFor(() =>
-      expect(
-        kit.requests.filter((request) =>
-          request.startsWith('GET /api/v1/threat-models/payment-api/checkout-flow'),
-        ).length,
-      ).toBeGreaterThan(before),
+      expect(screen.getByTestId('review-facts')).toHaveTextContent('Oct 1, 2026'),
     );
   });
 
-  it('reads the evaluation and the service again when the stream names a step of any model', async () => {
+  it('reads the evaluation and the service again when the stream names a step of another model', async () => {
     const kit = await open();
-    const reads = () =>
-      kit.requests.filter((request) => request === 'GET /api/v1/reports/threat-evaluation').length;
-    const before = reads();
+    const reads = (request: string) => kit.requests.filter((entry) => entry === request).length;
+    const evaluation = reads(EVALUATION_READ);
+    const service = reads(SERVICE_READ);
+    const model = reads(MODEL_READ);
     kit.emit('document-transitioned', {
       repository: 'threat-models',
-      id: DOCUMENT,
+      id: 'payment-api-another-model',
       state: 'in-review',
     });
-    await vi.waitFor(() => expect(reads()).toBeGreaterThan(before));
+    await vi.waitFor(() => expect(reads(EVALUATION_READ)).toBe(evaluation + 1));
+    await vi.waitFor(() => expect(reads(SERVICE_READ)).toBe(service + 1));
+    // The sheet of the open model has nothing to read for a step of another one.
+    expect(reads(MODEL_READ)).toBe(model);
   });
 
   it('ignores a save of another repository', async () => {

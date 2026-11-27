@@ -1100,6 +1100,21 @@ const REPORT_STATES = [
   ],
 ];
 
+/**
+ * Waits for the part of the page an audit exists for, then checks that the mock is still in the state the page read: the
+ * page reloaded after the first check (the theme), so a run that switched the shared mock meanwhile is named here and not
+ * audited under the wrong state. A part that does not appear is checked first, so that the mismatch is the failure.
+ */
+async function shownInScenario(page, request, reference, testId) {
+  try {
+    await expect(page.getByTestId(testId).first()).toBeVisible();
+  } catch (error) {
+    await expectScenario(request, reference);
+    throw error;
+  }
+  await expectScenario(request, reference);
+}
+
 for (const theme of ['light', 'dark']) {
   for (const [name, scenario, address, view, shown, prepare] of REPORT_STATES) {
     test(`reports: ${name} of ${scenario} at ${address} in the ${theme} theme`, async ({
@@ -1109,11 +1124,11 @@ for (const theme of ['light', 'dark']) {
       await useScenario(request, scenario);
       await login(page, address);
       // The page reads what the profile answers: a mock that is no longer in it is named, not drawn.
-      await expectScenario(request, scenario);
       await useTheme(page, theme);
       await expect(page.getByTestId(view)).toBeVisible();
+      await expectScenario(request, scenario);
       await prepare(page);
-      await expect(page.getByTestId(shown).first()).toBeVisible();
+      await shownInScenario(page, request, scenario, shown);
       await expectNoSeriousViolations(page, `reports: ${name} (${scenario}, ${theme})`);
     });
   }
@@ -1157,7 +1172,10 @@ const THREAT_STATES = [
     LENS_ADDRESS,
     'threat-models-view',
     'evaluation-column',
-    async () => {},
+    // The column is drawn while the evaluation is read: the audit waits for the notice it exists for.
+    async (page) => {
+      await expect(page.getByText('No service in the catalog')).toBeVisible();
+    },
   ],
   [
     'a service with a recipe that was started',
@@ -1373,22 +1391,24 @@ const THREAT_STATES = [
       await page.getByTestId('release-act').click();
       await expect(page.getByRole('alert')).toContainText('The Git server cannot be reached.');
     },
+    // The act moved the mock on: the state the page ends in.
+    'workshop#threat-model-git-unavailable',
   ],
 ];
 
 for (const theme of ['light', 'dark']) {
-  for (const [name, scenario, address, view, shown, prepare] of THREAT_STATES) {
+  for (const [name, scenario, address, view, shown, prepare, after = scenario] of THREAT_STATES) {
     test(`threat models: ${name} of ${scenario} at ${address} in the ${theme} theme`, async ({
       page,
       request,
     }) => {
       await useScenario(request, scenario);
       await login(page, address);
-      await expectScenario(request, scenario);
       await useTheme(page, theme);
       await expect(page.getByTestId(view)).toBeVisible();
+      await expectScenario(request, scenario);
       await prepare(page, request);
-      await expect(page.getByTestId(shown).first()).toBeVisible();
+      await shownInScenario(page, request, after, shown);
       await expectNoSeriousViolations(page, `threat models: ${name} (${scenario}, ${theme})`);
     });
   }

@@ -195,8 +195,10 @@ A new view gets its address in `navigation.spec.js` and its audit in `theme-read
 A test that depends on the state of the mock says so: `useScenario` checks that the mock answered the profile and the
 state it was asked for, and the audit rows of `theme-readability.spec.js` that read what a state answers check it again
 (`expectScenario`) once the page is up. The mock is one shared instance and `web-mock/stop.sh` stops the one in its PID
-file, so two runs that use one mock (or one that stops it under another) show up as a named mismatch, or as a refused
-connection, and not as a page that drew the data of another state; give every concurrent run its own ports.
+file, so two runs that use one mock (or one that stops it under another) can show up as a named mismatch or as a refused
+connection, but the checks are checkpoints and not isolation: a check that names only the profile passes while another run has
+switched the mock to another state of that profile, and a page may read a state between two checks. Give every concurrent
+run its own ports.
 
 The mock stores nothing, and a state it has no profile for is not invented in the page: where a flow needs one (a
 trend that leaves versions out, a scope whose targets another assessor saved, a scope that shows no open assessment

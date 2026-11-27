@@ -20,6 +20,7 @@
     MAX_ISSUES,
     MAX_MITIGATIONS,
     MAX_NAME,
+    mergeEdit,
     nextId,
     parseIssues,
     percentOf,
@@ -62,7 +63,14 @@
   let table: DataTable | undefined = $state();
   let editing = $state<{ index: number | null } | undefined>();
   /** The id of the countermeasure the editor opened on: the position is only trusted while it holds that one. */
-  let openedId: string | null = null;
+  let openedId = $state<string | null>(null);
+  /** The fields of that countermeasure as the editor opened on them: the base of the merge with a newer list. */
+  let openedFields: MitigationFields | undefined;
+  /**
+   * Whether the countermeasure the editor opened on was missing from a list since. An id can come back for another
+   * countermeasure (the next id is one more than the highest left), so once it was gone it stays gone for this editor.
+   */
+  let openedGone = $state(false);
   let editorOpen = $state(false);
   let dialogNote = $state<string | null>(null);
   let showProblem = $state(false);
@@ -72,9 +80,28 @@
   let reductionText = $state('50');
   let statusText = $state('');
   let issuesInput = $state('');
-  let removing = $state<number | null>(null);
-  let removingId: string | null = null;
+  /** The id of the countermeasure the prompt asks about: the prompt names it by its id, never by its position. */
+  let removingId = $state<string | null>(null);
+  /** Whether that countermeasure was missing from a list since, as {@link openedGone} for the editor. */
+  let removingGone = $state(false);
   let removeOpen = $state(false);
+  let removed = $derived(
+    removeOpen && removingId !== null && !removingGone
+      ? (mitigations.find((entry) => entry.id === removingId) ?? null)
+      : null,
+  );
+  $effect(() => {
+    if (editorOpen && openedId !== null && !mitigations.some((entry) => entry.id === openedId)) {
+      openedGone = true;
+    }
+    if (
+      removeOpen &&
+      removingId !== null &&
+      !mitigations.some((entry) => entry.id === removingId)
+    ) {
+      removingGone = true;
+    }
+  });
   let rowsStale = $state(false);
   $effect.pre(() => {
     void errors;
@@ -119,6 +146,38 @@
     return code === null ? null : $t(errorKey(code));
   });
 
+  /** The fields the dialog edits, in the form in which a dialog and a newer list are compared. */
+  interface MitigationFields {
+    name: string;
+    description: string;
+    threat: string;
+    riskReduction: number;
+    status: string;
+    issues: string[];
+  }
+
+  /** The catalogue key of the words of each field of the dialog, for the conflict that names it. */
+  const FIELD_LABELS: Record<keyof MitigationFields, string> = {
+    name: 'threats.field.name',
+    description: 'threats.field.description',
+    threat: 'threats.mitigation.field.threat',
+    riskReduction: 'threats.mitigation.reduction',
+    status: 'threats.mitigation.col.status',
+    issues: 'threats.mitigation.col.issues',
+  };
+
+  /** @param entry a countermeasure @returns its fields as the dialog edits them */
+  function fieldsOf(entry: OtmMitigation): MitigationFields {
+    return {
+      name: entry.name.trim(),
+      description: (entry.description ?? '').trim(),
+      threat: entry.attributes.threat,
+      riskReduction: entry.riskReduction,
+      status: entry.attributes.status ?? '',
+      issues: entry.attributes.issues ?? [],
+    };
+  }
+
   /** @returns the threat a countermeasure names, `null` when the model has none of that id */
   function threatOf(mitigation: OtmMitigation): OtmThreat | null {
     return threats.find((entry) => entry.id === mitigation.attributes.threat) ?? null;
@@ -135,6 +194,8 @@
     showProblem = false;
     dialogNote = null;
     openedId = held?.id ?? null;
+    openedFields = held ? fieldsOf(held) : undefined;
+    openedGone = false;
     editing = { index };
     editorOpen = true;
   }
@@ -154,7 +215,7 @@
     }
     const position =
       openedId === null ? -1 : mitigations.findIndex((entry) => entry.id === openedId);
-    if (openedId !== null && position < 0) {
+    if (openedId !== null && (position < 0 || openedGone)) {
       dialogNote = $t('threats.mitigation.gone');
       return;
     }
@@ -167,12 +228,38 @@
       return;
     }
     const held = position < 0 ? undefined : mitigations[position];
-    const description = descriptionText.trim();
-    const attributes: OtmMitigation['attributes'] = { ...held?.attributes, threat: threatId };
-    if (statusText === '') delete attributes.status;
-    else attributes.status = statusText as MitigationStatus;
-    if (issues.length === 0) delete attributes.issues;
-    else attributes.issues = issues;
+    const mine: MitigationFields = {
+      name: nameText.trim(),
+      description: descriptionText.trim(),
+      threat: threatId,
+      riskReduction: reduction,
+      status: statusText,
+      // An issue field the person left as it was keeps the stored ids as they are, whatever they hold (an id may contain
+      // a space or a comma, which the text of the field would split).
+      issues:
+        openedFields && issuesInput === issuesText(openedFields.issues)
+          ? openedFields.issues
+          : issues,
+    };
+    // A countermeasure that was changed while the dialog was open keeps what the person did not touch: only the fields
+    // they changed are written, and a field both changed to different values is a conflict that is told, never chosen.
+    const fields = held && openedFields ? mergeEdit(openedFields, mine, fieldsOf(held)) : null;
+    if (fields && fields.conflicts.length > 0) {
+      dialogNote = $t('threats.mitigation.conflict', {
+        fields: fields.conflicts.map((key) => $t(FIELD_LABELS[key])).join(', '),
+      });
+      return;
+    }
+    const merged = fields?.merged ?? mine;
+    if (!threats.some((entry) => entry.id === merged.threat)) {
+      dialogNote = $t('threats.mitigation.threat-gone');
+      return;
+    }
+    const attributes: OtmMitigation['attributes'] = { ...held?.attributes, threat: merged.threat };
+    if (merged.status === '') delete attributes.status;
+    else attributes.status = merged.status as MitigationStatus;
+    if (merged.issues.length === 0) delete attributes.issues;
+    else attributes.issues = merged.issues;
     const next: OtmMitigation = {
       ...held,
       id:
@@ -181,12 +268,12 @@
           'M',
           mitigations.map((entry) => entry.id),
         ),
-      name: nameText.trim(),
-      riskReduction: reduction,
+      name: merged.name,
+      riskReduction: merged.riskReduction,
       attributes,
     };
-    if (description === '') delete next.description;
-    else next.description = description;
+    if (merged.description === '') delete next.description;
+    else next.description = merged.description;
     onchange?.(
       position < 0
         ? [...mitigations, next]
@@ -205,12 +292,11 @@
   }
 
   async function remove() {
-    const asked = removing;
     const id = removingId;
+    const gone = removingGone;
     removeOpen = false;
-    removing = null;
     removingId = null;
-    if (asked === null || id === null) return;
+    if (id === null || gone) return;
     const index = mitigations.findIndex((entry) => entry.id === id);
     if (index < 0) return;
     rowsStale = true;
@@ -241,8 +327,8 @@
     onadd={() => openEditor(null)}
     onedit={(row) => openEditor(row)}
     onremove={(row) => {
-      removing = row;
       removingId = mitigations[row]?.id ?? null;
+      removingGone = false;
       removeOpen = true;
     }}
     onmove={move}
@@ -393,23 +479,22 @@
   bind:open={removeOpen}
   title={$t('threats.mitigation.remove.title')}
   closeLabel={$t('common.close')}
-  onclose={() => (removing = null)}
+  onclose={() => (removingId = null)}
 >
-  {#if removing !== null && mitigations[removing]}
-    <p>
-      {$t('threats.mitigation.remove.body', {
-        id: mitigations[removing].id,
-        name: mitigations[removing].name,
-      })}
-    </p>
+  {#if removed}
+    <p>{$t('threats.mitigation.remove.body', { id: removed.id, name: removed.name })}</p>
+  {:else if removingGone}
+    <p role="alert" data-testid="{testId}-remove-gone">{$t('threats.mitigation.remove.gone')}</p>
   {/if}
   <div class="acts">
     <Button onclick={() => (removeOpen = false)} data-testid="{testId}-remove-cancel">
       {$t('common.cancel')}
     </Button>
-    <Button variant="danger" onclick={() => void remove()} data-testid="{testId}-remove-confirm">
-      {$t('form.table.remove')}
-    </Button>
+    {#if removed}
+      <Button variant="danger" onclick={() => void remove()} data-testid="{testId}-remove-confirm">
+        {$t('form.table.remove')}
+      </Button>
+    {/if}
   </div>
 </Dialog>
 

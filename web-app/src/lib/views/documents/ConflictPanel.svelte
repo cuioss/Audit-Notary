@@ -26,15 +26,16 @@
     /** Called after the last field was decided and the panel is gone: where the keyboard goes on. */
     ondecided?: () => void;
     /** Tells a value of a field in the words of the lens; `null` leaves it to the generic reading of a value. */
-    describe?: (pointer: string, value: unknown) => string | null;
+    describe?: (pointer: string, value: unknown, other: unknown) => string | null;
   }
 
   let { conflicts, category, kind, locked, onresolve, ondecided, describe }: Props = $props();
 
-  /** @returns the value of a side of a conflict as one plain line */
-  function lineOf(pointer: string, value: unknown): string {
+  /** @returns the value of a side of a conflict as one plain line; `other` is the other side of the same conflict */
+  function lineOf(pointer: string, value: unknown, other: unknown): string {
     return (
-      describe?.(pointer, value) ?? plainValue($messagesStore, category, kind, pointer, value, $t)
+      describe?.(pointer, value, other) ??
+      plainValue($messagesStore, category, kind, pointer, value, $t)
     );
   }
 
@@ -73,11 +74,11 @@
           <dl class="conflict__versions">
             <div>
               <dt>{$t('documents.conflict.own')}</dt>
-              <dd>{lineOf(pointer, conflict.own)}</dd>
+              <dd>{lineOf(pointer, conflict.own, conflict.other)}</dd>
             </div>
             <div>
               <dt>{$t('documents.conflict.other', { name: conflict.by.name })}</dt>
-              <dd>{lineOf(pointer, conflict.other)}</dd>
+              <dd>{lineOf(pointer, conflict.other, conflict.own)}</dd>
             </div>
           </dl>
           <div class="conflict__acts">

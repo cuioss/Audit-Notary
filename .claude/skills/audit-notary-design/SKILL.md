@@ -60,8 +60,9 @@ Read the concept first, then the component you are about to change.
    document (owner, review date) and one for the file of the model; "Save for everyone" saves both, and a list of the file
    (`/threats`, `/mitigations`) is changed and sent as a whole, a conflict decided per list (`ConflictPanel describe`).
    `ThreatTable` and `CountermeasureEditor` are `DataTable` editors with a dialog over a copy (`DataTable` takes `addLabel` and
-   `rowName` where a page holds more than one table); a threat that was transferred is shown as a link and never written
-   here; the diagram is an `<img>` of a checked `data:image/svg+xml;base64,` URL with a text alternative, never markup.
+   `rowName` where a page holds more than one table); a threat that was transferred is shown as a link and never changed
+   here (the editor has no control for it), yet its reference is carried back unchanged in the whole `/threats` list that a save
+   sends, so that an edit of another field does not drop the link; the diagram is an `<img>` of a checked `data:image/svg+xml;base64,` URL with a text alternative, never markup.
 3. For a chart, use the five series colours in model order (`--color-series-1` … `-5`); they are validated for
    colour-vision and normal-vision separation against both sheet colours (`#ffffff`, `#161d2e`). A new chart colour
    needs the same validation before it lands: with the validator of the `dataviz` skill where your agent has that

@@ -267,6 +267,26 @@ describe('the words of a conflict over a list', () => {
     expect(describeList('/threats', [], t)).toBe('documents.value.entries{"count":0}');
   });
 
+  it('leaves both sides to the generic reading when they differ in a field the line does not name', () => {
+    const own = [threat('T-01')];
+    const other = [{ ...threat('T-01'), risk: { likelihood: 1, impact: 9 } }];
+    expect(describeList('/threats', own, t, other)).toBeNull();
+    expect(describeList('/threats', other, t, own)).toBeNull();
+    const reduced = [{ ...mitigation('M-01', 'T-01'), riskReduction: 90 }];
+    expect(describeList('/mitigations', [mitigation('M-01', 'T-01')], t, reduced)).toBeNull();
+    expect(
+      describeList('/mitigations', [mitigation('M-01', 'T-01')], t, [
+        { ...mitigation('M-01', 'T-01'), description: 'new' },
+      ]),
+    ).toBeNull();
+  });
+
+  it('keeps its line when the sides differ only in what the line names', () => {
+    expect(describeList('/threats', [threat('T-01')], t, [threat('T-01', 'accepted')])).toContain(
+      'Name T-01 (threats.status.open)',
+    );
+  });
+
   it('leaves every other field to the generic reading', () => {
     expect(describeList('/project', [], t)).toBeNull();
     expect(describeList('/threats', 'x', t)).toBeNull();
@@ -389,6 +409,41 @@ describe('the changes of a release', () => {
     expect(groups).toHaveLength(1);
     expect(groups[0].changes).toHaveLength(1);
     expect(groups[0].changes[0]).toMatchObject({ pointer: '/threats', before, after });
+  });
+
+  it('reads the whole list when it was reordered and an entry changed as well', () => {
+    const before = [threat('T-01'), threat('T-02')];
+    const after = [threat('T-02', 'accepted'), threat('T-01')];
+    const groups = groupModelDiff(
+      diff([{ part: 'model', changes: [{ pointer: '/threats', before, after }] }]),
+      label,
+    );
+    expect(groups[0].changes.map((change) => change.pointer)).toEqual(['/threats']);
+    expect(groups[0].changes[0]).toMatchObject({ before, after });
+  });
+
+  it('reads the whole list when an entry without an id changes next to an entry with one', () => {
+    const before = [threat('T-01'), { name: 'no id' }];
+    const after = [threat('T-01', 'accepted'), { name: 'other, no id' }];
+    const groups = groupModelDiff(
+      diff([{ part: 'model', changes: [{ pointer: '/threats', before, after }] }]),
+      label,
+    );
+    expect(groups[0].changes.map((change) => change.pointer)).toEqual(['/threats']);
+  });
+
+  it('keeps one change per entry when entries are new or gone and the rest keeps its order', () => {
+    const before = [threat('T-01'), threat('T-02'), threat('T-03')];
+    const after = [threat('T-01'), threat('T-04'), threat('T-03', 'accepted')];
+    const groups = groupModelDiff(
+      diff([{ part: 'model', changes: [{ pointer: '/threats', before, after }] }]),
+      label,
+    );
+    expect(groups[0].changes.map((change) => change.pointer)).toEqual([
+      '/threats/T-04',
+      '/threats/T-03',
+      '/threats/T-02',
+    ]);
   });
 
   it('shows an entry without an id instead of leaving it out', () => {

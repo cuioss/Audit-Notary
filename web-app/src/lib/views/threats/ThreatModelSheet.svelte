@@ -525,7 +525,7 @@
     category={THREAT_CATEGORY}
     kind={THREAT_KIND}
     {locked}
-    describe={(pointer, side) => describeList(pointer, side, $t)}
+    describe={(pointer, side, other) => describeList(pointer, side, $t, other)}
     onresolve={(pointer, keep) =>
       (Object.hasOwn(modelController.conflicts, pointer)
         ? modelController

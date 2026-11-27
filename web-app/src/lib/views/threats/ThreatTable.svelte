@@ -21,6 +21,7 @@
     MAX_DESCRIPTION,
     MAX_NAME,
     MAX_THREATS,
+    mergeEdit,
     nextId,
     percentOf,
     riskOf,
@@ -65,7 +66,14 @@
   /** The threat in the editor: its position, or `null` for one to add; `undefined` while the editor is closed. */
   let editing = $state<{ index: number | null } | undefined>();
   /** The id of the threat the editor opened on: the position is only trusted while it still holds that threat. */
-  let openedId: string | null = null;
+  let openedId = $state<string | null>(null);
+  /** The fields of that threat as the editor opened on them: the base of the merge with a newer list. */
+  let openedFields: ThreatFields | undefined;
+  /**
+   * Whether the threat the editor opened on was missing from a list since. An id can come back for another threat (the
+   * next id is one more than the highest left), so once the threat was gone it stays gone for this editor.
+   */
+  let openedGone = $state(false);
   let editorOpen = $state(false);
   let dialogNote = $state<string | null>(null);
   let showProblem = $state(false);
@@ -75,9 +83,24 @@
   let impactText = $state('50');
   let statusText = $state<ThreatTreatment>('open');
   let kinds = $state<string[]>([]);
-  let removing = $state<number | null>(null);
-  let removingId: string | null = null;
+  /** The id of the threat the prompt asks about: the prompt names it by its id, never by the position it had. */
+  let removingId = $state<string | null>(null);
+  /** Whether that threat was missing from a list since, as {@link openedGone} for the editor. */
+  let removingGone = $state(false);
   let removeOpen = $state(false);
+  let removed = $derived(
+    removeOpen && removingId !== null && !removingGone
+      ? (threats.find((entry) => entry.id === removingId) ?? null)
+      : null,
+  );
+  $effect(() => {
+    if (editorOpen && openedId !== null && !threats.some((entry) => entry.id === openedId)) {
+      openedGone = true;
+    }
+    if (removeOpen && removingId !== null && !threats.some((entry) => entry.id === removingId)) {
+      removingGone = true;
+    }
+  });
   /** Whether the list was reordered or shortened since the server's refusal: its row numbers no longer fit. */
   let rowsStale = $state(false);
   $effect.pre(() => {
@@ -115,6 +138,38 @@
     showProblem && percentOf(impactText) === null ? $t('threats.percent.error') : null,
   );
 
+  /** The catalogue key of the words of each field of the dialog, for the conflict that names it. */
+  const FIELD_LABELS: Record<keyof ThreatFields, string> = {
+    name: 'threats.field.name',
+    description: 'threats.field.description',
+    categories: 'threats.field.categories',
+    likelihood: 'threats.likelihood',
+    impact: 'threats.impact',
+    status: 'threats.col.status',
+  };
+
+  /** The fields the dialog edits, in the form in which a dialog and a newer list are compared. */
+  interface ThreatFields {
+    name: string;
+    description: string;
+    categories: string[];
+    likelihood: number;
+    impact: number;
+    status: ThreatTreatment;
+  }
+
+  /** @param entry a threat @returns its fields as the dialog edits them */
+  function fieldsOf(entry: OtmThreat): ThreatFields {
+    return {
+      name: entry.name.trim(),
+      description: (entry.description ?? '').trim(),
+      categories: STRIDE_CATEGORIES.filter((name) => entry.categories?.includes(name)),
+      likelihood: entry.risk.likelihood,
+      impact: entry.risk.impact,
+      status: treatmentOf(entry.attributes.status),
+    };
+  }
+
   /** @returns the countermeasures that treat a threat */
   function treating(threat: OtmThreat): OtmMitigation[] {
     return mitigations.filter((entry) => entry.attributes.threat === threat.id);
@@ -136,6 +191,8 @@
     showProblem = false;
     dialogNote = null;
     openedId = held?.id ?? null;
+    openedFields = held ? fieldsOf(held) : undefined;
+    openedGone = false;
     editing = { index };
     editorOpen = true;
   }
@@ -156,7 +213,7 @@
     // The list may have been replaced by a newer one while the dialog was open (live refresh): the threat is found by
     // its id, never by the position it had.
     const position = openedId === null ? -1 : threats.findIndex((entry) => entry.id === openedId);
-    if (openedId !== null && position < 0) {
+    if (openedId !== null && (position < 0 || openedGone)) {
       dialogNote = $t('threats.table.gone');
       return;
     }
@@ -165,7 +222,24 @@
       return;
     }
     const held = position < 0 ? undefined : threats[position];
-    const description = descriptionText.trim();
+    const mine: ThreatFields = {
+      name: nameText.trim(),
+      description: descriptionText.trim(),
+      categories: STRIDE_CATEGORIES.filter((name) => kinds.includes(name)),
+      likelihood,
+      impact,
+      status: statusText,
+    };
+    // A threat that was changed while the dialog was open keeps what the person did not touch: only the fields they
+    // changed are written, and a field both changed to different values is a conflict that is told, never chosen.
+    const fields = held && openedFields ? mergeEdit(openedFields, mine, fieldsOf(held)) : null;
+    if (fields && fields.conflicts.length > 0) {
+      dialogNote = $t('threats.table.conflict', {
+        fields: fields.conflicts.map((key) => $t(FIELD_LABELS[key])).join(', '),
+      });
+      return;
+    }
+    const merged = fields?.merged ?? mine;
     const next: OtmThreat = {
       ...held,
       id:
@@ -174,13 +248,13 @@
           'T',
           threats.map((entry) => entry.id),
         ),
-      name: nameText.trim(),
-      categories: STRIDE_CATEGORIES.filter((name) => kinds.includes(name)),
-      risk: { ...held?.risk, likelihood, impact },
-      attributes: { ...held?.attributes, status: statusText },
+      name: merged.name,
+      categories: merged.categories,
+      risk: { ...held?.risk, likelihood: merged.likelihood, impact: merged.impact },
+      attributes: { ...held?.attributes, status: merged.status },
     };
-    if (description === '') delete next.description;
-    else next.description = description;
+    if (merged.description === '') delete next.description;
+    else next.description = merged.description;
     onchange?.(
       position < 0
         ? [...threats, next]
@@ -214,12 +288,11 @@
   }
 
   async function remove() {
-    const asked = removing;
     const id = removingId;
+    const gone = removingGone;
     removeOpen = false;
-    removing = null;
     removingId = null;
-    if (asked === null || id === null) return;
+    if (id === null || gone) return;
     // The threat that was confirmed is the one that goes, wherever a newer list holds it now; one that is gone stays gone.
     const index = threats.findIndex((entry) => entry.id === id);
     if (index < 0) return;
@@ -259,8 +332,8 @@
     onadd={() => openEditor(null)}
     onedit={(row) => openEditor(row)}
     onremove={(row) => {
-      removing = row;
       removingId = threats[row]?.id ?? null;
+      removingGone = false;
       removeOpen = true;
     }}
     onmove={move}
@@ -443,24 +516,28 @@
   bind:open={removeOpen}
   title={$t('threats.remove.title')}
   closeLabel={$t('common.close')}
-  onclose={() => (removing = null)}
+  onclose={() => (removingId = null)}
 >
-  {#if removing !== null && threats[removing]}
-    {@const going = treating(threats[removing]).length}
-    <p>{$t('threats.remove.body', { id: threats[removing].id, name: threats[removing].name })}</p>
+  {#if removed}
+    {@const going = treating(removed).length}
+    <p>{$t('threats.remove.body', { id: removed.id, name: removed.name })}</p>
     {#if going > 0}
       <p data-testid="{testId}-remove-treatments">
         {$t('threats.remove.treatments', { count: going })}
       </p>
     {/if}
+  {:else if removingGone}
+    <p role="alert" data-testid="{testId}-remove-gone">{$t('threats.remove.gone')}</p>
   {/if}
   <div class="acts">
     <Button onclick={() => (removeOpen = false)} data-testid="{testId}-remove-cancel">
       {$t('common.cancel')}
     </Button>
-    <Button variant="danger" onclick={() => void remove()} data-testid="{testId}-remove-confirm">
-      {$t('form.table.remove')}
-    </Button>
+    {#if removed}
+      <Button variant="danger" onclick={() => void remove()} data-testid="{testId}-remove-confirm">
+        {$t('form.table.remove')}
+      </Button>
+    {/if}
   </div>
 </Dialog>
 

@@ -216,7 +216,139 @@ describe('ThreatTable', () => {
     });
     await fireEvent.click(screen.getByRole('button', { name: 'Remove T-01' }));
     await rerender({ threats: [], mitigations: [], onchange });
+    expect(screen.getByTestId('threats-remove-gone')).toHaveTextContent(
+      'Someone else removed this threat',
+    );
+    expect(screen.queryByTestId('threats-remove-confirm')).toBeNull();
+    expect(onchange).not.toHaveBeenCalled();
+  });
+
+  it('keeps the prompt on the threat it asked about when a newer list reorders the rows', async () => {
+    const onchange = vi.fn();
+    const { rerender } = render(ThreatTable, {
+      threats: [threat('T-01'), threat('T-02')],
+      mitigations: [mitigation('M-02', 'T-02')],
+      onchange,
+    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Remove T-01' }));
+    await rerender({
+      threats: [threat('T-02'), threat('T-01')],
+      mitigations: [mitigation('M-02', 'T-02')],
+      onchange,
+    });
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveTextContent('T-01, Threat T-01');
+    expect(dialog).not.toHaveTextContent('countermeasure goes with it');
     await fireEvent.click(screen.getByTestId('threats-remove-confirm'));
+    expect(onchange.mock.calls[0][0].map((entry: OtmThreat) => entry.id)).toEqual(['T-02']);
+  });
+
+  it('counts the countermeasures that go with the threat the prompt asked about', async () => {
+    const { rerender } = render(ThreatTable, {
+      threats: [threat('T-01'), threat('T-02')],
+      mitigations: [mitigation('M-01', 'T-01')],
+    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Remove T-02' }));
+    expect(screen.queryByTestId('threats-remove-treatments')).toBeNull();
+    await rerender({
+      threats: [threat('T-02'), threat('T-01')],
+      mitigations: [mitigation('M-01', 'T-01')],
+    });
+    expect(screen.getByRole('dialog')).toHaveTextContent('T-02, Threat T-02');
+    expect(screen.queryByTestId('threats-remove-treatments')).toBeNull();
+  });
+
+  it('does not remove a different threat that got the id of the one the prompt asked about', async () => {
+    const onchange = vi.fn();
+    const { rerender } = render(ThreatTable, {
+      threats: [threat('T-01'), threat('T-02')],
+      mitigations: [],
+      onchange,
+    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Remove T-02' }));
+    await rerender({ threats: [threat('T-01')], mitigations: [], onchange });
+    await rerender({
+      threats: [threat('T-01'), threat('T-02', { name: 'Another threat' })],
+      mitigations: [],
+      onchange,
+    });
+    expect(screen.getByTestId('threats-remove-gone')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).not.toHaveTextContent('Another threat');
+    expect(screen.queryByTestId('threats-remove-confirm')).toBeNull();
+    expect(onchange).not.toHaveBeenCalled();
+  });
+
+  it('does not apply a dialog to a different threat that got the id of the one it opened on', async () => {
+    const onchange = vi.fn();
+    const { rerender } = render(ThreatTable, {
+      threats: [threat('T-01'), threat('T-02')],
+      mitigations: [],
+      onchange,
+    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit T-02' }));
+    await change('threats-field-name', 'Mine');
+    await rerender({ threats: [threat('T-01')], mitigations: [], onchange });
+    await rerender({
+      threats: [threat('T-01'), threat('T-02', { name: 'Another threat' })],
+      mitigations: [],
+      onchange,
+    });
+    await fireEvent.click(screen.getByTestId('threats-apply'));
+    expect(screen.getByTestId('threats-dialog-note')).toHaveTextContent(
+      'Someone else removed this threat',
+    );
+    expect(onchange).not.toHaveBeenCalled();
+  });
+
+  it('keeps what someone else changed meanwhile in a field the person did not touch', async () => {
+    const onchange = vi.fn();
+    const { rerender } = render(ThreatTable, {
+      threats: [threat('T-01')],
+      mitigations: [],
+      onchange,
+    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit T-01' }));
+    await change('threats-field-name', 'Renamed');
+    await rerender({
+      threats: [
+        threat('T-01', {
+          risk: { likelihood: 10, impact: 90 },
+          description: 'Added by someone else',
+          attributes: { status: 'accepted' },
+        }),
+      ],
+      mitigations: [],
+      onchange,
+    });
+    await fireEvent.click(screen.getByTestId('threats-apply'));
+    const [threats] = onchange.mock.calls[0];
+    expect(threats[0]).toMatchObject({
+      name: 'Renamed',
+      description: 'Added by someone else',
+      risk: { likelihood: 10, impact: 90 },
+      attributes: { status: 'accepted' },
+    });
+  });
+
+  it('tells a field that both changed to different values, and applies nothing', async () => {
+    const onchange = vi.fn();
+    const { rerender } = render(ThreatTable, {
+      threats: [threat('T-01')],
+      mitigations: [],
+      onchange,
+    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit T-01' }));
+    await change('threats-field-name', 'Mine');
+    await change('threats-field-impact', '70');
+    await rerender({
+      threats: [threat('T-01', { name: 'Theirs', risk: { likelihood: 10, impact: 70 } })],
+      mitigations: [],
+      onchange,
+    });
+    await fireEvent.click(screen.getByTestId('threats-apply'));
+    const note = screen.getByTestId('threats-dialog-note');
+    expect(note).toHaveTextContent('Someone else changed Name while you edited it');
+    expect(note).not.toHaveTextContent('Impact');
     expect(onchange).not.toHaveBeenCalled();
   });
 });
@@ -342,6 +474,114 @@ describe('CountermeasureEditor', () => {
     expect(onchange).not.toHaveBeenCalled();
   });
 
+  it('keeps what someone else changed meanwhile in a field the person did not touch', async () => {
+    const onchange = vi.fn();
+    const { rerender } = render(CountermeasureEditor, {
+      mitigations: [mitigation('M-01', 'T-01')],
+      threats: [threat('T-01')],
+      onchange,
+    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit M-01' }));
+    await change('mitigations-field-name', 'Renamed');
+    await rerender({
+      mitigations: [
+        mitigation('M-01', 'T-01', { description: 'Added by someone else', riskReduction: 80 }),
+      ],
+      threats: [threat('T-01')],
+      onchange,
+    });
+    await fireEvent.click(screen.getByTestId('mitigations-apply'));
+    expect(onchange.mock.calls[0][0][0]).toMatchObject({
+      name: 'Renamed',
+      description: 'Added by someone else',
+      riskReduction: 80,
+    });
+  });
+
+  it('tells a field that both changed to different values, and applies nothing', async () => {
+    const onchange = vi.fn();
+    const { rerender } = render(CountermeasureEditor, {
+      mitigations: [mitigation('M-01', 'T-01')],
+      threats: [threat('T-01')],
+      onchange,
+    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit M-01' }));
+    await change('mitigations-field-name', 'Mine');
+    await rerender({
+      mitigations: [mitigation('M-01', 'T-01', { name: 'Theirs' })],
+      threats: [threat('T-01')],
+      onchange,
+    });
+    await fireEvent.click(screen.getByTestId('mitigations-apply'));
+    expect(screen.getByTestId('mitigations-dialog-note')).toHaveTextContent(
+      'Someone else changed Name while you edited it',
+    );
+    expect(onchange).not.toHaveBeenCalled();
+  });
+
+  it('does not apply a dialog to, or remove, a different countermeasure that got the id', async () => {
+    const onchange = vi.fn();
+    const { rerender } = render(CountermeasureEditor, {
+      mitigations: [mitigation('M-01', 'T-01')],
+      threats: [threat('T-01')],
+      onchange,
+    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit M-01' }));
+    await change('mitigations-field-name', 'Mine');
+    await rerender({ mitigations: [], threats: [threat('T-01')], onchange });
+    await rerender({
+      mitigations: [mitigation('M-01', 'T-01', { name: 'Another one' })],
+      threats: [threat('T-01')],
+      onchange,
+    });
+    await fireEvent.click(screen.getByTestId('mitigations-apply'));
+    expect(screen.getByTestId('mitigations-dialog-note')).toHaveTextContent(
+      'Someone else removed this countermeasure',
+    );
+    await fireEvent.click(screen.getByTestId('mitigations-cancel'));
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Remove M-01' }));
+    await rerender({ mitigations: [], threats: [threat('T-01')], onchange });
+    expect(screen.getByTestId('mitigations-remove-gone')).toBeInTheDocument();
+    expect(screen.queryByTestId('mitigations-remove-confirm')).toBeNull();
+    expect(onchange).not.toHaveBeenCalled();
+  });
+
+  it('keeps the prompt on the countermeasure it asked about when a newer list reorders the rows', async () => {
+    const onchange = vi.fn();
+    const { rerender } = render(CountermeasureEditor, {
+      mitigations: [mitigation('M-01', 'T-01'), mitigation('M-02', 'T-01')],
+      threats: [threat('T-01')],
+      onchange,
+    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Remove M-01' }));
+    await rerender({
+      mitigations: [mitigation('M-02', 'T-01'), mitigation('M-01', 'T-01')],
+      threats: [threat('T-01')],
+      onchange,
+    });
+    expect(screen.getByRole('dialog')).toHaveTextContent('M-01, Countermeasure M-01');
+    await fireEvent.click(screen.getByTestId('mitigations-remove-confirm'));
+    expect(onchange.mock.calls[0][0].map((entry: OtmMitigation) => entry.id)).toEqual(['M-02']);
+  });
+
+  it('keeps an issue id that holds a separator when the person left the issue field alone', async () => {
+    const onchange = vi.fn();
+    render(CountermeasureEditor, {
+      mitigations: [
+        mitigation('M-01', 'T-01', {
+          attributes: { threat: 'T-01', issues: ['OPS 123', 'SEC,42'] },
+        }),
+      ],
+      threats: [threat('T-01')],
+      onchange,
+    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit M-01' }));
+    await change('mitigations-field-name', 'Renamed');
+    await fireEvent.click(screen.getByTestId('mitigations-apply'));
+    expect(onchange.mock.calls[0][0][0].attributes.issues).toEqual(['OPS 123', 'SEC,42']);
+  });
+
   it('moves, removes after asking, and shows the refusal at the row', async () => {
     const onchange = vi.fn();
     render(CountermeasureEditor, {
@@ -405,6 +645,27 @@ describe('ThreatDiffValue', () => {
     expect(entry).toHaveTextContent('Treats T-03');
     expect(entry).toHaveTextContent('Planned');
     expect(entry).toHaveTextContent('Issues: A-1, A-2');
+  });
+
+  it('reads the description of a threat and of a countermeasure and the risk reduction of a countermeasure', () => {
+    const { unmount } = render(ThreatDiffValue, {
+      list: 'threats',
+      entry: threat('T-01', { description: 'Only this changed' }),
+    });
+    expect(screen.getByTestId('diff-entry')).toHaveTextContent('Description: Only this changed');
+    unmount();
+    render(ThreatDiffValue, {
+      list: 'mitigations',
+      entry: mitigation('M-01', 'T-03', { riskReduction: 90, description: 'Seen in release' }),
+    });
+    const entry = screen.getByTestId('diff-entry');
+    expect(entry).toHaveTextContent('Risk reduction: 90');
+    expect(entry).toHaveTextContent('Description: Seen in release');
+  });
+
+  it('shows no description line for an entry that has none', () => {
+    render(ThreatDiffValue, { list: 'threats', entry: threat('T-01') });
+    expect(screen.getByTestId('diff-entry')).not.toHaveTextContent('Description');
   });
 
   it('reads a countermeasure without a status, and an entry that is gone', () => {

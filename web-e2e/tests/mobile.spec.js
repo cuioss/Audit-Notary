@@ -1270,13 +1270,17 @@ test.describe('at 390 px', () => {
     await expect(page.getByTestId('release-record')).toBeVisible();
     await expectNoSideways(page);
     // The summary of each group of the record is a target of the phone size.
+    // The groups are read from the record, so a group the release gains is checked too; the three of this state must be there.
+    const summaries = page.getByTestId('release-record').locator('summary');
+    expect(await summaries.count()).toBeGreaterThanOrEqual(3);
     for (const group of [
       'record-data:last-review',
       'record-model:threats',
       'record-model:mitigations',
     ]) {
-      await expectTarget(page.getByTestId(group).locator('summary'));
+      await expect(page.getByTestId(group)).toBeVisible();
     }
+    for (const summary of await summaries.all()) await expectTarget(summary);
     await page.getByTestId('release-act').scrollIntoViewIfNeeded();
     await expect(page.getByTestId('release-act')).toBeInViewport();
     await expectTarget(page.getByTestId('release-act'));

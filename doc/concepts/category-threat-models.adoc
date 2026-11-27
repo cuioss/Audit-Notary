@@ -143,7 +143,11 @@ xref:../specification/rest-api.adoc#_decided_threat_models[REST API Register, Op
   and the address of the wizard is a placeholder inside the lens until the wizard is built.
 . The labels of the form are keys of the app's own catalogue, because the server's catalogue of the document type is not
   served yet.
-. The release page reads the lists of threats and countermeasures change by change, by id.
+. The release page reads the lists of threats and countermeasures change by change, by id. Where one change per id cannot say it
+  all (the list was reordered, an entry has no id or a second one with the same id), it shows the whole list as one change.
+  An entry in a dialog is merged with the newer list field by field: a field the person left alone keeps what someone else
+  wrote, a field both changed differently is told as a conflict and nothing is applied; an entry that was gone from a list
+  once stays gone for the open dialog or prompt even when another entry takes its id later (decided provisionally).
 
 == Related
 

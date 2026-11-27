@@ -5,7 +5,7 @@
 
   /**
    * One side of the change of a threat or a countermeasure in the diff of a release: what the entry says, in the words of
-   * the domain (its name, its status, the threat a countermeasure treats, the issues), and "gone" for an entry that the
+   * the domain (its name, its description, its status, the risk reduction of a countermeasure, the threat it treats, the issues), and "gone" for an entry that the
    * release removes. A threat that was transferred names the risk it became.
    */
   interface Props {
@@ -32,6 +32,9 @@
       {$t('threats.likelihood')}: {threat.risk.likelihood}, {$t('threats.impact')}: {threat.risk
         .impact}
     </span>
+    {#if threat.description}
+      <span class="entry__line">{$t('threats.field.description')}: {threat.description}</span>
+    {/if}
     {#if threat.categories && threat.categories.length > 0}
       <span class="entry__line">
         {threat.categories.map((name) => $t(`threats.category.${categorySlug(name)}`)).join(', ')}
@@ -45,6 +48,12 @@
     <span class="entry__line">
       {$t('threats.mitigation.of', { threat: mitigation.attributes.threat })}
     </span>
+    <span class="entry__line">
+      {$t('threats.mitigation.reduction')}: {mitigation.riskReduction}
+    </span>
+    {#if mitigation.description}
+      <span class="entry__line">{$t('threats.field.description')}: {mitigation.description}</span>
+    {/if}
     <span class="entry__line">
       {mitigation.attributes.status
         ? $t(`threats.mitigation.status.${mitigation.attributes.status}`)

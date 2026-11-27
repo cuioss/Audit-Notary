@@ -3811,7 +3811,10 @@ change each one. The bodies and addresses are in <<_threat_model_requests>>:
   (`web-app.adoc`) keeps an array inside a row read-only. The sheet of the lens does not use that table for the countermeasures:
   its own editor (`CountermeasureEditor`, decision 21) takes the issue ids as one field, separated by commas, and an agent enters
   them through the REST API as well (AUN-TM-4). Left open: whether the form kit should get a control for a list of short texts, so
-  that the generic form and the lens read alike. The bounds stay `maxItems` 20, unique, 1 to 64 characters.
+  that the generic form and the lens read alike. The bounds stay `maxItems` 20, unique, 1 to 64 characters. The editor keeps the
+  stored ids as they are while the issue field is left alone, so an id that holds a space or a comma (the schema allows one)
+  survives an edit of another field; once the person changes the text of the field, it is read as ids separated by commas,
+  semicolons or white space, and an id that holds a separator cannot be entered through the form (the REST API can).
 
 . *The sheet of a model has two parts and so two document controllers* (decided with the screens of the lens). The data of the document (`owner`, `last-review`) and the
   file of the model (`model`) each have their own draft, blob id and conflicts, and *Save for everyone* sends one save for each

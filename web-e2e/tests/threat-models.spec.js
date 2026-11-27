@@ -65,7 +65,15 @@ test.describe('the fixtures of this spec', () => {
       return answer.json();
     };
 
-    // The nine services of the catalog, with their need and the models of each.
+    // The services of the catalog are the ones this spec has words for: a service the mock gains is named here, not skipped
+    // by the loops below.
+    const catalog = await read('/api/v1/catalogs/service');
+    expect(
+      SERVICES.map((service) => service.id).sort(),
+      'the services of the fixtures against the catalog of the mock',
+    ).toEqual(catalog.entries.map((entry) => entry.id).sort());
+
+    // The services of the catalog, with their need and the models of each.
     for (const service of SERVICES) {
       const body = await read(servicePath(service.id));
       expect(body.service.name, service.id).toBe(service.name);
@@ -77,7 +85,8 @@ test.describe('the fixtures of this spec', () => {
     }
     expect((await page.request.get(servicePath('no-such-service'))).status()).toBe(404);
 
-    // The checkout flow: its threats in order with the status, the treatment and the transfer, and its countermeasures.
+    // The checkout flow: its threats in order with the status, the treatment and the transfer, and its countermeasures. The
+    // lists are compared whole, so a threat or a countermeasure the mock gains or loses is named here.
     const model = await read(modelPath(CHECKOUT.service, CHECKOUT.model));
     expect(model.id).toBe(CHECKOUT.document);
     expect(model.title).toBe(CHECKOUT.title);
@@ -484,7 +493,11 @@ test.describe('the sheet of a model (UC-TM-2, AUN-TM-4)', () => {
     // The diagram is the data URL of the read, drawn as an image that loaded.
     const image = page.getByTestId('diagram-image');
     expect(await image.getAttribute('src')).toMatch(/^data:image\/svg\+xml;base64,/);
-    expect(await image.evaluate((element) => element.complete && element.naturalWidth)).toBe(760);
+    await expect
+      .poll(() => image.evaluate((element) => element.complete && element.naturalWidth), {
+        message: 'the diagram has loaded',
+      })
+      .toBe(760);
     await expect(image).toHaveAccessibleName(
       'Diagram of Payment API, checkout flow with the components Customer browser, Payment API, Payment database, Payment provider.',
     );
@@ -1248,7 +1261,10 @@ test.describe('the sheet follows the stream (AUN-WEB-5)', () => {
       if (path === servicePath(CHECKOUT.service)) reads.service += 1;
     });
     const by = { pseudonym: 'p-2b7f10', name: 'Jordan Weber' };
-    // The events arrive in the order they were sent: a document of another repository comes first and reads nothing.
+    // The events arrive in the order they were sent: a document of another repository comes first. The page shows no
+    // delivery, so this test cannot tell a refresh that the first event started from one that the second started; that
+    // the repository filter reads nothing for another repository is the test "ignores a save of another repository" of
+    // `sheet.test.ts`. Here the totals prove that the event of the threat models reads each endpoint once, not twice.
     await broadcast(request, 'document-saved', {
       repository: 'samm-assessments',
       id: 'payments-2026-q4',

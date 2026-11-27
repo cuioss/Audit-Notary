@@ -17,6 +17,7 @@ import type {
   ThreatTreatment,
 } from '../api/types';
 import { THREAT_TREATMENTS } from '../api/types';
+import type { SaveStateKind } from '../components/SaveState.svelte';
 import { checkReturn, formatAddress } from '../routes';
 
 /** The repository of the threat models. */
@@ -334,14 +335,30 @@ type Translate = (key: string, params?: Record<string, string | number>) => stri
  * (a threat) or threat (a countermeasure). A conflict is decided per list, so the person must be able to tell the two
  * lists apart.
  *
+ * The line shows only some fields of an entry. When the two sides also differ in a field it does not show (the impact of
+ * a threat, the risk reduction of a countermeasure), the line would read the same on both sides, so it leaves both sides
+ * to the generic reading, which spells out every field.
+ *
  * @param pointer the pointer of the list
  * @param value one side of the conflict
  * @param t the translation function
- * @returns the line, or `null` for a field that is no list of the model
+ * @param other the other side of the conflict, when the caller has it
+ * @returns the line, or `null` for a field that is no list of the model or whose sides differ beyond the line
  */
-export function describeList(pointer: string, value: unknown, t: Translate): string | null {
+export function describeList(
+  pointer: string,
+  value: unknown,
+  t: Translate,
+  other?: unknown,
+): string | null {
   if (pointer !== '/threats' && pointer !== '/mitigations') return null;
   if (!Array.isArray(value)) return null;
+  if (
+    Array.isArray(other) &&
+    !jsonEqual(unshown(pointer, value), unshown(pointer, other as unknown[]))
+  ) {
+    return null;
+  }
   const size = t('documents.value.entries', { count: value.length });
   if (value.length === 0) return size;
   const content = value
@@ -357,6 +374,45 @@ export function describeList(pointer: string, value: unknown, t: Translate): str
     })
     .join('; ');
   return t('documents.value.with-content', { size, content });
+}
+
+/**
+ * The three-way merge of a dialog over a record that may have changed while the dialog was open (live refresh): each
+ * field the person changed is taken from the dialog, each field they left alone stays as the record holds it now, so that
+ * a change someone else made meanwhile is not written over with the old value. A field that both changed to different
+ * values is a conflict, and nothing is merged.
+ *
+ * @param base the fields as the dialog opened on them
+ * @param mine the fields as the dialog holds them
+ * @param theirs the fields of the record as it stands now
+ * @returns the merged fields, and the names of the fields in conflict (none when the merge is complete)
+ */
+export function mergeEdit<T extends object>(
+  base: T,
+  mine: T,
+  theirs: T,
+): { merged: T; conflicts: (keyof T)[] } {
+  const merged = { ...theirs };
+  const conflicts: (keyof T)[] = [];
+  for (const key of Object.keys(mine) as (keyof T)[]) {
+    if (jsonEqual(base[key], mine[key])) continue;
+    if (jsonEqual(base[key], theirs[key]) || jsonEqual(mine[key], theirs[key])) {
+      merged[key] = mine[key];
+    } else {
+      conflicts.push(key);
+    }
+  }
+  return { merged, conflicts };
+}
+
+/** The entries of a list without the fields that {@link describeList} names: what its line leaves unsaid. */
+function unshown(pointer: string, list: unknown[]): unknown[] {
+  const shown = pointer === '/threats' ? 'status' : 'threat';
+  return list.map((entry) => {
+    const { id: _id, name: _name, attributes, ...rest } = (entry ?? {}) as Record<string, unknown>;
+    const { [shown]: _shown, ...others } = (attributes ?? {}) as Record<string, unknown>;
+    return { ...rest, attributes: others };
+  });
 }
 
 /** The start of the data URL of a diagram the app draws: a base64 vector image, nothing else. */
@@ -398,10 +454,25 @@ export function componentNames(value: JsonObject | undefined): string[] {
  * @param state a save state
  * @returns its rank, higher for the one that tells the person more
  */
-export function saveRank(state: string): number {
-  const order = ['clean', 'saved', 'draft', 'drafting', 'changed', 'conflict', 'failed', 'saving'];
-  return order.indexOf(state);
+export function saveRank(state: SaveStateKind): number {
+  return SAVE_RANK[state];
 }
+
+/**
+ * The rank of every save state of the margin. The type is the record over the states of the one place that names them
+ * ({@link SaveStateKind}), so a state that is added there does not compile here until it has a rank.
+ */
+const SAVE_RANK: Record<SaveStateKind, number> = {
+  'read-only': 0,
+  clean: 1,
+  saved: 2,
+  draft: 3,
+  drafting: 4,
+  changed: 5,
+  conflict: 6,
+  failed: 7,
+  saving: 8,
+};
 
 /** One change of the record a release makes: the part it is in and the words of its field. */
 export interface ModelChange {
@@ -457,7 +528,10 @@ export function groupModelDiff(
         groups.push(group);
       }
       const list = tokens.length === 1 && (property === 'threats' || property === 'mitigations');
-      const byId = list ? elementChanges(section.part, change, group.key) : [];
+      const byId =
+        list && entriesByIdShowEveryChange(change)
+          ? elementChanges(section.part, change, group.key)
+          : [];
       if (byId.length > 0) {
         group.changes.push(...byId);
       } else if (!list || !jsonEqual(change.before, change.after)) {
@@ -475,6 +549,27 @@ export function groupModelDiff(
     }
   }
   return groups.filter((group) => group.changes.length > 0);
+}
+
+/**
+ * Whether one change per entry, by id, shows everything the list changed. It does not when an entry has no id or an id
+ * that another entry of the same side has, or when the entries both sides have changed their order: the approver then
+ * reads the whole list, which is the only form that says it all.
+ */
+function entriesByIdShowEveryChange(change: DiffChange): boolean {
+  const idsOf = (value: unknown): string[] | null => {
+    if (value === null || value === undefined) return [];
+    if (!Array.isArray(value)) return null;
+    const ids = value.map((entry) => (entry as { id?: unknown } | null)?.id);
+    if (!ids.every((id) => typeof id === 'string' && id !== '')) return null;
+    return new Set(ids).size === ids.length ? (ids as string[]) : null;
+  };
+  const before = idsOf(change.before);
+  const after = idsOf(change.after);
+  if (!before || !after) return false;
+  const kept = new Set(before.filter((id) => after.includes(id)));
+  const order = (ids: string[]) => ids.filter((id) => kept.has(id)).join('\u0000');
+  return order(before) === order(after);
 }
 
 /** The changes of the entries of a list of the file, by id: new, gone or changed. */
