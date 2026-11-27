@@ -1,0 +1,89 @@
+= Audit Notary -- Modern Web Guidance
+:toc: left
+:toclevels: 2
+:toc-title: Table of Contents
+:source-highlighter: highlight.js
+
+xref:README.adoc[Development] » Modern Web Guidance
+
+Modern Web Guidance is Google's skill pack that steers a coding agent toward current web-platform features (native
+dialogs and popovers, anchor positioning, container queries, form validation) instead of older patterns. This page says
+how a person who works on the web app can use it in a session, how to install it safely, and what was found when its
+package was read. It is a local tool of that person: no dependency of the repository (the rule of `AGENTS.md` that no
+dependency is added without the owner's approval is not touched), no change to the build, and no part of Audit Notary.
+The pack is licensed Apache-2.0, and its name is a trademark of its owner.
+
+== Install
+
+Version read and checked: `modern-web-guidance@1.0.2`, the repository `GoogleChrome/modern-web-guidance` at commit
+`2b4aa13` (2026-11-23), npm integrity
+`sha512-ksFBCdzMl5xxf7wuF7XQbudQ6El1e2VrO0WzcH/U29NYGNzu0EZjtojkfwzFBSnmenDyl7QIwPCgYvfEmZHr+w=`
+(`npm view modern-web-guidance@1.0.2 dist.integrity`).
+
+. Switch the telemetry off first. It is on by default, runs in a detached background process, and sends the search
+  queries the agent writes (they name the feature being built), the guide ids and the agent's name. Put
+  `export DISABLE_TELEMETRY=1` in the shell profile of the account that starts the agent.
+. Install the skill for Claude Code:
++
+[source,bash]
+----
+claude plugin marketplace add GoogleChrome/modern-web-guidance
+claude plugin install modern-web-guidance@googlechrome
+----
++
+The wizard of the vendor, `npx modern-web-guidance@latest install`, makes a second download (`npx skills add`) and is
+not needed.
+. Allow only the one command the skill runs, `npx -y modern-web-guidance@latest *`, never a bare `npx *`.
+. The skill runs `@latest` on every call, so the code that runs is whatever the vendor published last. To run exactly
+  the version checked above, run the commands yourself with `@1.0.2` (`npx modern-web-guidance@1.0.2 search "<query>"`),
+  or copy the skill directory into your user skill directory and replace `@latest` by `@1.0.2`; keep the `LICENSE` and
+  say in the file that it was changed.
+. Do not run `set-allow-volatile-features` or `set-allow-origin-trials`: they write a `.mwgrc` file at the repository
+  root, which is not ignored by `.gitignore`. Never commit one.
+
+== How It Is Used Here
+
+* A guide is a pattern for plain HTML, CSS and JavaScript. The web app is Svelte: adapt the pattern, never paste it, and
+  never let a guide add a dependency.
+* The rules of this repository win over a guide. A change to the look or the interaction of the web app goes through the
+  project skill `/audit-notary-design` and `doc/concepts/visual-design.adoc` whatever a guide says; a guide that
+  disagrees with the design is not followed.
+* The guide on sanitizing untrusted HTML is read against the sanitizer the web app already has (`sanitize.ts` and
+  `SafeNodes.svelte`, AUN-WEB-4 and AUN-WEB-8 of `doc/specification/web-app.adoc`): the web app renders no `{@html}`, and
+  a guide never replaces that.
+* Login and session are not the web app's to extend (ADR-0004): a guide on passkeys, sign-in or origin validation is
+  background reading for the design against Token Sheriff, not a change of `security/` or `web/`.
+* `legacy-scan` is an audit, run once on a scratch copy of `web-app/`: it reports patterns that a native feature could
+  replace, each with a rubric to check by hand. It fixes nothing; a change that follows is made like any other.
+* A guide does not replace the checks of the repository. The accessibility check of the vendor's own dashboard is, by its
+  own statement, not a WCAG audit.
+
+== What Was Found
+
+Read from the repository and the package, nothing run; the vendor's figures were not reproduced.
+
+* The skill is a command line (`npx -y modern-web-guidance@latest`), and 70 of its 211 guide files contain `npx`. Nothing
+  pins the code that runs; the one pin (`--skill-version`) selects the guide corpus.
+* Installing needs a network; the search runs locally on the files of the package. Files written outside the project:
+  `.mwgrc` (the browser-support policy, in the repository root or the home directory), a temporary file for output over
+  9.5 KB, and the npm cache.
+* The vendor reports that 88 % of automated checks passed with the pack against 56 % without it (nightly runs of
+  2026-11-08, 199 to 215 tasks per agent; its dashboard, not opened here) and that the guided runs took longer and used
+  more tokens. One adopter reports 60.8 % to 94.0 % for one agent and 75.8 % to 90.0 % for another over 180 runs, in three
+  arms: unguided, guided without naming the pack, guided with it named.
+* The web app (`web-app/src`, counted by a search over the sources): 145 Svelte components; the native `<dialog>` element
+  and `showModal()` are used by `Dialog.svelte` (the other hit is the test setup); no hand-built `role="dialog"`, no
+  `popover`, no `transition: all`. The web app declares no browser-support target: there is no `browserslist` and no build
+  target in `vite.config.ts` or `package.json`, and neither `doc/` nor `AGENTS.md` names a Baseline level. Without one the
+  pack assumes _Baseline widely available_.
+
+Declare the target once, for example `**Browser Support:** Baseline 2024` in `AGENTS.md`, if a guide should respect it;
+that is a decision of the owner and not made here.
+
+== Sources
+
+* Chrome, _Modern Web Guidance_: https://developer.chrome.com/docs/modern-web-guidance and its _Get started_ page
+  (installation, the Baseline target, `search` and `retrieve`).
+* The repository https://github.com/GoogleChrome/modern-web-guidance (the skill text, the guides, the manifests, the
+  sections _Updating_ and _Telemetry & Privacy_ of its README) and the package `modern-web-guidance@1.0.2` on npm (the
+  command line, read for its network, process and file behaviour).

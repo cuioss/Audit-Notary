@@ -55,6 +55,11 @@ web-mock/stop.sh
 The mock signs in by itself; switch the profile while the app runs with
 `curl -X POST http://127.0.0.1:7420/mock/scenario -d '{"scenario":"first-login"}'`.
 
+== Modern Web Guidance
+
+How to use Google's Modern Web Guidance skill pack in a session on the web app, how to install it safely, and what was
+found when it was read: xref:modern-web-guidance.adoc[Modern Web Guidance].
+
 == Continuous Integration
 
 [cols="1,3"]
