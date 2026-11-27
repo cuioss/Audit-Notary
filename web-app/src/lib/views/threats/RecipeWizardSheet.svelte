@@ -369,6 +369,7 @@
               value={stepValue(wizard.values, fills)}
               errors={stepErrors.length > 0 ? stepErrors : null}
               headingLevel={3}
+              untitled
               {services}
               onchange={(next, state) => {
                 formErrors = state.errors.length;
@@ -522,6 +523,11 @@
   .status__acts :global(.btn-with-reason) {
     align-items: stretch;
     max-inline-size: none;
+  }
+
+  /* The column is read from its start: the reason an act cannot be taken stands under the act, not at its far end. */
+  .status__acts :global(.btn__reason) {
+    text-align: start;
   }
 
   .margin__note {

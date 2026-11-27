@@ -19,6 +19,8 @@ export interface FormContext {
   readonly readonly: boolean;
   /** The level of the heading of a first-level section. */
   readonly headingLevel: number;
+  /** Whether the form is one part that a heading above it already names: that part's own title is not drawn. */
+  readonly untitled?: boolean;
   /** @returns the value of the field at a pointer into this context's value */
   valueAt(pointer: string): unknown;
   /**

@@ -311,7 +311,9 @@ already reached by a check and as acts that go back to them (they are named "<st
 yet reached as plain text, so that the way forward is the sheet's own act and never a jump. On a phone only the count ("Step 2 of
 5") and the current step stay. A step is the heading of the step, its guidance (the recipe's AsciiDoc, rendered by the server,
 set off by a hairline at its start and never in a box), and the form of the part of the model it fills: the form kit for an object
-or a table of objects, and the table of the threats and the editor of the countermeasures where the step fills those two lists. A
+or a table of objects, and the table of the threats and the editor of the countermeasures where the step fills those two lists. The
+step's heading names its only part, so the form is `untitled`: the section title or the table caption it would draw a second
+time stays for a screen reader. A
 change of step moves the focus to its heading and is announced politely. The last page, *Review and create*, lists every step with
 what it holds and an act to change it, asks for the owner and the review date (prefilled with today), and carries the one primary
 act, *Create threat model*. The status of the sheet holds the save state (*Saved for you at …* once the step is kept, the same

@@ -73,7 +73,7 @@
       body={$t('threats.new.recipes.none.body')}
     >
       {#snippet actions()}
-        <Link href={serviceAddress(service.service.id)}>{service.service.name}</Link>
+        <Link href={serviceAddress(service.service.id)}>{$t('threats.new.back')}</Link>
       {/snippet}
     </EmptyState>
   {:else}

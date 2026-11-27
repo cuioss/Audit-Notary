@@ -99,6 +99,57 @@ describe('SchemaForm: labels, marks and hints', () => {
   });
 });
 
+describe('SchemaForm: a form under a heading that names its only part', () => {
+  const section: JsonSchema = {
+    type: 'object',
+    properties: { frame: { type: 'object', properties: { name: { type: 'string' } } } },
+  };
+  const table: JsonSchema = {
+    type: 'object',
+    properties: {
+      zones: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' } } } },
+    },
+  };
+
+  it('draws the title of the only section for a screen reader alone, without its rule', () => {
+    useMessages('en');
+    render(SchemaForm, { schema: section, category: 'x', kind: 'y', value: {}, untitled: true });
+    const title = screen.getByRole('heading', { name: 'frame' });
+    expect(title).toHaveClass('sr-only');
+    expect(title.closest('section')).toHaveClass('section--untitled');
+    expect(field('name')).toBeInTheDocument();
+  });
+
+  it('draws the caption of the only table for a screen reader alone', () => {
+    useMessages('en');
+    render(SchemaForm, { schema: table, category: 'x', kind: 'y', value: {}, untitled: true });
+    expect(screen.getByText('zones')).toHaveClass('sr-only');
+  });
+
+  it('keeps every title of a form of several parts, and of a form that was not asked', () => {
+    useMessages('en');
+    const two: JsonSchema = {
+      type: 'object',
+      properties: {
+        frame: { type: 'object', properties: { name: { type: 'string' } } },
+        more: { type: 'object', properties: { id: { type: 'string' } } },
+      },
+    };
+    const { unmount } = render(SchemaForm, {
+      schema: two,
+      category: 'x',
+      kind: 'y',
+      value: {},
+      untitled: true,
+    });
+    expect(screen.getByRole('heading', { name: 'frame' })).not.toHaveClass('sr-only');
+    expect(screen.getByRole('heading', { name: 'more' })).not.toHaveClass('sr-only');
+    unmount();
+    render(SchemaForm, { schema: section, category: 'x', kind: 'y', value: {} });
+    expect(screen.getByRole('heading', { name: 'frame' })).not.toHaveClass('sr-only');
+  });
+});
+
 describe('SchemaForm: editing the kinds', () => {
   it('stores a text, and removes the property when the field is emptied', async () => {
     const { onchange } = await open('test-note');

@@ -234,7 +234,7 @@ test.describe('the choice of a recipe (UC-TM-1)', () => {
     );
     await expect(page.getByTestId('recipe-choice')).toHaveCount(0);
     await expectNoSeriousViolations(page, 'threat models: no recipe');
-    await sheet.getByRole('link', { name: SERVICE.name }).click();
+    await sheet.getByRole('link', { name: 'Back to the service' }).click();
     await expect(page).toHaveURL(SERVICE_ADDRESS);
   });
 
@@ -1315,7 +1315,7 @@ test.describe('the wizard is written in German', () => {
     await expect(page.getByTestId('summary-project')).toContainText(CREATED.name);
     await expect(page.getByTestId('summary-zones')).toContainText('Noch nichts');
     await expect(page.getByTestId('review-data')).toContainText(
-      'Verantwortliche Rolle und Prüfdatum',
+      'Verantwortlich und Überprüfungsdatum',
     );
     await expect(page.getByRole('button', { name: 'Der Rahmen ändern' })).toBeVisible();
     await expect(state(page)).toContainText('für Sie gespeichert');

@@ -27,9 +27,11 @@
     error: string | null;
     /** Whether the table is read: the form, a section above or the property says so. */
     reading?: boolean;
+    /** Whether the heading above the form already names the list: its caption is for a screen reader alone. */
+    untitled?: boolean;
   }
 
-  let { node, label, hints, error, reading = false }: Props = $props();
+  let { node, label, hints, error, reading = false, untitled = false }: Props = $props();
 
   const form = useForm();
 
@@ -124,6 +126,7 @@
     <DataTable
       bind:this={table}
       caption={label}
+      captionHidden={untitled}
       {columns}
       rowCount={rows.length}
       readonly={reading}

@@ -57,6 +57,8 @@
   );
   let reading = $derived(form.readonly || inheritedReadOnly || node.readOnly);
   let level = $derived(Math.min(6, form.headingLevel + depth));
+  /** The only part of a form whose heading above already names it: its title is for a screen reader alone. */
+  let untitled = $derived(form.untitled === true && depth === 0);
   /** Unique on the page: a row editor over the form holds sections with the same pointers. */
   const sectionId = uniqueId('section');
 
@@ -106,10 +108,15 @@
   <section
     class="section"
     class:section--nested={depth > 0}
+    class:section--untitled={untitled}
     aria-labelledby={sectionId}
     data-pointer={node.pointer}
   >
-    <svelte:element this={`h${level}`} class="section__title" id={sectionId}>{label}</svelte:element
+    <svelte:element
+      this={`h${level}`}
+      class="section__title"
+      class:sr-only={untitled}
+      id={sectionId}>{label}</svelte:element
     >
     {#each hints as line, index (index)}
       <p class="field__hint">{line}</p>
@@ -123,7 +130,7 @@
   </section>
 {:else if node.kind === 'table'}
   <div class="field" data-pointer={node.pointer}>
-    <TableField {node} {label} {hints} {error} {reading} />
+    <TableField {node} {label} {hints} {error} {reading} {untitled} />
   </div>
 {:else if reading || node.kind === 'plain'}
   <div class="field" data-pointer={node.pointer}>
@@ -265,6 +272,12 @@
 
   .section--nested {
     padding-block-start: var(--space-3);
+    border-block-start: none;
+  }
+
+  /* The heading above the form names this part: no second rule and no second title over it. */
+  .section--untitled {
+    padding-block-start: 0;
     border-block-start: none;
   }
 

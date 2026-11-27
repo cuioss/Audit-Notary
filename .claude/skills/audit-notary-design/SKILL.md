@@ -67,7 +67,8 @@ Read the concept first, then the component you are about to change.
    vocabulary: the steps as a numbered list, the reached ones as acts that go back, the current one `aria-current="step"`, a
    count and the current step only on a phone) over the steps and one last page, *Review and create*; a step is its heading
    (it takes the focus, the change is announced politely), the recipe's guidance (`AsciiDocView`, set off by a hairline, never
-   a box) and the form of what it fills (`SchemaForm` cut to the member, `ThreatTable`, `CountermeasureEditor`). The primary
+   a box) and the form of what it fills (`SchemaForm` cut to the member and `untitled`, so that the title of its only section or the caption of its only table is not
+   drawn under the step's own heading, `ThreatTable`, `CountermeasureEditor`). The primary
    act is *Next step*, on the last page *Create threat model*; *Back* writes nothing; the draft is kept when the person goes
    on and the status says *Saved for you at …*; leaving with changes that are kept nowhere asks (`LeaveGuard`); the create goes
    through `StepUpHandler`. A text of a recipe is its own data in the language of the interface, never a catalogue key.

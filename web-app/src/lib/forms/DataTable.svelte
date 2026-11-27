@@ -26,6 +26,8 @@
   interface Props {
     /** The name of the table: the label of the list. */
     caption: string;
+    /** Whether the caption is for a screen reader alone, because a heading above the table names it already. */
+    captionHidden?: boolean;
     /** The columns. */
     columns: TableColumn[];
     /** The number of rows. */
@@ -65,6 +67,7 @@
 
   let {
     caption,
+    captionHidden = false,
     columns,
     rowCount,
     cell,
@@ -121,11 +124,11 @@
 
 <div class="table" data-testid={testId} bind:this={grid}>
   {#if rowCount === 0}
-    <p class="table__caption">{caption}</p>
+    <p class="table__caption" class:sr-only={captionHidden}>{caption}</p>
     <p class="table__empty">{empty}</p>
   {:else}
     <table class="table__grid">
-      <caption class="table__caption">{caption}</caption>
+      <caption class="table__caption" class:sr-only={captionHidden}>{caption}</caption>
       <thead class="table__head" class:table__head--single={columns.length === 1}>
         <tr>
           {#each columns as column (column.key)}
@@ -290,6 +293,15 @@
 
   .table__add {
     display: flex;
+  }
+
+  /* The act sits at the start of the line under the list, and so does the reason it cannot be taken. */
+  .table__add :global(.btn-with-reason) {
+    align-items: flex-start;
+  }
+
+  .table__add :global(.btn__reason) {
+    text-align: start;
   }
 
   @container (max-width: 44rem) {
