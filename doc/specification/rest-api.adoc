@@ -5263,4 +5263,8 @@ required, which is true only after the notice is begun, point 40).
 For the owner, from part B of the lens: whether a release should be refused while a deadline is open (point 46; the page lists them
 and does not block); whether a create should be able to ask for step-up at all (point 48: it is wired, the shipped workflows ask for
 none); and whether the stopped clock should be told after the release when no deadline was still a duty (point 46: the list and its
-sentence are drawn only with rows, so a release with every deadline met or sent shows the seal alone).
+sentence are drawn only with rows, so a release with every deadline met or sent shows the seal alone). If a create may ask for
+step-up, the multi-factor path leaves the page, and there is no draft of an incident that does not exist (point 31): the title and the
+time typed so far are lost across the redirect. Decided provisionally: leave it as it is (the password path stays on the page, and the
+shipped workflows ask for no step-up on a create); the options are a keep of its own (such as the session storage), a `beforeLeave` that
+refuses the create under multi-factor with a notice, or leaving the loss.
