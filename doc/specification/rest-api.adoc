@@ -5177,12 +5177,15 @@ clock, the notices and the report), so that no screen is blocked; the owner may 
 . *The act of a stage acts on the saved part,* like every step of a workflow: with changes only the person has, the bar offers
   *Save for everyone, then Complete stage*. The act is disabled, with the reason, while a stage before it is open or a conflict of
   the part is undecided. The stage that asks for step-up says in a line, in domain words, that the person confirms their identity
-  once more.
+  once more. *Save for everyone* saves the parts that changed one after the other (the title first, then the stages in their
+  order), each as its own signed commit; a conflict or a refusal of one part does not hold back the others, and a confirmation
+  that was not answered stops the rest, which wait for the next press instead of asking again.
 . *The tab is the query `stage`.* A change of tab replaces the address (`replace`, no entry of the history for each tab), and
   an address without a stage, or with one the incident does not declare, opens the first stage that is open and does not wait
-  for another, then the first that is open, then the first that applies.
+  for another, then the first that is open, then the first that applies. That tab is found once, when the sheet opens: a
+  completion, or a read that brings the work of someone else, never moves the person to another tab; only the query does.
 . *The clock is told against the page's own time while the incident is worked on, and against `asOf` once it is frozen or a
-  revision.* An `OPEN` deadline whose due time has passed on the page's clock reads *Missed* ("Overdue by …") and needs the
+  revision.* An `OPEN` deadline without a notice whose due time has passed on the page's clock reads *Missed* ("Overdue by …") and needs the
   person until the next read says so; a deadline that is missed and was never sent is a box, one that was sent late is
   information (a dot and the words "Sent …, … late"). The server's status stays the truth: the page never writes a status.
 . *The notices are a table over the form.* The tab *Notifications* lists every named member that has a time, and every entry of

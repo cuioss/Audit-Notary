@@ -1970,7 +1970,7 @@ test.describe('the lens is written in German', () => {
       'Noch 26 Tage bis zur Fälligkeit',
     );
     await expect(clockRow(page, 'nis2-notification')).toContainText(
-      'Gesendet 22.11.2026, 11:20, 3 Stunden zu spät',
+      'Gesendet am 22.11.2026, 11:20, 3 Stunden zu spät',
     );
     const table = page.getByTestId('notifications-table');
     await expect(table.getByRole('columnheader')).toHaveText([

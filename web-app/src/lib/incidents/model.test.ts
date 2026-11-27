@@ -269,6 +269,16 @@ describe('a row of the deadline clock', () => {
     expect(row).toMatchObject({ status: 'MISSED', statusLabel: 'Missed', needsYou: true });
   });
 
+  it('leaves the status of a deadline with a notice to the server, whatever the page clock says', () => {
+    const row = clockRow(
+      deadline({ due: '2026-11-26T09:00:00Z', sentAt: '2026-11-26T08:00:00Z' }),
+      at,
+      english,
+      when,
+    );
+    expect(row).toMatchObject({ status: 'OPEN', needsYou: false });
+  });
+
   it('is written in German too', () => {
     use('de');
     const row = clockRow(deadline({ due: '2026-11-28T10:00:00Z' }), at, german, when);
@@ -394,6 +404,36 @@ describe('the report', () => {
     expect(sections).toHaveLength(2);
     expect(sections[0].source).toBe('=== Summary\n\nx');
     expect(sections[1].source.startsWith('=== Deadlines')).toBe(true);
+  });
+
+  it('puts every heading one level lower, so that a subsection stays below its section', () => {
+    const sections = reportSections('= T\n\n== A\n\n=== A1\n\ntext\n\n== B\n');
+    expect(sections.map((section) => section.source)).toEqual([
+      '=== A\n\n==== A1\n\ntext',
+      '=== B',
+    ]);
+  });
+
+  it('does not cut a listing, a literal or a comment block at a line that looks like a heading', () => {
+    const adoc = [
+      '= T',
+      '',
+      '== A',
+      '',
+      '----',
+      '== not a heading',
+      '----',
+      '',
+      '== B',
+      '',
+      '....',
+      '== x',
+      '....',
+    ];
+    const sections = reportSections(adoc.join('\n'));
+    expect(sections).toHaveLength(2);
+    expect(sections[0].source).toBe('=== A\n\n----\n== not a heading\n----');
+    expect(sections[1].source).toBe('=== B\n\n....\n== x\n....');
   });
 
   it('keeps a text before the first section as a section of its own and drops empty ones', () => {

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { get } from 'svelte/store';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '../../api/client';
+import { ApiError } from '../../api/errors';
 import { DRAFT_DELAY_MS } from '../../documents/controller.svelte';
 import { status } from '../../stores/app';
 import { SCENARIO_DIR } from '../../test/scenarioFetch';
@@ -436,6 +437,27 @@ describe('saving a part', () => {
     });
   });
 
+  it('asks the step-up once for the parts it saves, and sends no second request when it was not answered', async () => {
+    const kit = await open('workshop', CARD, { stage: 'triage' });
+    const stepUp = vi.spyOn(apiClient, 'stepUp').mockImplementation(() => {});
+    const save = vi
+      .spyOn(apiClient, 'saveDocument')
+      .mockRejectedValue(
+        new ApiError('STEP_UP_REQUIRED', 403, [], { stepUp: '/api/v1/auth/login?step-up=mfa' }),
+      );
+    await fireEvent.input(within(screen.getByTestId('title-form')).getByRole('textbox'), {
+      target: { value: 'Card data in the checkout log' },
+    });
+    await kit.show('privacy-assessment');
+    await fireEvent.input(screen.getByLabelText(/Records affected, approximate/), {
+      target: { value: '1900' },
+    });
+    await fireEvent.click(screen.getByTestId('save-everyone'));
+    await vi.waitFor(() => expect(stepUp).toHaveBeenCalledTimes(1));
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('save-state')).toHaveAttribute('data-state', 'changed');
+  });
+
   it('reads the incident again after a save', async () => {
     const kit = await open('workshop', CARD);
     const reads = () =>
@@ -574,6 +596,15 @@ describe('completing a stage', () => {
     expect(screen.getByTestId('stage-completion')).toHaveTextContent('Completed by Alex Example');
     expect(screen.getByTestId('stage-reopen')).toHaveTextContent('Reopen stage');
     expect(screen.getByTestId('stage-form')).not.toContainElement(screen.queryByRole('textbox'));
+  });
+
+  it('stays on the tab the address opened when the stage is completed, though the default would be another now', async () => {
+    await open('workshop', STUFFING);
+    expect(shownStage()).toBe('review');
+    await fireEvent.click(screen.getByTestId('stage-complete'));
+    await vi.waitFor(() => expect(tab('review')).toHaveTextContent('Completed'));
+    expect(shownStage()).toBe('review');
+    expect(tab('review')).toHaveAttribute('aria-selected', 'true');
   });
 
   it('reopens a completed stage and marks the stages signed off after it', async () => {

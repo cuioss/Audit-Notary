@@ -271,15 +271,20 @@ export function clockRow(
   } else {
     detail = t('incidents.clock.left', { span: span(due.getTime() - at.getTime()) });
   }
-  // A deadline the clock of the page has overtaken before the server says so is already a duty.
-  const overtaken = deadline.status === 'OPEN' && due !== null && due.getTime() < at.getTime();
+  // A deadline never sent that the clock of the page has overtaken before the server says so is already a duty; one with a
+  // notice keeps the status the server gave it.
+  const overtaken =
+    deadline.status === 'OPEN' &&
+    deadline.sentAt === null &&
+    due !== null &&
+    due.getTime() < at.getTime();
   return {
     key: `${deadline.rule}/${deadline.element ?? ''}`,
     name,
     basis: t(`category.${INCIDENT_CATEGORY}.deadline.${deadline.rule}.basis`),
     status: overtaken ? 'MISSED' : deadline.status,
     statusLabel: t(`incidents.clock.status.${overtaken ? 'MISSED' : deadline.status}`),
-    needsYou: needsYou || (overtaken && deadline.sentAt === null),
+    needsYou: needsYou || overtaken,
     due: deadline.due,
     dueText: deadline.due === null ? null : when(deadline.due),
     detail,
@@ -370,9 +375,9 @@ function propertiesOf(schema: JsonSchema | undefined): Record<string, JsonSchema
 export function partSchema(schema: JsonSchema, part: string): JsonSchema {
   const own = propertiesOf(schema)[part];
   if (!own) return { type: 'object', properties: {} };
-  const { completion: _completion, ...rest } = propertiesOf(own);
-  void _completion;
-  return { ...own, properties: rest };
+  const properties = { ...propertiesOf(own) };
+  delete properties.completion;
+  return { ...own, properties };
 }
 
 /**

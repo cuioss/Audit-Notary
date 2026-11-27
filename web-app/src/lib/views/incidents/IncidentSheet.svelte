@@ -33,6 +33,7 @@
     openStages,
     releaseAddress,
     stageTabs,
+    SUBMIT_TRANSITION,
   } from '../../incidents/model';
   import { StageActs } from '../../incidents/stageActs.svelte';
   import StepUpDialog from '../../stepup/StepUpDialog.svelte';
@@ -176,7 +177,17 @@
       stages.map((entry) => [entry.id, $t(`category.${INCIDENT_CATEGORY}.stage.${entry.id}`)]),
     ),
   );
-  let selectedId = $derived(knownStage(stageQuery, stages) ?? defaultStage(stages) ?? '');
+  /**
+   * The tab an address without a stage opens, found once when the sheet opens: a completion, or a read that brings the work
+   * of someone else, never moves the person to another tab by itself.
+   */
+  const opened = untrack(() => defaultStage(incident.stages));
+  let selectedId = $derived(
+    knownStage(stageQuery, stages) ??
+      knownStage(opened ?? undefined, stages) ??
+      defaultStage(stages) ??
+      '',
+  );
   let selected = $derived(stages.find((entry) => entry.id === selectedId) ?? null);
 
   let dirty = $derived(all.some((controller) => controller.dirty));
@@ -292,7 +303,14 @@
       act: $t('documents.save'),
       lede: $t('stepup.lede.save', { title: incident.title }),
     };
-    for (const part of parts) await controllers[part].save();
+    for (const part of parts) {
+      const controller = controllers[part];
+      const waiting = controller.dirty && !controller.locked && controller.open === 0;
+      await controller.save();
+      // A save the person cancelled, or that left for the identity provider, changed nothing: the next part would ask the
+      // same question again, so the rest waits for the next press.
+      if (waiting && controller.dirty && controller.saveState === 'changed') break;
+    }
   }
 
   async function save() {
@@ -349,7 +367,7 @@
 
   /** Why the incident cannot be submitted although the person may: a stage that applies is not completed. */
   function submitReason(transition: DocumentTransition): string | null {
-    if (transition.release) return null;
+    if (transition.release || transition.id !== SUBMIT_TRANSITION) return null;
     const waiting = openStages(stages);
     return allStagesDone(stages) || waiting.length === 0
       ? null
@@ -407,6 +425,16 @@
     askStage = null;
     await runAct(id);
   }
+
+  // The refusal, the failure and the question to save first belong to the stage they were asked on: a link to another stage
+  // (the stages that come first) or the way back in the history leaves them behind.
+  $effect.pre(() => {
+    void selectedId;
+    untrack(() => {
+      acts.clear();
+      askStage = null;
+    });
+  });
 
   function choose(id: string) {
     acts.clear();
