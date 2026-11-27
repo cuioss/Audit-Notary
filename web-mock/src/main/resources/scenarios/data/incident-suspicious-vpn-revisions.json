@@ -1,0 +1,19 @@
+{
+  "repository": "isms-incidents-2026",
+  "id": "01JZA8F0H2K4M6P8R0T2W4Y6A8",
+  "revisions": [
+    {
+      "ref": "aaa46d8",
+      "commit": "aaa46d8",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-11-26T09:41:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

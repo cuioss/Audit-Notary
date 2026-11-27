@@ -1,0 +1,100 @@
+{
+  "items": [
+    {
+      "kind": "review",
+      "lens": "samm",
+      "title": "Payments 2026 Q4: Strategy and Metrics",
+      "address": "/samm/payments/2026-q4/sm",
+      "due": "2026-11-27"
+    },
+    {
+      "kind": "release",
+      "lens": "samm",
+      "title": "Payments 2026 Q4 assessment",
+      "address": "/samm/payments/2026-q4/release",
+      "due": "2026-12-04"
+    },
+    {
+      "kind": "review",
+      "lens": "threat-models",
+      "title": "Payment API: checkout flow",
+      "address": "/threat-models/payment-api/checkout-flow",
+      "due": "2026-12-01"
+    },
+    {
+      "kind": "deadline",
+      "lens": "incidents",
+      "title": "Card data exposed in the checkout log: gdpr-art33",
+      "address": "/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K?stage=notifications",
+      "due": "2026-11-22",
+      "deadline": {
+        "rule": "gdpr-art33",
+        "status": "MISSED"
+      }
+    },
+    {
+      "kind": "deadline",
+      "lens": "incidents",
+      "title": "Phishing mail with a forged payment link: gdpr-art33",
+      "address": "/incidents/2026/01JZA2B4D6F8H0K2N4Q6S8V0X2?stage=notifications",
+      "due": "2026-11-27",
+      "deadline": {
+        "rule": "gdpr-art33",
+        "status": "MISSED"
+      }
+    },
+    {
+      "kind": "deadline",
+      "lens": "incidents",
+      "title": "Card data exposed in the checkout log: nis2-final-report",
+      "address": "/incidents/2026/01JZ9T4M6Q8S0V2X4B6D8F0H2K?stage=notifications",
+      "due": "2026-12-22",
+      "deadline": {
+        "rule": "nis2-final-report",
+        "status": "OPEN"
+      }
+    },
+    {
+      "kind": "review",
+      "lens": "isms",
+      "title": "Risk R-012: supplier access to production",
+      "address": "/isms/risks/r-012",
+      "due": "2026-12-15"
+    },
+    {
+      "kind": "review",
+      "lens": "categories",
+      "title": "Supplier security questionnaire",
+      "address": "/categories/test-note/01JZ8T5C7E9G1J3M5P7R9V1X3Z/release",
+      "due": "2026-11-30"
+    },
+    {
+      "kind": "review",
+      "lens": "categories",
+      "title": "Access review cadence",
+      "address": "/categories/test-note/01JZ8V8D0F2H4K6N8Q0S2W4Y6A/release",
+      "due": "2026-12-02",
+      "requestId": "rr-01JZ8V9C2E4G6J8M0P2R4T6W8Y",
+      "requestedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "requestedAt": "2026-11-26T07:55:00Z",
+      "comment": "Reviewed with the team; ready to release."
+    },
+    {
+      "kind": "release",
+      "lens": "categories",
+      "title": "Retention schedule for audit evidence",
+      "address": "/categories/test-note/01JZ8R7A9C1E3G5J7M9P1S3V5X",
+      "due": "2026-12-03",
+      "requestId": "rr-01JZ8R9B1D3F5H7K9N1Q3S5V7X",
+      "requestedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "requestedAt": "2026-11-26T08:20:00Z",
+      "comment": "Written from the interview notes; please submit it and release it."
+    }
+  ]
+}

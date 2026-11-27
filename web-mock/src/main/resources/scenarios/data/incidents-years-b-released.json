@@ -1,0 +1,25 @@
+{
+  "today": "2026-11-26",
+  "years": [
+    {
+      "year": 2026,
+      "repository": "isms-incidents-2026",
+      "current": true,
+      "incidents": 7,
+      "open": 5,
+      "withMissedDeadline": 1,
+      "retentionEnd": "2031-12-31",
+      "address": "/incidents/2026"
+    },
+    {
+      "year": 2025,
+      "repository": "isms-incidents-2025",
+      "current": false,
+      "incidents": 2,
+      "open": 0,
+      "withMissedDeadline": 1,
+      "retentionEnd": "2030-12-31",
+      "address": "/incidents/2025"
+    }
+  ]
+}
