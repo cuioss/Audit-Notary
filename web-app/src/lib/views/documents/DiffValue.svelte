@@ -19,7 +19,8 @@
    * One side of a change in the diff of a release: the value as the form reads it (the name of a person, the text of an
    * option, the title of a document, the localised date, a yes or a no), so the approver reads the words of the domain
    * and never a pseudonym or a code. A list or a row that is new or gone is read row by row, field by field, the same
-   * way; a section of more than plain fields or a field the schema no longer has is told in one line.
+   * way; a row's list of plain values (the tickets of an action) is read entry by entry; a section of more than that or a field the
+   * schema no longer has is told in one line.
    *
    * It stands under a form's services (`provideFormServices`), which resolve the references once for the whole diff.
    */
@@ -76,24 +77,36 @@
     node: FieldNode;
     label: string;
     value: unknown;
+    /** The node of an entry, when the field is a list of plain values (a row's issues): each entry is read on its own. */
+    entry?: FieldNode;
+  }
+
+  /** @returns the node of the entries of a field that is a list of plain values, `null` for any other field */
+  function entryOf(field: FieldNode): FieldNode | null {
+    // A list inside a row is no table of the form (a row holds no table): its kind is `plain`, its schema an array.
+    if (field.kind !== 'table' && field.kind !== 'plain') return null;
+    if (field.schema.type !== 'array') return null;
+    const entry = itemNode(field, schema);
+    return isScalarKind(entry.kind) ? entry : null;
   }
 
   /**
    * @param section a row of a table, as a section
    * @param held the value of the row
-   * @returns its fields as cells, or `null` when the row holds more than the fields that can be read in one line each
+   * @returns its fields as cells, or `null` when the row holds more than plain fields and lists of plain values
    */
   function cellsOf(section: FieldNode, held: unknown): Cell[] | null {
     if (!isObject(held)) return null;
     const fields = childNodes(section, schema);
     if (Object.keys(held).some((key) => !fields.some((field) => field.name === key))) return null;
-    if (fields.some((field) => !isScalarKind(field.kind))) return null;
+    if (fields.some((field) => !isScalarKind(field.kind) && entryOf(field) === null)) return null;
     return fields
       .filter((field) => Object.hasOwn(held, field.name))
       .map((field) => ({
         node: field.kind === 'asciidoc' ? { ...field, kind: 'text' } : field,
         label: fieldLabel($messagesStore, category, kind, toPointer(field.path)),
         value: held[field.name],
+        entry: entryOf(field) ?? undefined,
       }));
   }
 
@@ -123,7 +136,18 @@
     {#each cells as cell (cell.node.name)}
       <div class="cell">
         {#if cell.label !== ''}<dt>{cell.label}</dt>{/if}
-        <dd><ReadValue node={cell.node} value={cell.value} compact /></dd>
+        <dd>
+          {#if cell.entry && Array.isArray(cell.value) && cell.value.length > 0}
+            {@const entry = cell.entry}
+            <ul class="entries">
+              {#each cell.value as held, index (index)}
+                <li><ReadValue node={entry} value={held} compact /></li>
+              {/each}
+            </ul>
+          {:else}
+            <ReadValue node={cell.node} value={cell.value} compact />
+          {/if}
+        </dd>
       </div>
     {/each}
   </dl>
@@ -164,6 +188,13 @@
     grid-template-columns: max-content minmax(0, 1fr);
     column-gap: var(--space-3);
     row-gap: 2px;
+  }
+
+  .entries {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
+    list-style: none;
   }
 
   .cell {

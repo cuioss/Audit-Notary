@@ -5214,7 +5214,7 @@ incident), so that no screen is blocked; the owner may change each one (the numb
   sheet words it, with the reminder that a released incident is frozen and a notice not recorded by then can no longer be recorded,
   and a link to the tab *Notifications*. The margin counts them. Refusing the release while a deadline is open is not decided (the
   owner question of point 16 stays); after the release the same list is told against the time of the release, under the sentence
-  that the clock has stopped.
+  that the clock has stopped (when no deadline is still a duty, neither the list nor the sentence is drawn).
 . *The release page shows the diff by stage, then by field.* The parts of the diff are the stages (the title is the part `data`,
   its group is *Title*); a group is one stage, its rows are the changes in the order of the form, each worded as the form words
   the field. An incident is released once, so `from` is always `null` and every change is a whole top-level field, which is why
@@ -5262,5 +5262,5 @@ required, which is true only after the notice is begun, point 40).
 
 For the owner, from part B of the lens: whether a release should be refused while a deadline is open (point 46; the page lists them
 and does not block); whether a create should be able to ask for step-up at all (point 48: it is wired, the shipped workflows ask for
-none); and whether the rows of a table in the release diff (the actions and measures of the response and the review) should be read
-field by field when a row holds a list (the shared diff reads such a row in one line, which names a role by its id).
+none); and whether the stopped clock should be told after the release when no deadline was still a duty (point 46: the list and its
+sentence are drawn only with rows, so a release with every deadline met or sent shows the seal alone).

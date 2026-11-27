@@ -67,6 +67,15 @@ describe('the form', () => {
     expect(screen.getByTestId('save-state')).toHaveTextContent('Not saved yet.');
   });
 
+  it('is not a change again when the awareness was typed and cleared', async () => {
+    await open();
+    const aware = await screen.findByLabelText(/Became aware at/);
+    await fireEvent.input(aware, { target: { value: '2026-11-26T09:30' } });
+    expect(screen.getByTestId('save-state')).toHaveTextContent('Your text stays on this page');
+    await fireEvent.input(aware, { target: { value: '' } });
+    expect(screen.getByTestId('save-state')).toHaveTextContent('Nothing is kept until');
+  });
+
   it('is read in German', async () => {
     await open('workshop', '2026', 'de');
     expect(await screen.findByTestId('create-incident')).toHaveTextContent('Vorfall anlegen');

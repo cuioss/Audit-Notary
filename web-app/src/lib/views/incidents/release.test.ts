@@ -126,6 +126,23 @@ describe('the review', () => {
     expect(triage.querySelectorAll('del')).toHaveLength(0);
   });
 
+  it('reads a row that holds a list field by field: the role by its name, the issues one by one', async () => {
+    await open('workshop#incident-submitted');
+    const response = screen.getByTestId('record-response');
+    await vi.waitFor(() => expect(response).not.toHaveTextContent('role:developer'));
+    expect(response).toHaveTextContent('Role');
+    expect(response).toHaveTextContent('Tickets');
+    expect(response).toHaveTextContent('ID-901');
+    expect(response).not.toHaveTextContent('entries');
+  });
+
+  it('reads the same row in German with the German name of the role', async () => {
+    await open('workshop#incident-submitted', 'de');
+    const response = screen.getByTestId('record-response');
+    await vi.waitFor(() => expect(response).not.toHaveTextContent('role:developer'));
+    expect(response).toHaveTextContent('Rolle');
+  });
+
   it('reads the sign-off of a stage as the person and the time, not the pseudonym', async () => {
     await open('workshop#incident-submitted');
     const triage = screen.getByTestId('record-triage');
