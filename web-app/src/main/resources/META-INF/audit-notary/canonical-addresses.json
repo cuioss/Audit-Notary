@@ -26,8 +26,16 @@
     { "route": "samm.practice", "pattern": "/samm/{scope}/{assessment}/{practice}" },
     { "route": "threat-models", "pattern": "/threat-models" },
     { "route": "threat-models.service", "pattern": "/threat-models/{service}" },
-    { "route": "threat-models.new", "pattern": "/threat-models/{service}/new", "query": ["recipe"] },
-    { "route": "threat-models.model", "pattern": "/threat-models/{service}/{model}", "query": ["at"] },
+    {
+      "route": "threat-models.new",
+      "pattern": "/threat-models/{service}/new",
+      "query": ["recipe"]
+    },
+    {
+      "route": "threat-models.model",
+      "pattern": "/threat-models/{service}/{model}",
+      "query": ["at"]
+    },
     { "route": "threat-models.release", "pattern": "/threat-models/{service}/{model}/release" },
     { "route": "incidents", "pattern": "/incidents" },
     { "route": "incidents.year", "pattern": "/incidents/{year}" },

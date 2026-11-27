@@ -270,7 +270,13 @@ describe('the SAMM completion', () => {
 describe('the threat models', () => {
   it.each([
     ['/threat-models', '', 'threat-models', {}, undefined],
-    ['/threat-models/payment-api', '', 'threat-models.service', { service: 'payment-api' }, undefined],
+    [
+      '/threat-models/payment-api',
+      '',
+      'threat-models.service',
+      { service: 'payment-api' },
+      undefined,
+    ],
     [
       '/threat-models/payment-api/new',
       '',
