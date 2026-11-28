@@ -535,7 +535,14 @@ class IsmsStatesTest {
                     () -> assertEquals(released.path("parts").path("data").path("value"), reopened.path("parts").path("data").path("value")),
                     () -> assertEquals(List.of("isms.submit"), list(reopened.path("transitions")).stream().map(item -> item.path("id").asText()).toList()),
                     () -> assertEquals("save", reopened.path("history").get(0).path("kind").asText()),
-                    () -> assertEquals("risks/R-018/v2", reopened.path("history").get(1).path("tag").asText()));
+                    () -> assertEquals("risks/R-018/v2", reopened.path("history").get(1).path("tag").asText()),
+                    () -> assertEquals(data("risk-r-018-released-revisions.json").path("revisions").size() + 1,
+                            data("risk-r-018-reopened-revisions.json").path("revisions").size()),
+                    () -> assertEquals(reopened.path("history").get(0).path("at").asText(),
+                            data("risk-r-018-reopened-revisions.json").path("revisions").get(0).path("at").asText()),
+                    () -> assertEquals("save", data("risk-r-018-reopened-revisions.json").path("revisions").get(0).path("kind").asText()),
+                    () -> assertEquals(list(data("risk-r-018-released-revisions.json").path("revisions")),
+                            list(data("risk-r-018-reopened-revisions.json").path("revisions")).subList(1, 1 + data("risk-r-018-released-revisions.json").path("revisions").size())));
         }
 
         @Test
@@ -1058,7 +1065,7 @@ class IsmsStatesTest {
                         () -> assertEquals("draft", row.path("state").asText()),
                         () -> assertEquals(3, row.path("version").asInt()),
                         () -> assertEquals(data("risk-r-018-at-v2.json"), get(client, REGISTER + "R-018?at=v2")),
-                        () -> assertEquals(data("risk-r-018-released-revisions.json"), get(client, REGISTER + "R-018/revisions")),
+                        () -> assertEquals(data("risk-r-018-reopened-revisions.json"), get(client, REGISTER + "R-018/revisions")),
                         () -> assertEquals(data("reports-risks-released.json"), get(client, "/api/v1/isms/risks")));
             }
         }

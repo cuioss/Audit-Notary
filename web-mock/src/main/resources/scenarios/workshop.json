@@ -15207,7 +15207,7 @@
         },
         "GET /api/v1/documents/isms-register/R-018/revisions": {
           "status": 200,
-          "body_file": "risk-r-018-released-revisions.json",
+          "body_file": "risk-r-018-reopened-revisions.json",
           "requires": {
             "repository": "isms-register",
             "action": "read"
