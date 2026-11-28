@@ -10,7 +10,10 @@ import DueView from './DueView.svelte';
  * request shows who asked and the comment, for the person who asked and for the approver, each entry opens the address it
  * names, and the list follows the events of a request and of a document that moved along its workflow.
  */
-afterEach(resetKit);
+afterEach(() => {
+  vi.useRealTimers();
+  resetKit();
+});
 
 /** @returns the entry of a document in the list */
 function entryOf(title: string, lang: 'en' | 'de' = 'en'): HTMLElement {
@@ -108,6 +111,9 @@ describe('the deadlines of an incident', () => {
   const CARD = '01JZ9T4M6Q8S0V2X4B6D8F0H2K';
 
   it('words the deadline in the language of the person and opens the notifications of the incident', async () => {
+    // The mock's day, so that a deadline that is open there stays open on the day the suite runs.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-26T10:00:00Z'));
     await useProfile('workshop');
     render(DueView);
     await screen.findByTestId('due-list');

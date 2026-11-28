@@ -63,6 +63,12 @@ class IsmsTest {
     private static final Map<String, String> DOCUMENTS = new LinkedHashMap<>();
     private static final Map<String, String> COLLECTIONS = Map.of("policy", "policies", "isms-scope", "scope", "audit-report", "audits",
             "management-review", "management-reviews");
+    /**
+     * The risks that exist in a state of a profile only (IsmsStatesTest): the plain read of a risk that a state of {@code workshop} or of
+     * {@code empty} routes and no route of the base routes (the first number of {@code empty}, the next number and the taken one), derived
+     * from the scenarios.
+     */
+    static final Set<String> STATE_ONLY_RISKS = stateOnlyRisks();
     private static final List<String> REPORTS = List.of("now", "2026-03", "2026-06", "audit-2026-03", "management-review-2026-06",
             "before-first", "empty");
 
@@ -78,18 +84,70 @@ class IsmsTest {
             releases.sort(null);
             RISKS.put(id, releases);
         });
+        // the documents: the plain reads of isms-core that the scenario-level routes of workshop name (independent of the list of the documents)
         Map<String, String> byId = new java.util.TreeMap<>();
-        try (var files = Files.list(DATA_DIRECTORY)) {
-            files.map(path -> path.getFileName().toString())
-                    .filter(name -> name.startsWith("isms-doc-") && name.endsWith(".json") && !name.endsWith("-revisions.json") && !name.contains("-at-"))
-                    .forEach(name -> {
-                        String slug = name.substring("isms-doc-".length(), name.length() - ".json".length());
-                        byId.put(data(name).path("id").asText(), slug);
-                    });
+        for (var endpoint : endpoints(scenario("workshop"))) {
+            if (endpoint.state().isEmpty() && "GET".equals(endpoint.method()) && endpoint.path().matches("/api/v1/documents/isms-core/[0-9A-Z]{26}")
+                    && endpoint.answer().path("body_file").asText().startsWith("isms-doc-")) {
+                String name = endpoint.answer().path("body_file").asText();
+                byId.put(data(name).path("id").asText(), name.substring("isms-doc-".length(), name.length() - ".json".length()));
+            }
+        }
+        byId.forEach((id, slug) -> DOCUMENTS.put(slug, id));
+    }
+
+    /** A route or a link of a scenario: the state ({@code ""} for the routes of the scenario itself), the method, the path with its query and the answer. */
+    record Endpoint(String state, String method, String path, JsonNode answer) {
+    }
+
+    static JsonNode scenario(String name) {
+        try (var stream = CLASS_LOADER.getResourceAsStream("scenarios/" + name + ".json")) {
+            return MockClient.MAPPER.readTree(java.util.Objects.requireNonNull(stream));
         } catch (IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
-        byId.forEach((id, slug) -> DOCUMENTS.put(slug, id));
+    }
+
+    static List<String> fieldNames(JsonNode node) {
+        List<String> names = new ArrayList<>();
+        node.fieldNames().forEachRemaining(names::add);
+        return names;
+    }
+
+    /** Every route and every link of a scenario: its own routes, then the routes and the links of each state. */
+    static List<Endpoint> endpoints(JsonNode scenario) {
+        List<Endpoint> result = new ArrayList<>();
+        addRoutes(result, "", scenario.path("routes"));
+        for (String state : fieldNames(scenario.path("states"))) {
+            addRoutes(result, state, scenario.path("states").path(state).path("routes"));
+            scenario.path("states").path(state).path("links").forEach(link ->
+                    result.add(new Endpoint(state, link.path("method").asText(), link.path("path").asText(), link)));
+        }
+        return result;
+    }
+
+    private static void addRoutes(List<Endpoint> result, String state, JsonNode routes) {
+        for (String key : fieldNames(routes)) {
+            int space = key.indexOf(' ');
+            result.add(new Endpoint(state, key.substring(0, space), key.substring(space + 1), routes.path(key)));
+        }
+    }
+
+    private static Set<String> stateOnlyRisks() {
+        Pattern plain = Pattern.compile("/api/v1/documents/isms-register/(R-\\d{3})");
+        Set<String> inBase = new HashSet<>();
+        Set<String> inStates = new java.util.TreeSet<>();
+        for (String profile : List.of("workshop", "empty")) {
+            for (var endpoint : endpoints(scenario(profile))) {
+                var matcher = plain.matcher(endpoint.path());
+                String file = endpoint.answer().path("body_file").asText();
+                if ("GET".equals(endpoint.method()) && matcher.matches() && file.matches("risk-r-\\d{3}\\.json")) {
+                    (endpoint.state().isEmpty() ? inBase : inStates).add(matcher.group(1));
+                }
+            }
+        }
+        inStates.removeAll(inBase);
+        return Set.copyOf(inStates);
     }
 
     static JsonNode data(String name) {
@@ -110,6 +168,11 @@ class IsmsTest {
 
     static JsonNode riskAt(String id, int version) {
         return data("risk-" + slugOf(id) + "-at-v" + version + ".json");
+    }
+
+    /** The slug of a document (of the file {@code isms-doc-<slug>.json}) by its id; the documents are those that the base routes of workshop read. */
+    static String slugOfDocument(String id) {
+        return DOCUMENTS.entrySet().stream().filter(entry -> entry.getValue().equals(id)).findFirst().orElseThrow().getKey();
     }
 
     static JsonNode document(String slug) {
@@ -228,7 +291,7 @@ class IsmsTest {
             List<String> riskFiles;
             try (var files = Files.list(DATA_DIRECTORY)) {
                 riskFiles = files.map(path -> path.getFileName().toString())
-                        .filter(name -> name.matches("risk-r-\\d{3}\\.json")).map(name -> name.substring(5, 10).toUpperCase()).sorted().toList();
+                        .filter(name -> name.matches("risk-r-\\d{3}\\.json")).filter(name -> !STATE_ONLY_RISKS.contains(name.substring(5, 10).toUpperCase())).map(name -> name.substring(5, 10).toUpperCase()).sorted().toList();
             } catch (IOException e) {
                 throw new java.io.UncheckedIOException(e);
             }
@@ -522,6 +585,100 @@ class IsmsTest {
             assertDiff(data("isms-diff-internal-audit-2026-released.json"), null, null, audit.path("parts").path("data").path("value"), "working");
         }
 
+        private String tagOf(String slug, int version) {
+            return COLLECTIONS.get(document(slug).path("kind").asText()) + "/" + DOCUMENTS.get(slug) + "/v" + version;
+        }
+
+        private JsonNode valueAt(String slug, int version) {
+            return data("isms-doc-" + slug + "-at-v" + version + ".json").path("parts").path("data").path("value");
+        }
+
+        @Test
+        @DisplayName("every release of a document has its read: frozen, without transitions, the tag of its collection, the value it had, the commit of its revision")
+        void shouldReadEveryReleaseOfADocument() {
+            int total = 0;
+            for (var entry : DOCUMENTS.entrySet()) {
+                String slug = entry.getKey();
+                var revisions = data("isms-doc-" + slug + "-revisions.json").path("revisions");
+                List<Integer> releases = new ArrayList<>();
+                revisions.forEach(revision -> {
+                    if ("release".equals(revision.path("kind").asText())) {
+                        releases.add(revision.path("version").asInt());
+                    }
+                });
+                releases.sort(null);
+                var current = document(slug);
+                for (int version : releases) {
+                    total++;
+                    var read = data("isms-doc-" + slug + "-at-v" + version + ".json");
+                    var revision = list(revisions).stream().filter(item -> ("v" + version).equals(item.path("ref").asText())).findFirst().orElseThrow();
+                    assertAll(slug + " v" + version,
+                            () -> assertTrue(read.path("frozen").asBoolean()),
+                            () -> assertEquals("released", read.path("state").asText()),
+                            () -> assertEquals(version, read.path("version").asInt()),
+                            () -> assertEquals(0, read.path("transitions").size()),
+                            () -> assertTrue(read.path("draft").isNull()),
+                            () -> assertTrue(read.path("releaseRequest").isNull()),
+                            () -> assertEquals(DOCUMENTS.get(slug), read.path("id").asText()),
+                            () -> assertEquals(current.path("kind"), read.path("kind")),
+                            () -> assertEquals(tagOf(slug, version), read.path("at").path("tag").asText()),
+                            () -> assertEquals(read.path("at").path("tag"), read.path("release").path("tag")),
+                            () -> assertEquals("v" + version, read.path("at").path("ref").asText()),
+                            () -> assertEquals("release", read.path("at").path("kind").asText()),
+                            () -> assertEquals(revision.path("commit"), read.path("at").path("commit")),
+                            () -> assertEquals(revision.path("at"), read.path("at").path("at")),
+                            () -> assertEquals(revision.path("by"), read.path("at").path("by")),
+                            () -> assertEquals(read.path("parts").path("data").path("value").path("title"), read.path("title")),
+                            () -> assertEquals(read.path("history").get(0).path("tag"), read.path("release").path("tag")),
+                            () -> assertTrue(list(read.path("history")).size() <= 20));
+                }
+                if ("released".equals(current.path("state").asText())) {
+                    assertEquals(current.path("parts").path("data").path("value"), valueAt(slug, releases.get(releases.size() - 1)), slug);
+                }
+            }
+            assertEquals(11, total);
+        }
+
+        @Test
+        @DisplayName("the compare of two releases of a document: the tags, the values of the two reads, every field that differs and none else")
+        void shouldDiffTwoReleasesOfADocument() {
+            var policy = "information-security-policy";
+            Map<String, int[]> pairs = new LinkedHashMap<>();
+            pairs.put("information-security-policy-v1-v2", new int[] {1, 2});
+            pairs.put("information-security-policy-v2-v3", new int[] {2, 3});
+            pairs.put("information-security-policy-v1-v3", new int[] {1, 3});
+            pairs.put("isms-scope-v1-v2", new int[] {1, 2});
+            for (var pair : pairs.entrySet()) {
+                String slug = pair.getKey().startsWith(policy) ? policy : "isms-scope";
+                int from = pair.getValue()[0];
+                int to = pair.getValue()[1];
+                var diff = data("isms-diff-" + pair.getKey() + ".json");
+                assertAll(pair.getKey(),
+                        () -> assertEquals(DOCUMENTS.get(slug), diff.path("id").asText()),
+                        () -> assertEquals("isms-core", diff.path("repository").asText()),
+                        () -> assertEquals(1, diff.path("sections").size()));
+                assertDiff(diff, valueAt(slug, from), tagOf(slug, from), valueAt(slug, to), tagOf(slug, to));
+            }
+            // the changes of the brief: v1 -> v2, v2 -> v3, the union v1 -> v3, and the scope
+            assertEquals(List.of("/purpose", "/statements", "/review-due"), pointersOf("isms-diff-information-security-policy-v1-v2.json"));
+            assertEquals(List.of("/statements", "/applies-to", "/review-due"), pointersOf("isms-diff-information-security-policy-v2-v3.json"));
+            assertEquals(List.of("/purpose", "/statements", "/applies-to", "/review-due"), pointersOf("isms-diff-information-security-policy-v1-v3.json"));
+            assertEquals(List.of("/boundaries", "/exclusions", "/review-due"), pointersOf("isms-diff-isms-scope-v1-v2.json"));
+            var v23 = data("isms-diff-information-security-policy-v2-v3.json").path("sections").path(0).path("changes");
+            assertEquals(List.of("team:payments"), texts(v23.get(1).path("before")));
+            assertEquals(List.of("organisation"), texts(v23.get(1).path("after")));
+            assertEquals("2026-11-18", v23.get(2).path("before").asText());
+            assertEquals("2027-05-20", v23.get(2).path("after").asText());
+            // the union is the first value against the last one: its before is that of v1 and its after that of v3
+            var union = list(data("isms-diff-information-security-policy-v1-v3.json").path("sections").path(0).path("changes"));
+            assertEquals("2026-03-10", union.get(3).path("before").asText());
+            assertEquals("2027-05-20", union.get(3).path("after").asText());
+        }
+
+        private List<String> pointersOf(String name) {
+            return list(data(name).path("sections").path(0).path("changes")).stream().map(change -> change.path("pointer").asText()).toList();
+        }
+
         @Test
         @DisplayName("the policy in review against its release: the statements and the teams it applies to")
         void shouldDiffThePolicyInReview() {
@@ -763,6 +920,19 @@ class IsmsTest {
                 } catch (IOException e) {
                     throw new java.io.UncheckedIOException(e);
                 }
+            }
+            // release: Noor Haddad reads isms-register and not isms-core, so the Due rule yields the two risks and no document
+            try (var in = getClass().getClassLoader().getResourceAsStream("scenarios/release.json")) {
+                var scenario = MockClient.MAPPER.readTree(in);
+                var inline = list(scenario.path("routes").path("GET /api/v1/due").path("body").path("items")).stream()
+                        .filter(item -> "isms".equals(item.path("lens").asText())).toList();
+                var readable = list(scenario.path("rights")).stream().map(right -> right.path("repository").asText()).toList();
+                assertTrue(readable.contains("isms-register") && !readable.contains("isms-core"));
+                assertEquals(expected.stream().filter(item -> item.path("address").asText().startsWith("/isms/risks/")).toList(), inline,
+                        "release serves the reviews of the risks it may read");
+                assertEquals(List.of("/isms/risks/r-007", "/isms/risks/r-012"), inline.stream().map(item -> item.path("address").asText()).toList());
+            } catch (IOException e) {
+                throw new java.io.UncheckedIOException(e);
             }
             var due = list(data("due-workshop-lifecycle.json").path("items"));
             assertEquals(List.of("samm", "samm", "threat-models", "incidents", "incidents", "incidents", "isms", "isms", "isms", "isms", "categories"),

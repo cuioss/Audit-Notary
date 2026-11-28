@@ -1,0 +1,85 @@
+{
+  "repository": "isms-register",
+  "id": "R-042",
+  "category": "isms",
+  "kind": "risk",
+  "title": "Unpatched build agents",
+  "state": "in-review",
+  "version": 1,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "e2c7c0d",
+      "savedAt": "2026-11-26T10:12:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Unpatched build agents",
+        "description": "The build agents of the second pipeline are not covered by the patch cycle of the first one. Several of them run an operating system with known vulnerabilities.",
+        "rating": "high",
+        "treatment": "mitigate",
+        "treatment-notes": "Bring the build agents of the second pipeline into the patch cycle of the first one.",
+        "owner": "team:security-office",
+        "issues": [
+          "SEC-401"
+        ],
+        "related": [
+          "system:core-platform"
+        ]
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-26T10:14:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-11-26T10:12:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2026-11-24T09:15:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2026-11-24T09:00:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "isms.release",
+      "to": "released",
+      "right": "approve",
+      "stepUp": true,
+      "release": true
+    }
+  ]
+}

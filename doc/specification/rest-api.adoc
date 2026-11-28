@@ -979,7 +979,8 @@ xref:category-threat-models.adoc#AUN-TM-4[AUN-TM-4], xref:category-samm.adoc#AUN
 |As the generic requests: `DRAFT_SAVED`, `SAVED`, `TRANSITIONED` (right `edit`) and `RELEASED` with the tag `risks/R-<n>/v<n>`
 (right `approve`, step-up, `isms.release`); a risk is released more than once, a release merges the entry's path into `main`
 |`MANDATORY_FIELDS_MISSING` (`/rating`, `/treatment`, `/owner`); `VALIDATION` per field, `READ_ONLY` for `/origin`; `CONFLICT`;
-`STEP_UP_REQUIRED`, `CHANGED_SINCE_REVIEW`, `FORBIDDEN`, `REJECTED`, `GIT_UNAVAILABLE`; `DOCUMENT_RELEASED` does not apply;
+`STEP_UP_REQUIRED`, `CHANGED_SINCE_REVIEW`, `FORBIDDEN`, `REJECTED`, `GIT_UNAVAILABLE`; `DOCUMENT_RELEASED` does not apply to a save (a
+save reopens a released risk), only to a release that somebody else made first (PROVISIONAL, <<_isms_save_release>>);
 `409 TRANSFER_PENDING` at the release of a risk whose transfer into its threat model is not written (PROVISIONAL, <<_isms_save_release>>)
 |xref:../use-cases/07-isms.adoc#UC-ISMS-2[UC-ISMS-2], xref:../use-cases/02-documents.adoc#UC-DOC-6[UC-DOC-6],
 xref:../use-cases/02-documents.adoc#UC-DOC-7[UC-DOC-7]
@@ -4947,6 +4948,8 @@ specific:
   the register as of a date then lists the entry as it is released. The web app sees none of the branches.
 * *A released entry is reopened by a save* (as a threat model): state `draft`, `version` one higher, `release` the last release.
   There is no request that deletes, retires or closes a risk (<<_decided_isms>>, point 70).
+* *A release that somebody released first* answers `409 DOCUMENT_RELEASED` with the `tag` (PROVISIONAL, <<_decided_isms>>, the item
+  *A save reopens a released risk*): the release request is the one outcome of the generic release that a risk keeps, a save is never refused.
 * *The events* are the generic ones (`document-created` with `kind` `risk` or one of the four, `document-saved`,
   `document-transitioned`); the register list, the documents list and an open sheet read again on them.
 * *The search* (`GET /api/v1/search?q=`) indexes the documents of `isms-core` (`category` `isms`, `kind`, `address`
@@ -6273,6 +6276,13 @@ refuses the create under multi-factor with a notice, or leaving the loss.
   person who acts, the submit goes on, the release answers `409 TRANSFER_PENDING` until the link is written. Otherwise a risk
   could be released without a save in between and leave its threat counted as untreated. Provisional until the owner decides
   between storing the link and deriving it (68), which would make the point void.
+. *A save reopens a released risk; a release that somebody else made first is `DOCUMENT_RELEASED`.* A risk is released more than once, so
+  a save is never refused for a released risk: it starts the next version (a draft, version 3 after the release v2) and the release
+  stays readable with `?at=v2`. A release request for a risk that somebody released while the review was open answers `409
+  DOCUMENT_RELEASED` with the `tag`, the outcome of the generic release request (decided provisionally with the release flow, like
+  the other repositories; the mock state is `risk-release-released-meanwhile`, a save in it is `risk-release-reopened`). A release
+  after a re-read diff that carries a change saved meanwhile (`risk-release-changed-reviewed`) releases that change with the version
+  (`risk-released-changed`).
 
 For the owner: whether the categories of the ISMS should be one workflow or one per type, and whether a document may be
 released once only (53); whether a generated page of the ISMS documents belongs in the web app (55); the fields of the five
@@ -6285,5 +6295,6 @@ all, or derived from the register (68, 76; it makes a released model a draft and
 should be closed, retired or deleted, and whether an owner must accept a residual risk before the release (70; the requirement of
 the standard is not checked here, only that the register names the owner by team and role); whether the Due lens should list the
 entries in review and the reviews of drafts (71); whether the first save of a risk may be refused for the title alone being
-absent (61); and whether the application should keep a "next number" visible, which the first-save numbering of the library
-forbids (60).
+absent (61); whether the application should keep a "next number" visible, which the first-save numbering of the library
+forbids (60); and whether the release of a risk that somebody released meanwhile answers `DOCUMENT_RELEASED` as in the other repositories (the last
+item).

@@ -1,0 +1,108 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB8K0N2Q4S6V8X0Z2C4E6G9",
+  "category": "isms",
+  "kind": "management-review",
+  "title": "Management review 2025",
+  "state": "released",
+  "version": 1,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "4632ac1",
+      "savedAt": "2025-12-08T10:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Management review 2025",
+        "year": 2025,
+        "held-at": "2025-12-04",
+        "participants": [
+          "p-7d2e58",
+          "p-4c1a9e",
+          "p-2b7f10"
+        ],
+        "inputs": "The results of the internal audit 2025.\n\n* The incidents of the year.\n* The risk register.",
+        "decisions": [
+          {
+            "what": "Test the restore of the customer database every quarter.",
+            "role": "role:service-owner",
+            "due": "2026-03-31",
+            "issues": [
+              "OPS-211"
+            ]
+          },
+          {
+            "what": "Plan the next internal audit for the autumn.",
+            "role": "role:ciso",
+            "due": "2026-09-01",
+            "issues": []
+          }
+        ],
+        "conclusion": "The ISMS is suitable. The scope is reviewed before the next audit."
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2025-12-09T15:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "management-reviews/01JZB8K0N2Q4S6V8X0Z2C4E6G9/v1"
+    },
+    {
+      "at": "2025-12-09T14:20:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-12-08T10:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2025-12-02T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "management-reviews/01JZB8K0N2Q4S6V8X0Z2C4E6G9/v1",
+    "at": "2025-12-09T15:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "at": {
+    "ref": "v1",
+    "kind": "release",
+    "commit": "48b6c88",
+    "tag": "management-reviews/01JZB8K0N2Q4S6V8X0Z2C4E6G9/v1",
+    "at": "2025-12-09T15:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  }
+}

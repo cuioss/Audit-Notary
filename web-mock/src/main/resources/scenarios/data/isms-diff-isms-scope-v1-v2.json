@@ -1,0 +1,42 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB4F6H8K0N2Q4S6V8X0Z2C5",
+  "from": "scope/01JZB4F6H8K0N2Q4S6V8X0Z2C5/v1",
+  "to": "scope/01JZB4F6H8K0N2Q4S6V8X0Z2C5/v2",
+  "sections": [
+    {
+      "part": "data",
+      "changes": [
+        {
+          "pointer": "/boundaries",
+          "before": "The ISMS covers the development, the operation and the support of the payment products and of the platform they run on.\n\n* The locations of the organisation and the home offices of its staff.\n* The systems of the core platform and the services of the catalog.",
+          "after": "The ISMS covers the development, the operation and the support of the payment products and of the platform they run on, including the mobile apps.\n\n* The locations of the organisation and the home offices of its staff.\n* The systems of the core platform and the services of the catalog.\n* The suppliers that run a part of the operation."
+        },
+        {
+          "pointer": "/exclusions",
+          "before": [
+            {
+              "what": "Marketing websites",
+              "reason": "They hold no customer data and run outside the production network."
+            }
+          ],
+          "after": [
+            {
+              "what": "Marketing websites",
+              "reason": "They hold no customer data and run outside the production network."
+            },
+            {
+              "what": "Office printers and telephones",
+              "reason": "They process no customer data and are managed by the landlord."
+            }
+          ]
+        },
+        {
+          "pointer": "/review-due",
+          "before": "2025-11-20",
+          "after": "2026-11-20"
+        }
+      ]
+    }
+  ]
+}

@@ -123,7 +123,19 @@ today, walks the stages (`incident-triage-reopened`, `-triage-recompleted`, `-pr
 `-create-invalid`, `-year-missing`); `read-only` answers every write `403 FORBIDDEN`, `release` (no right on the incident
 repositories) answers no year and `403 FORBIDDEN` for the rest, `empty` has no year (`404 NOT_FOUND`) and serves the schema,
 `degraded` answers a save, the completion of a stage and a create `503 GIT_UNAVAILABLE` until `recovered`, and `local` has no write
-route; a request about a document that no route names answers `404 NOT_FOUND` for a repository of the scenario's
+route; the lens *ISMS*: `workshop`, `read-only`, `degraded` and `local` answer the schema, the register of risks and the generic lists,
+eight risks and eight documents with their revisions, the read of every release (`?at=`, `404` and `422`), the diffs of the release
+view and of the compare page, the gaps of a scope, the drafts of a risk from a gap or a threat (one outcome for each origin) and the Due
+items of the reviews; `workshop` holds `approve` on `isms-register` and `isms-core`, creates a risk or a policy (`risk-created`,
+`isms-document-created`), creates a risk from a gap or a threat (`risk-origin-gap`, `risk-origin-threat`, `risk-origin-not-recorded`
+with `risk-release-transfer-pending` and `409 TRANSFER_PENDING`, and the transfer in the threat model), takes the next number
+(`risk-number-taken`), completes, submits and reopens (`risk-completed`, `risk-submitted`, `risk-reopened`), releases a risk and a
+policy with step-up (`risk-released`, `risk-release-step-up`, `-release-changed` with `risk-released-changed`, `-release-released-meanwhile` with `risk-release-reopened`, `isms-document-released`,
+`isms-document-release-step-up`) and refuses (`risk-saved-by-other`, `-invalid`, `-create-invalid`, `-origin-read-only`,
+`isms-document-saved-by-other`, `-invalid`, `isms-git-unavailable`); `read-only` answers every write `403 FORBIDDEN`, `release` (right
+`read` on `isms-register` only) reads the register and the risks and answers every document of `isms-core` `403 FORBIDDEN`, `empty` has no
+risk and no document and creates the first risk `R-001`, `degraded` answers a save and a create of a risk `503 GIT_UNAVAILABLE` until
+`recovered`, and `local` has no write route; a request about a document that no route names answers `404 NOT_FOUND` for a repository of the scenario's
 rights
 
 |Control

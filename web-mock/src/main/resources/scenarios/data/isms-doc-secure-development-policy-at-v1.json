@@ -1,0 +1,91 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB3E5G7J9M1P3R5T7W9Y1B4",
+  "category": "isms",
+  "kind": "policy",
+  "title": "Secure development policy",
+  "state": "released",
+  "version": 1,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "7a46ac5",
+      "savedAt": "2026-02-10T14:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Secure development policy",
+        "owner": "role:ciso",
+        "purpose": "This policy states what a team does so that the software it builds can be operated safely.",
+        "statements": "Every change of the software is reviewed by a second person before it is released.\n\n* Dependencies are checked for known vulnerabilities at every build.\n* Secrets are never stored in the source code.",
+        "applies-to": [
+          "team:payments",
+          "team:identity"
+        ],
+        "review-due": "2027-02-12"
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-02-12T11:00:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "policies/01JZB3E5G7J9M1P3R5T7W9Y1B4/v1"
+    },
+    {
+      "at": "2026-02-12T10:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2026-02-10T14:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 2
+    },
+    {
+      "at": "2026-02-03T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "policies/01JZB3E5G7J9M1P3R5T7W9Y1B4/v1",
+    "at": "2026-02-12T11:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "at": {
+    "ref": "v1",
+    "kind": "release",
+    "commit": "319d8bd",
+    "tag": "policies/01JZB3E5G7J9M1P3R5T7W9Y1B4/v1",
+    "at": "2026-02-12T11:00:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  }
+}

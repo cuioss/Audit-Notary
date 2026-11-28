@@ -1,0 +1,235 @@
+{
+  "today": "2026-11-26",
+  "risks": [
+    {
+      "id": "R-004",
+      "entry": "r-004",
+      "title": "Build agents run unpatched images",
+      "state": "released",
+      "version": 3,
+      "rating": "high",
+      "treatment": "mitigate",
+      "owner": {
+        "kind": "team",
+        "id": "security-office",
+        "name": "Security Office"
+      },
+      "reviewDue": "2027-04-21",
+      "reviewStatus": "ok",
+      "origin": null,
+      "requested": false,
+      "updatedAt": "2026-10-21T09:14:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "risks/R-004/v3",
+        "at": "2026-10-21T09:14:00Z"
+      },
+      "address": "/isms/risks/r-004"
+    },
+    {
+      "id": "R-007",
+      "entry": "r-007",
+      "title": "Signing keys held by a single administrator",
+      "state": "released",
+      "version": 1,
+      "rating": "low",
+      "treatment": "accept",
+      "owner": {
+        "kind": "team",
+        "id": "security-office",
+        "name": "Security Office"
+      },
+      "reviewDue": "2026-11-18",
+      "reviewStatus": "overdue",
+      "origin": null,
+      "requested": false,
+      "updatedAt": "2026-02-18T11:20:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "risks/R-007/v1",
+        "at": "2026-02-18T11:20:00Z"
+      },
+      "address": "/isms/risks/r-007"
+    },
+    {
+      "id": "R-009",
+      "entry": "r-009",
+      "title": "Replay of payment authorisations in the checkout flow",
+      "state": "released",
+      "version": 2,
+      "rating": "critical",
+      "treatment": "mitigate",
+      "owner": {
+        "kind": "team",
+        "id": "payments",
+        "name": "Payments"
+      },
+      "reviewDue": "2027-02-11",
+      "reviewStatus": "ok",
+      "origin": {
+        "ref": "threat-models:threat-model/payment-api-checkout-flow#T-07",
+        "title": "Payment API, checkout flow: T-07",
+        "address": "/threat-models/payment-api/checkout-flow"
+      },
+      "requested": false,
+      "updatedAt": "2026-08-11T08:47:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "risks/R-009/v2",
+        "at": "2026-08-11T08:47:00Z"
+      },
+      "address": "/isms/risks/r-009"
+    },
+    {
+      "id": "R-012",
+      "entry": "r-012",
+      "title": "Supplier access to production",
+      "state": "released",
+      "version": 2,
+      "rating": "high",
+      "treatment": "mitigate",
+      "owner": {
+        "kind": "team",
+        "id": "security-office",
+        "name": "Security Office"
+      },
+      "reviewDue": "2026-12-15",
+      "reviewStatus": "due-soon",
+      "origin": null,
+      "requested": false,
+      "updatedAt": "2026-09-03T10:12:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "risks/R-012/v2",
+        "at": "2026-09-03T10:12:00Z"
+      },
+      "address": "/isms/risks/r-012"
+    },
+    {
+      "id": "R-015",
+      "entry": "r-015",
+      "title": "Security Testing of the payments scope is below its target",
+      "state": "released",
+      "version": 1,
+      "rating": "medium",
+      "treatment": "mitigate",
+      "owner": {
+        "kind": "team",
+        "id": "payments",
+        "name": "Payments"
+      },
+      "reviewDue": "2027-01-02",
+      "reviewStatus": "ok",
+      "origin": {
+        "ref": "samm-assessments:assessment/payments-2026-q2#st",
+        "title": "Payments 2026 Q2, Security Testing",
+        "address": "/samm/payments/2026-q2/st"
+      },
+      "requested": false,
+      "updatedAt": "2026-07-02T13:30:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "risks/R-015/v1",
+        "at": "2026-07-02T13:30:00Z"
+      },
+      "address": "/isms/risks/r-015"
+    },
+    {
+      "id": "R-018",
+      "entry": "r-018",
+      "title": "No tested restore of the customer database",
+      "state": "in-review",
+      "version": 2,
+      "rating": "high",
+      "treatment": "mitigate",
+      "owner": {
+        "kind": "team",
+        "id": "identity",
+        "name": "Identity Platform"
+      },
+      "reviewDue": "2027-05-05",
+      "reviewStatus": "ok",
+      "origin": null,
+      "requested": false,
+      "updatedAt": "2026-11-25T14:30:00Z",
+      "updatedBy": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      },
+      "release": {
+        "tag": "risks/R-018/v1",
+        "at": "2026-10-05T15:02:00Z"
+      },
+      "address": "/isms/risks/r-018"
+    },
+    {
+      "id": "R-021",
+      "entry": "r-021",
+      "title": "Personal data in application logs",
+      "state": "released",
+      "version": 1,
+      "rating": "medium",
+      "treatment": "accept",
+      "owner": {
+        "kind": "team",
+        "id": "mobile",
+        "name": "Mobile Apps"
+      },
+      "reviewDue": "2027-11-12",
+      "reviewStatus": "ok",
+      "origin": null,
+      "requested": false,
+      "updatedAt": "2026-11-12T10:41:00Z",
+      "updatedBy": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "release": {
+        "tag": "risks/R-021/v1",
+        "at": "2026-11-12T10:41:00Z"
+      },
+      "address": "/isms/risks/r-021"
+    },
+    {
+      "id": "R-042",
+      "entry": "r-042",
+      "title": "Unpatched build agents",
+      "state": "in-review",
+      "version": 1,
+      "rating": "high",
+      "treatment": "mitigate",
+      "owner": {
+        "kind": "team",
+        "id": "security-office",
+        "name": "Security Office"
+      },
+      "reviewDue": null,
+      "reviewStatus": "none",
+      "origin": null,
+      "requested": false,
+      "updatedAt": "2026-11-26T10:14:00Z",
+      "updatedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "release": null,
+      "address": "/isms/risks/r-042"
+    }
+  ],
+  "truncated": false
+}

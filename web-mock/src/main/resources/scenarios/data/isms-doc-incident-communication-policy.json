@@ -1,0 +1,46 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB9M1P3R5T7W9Y1B3D5F7H0",
+  "category": "isms",
+  "kind": "policy",
+  "title": "Incident communication policy",
+  "state": "draft",
+  "version": 1,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "4f8e610",
+      "savedAt": "2026-11-26T09:41:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Incident communication policy",
+        "owner": "role:ciso"
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-26T09:41:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "isms.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ]
+}

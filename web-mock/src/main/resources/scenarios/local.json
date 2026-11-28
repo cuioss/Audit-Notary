@@ -2021,6 +2021,56 @@
         "repository": "samm-assessments",
         "action": "read"
       }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=v1": {
+      "status": 200,
+      "body_file": "isms-doc-information-security-policy-at-v1.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=v2": {
+      "status": 200,
+      "body_file": "isms-doc-information-security-policy-at-v2.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=v3": {
+      "status": 200,
+      "body_file": "isms-doc-information-security-policy-at-v3.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
     }
   },
   "states": {

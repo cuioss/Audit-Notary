@@ -1,0 +1,93 @@
+{
+  "repository": "isms-core",
+  "id": "01JZB4F6H8K0N2Q4S6V8X0Z2C5",
+  "category": "isms",
+  "kind": "isms-scope",
+  "title": "Scope of the ISMS",
+  "state": "released",
+  "version": 1,
+  "frozen": true,
+  "parts": {
+    "data": {
+      "blob": "6b21afa",
+      "savedAt": "2025-03-07T16:00:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Scope of the ISMS",
+        "owner": "role:ciso",
+        "boundaries": "The ISMS covers the development, the operation and the support of the payment products and of the platform they run on.\n\n* The locations of the organisation and the home offices of its staff.\n* The systems of the core platform and the services of the catalog.",
+        "exclusions": [
+          {
+            "what": "Marketing websites",
+            "reason": "They hold no customer data and run outside the production network."
+          }
+        ],
+        "interested-parties": "Customers, the supervisory authority, the payment providers and the staff.",
+        "review-due": "2025-11-20"
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2025-03-10T09:30:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      },
+      "kind": "release",
+      "tag": "scope/01JZB4F6H8K0N2Q4S6V8X0Z2C5/v1"
+    },
+    {
+      "at": "2025-03-10T09:10:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "submit"
+    },
+    {
+      "at": "2025-03-07T16:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "save",
+      "part": "data",
+      "count": 1
+    },
+    {
+      "at": "2025-03-03T11:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": {
+    "tag": "scope/01JZB4F6H8K0N2Q4S6V8X0Z2C5/v1",
+    "at": "2025-03-10T09:30:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  },
+  "releaseRequest": null,
+  "transitions": [],
+  "at": {
+    "ref": "v1",
+    "kind": "release",
+    "commit": "aa458a0",
+    "tag": "scope/01JZB4F6H8K0N2Q4S6V8X0Z2C5/v1",
+    "at": "2025-03-10T09:30:00Z",
+    "by": {
+      "pseudonym": "p-7d2e58",
+      "name": "Noor Haddad"
+    }
+  }
+}

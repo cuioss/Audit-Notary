@@ -1,0 +1,51 @@
+{
+  "repository": "isms-register",
+  "id": "R-043",
+  "category": "isms",
+  "kind": "risk",
+  "title": "Strategy and Metrics of the Payments scope is below its target",
+  "state": "draft",
+  "version": 1,
+  "frozen": false,
+  "parts": {
+    "data": {
+      "blob": "0981e3d",
+      "savedAt": "2026-11-26T09:41:00Z",
+      "savedBy": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example",
+        "role": "Security Champion"
+      },
+      "value": {
+        "title": "Strategy and Metrics of the Payments scope is below its target",
+        "description": "The released assessment Payments 2026 Q2 scores 1.25 for Strategy and Metrics; the target of the scope is 2. The measures of the payments scope are not defined, so that nobody can tell whether the security work has an effect.",
+        "rating": "medium",
+        "treatment": "mitigate",
+        "treatment-notes": "Define the measures of the payments scope and review them every quarter.",
+        "owner": "team:payments",
+        "origin": "samm-assessments:assessment/payments-2026-q2#sm"
+      }
+    }
+  },
+  "draft": null,
+  "history": [
+    {
+      "at": "2026-11-26T09:41:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      },
+      "kind": "create"
+    }
+  ],
+  "release": null,
+  "releaseRequest": null,
+  "transitions": [
+    {
+      "id": "isms.submit",
+      "to": "in-review",
+      "right": "edit",
+      "stepUp": false
+    }
+  ]
+}

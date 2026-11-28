@@ -4684,6 +4684,194 @@
         "repository": "isms-core",
         "action": "edit"
       }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=v1": {
+      "status": 200,
+      "body_file": "isms-doc-information-security-policy-at-v1.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=v2": {
+      "status": 200,
+      "body_file": "isms-doc-information-security-policy-at-v2.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=v3": {
+      "status": 200,
+      "body_file": "isms-doc-information-security-policy-at-v3.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB2D4F6H8K0N2Q4S6V8X0Z3?at=v1": {
+      "status": 200,
+      "body_file": "isms-doc-access-control-policy-at-v1.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB2D4F6H8K0N2Q4S6V8X0Z3?at=v2": {
+      "status": 200,
+      "body_file": "isms-doc-access-control-policy-at-v2.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB3E5G7J9M1P3R5T7W9Y1B4?at=v1": {
+      "status": 200,
+      "body_file": "isms-doc-secure-development-policy-at-v1.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB4F6H8K0N2Q4S6V8X0Z2C5?at=v1": {
+      "status": 200,
+      "body_file": "isms-doc-isms-scope-at-v1.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB4F6H8K0N2Q4S6V8X0Z2C5?at=v2": {
+      "status": 200,
+      "body_file": "isms-doc-isms-scope-at-v2.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB5G7J9M1P3R5T7W9Y1B3D6?at=v1": {
+      "status": 200,
+      "body_file": "isms-doc-internal-audit-2025-at-v1.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB7J9M1P3R5T7W9Y1B3D5F8?at=v1": {
+      "status": 200,
+      "body_file": "isms-doc-management-review-2026-h1-at-v1.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB8K0N2Q4S6V8X0Z2C4E6G9?at=v1": {
+      "status": 200,
+      "body_file": "isms-doc-management-review-2025-at-v1.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/diff?from=v1&to=v2": {
+      "status": 200,
+      "body_file": "isms-diff-information-security-policy-v1-v2.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/diff?from=v2&to=v3": {
+      "status": 200,
+      "body_file": "isms-diff-information-security-policy-v2-v3.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/diff?from=v1&to=v3": {
+      "status": 200,
+      "body_file": "isms-diff-information-security-policy-v1-v3.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB4F6H8K0N2Q4S6V8X0Z2C5/diff?from=v1&to=v2": {
+      "status": 200,
+      "body_file": "isms-diff-isms-scope-v1-v2.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/diff?from=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/diff?from=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/from",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/diff": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/from",
+            "code": "REQUIRED"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
     }
   },
   "states": {
@@ -5176,6 +5364,146 @@
           "requires": {
             "repository": "isms-incidents-2026",
             "action": "edit"
+          }
+        },
+        "create-risk": {
+          "method": "POST",
+          "path": "/api/v1/documents/isms-register",
+          "next": "risk-created",
+          "status": 201,
+          "body": {
+            "outcome": "CREATED",
+            "id": "R-043",
+            "repository": "isms-register",
+            "address": "/isms/risks/r-043",
+            "state": "draft",
+            "version": 1,
+            "at": "2026-11-26T09:41:00Z",
+            "parts": {
+              "data": {
+                "blob": "0981e3d",
+                "savedAt": "2026-11-26T09:41:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            }
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "save-r012": {
+          "method": "POST",
+          "path": "/api/v1/documents/isms-register/R-012/save",
+          "next": "risk-reopened",
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T10:12:00Z",
+            "parts": {
+              "data": {
+                "blob": "56d52db",
+                "savedAt": "2026-11-26T10:12:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            },
+            "state": "draft",
+            "version": 3
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "save-r042": {
+          "method": "POST",
+          "path": "/api/v1/documents/isms-register/R-042/save",
+          "next": "risk-completed",
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T10:12:00Z",
+            "parts": {
+              "data": {
+                "blob": "e2c7c0d",
+                "savedAt": "2026-11-26T10:12:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            },
+            "state": "draft",
+            "version": 1
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "release-r018": {
+          "method": "POST",
+          "path": "/api/v1/releases/isms-register/R-018",
+          "next": "risk-released",
+          "status": 200,
+          "body": {
+            "outcome": "RELEASED",
+            "tag": "risks/R-018/v2",
+            "at": "2026-11-26T10:05:00Z"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "approve"
+          }
+        },
+        "create-document": {
+          "method": "POST",
+          "path": "/api/v1/documents/isms-core",
+          "next": "isms-document-created",
+          "status": 201,
+          "body": {
+            "outcome": "CREATED",
+            "id": "01JZB9M1P3R5T7W9Y1B3D5F7H0",
+            "repository": "isms-core",
+            "address": "/isms/documents/01JZB9M1P3R5T7W9Y1B3D5F7H0",
+            "state": "draft",
+            "version": 1,
+            "at": "2026-11-26T09:41:00Z",
+            "parts": {
+              "data": {
+                "blob": "4f8e610",
+                "savedAt": "2026-11-26T09:41:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            }
+          },
+          "requires": {
+            "repository": "isms-core",
+            "action": "edit"
+          }
+        },
+        "release-policy": {
+          "method": "POST",
+          "path": "/api/v1/releases/isms-core/01JZB3E5G7J9M1P3R5T7W9Y1B4",
+          "next": "isms-document-released",
+          "status": 200,
+          "body": {
+            "outcome": "RELEASED",
+            "tag": "policies/01JZB3E5G7J9M1P3R5T7W9Y1B4/v2",
+            "at": "2026-11-26T10:05:00Z"
+          },
+          "requires": {
+            "repository": "isms-core",
+            "action": "approve"
           }
         }
       }
@@ -12673,6 +13001,2350 @@
           }
         }
       }
+    },
+    "risk-created": {
+      "description": "A risk was created without an origin (09:41): R-043 \"Signing keys of the release pipeline are not rotated\" is a draft of Alex Example (medium, mitigate, one ticket, no review date) with one create commit; the register (nine entries, R-043 last, no review status) and the search index follow; the generic list and the references are those of the base.",
+      "routes": {
+        "GET /api/v1/documents/isms-register/R-043": {
+          "status": 200,
+          "body_file": "risk-r-043.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-043/revisions": {
+          "status": 200,
+          "body_file": "risk-r-043-revisions.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/register": {
+          "status": 200,
+          "body_file": "isms-register-created.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/search": {
+          "handler": "search-documents",
+          "data_file": "documents-index-isms-created.json"
+        },
+        "POST /api/v1/documents/isms-register/R-043/save": {
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T09:42:00Z",
+            "parts": {
+              "data": {
+                "blob": "6026565",
+                "savedAt": "2026-11-26T09:42:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            },
+            "state": "draft",
+            "version": 1
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "PUT /api/v1/drafts/isms-register/R-043": {
+          "status": 200,
+          "body": {
+            "outcome": "DRAFT_SAVED",
+            "at": "2026-11-26T09:42:00Z"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-created",
+          "data": {
+            "repository": "isms-register",
+            "id": "R-043",
+            "kind": "risk"
+          }
+        }
+      ]
+    },
+    "risk-origin-gap": {
+      "description": "The form of a risk from the gap Strategy and Metrics of the Payments scope (the prefill is the draft of the base): the create answers 201 R-043 with the origin recorded and moves to risk-created-from-gap.",
+      "links": {
+        "created-from-gap": {
+          "method": "POST",
+          "path": "/api/v1/documents/isms-register",
+          "next": "risk-created-from-gap",
+          "status": 201,
+          "body": {
+            "outcome": "CREATED",
+            "id": "R-043",
+            "repository": "isms-register",
+            "address": "/isms/risks/r-043",
+            "state": "draft",
+            "version": 1,
+            "at": "2026-11-26T09:41:00Z",
+            "parts": {
+              "data": {
+                "blob": "0981e3d",
+                "savedAt": "2026-11-26T09:41:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            },
+            "origin": {
+              "ref": "samm-assessments:assessment/payments-2026-q2#sm",
+              "recorded": true
+            }
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "risk-created-from-gap": {
+      "description": "R-043 \"Strategy and Metrics of the Payments scope is below its target\" was created from the gap (09:41): it names the gap as its origin, the register lists it with the origin, the gaps of the payments scope carry R-043 on Strategy and Metrics, and the draft of that gap now answers ORIGIN_HAS_RISK with R-043.",
+      "routes": {
+        "GET /api/v1/documents/isms-register/R-043": {
+          "status": 200,
+          "body_file": "risk-r-043-gap.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-043/revisions": {
+          "status": 200,
+          "body_file": "risk-r-043-revisions.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/register": {
+          "status": 200,
+          "body_file": "isms-register-gap.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/samm/payments/gaps": {
+          "status": 200,
+          "body_file": "isms-gaps-payments-risk.json",
+          "requires": {
+            "repository": "samm-assessments",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks/draft?origin=samm-assessments%3Aassessment%2Fpayments-2026-q2%23sm": {
+          "status": 409,
+          "body": {
+            "outcome": "ORIGIN_HAS_RISK",
+            "risk": {
+              "id": "R-043",
+              "entry": "r-043",
+              "title": "Strategy and Metrics of the Payments scope is below its target",
+              "address": "/isms/risks/r-043"
+            }
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-043/save": {
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T09:42:00Z",
+            "parts": {
+              "data": {
+                "blob": "6026565",
+                "savedAt": "2026-11-26T09:42:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            },
+            "state": "draft",
+            "version": 1
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "PUT /api/v1/drafts/isms-register/R-043": {
+          "status": 200,
+          "body": {
+            "outcome": "DRAFT_SAVED",
+            "at": "2026-11-26T09:42:00Z"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-created",
+          "data": {
+            "repository": "isms-register",
+            "id": "R-043",
+            "kind": "risk"
+          }
+        }
+      ]
+    },
+    "risk-origin-threat": {
+      "description": "The form of a risk from the threat T-02 of the Payment API, checkout flow (the prefill is the draft of the base): the create answers 201 R-043 with the origin recorded and moves to risk-created-from-threat.",
+      "links": {
+        "created-from-threat": {
+          "method": "POST",
+          "path": "/api/v1/documents/isms-register",
+          "next": "risk-created-from-threat",
+          "status": 201,
+          "body": {
+            "outcome": "CREATED",
+            "id": "R-043",
+            "repository": "isms-register",
+            "address": "/isms/risks/r-043",
+            "state": "draft",
+            "version": 1,
+            "at": "2026-11-26T09:41:00Z",
+            "parts": {
+              "data": {
+                "blob": "0981e3d",
+                "savedAt": "2026-11-26T09:41:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            },
+            "origin": {
+              "ref": "threat-models:threat-model/payment-api-checkout-flow#T-02",
+              "recorded": true
+            }
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "risk-created-from-threat": {
+      "description": "R-043 \"Account takeover by credential stuffing at checkout\" was created from the threat T-02 (09:41, high, mitigate, review 2027-05-26) and the transfer was recorded in the threat model: T-02 carries the risk, the model is a draft again (version 4, the release v3 stays), the evaluation counts 9 threats, 3 open, 1 untreated and 2 transferred, and the draft of T-02 answers ORIGIN_HAS_RISK with R-043.",
+      "routes": {
+        "GET /api/v1/isms/risks/draft?origin=threat-models%3Athreat-model%2Fpayment-api-checkout-flow%23T-02": {
+          "status": 409,
+          "body": {
+            "outcome": "ORIGIN_HAS_RISK",
+            "risk": {
+              "id": "R-043",
+              "entry": "r-043",
+              "title": "Account takeover by credential stuffing at checkout",
+              "address": "/isms/risks/r-043"
+            }
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-043": {
+          "status": 200,
+          "body_file": "risk-r-043-threat.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-043/revisions": {
+          "status": 200,
+          "body_file": "risk-r-043-revisions.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/register": {
+          "status": 200,
+          "body_file": "isms-register-threat.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-043/save": {
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T09:42:00Z",
+            "parts": {
+              "data": {
+                "blob": "6026565",
+                "savedAt": "2026-11-26T09:42:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            },
+            "state": "draft",
+            "version": 1
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "PUT /api/v1/drafts/isms-register/R-043": {
+          "status": 200,
+          "body": {
+            "outcome": "DRAFT_SAVED",
+            "at": "2026-11-26T09:42:00Z"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api/checkout-flow": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-transferred.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-transferred.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow/revisions": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-transferred-revisions.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api": {
+          "status": 200,
+          "body_file": "threat-model-service-payment-api-transferred.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models": {
+          "status": 200,
+          "body_file": "threat-models-index-transferred.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/reports/threat-evaluation": {
+          "status": 200,
+          "body_file": "reports-threat-evaluation-transferred.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api/checkout-flow?at=v1": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v1.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api/checkout-flow?at=v2": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v2.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api/checkout-flow?at=v3": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v3.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api/checkout-flow?at=v9": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/threat-models/payment-api/checkout-flow?at=zzz": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/at",
+                "code": "FORMAT"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=v1": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v1.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=v2": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v2.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=v3": {
+          "status": 200,
+          "body_file": "threat-model-payment-api-checkout-flow-at-v3.json",
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=v9": {
+          "status": 404,
+          "body": {
+            "outcome": "NOT_FOUND"
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/threat-models/payment-api-checkout-flow?at=zzz": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/at",
+                "code": "FORMAT"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "threat-models",
+            "action": "read"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-created",
+          "data": {
+            "repository": "isms-register",
+            "id": "R-043",
+            "kind": "risk"
+          }
+        },
+        {
+          "after_ms": 200,
+          "event": "document-saved",
+          "data": {
+            "repository": "threat-models",
+            "id": "payment-api-checkout-flow",
+            "part": "model",
+            "fields": [
+              "/threats"
+            ],
+            "by": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example"
+            }
+          }
+        }
+      ]
+    },
+    "risk-origin-not-recorded": {
+      "description": "The form of a risk from the threat T-02, but the write into the threat model will fail: the create answers 201 R-043 with the origin recorded: false and moves to risk-created-not-recorded.",
+      "links": {
+        "created-not-recorded": {
+          "method": "POST",
+          "path": "/api/v1/documents/isms-register",
+          "next": "risk-created-not-recorded",
+          "status": 201,
+          "body": {
+            "outcome": "CREATED",
+            "id": "R-043",
+            "repository": "isms-register",
+            "address": "/isms/risks/r-043",
+            "state": "draft",
+            "version": 1,
+            "at": "2026-11-26T09:41:00Z",
+            "parts": {
+              "data": {
+                "blob": "0981e3d",
+                "savedAt": "2026-11-26T09:41:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            },
+            "origin": {
+              "ref": "threat-models:threat-model/payment-api-checkout-flow#T-02",
+              "recorded": false
+            }
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "risk-created-not-recorded": {
+      "description": "R-043 was created from the threat T-02 as in risk-created-from-threat, but the threat model could not be written: the risk exists with its origin, the model is unchanged (T-02 is not transferred, 2 untreated). The submit (submit-r043, 200) goes on and moves to risk-release-transfer-pending.",
+      "routes": {
+        "GET /api/v1/isms/risks/draft?origin=threat-models%3Athreat-model%2Fpayment-api-checkout-flow%23T-02": {
+          "status": 409,
+          "body": {
+            "outcome": "ORIGIN_HAS_RISK",
+            "risk": {
+              "id": "R-043",
+              "entry": "r-043",
+              "title": "Account takeover by credential stuffing at checkout",
+              "address": "/isms/risks/r-043"
+            }
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-043": {
+          "status": 200,
+          "body_file": "risk-r-043-threat.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-043/revisions": {
+          "status": 200,
+          "body_file": "risk-r-043-revisions.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/register": {
+          "status": 200,
+          "body_file": "isms-register-threat.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-043/save": {
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T09:42:00Z",
+            "parts": {
+              "data": {
+                "blob": "6026565",
+                "savedAt": "2026-11-26T09:42:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            },
+            "state": "draft",
+            "version": 1
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "PUT /api/v1/drafts/isms-register/R-043": {
+          "status": 200,
+          "body": {
+            "outcome": "DRAFT_SAVED",
+            "at": "2026-11-26T09:42:00Z"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      },
+      "links": {
+        "submit-r043": {
+          "method": "POST",
+          "path": "/api/v1/documents/isms-register/R-043/transitions/isms.submit",
+          "next": "risk-release-transfer-pending",
+          "status": 200,
+          "body": {
+            "outcome": "TRANSITIONED",
+            "state": "in-review",
+            "version": 1,
+            "at": "2026-11-26T09:44:00Z"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-created",
+          "data": {
+            "repository": "isms-register",
+            "id": "R-043",
+            "kind": "risk"
+          }
+        }
+      ]
+    },
+    "risk-release-transfer-pending": {
+      "description": "R-043 (from the threat T-02, the transfer not written) is in review: the release answers 409 TRANSFER_PENDING with the origin recorded: false, and stays refused (PROVISIONAL, point 76). The register list and the threat model are those of the base.",
+      "routes": {
+        "GET /api/v1/documents/isms-register/R-043": {
+          "status": 200,
+          "body_file": "risk-r-043-threat-in-review.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-043/diff?from=released": {
+          "status": 200,
+          "body_file": "isms-diff-r-043-released.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        }
+      },
+      "links": {
+        "release-r043": {
+          "method": "POST",
+          "path": "/api/v1/releases/isms-register/R-043",
+          "next": "risk-release-transfer-pending",
+          "status": 409,
+          "body": {
+            "outcome": "TRANSFER_PENDING",
+            "origin": {
+              "ref": "threat-models:threat-model/payment-api-checkout-flow#T-02",
+              "recorded": false
+            }
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "approve"
+          }
+        }
+      }
+    },
+    "risk-number-taken": {
+      "description": "Another person created a risk meanwhile: the create answers 201 R-044 (09:43) and moves to risk-created-taken.",
+      "links": {
+        "created-taken": {
+          "method": "POST",
+          "path": "/api/v1/documents/isms-register",
+          "next": "risk-created-taken",
+          "status": 201,
+          "body": {
+            "outcome": "CREATED",
+            "id": "R-044",
+            "repository": "isms-register",
+            "address": "/isms/risks/r-044",
+            "state": "draft",
+            "version": 1,
+            "at": "2026-11-26T09:43:00Z",
+            "parts": {
+              "data": {
+                "blob": "5202872",
+                "savedAt": "2026-11-26T09:43:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            }
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "risk-created-taken": {
+      "description": "R-044 \"Signing keys of the release pipeline are not rotated\" is Alex's risk; R-043 \"Quarterly access review is not documented\" is Jordan Weber's draft (09:40). The register lists ten entries; reading R-043 is not routed (a documented limit).",
+      "routes": {
+        "GET /api/v1/documents/isms-register/R-044": {
+          "status": 200,
+          "body_file": "risk-r-044.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-044/revisions": {
+          "status": 200,
+          "body_file": "risk-r-044-revisions.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/register": {
+          "status": 200,
+          "body_file": "isms-register-taken.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-044/save": {
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T09:44:00Z",
+            "parts": {
+              "data": {
+                "blob": "36dc957",
+                "savedAt": "2026-11-26T09:44:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            },
+            "state": "draft",
+            "version": 1
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "PUT /api/v1/drafts/isms-register/R-044": {
+          "status": 200,
+          "body": {
+            "outcome": "DRAFT_SAVED",
+            "at": "2026-11-26T09:44:00Z"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-created",
+          "data": {
+            "repository": "isms-register",
+            "id": "R-044",
+            "kind": "risk"
+          }
+        }
+      ]
+    },
+    "risk-create-invalid": {
+      "description": "The server refuses the create of a risk with three errors: REQUIRED at /title, REFERENCE_NOT_FOUND at /owner and ENUM at /rating.",
+      "routes": {
+        "POST /api/v1/documents/isms-register": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "part": "data",
+                "pointer": "/title",
+                "code": "REQUIRED"
+              },
+              {
+                "part": "data",
+                "pointer": "/owner",
+                "code": "REFERENCE_NOT_FOUND"
+              },
+              {
+                "part": "data",
+                "pointer": "/rating",
+                "code": "ENUM"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "risk-completed": {
+      "description": "R-042 \"Unpatched build agents\" was completed by Alex Example (10:12): the treatment mitigate with its notes; the draft offers the submit (submit-r042) and the register lists the treatment.",
+      "routes": {
+        "GET /api/v1/documents/isms-register/R-042": {
+          "status": 200,
+          "body_file": "risk-r-042-completed.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/register": {
+          "status": 200,
+          "body_file": "isms-register-completed.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-042/save": {
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T10:12:00Z",
+            "parts": {
+              "data": {
+                "blob": "e2c7c0d",
+                "savedAt": "2026-11-26T10:12:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            },
+            "state": "draft",
+            "version": 1
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      },
+      "links": {
+        "submit-r042": {
+          "method": "POST",
+          "path": "/api/v1/documents/isms-register/R-042/transitions/isms.submit",
+          "next": "risk-submitted",
+          "status": 200,
+          "body": {
+            "outcome": "TRANSITIONED",
+            "state": "in-review",
+            "version": 1,
+            "at": "2026-11-26T10:14:00Z"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-saved",
+          "data": {
+            "repository": "isms-register",
+            "id": "R-042",
+            "part": "data",
+            "by": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example"
+            }
+          }
+        }
+      ]
+    },
+    "risk-submitted": {
+      "description": "R-042 was submitted by Alex Example (10:14): it is in review, version 1, and offers the release (not routed: a documented limit); the register lists it in review.",
+      "routes": {
+        "GET /api/v1/documents/isms-register/R-042": {
+          "status": 200,
+          "body_file": "risk-r-042-in-review.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/register": {
+          "status": 200,
+          "body_file": "isms-register-submitted.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-transitioned",
+          "data": {
+            "repository": "isms-register",
+            "id": "R-042",
+            "state": "in-review",
+            "version": 1,
+            "by": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example"
+            }
+          }
+        }
+      ]
+    },
+    "risk-reopened": {
+      "description": "R-012 \"Supplier access to production\" was saved by Alex Example (10:12) after its release v2: it is a draft again, version 3, the release v2 stays and the submit is offered; the register lists it as a draft. The as-of lists are unchanged (main holds the release).",
+      "routes": {
+        "GET /api/v1/documents/isms-register/R-012": {
+          "status": 200,
+          "body_file": "risk-r-012-reopened.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/register": {
+          "status": 200,
+          "body_file": "isms-register-reopened.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-012/save": {
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T10:12:00Z",
+            "parts": {
+              "data": {
+                "blob": "56d52db",
+                "savedAt": "2026-11-26T10:12:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            },
+            "state": "draft",
+            "version": 3
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-012?at=v1": {
+          "status": 200,
+          "body_file": "risk-r-012-at-v1.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-012?at=v2": {
+          "status": 200,
+          "body_file": "risk-r-012-at-v2.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-saved",
+          "data": {
+            "repository": "isms-register",
+            "id": "R-012",
+            "part": "data",
+            "by": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example"
+            }
+          }
+        }
+      ]
+    },
+    "risk-released": {
+      "description": "R-018 \"No tested restore of the customer database\" was released as v2 by Noor Haddad (10:05): it reads released with no transition, the revisions end with v2 (?at=v2 is the release), the register lists it released, and the register as of now (reports) lists v2 (commit e41c9a8).",
+      "routes": {
+        "GET /api/v1/documents/isms-register/R-018": {
+          "status": 200,
+          "body_file": "risk-r-018-released.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-018/revisions": {
+          "status": 200,
+          "body_file": "risk-r-018-released-revisions.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/register": {
+          "status": 200,
+          "body_file": "isms-register-released.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-018?at=v2": {
+          "status": 200,
+          "body_file": "risk-r-018-at-v2.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks": {
+          "status": 200,
+          "body_file": "reports-risks-released.json"
+        },
+        "GET /api/v1/documents/isms-register/R-018?at=v1": {
+          "status": 200,
+          "body_file": "risk-r-018-at-v1.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-03-01": {
+          "status": 200,
+          "body_file": "reports-risks-2026-03.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=audit-2026-03": {
+          "status": 200,
+          "body_file": "reports-risks-audit-2026-03.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-06-30": {
+          "status": 200,
+          "body_file": "reports-risks-2026-06.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=management-review-2026-06": {
+          "status": 200,
+          "body_file": "reports-risks-management-review-2026-06.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2025-06-01": {
+          "status": 200,
+          "body_file": "reports-risks-before-first.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2027-01-01": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "FUTURE"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-13-45": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "PATTERN"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=no-such-tag": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "UNKNOWN_TAG"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-transitioned",
+          "data": {
+            "repository": "isms-register",
+            "id": "R-018",
+            "state": "released",
+            "version": 2,
+            "by": {
+              "pseudonym": "p-7d2e58",
+              "name": "Noor Haddad"
+            }
+          }
+        }
+      ]
+    },
+    "risk-release-step-up": {
+      "description": "The release of R-018 asks for a fresh login first; after it (risk-release-stepped-up) the same request passes.",
+      "links": {
+        "release-r018": {
+          "method": "POST",
+          "path": "/api/v1/releases/isms-register/R-018",
+          "next": "risk-release-stepped-up",
+          "status": 403,
+          "body": {
+            "outcome": "STEP_UP_REQUIRED",
+            "stepUp": "/api/v1/auth/login?step-up=mfa"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "approve"
+          }
+        }
+      }
+    },
+    "risk-release-stepped-up": {
+      "description": "The fresh login of the release is done: the release is accepted and the mock moves to risk-released.",
+      "links": {
+        "release-r018": {
+          "method": "POST",
+          "path": "/api/v1/releases/isms-register/R-018",
+          "next": "risk-released",
+          "status": 200,
+          "body": {
+            "outcome": "RELEASED",
+            "tag": "risks/R-018/v2",
+            "at": "2026-11-26T10:05:00Z"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "approve"
+          }
+        }
+      }
+    },
+    "risk-release-changed": {
+      "description": "Somebody saved R-018 after the review was opened: the release answers CHANGED_SINCE_REVIEW and moves to risk-release-changed-refused; the release view reads the diff of the base.",
+      "links": {
+        "release-r018": {
+          "method": "POST",
+          "path": "/api/v1/releases/isms-register/R-018",
+          "next": "risk-release-changed-refused",
+          "status": 409,
+          "body": {
+            "outcome": "CHANGED_SINCE_REVIEW"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "approve"
+          }
+        }
+      }
+    },
+    "risk-release-changed-refused": {
+      "description": "The release was refused as changed since the review: it stays refused until the diff is read again; the next read of the diff is that review, now with the change that was saved meanwhile (isms-diff-r-018-released-changed.json: a third ticket, OPS-213), and moves to risk-release-changed-reviewed. The key reads from=released only: a read of the diff with any other member of the query (a to) is the same review (a documented limit).",
+      "links": {
+        "review-r018": {
+          "method": "GET",
+          "path": "/api/v1/documents/isms-register/R-018/diff?from=released",
+          "next": "risk-release-changed-reviewed",
+          "status": 200,
+          "body_file": "isms-diff-r-018-released-changed.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "release-r018": {
+          "method": "POST",
+          "path": "/api/v1/releases/isms-register/R-018",
+          "next": "risk-release-changed-refused",
+          "status": 409,
+          "body": {
+            "outcome": "CHANGED_SINCE_REVIEW"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "approve"
+          }
+        }
+      }
+    },
+    "risk-release-changed-reviewed": {
+      "description": "The diff was read after the refusal and carries the change saved meanwhile: the release is accepted and the mock moves to risk-released-changed, where R-018 v2 holds the third ticket OPS-213 that the review read.",
+      "routes": {
+        "GET /api/v1/documents/isms-register/R-018/diff?from=released": {
+          "status": 200,
+          "body_file": "isms-diff-r-018-released-changed.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        }
+      },
+      "links": {
+        "release-r018": {
+          "method": "POST",
+          "path": "/api/v1/releases/isms-register/R-018",
+          "next": "risk-released-changed",
+          "status": 200,
+          "body": {
+            "outcome": "RELEASED",
+            "tag": "risks/R-018/v2",
+            "at": "2026-11-26T10:05:00Z"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "approve"
+          }
+        }
+      }
+    },
+    "risk-release-released-meanwhile": {
+      "description": "Somebody released R-018 while the review was open: the release answers DOCUMENT_RELEASED with the tag risks/R-018/v2 (the outcome of the generic release request, PROVISIONAL), and the risk reads released as in risk-released. A save is not refused: it reopens the released risk as a draft, version 3, and moves to risk-release-reopened (the release v2 stays and is read with ?at=v2).",
+      "routes": {
+        "GET /api/v1/documents/isms-register/R-018": {
+          "status": 200,
+          "body_file": "risk-r-018-released.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-018/revisions": {
+          "status": 200,
+          "body_file": "risk-r-018-released-revisions.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/register": {
+          "status": 200,
+          "body_file": "isms-register-released.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-018?at=v2": {
+          "status": 200,
+          "body_file": "risk-r-018-at-v2.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks": {
+          "status": 200,
+          "body_file": "reports-risks-released.json"
+        },
+        "POST /api/v1/releases/isms-register/R-018": {
+          "status": 409,
+          "body": {
+            "outcome": "DOCUMENT_RELEASED",
+            "tag": "risks/R-018/v2"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "approve"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-018?at=v1": {
+          "status": 200,
+          "body_file": "risk-r-018-at-v1.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-03-01": {
+          "status": 200,
+          "body_file": "reports-risks-2026-03.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=audit-2026-03": {
+          "status": 200,
+          "body_file": "reports-risks-audit-2026-03.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-06-30": {
+          "status": 200,
+          "body_file": "reports-risks-2026-06.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=management-review-2026-06": {
+          "status": 200,
+          "body_file": "reports-risks-management-review-2026-06.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2025-06-01": {
+          "status": 200,
+          "body_file": "reports-risks-before-first.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2027-01-01": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "FUTURE"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-13-45": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "PATTERN"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=no-such-tag": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "UNKNOWN_TAG"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        }
+      },
+      "links": {
+        "save-r018": {
+          "method": "POST",
+          "path": "/api/v1/documents/isms-register/R-018/save",
+          "next": "risk-release-reopened",
+          "status": 200,
+          "body": {
+            "outcome": "SAVED",
+            "at": "2026-11-26T10:12:00Z",
+            "parts": {
+              "data": {
+                "blob": "14d6ae2",
+                "savedAt": "2026-11-26T10:12:00Z",
+                "savedBy": {
+                  "pseudonym": "p-4c1a9e",
+                  "name": "Alex Example"
+                }
+              }
+            },
+            "state": "draft",
+            "version": 3
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "risk-saved-by-other": {
+      "description": "Jordan Weber saved R-018 first: the next save answers CONFLICT for /description and /review-due with both values.",
+      "routes": {
+        "POST /api/v1/documents/isms-register/R-018/save": {
+          "status": 409,
+          "body": {
+            "outcome": "CONFLICT",
+            "conflicts": [
+              {
+                "part": "data",
+                "blob": "14d6ae2",
+                "fields": [
+                  {
+                    "pointer": "/description",
+                    "own": "Backups of the customer database are taken every night, but a restore was never tested. It is unknown whether the data can be recovered within the time that the business accepts. The first restore test on a copy of the database is planned for next quarter and must show a recovery time below four hours.",
+                    "other": "Backups of the customer database are taken every night, but a restore was never tested. It is unknown whether the data can be recovered within the time that the business accepts. A restore test is planned with the platform team for next quarter.",
+                    "by": {
+                      "pseudonym": "p-2b7f10",
+                      "name": "Jordan Weber",
+                      "role": "Developer"
+                    }
+                  },
+                  {
+                    "pointer": "/review-due",
+                    "own": "2027-05-05",
+                    "other": "2027-04-05",
+                    "by": {
+                      "pseudonym": "p-2b7f10",
+                      "name": "Jordan Weber",
+                      "role": "Developer"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "risk-invalid": {
+      "description": "The server refuses a save and a draft of R-018 with three per-field errors: REFERENCE_NOT_FOUND at /owner, MAX_LENGTH at /issues/0 and REFERENCE_NOT_FOUND at /related/0.",
+      "routes": {
+        "POST /api/v1/documents/isms-register/R-018/save": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "part": "data",
+                "pointer": "/owner",
+                "code": "REFERENCE_NOT_FOUND"
+              },
+              {
+                "part": "data",
+                "pointer": "/issues/0",
+                "code": "MAX_LENGTH"
+              },
+              {
+                "part": "data",
+                "pointer": "/related/0",
+                "code": "REFERENCE_NOT_FOUND"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "PUT /api/v1/drafts/isms-register/R-018": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "part": "data",
+                "pointer": "/owner",
+                "code": "REFERENCE_NOT_FOUND"
+              },
+              {
+                "part": "data",
+                "pointer": "/issues/0",
+                "code": "MAX_LENGTH"
+              },
+              {
+                "part": "data",
+                "pointer": "/related/0",
+                "code": "REFERENCE_NOT_FOUND"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "risk-origin-read-only": {
+      "description": "A save of R-015 that sends the origin answers 422 READ_ONLY at /origin (the origin is written by the server only).",
+      "routes": {
+        "POST /api/v1/documents/isms-register/R-015/save": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "part": "data",
+                "pointer": "/origin",
+                "code": "READ_ONLY"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "isms-document-created": {
+      "description": "The policy Incident communication policy was created (09:41): it is a draft of Alex Example (owner the CISO role, no statements yet); the read, the revisions and the list of the documents (nine rows) follow.",
+      "routes": {
+        "GET /api/v1/documents/isms-core/01JZB9M1P3R5T7W9Y1B3D5F7H0": {
+          "status": 200,
+          "body_file": "isms-doc-incident-communication-policy.json",
+          "requires": {
+            "repository": "isms-core",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-core/01JZB9M1P3R5T7W9Y1B3D5F7H0/revisions": {
+          "status": 200,
+          "body_file": "isms-doc-incident-communication-policy-revisions.json",
+          "requires": {
+            "repository": "isms-core",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-core": {
+          "status": 200,
+          "body_file": "isms-documents-created.json",
+          "requires": {
+            "repository": "isms-core",
+            "action": "read"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-created",
+          "data": {
+            "repository": "isms-core",
+            "id": "01JZB9M1P3R5T7W9Y1B3D5F7H0",
+            "kind": "policy"
+          }
+        }
+      ]
+    },
+    "isms-document-released": {
+      "description": "The Secure development policy was released as v2 by Noor Haddad (10:05): it reads released with no transition, the revisions end with v2 (?at=v2 is the release) and the list of the documents shows it released.",
+      "routes": {
+        "GET /api/v1/documents/isms-core/01JZB3E5G7J9M1P3R5T7W9Y1B4": {
+          "status": 200,
+          "body_file": "isms-doc-secure-development-policy-released.json",
+          "requires": {
+            "repository": "isms-core",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-core/01JZB3E5G7J9M1P3R5T7W9Y1B4/revisions": {
+          "status": 200,
+          "body_file": "isms-doc-secure-development-policy-released-revisions.json",
+          "requires": {
+            "repository": "isms-core",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-core/01JZB3E5G7J9M1P3R5T7W9Y1B4?at=v2": {
+          "status": 200,
+          "body_file": "isms-doc-secure-development-policy-at-v2.json",
+          "requires": {
+            "repository": "isms-core",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-core": {
+          "status": 200,
+          "body_file": "isms-documents-released.json",
+          "requires": {
+            "repository": "isms-core",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-core/01JZB3E5G7J9M1P3R5T7W9Y1B4?at=v1": {
+          "status": 200,
+          "body_file": "isms-doc-secure-development-policy-at-v1.json",
+          "requires": {
+            "repository": "isms-core",
+            "action": "read"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-transitioned",
+          "data": {
+            "repository": "isms-core",
+            "id": "01JZB3E5G7J9M1P3R5T7W9Y1B4",
+            "state": "released",
+            "version": 2,
+            "by": {
+              "pseudonym": "p-7d2e58",
+              "name": "Noor Haddad"
+            }
+          }
+        }
+      ]
+    },
+    "isms-document-release-step-up": {
+      "description": "The release of the Secure development policy asks for a fresh login first; after it (isms-document-release-stepped-up) the same request passes.",
+      "links": {
+        "release-policy": {
+          "method": "POST",
+          "path": "/api/v1/releases/isms-core/01JZB3E5G7J9M1P3R5T7W9Y1B4",
+          "next": "isms-document-release-stepped-up",
+          "status": 403,
+          "body": {
+            "outcome": "STEP_UP_REQUIRED",
+            "stepUp": "/api/v1/auth/login?step-up=mfa"
+          },
+          "requires": {
+            "repository": "isms-core",
+            "action": "approve"
+          }
+        }
+      }
+    },
+    "isms-document-release-stepped-up": {
+      "description": "The fresh login of the release is done: the release is accepted and the mock moves to isms-document-released.",
+      "links": {
+        "release-policy": {
+          "method": "POST",
+          "path": "/api/v1/releases/isms-core/01JZB3E5G7J9M1P3R5T7W9Y1B4",
+          "next": "isms-document-released",
+          "status": 200,
+          "body": {
+            "outcome": "RELEASED",
+            "tag": "policies/01JZB3E5G7J9M1P3R5T7W9Y1B4/v2",
+            "at": "2026-11-26T10:05:00Z"
+          },
+          "requires": {
+            "repository": "isms-core",
+            "action": "approve"
+          }
+        }
+      }
+    },
+    "isms-document-saved-by-other": {
+      "description": "Jordan Weber saved the statements of the Information security policy first: the next save answers CONFLICT for /statements with both values.",
+      "routes": {
+        "POST /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/save": {
+          "status": 409,
+          "body": {
+            "outcome": "CONFLICT",
+            "conflicts": [
+              {
+                "part": "data",
+                "blob": "54b0717",
+                "fields": [
+                  {
+                    "pointer": "/statements",
+                    "own": "The management of the organisation is accountable for information security and reviews it every year.\n\n* Every system and every set of data has an owner who answers for its protection.\n* Access is given by need and withdrawn when the need ends.\n* Security incidents are reported to the security office without delay.\n* Suppliers that process our information are bound to the same rules.\n* A change of the security rules is released only after the review of the Chief Information Security Officer.\n* Every exception to these rules is recorded and reviewed.",
+                    "other": "The management of the organisation is accountable for information security and reviews it every year.\n\n* Every system and every set of data has an owner who answers for its protection.\n* Access is given by need and withdrawn when the need ends.\n* Security incidents are reported to the security office without delay.\n* Suppliers that process our information are bound to the same rules.\n* A change of the security rules is released only after the review of the Chief Information Security Officer.\n* Information that is no longer needed is deleted.",
+                    "by": {
+                      "pseudonym": "p-2b7f10",
+                      "name": "Jordan Weber",
+                      "role": "Developer"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-core",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "isms-document-invalid": {
+      "description": "The server refuses a save and a draft of the Information security policy with two errors: REFERENCE_NOT_FOUND at /owner and at /applies-to/0.",
+      "routes": {
+        "POST /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/save": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "part": "data",
+                "pointer": "/owner",
+                "code": "REFERENCE_NOT_FOUND"
+              },
+              {
+                "part": "data",
+                "pointer": "/applies-to/0",
+                "code": "REFERENCE_NOT_FOUND"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-core",
+            "action": "edit"
+          }
+        },
+        "PUT /api/v1/drafts/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "part": "data",
+                "pointer": "/owner",
+                "code": "REFERENCE_NOT_FOUND"
+              },
+              {
+                "part": "data",
+                "pointer": "/applies-to/0",
+                "code": "REFERENCE_NOT_FOUND"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-core",
+            "action": "edit"
+          }
+        }
+      }
+    },
+    "isms-git-unavailable": {
+      "description": "The Git servers of isms-register and isms-core cannot be reached: the status is degraded, the reads and the draft PUT still work; every other write (save, submit, release, create of a risk and of a document) answers GIT_UNAVAILABLE.",
+      "routes": {
+        "GET /api/v1/status": {
+          "status": 200,
+          "body": {
+            "version": "0.1.0-SNAPSHOT",
+            "degraded": true,
+            "loginProvider": "oidc",
+            "repositories": [
+              {
+                "alias": "samm-assessments",
+                "fetch": "UP"
+              },
+              {
+                "alias": "threat-models",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-register",
+                "fetch": "DOWN"
+              },
+              {
+                "alias": "isms-core",
+                "fetch": "DOWN"
+              },
+              {
+                "alias": "isms-incidents-2026",
+                "fetch": "UP"
+              },
+              {
+                "alias": "isms-incidents-2025",
+                "fetch": "UP"
+              },
+              {
+                "alias": "directory",
+                "fetch": "UP"
+              },
+              {
+                "alias": "test-notes",
+                "fetch": "UP"
+              }
+            ]
+          }
+        },
+        "POST /api/v1/documents/isms-core": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-core",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-core",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-core/01JZB3E5G7J9M1P3R5T7W9Y1B4/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-core",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-core/01JZB6H8K0N2Q4S6V8X0Z2C4E7/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-core",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-core/01JZB6H8K0N2Q4S6V8X0Z2C4E7/transitions/isms.submit": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-core",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-register": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-012/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-015/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-018/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-021/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-042/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-042/transitions/isms.submit": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-043/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-043/transitions/isms.submit": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/documents/isms-register/R-044/save": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "edit"
+          }
+        },
+        "POST /api/v1/releases/isms-core/01JZB3E5G7J9M1P3R5T7W9Y1B4": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-core",
+            "action": "approve"
+          }
+        },
+        "POST /api/v1/releases/isms-register/R-018": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "approve"
+          }
+        },
+        "POST /api/v1/releases/isms-register/R-043": {
+          "status": 503,
+          "body": {
+            "outcome": "GIT_UNAVAILABLE"
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "approve"
+          }
+        }
+      }
+    },
+    "risk-released-changed": {
+      "description": "R-018 was released as v2 by Noor Haddad (10:05) after the review of the change saved meanwhile (09:58, Jordan Weber): as in risk-released, but v2 (the read and ?at=v2) lists the three tickets OPS-211, OPS-212 and OPS-213 that the re-read diff showed, and the revisions carry the save of 09:58.",
+      "routes": {
+        "GET /api/v1/documents/isms-register/R-018": {
+          "status": 200,
+          "body_file": "risk-r-018-released-changed.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-018/revisions": {
+          "status": 200,
+          "body_file": "risk-r-018-released-changed-revisions.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/register": {
+          "status": 200,
+          "body_file": "isms-register-released.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-018?at=v2": {
+          "status": 200,
+          "body_file": "risk-r-018-at-v2-changed.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks": {
+          "status": 200,
+          "body_file": "reports-risks-released.json"
+        },
+        "GET /api/v1/documents/isms-register/R-018?at=v1": {
+          "status": 200,
+          "body_file": "risk-r-018-at-v1.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-03-01": {
+          "status": 200,
+          "body_file": "reports-risks-2026-03.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=audit-2026-03": {
+          "status": 200,
+          "body_file": "reports-risks-audit-2026-03.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-06-30": {
+          "status": 200,
+          "body_file": "reports-risks-2026-06.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=management-review-2026-06": {
+          "status": 200,
+          "body_file": "reports-risks-management-review-2026-06.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2025-06-01": {
+          "status": 200,
+          "body_file": "reports-risks-before-first.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2027-01-01": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "FUTURE"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-13-45": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "PATTERN"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=no-such-tag": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "UNKNOWN_TAG"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-transitioned",
+          "data": {
+            "repository": "isms-register",
+            "id": "R-018",
+            "state": "released",
+            "version": 2,
+            "by": {
+              "pseudonym": "p-7d2e58",
+              "name": "Noor Haddad"
+            }
+          }
+        }
+      ]
+    },
+    "risk-release-reopened": {
+      "description": "R-018 was saved by Alex Example (10:12) after the release v2 of somebody else: it is a draft again, version 3, the release v2 stays (?at=v2, the revisions and the register as of now) and the submit is offered; the register lists it as a draft.",
+      "routes": {
+        "GET /api/v1/documents/isms-register/R-018": {
+          "status": 200,
+          "body_file": "risk-r-018-reopened.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-018/revisions": {
+          "status": 200,
+          "body_file": "risk-r-018-reopened-revisions.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/register": {
+          "status": 200,
+          "body_file": "isms-register-released-reopened.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/documents/isms-register/R-018?at=v2": {
+          "status": 200,
+          "body_file": "risk-r-018-at-v2.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks": {
+          "status": 200,
+          "body_file": "reports-risks-released.json"
+        },
+        "GET /api/v1/documents/isms-register/R-018?at=v1": {
+          "status": 200,
+          "body_file": "risk-r-018-at-v1.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-03-01": {
+          "status": 200,
+          "body_file": "reports-risks-2026-03.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=audit-2026-03": {
+          "status": 200,
+          "body_file": "reports-risks-audit-2026-03.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-06-30": {
+          "status": 200,
+          "body_file": "reports-risks-2026-06.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=management-review-2026-06": {
+          "status": 200,
+          "body_file": "reports-risks-management-review-2026-06.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2025-06-01": {
+          "status": 200,
+          "body_file": "reports-risks-before-first.json",
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2027-01-01": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "FUTURE"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=2026-13-45": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "PATTERN"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        },
+        "GET /api/v1/isms/risks?as-of=no-such-tag": {
+          "status": 422,
+          "body": {
+            "outcome": "VALIDATION",
+            "errors": [
+              {
+                "pointer": "/as-of",
+                "code": "UNKNOWN_TAG"
+              }
+            ]
+          },
+          "requires": {
+            "repository": "isms-register",
+            "action": "read"
+          }
+        }
+      },
+      "events": [
+        {
+          "after_ms": 200,
+          "event": "document-saved",
+          "data": {
+            "repository": "isms-register",
+            "id": "R-018",
+            "part": "data",
+            "by": {
+              "pseudonym": "p-4c1a9e",
+              "name": "Alex Example"
+            }
+          }
+        }
+      ]
     }
   }
 }

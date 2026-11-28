@@ -1591,7 +1591,8 @@ class ProfilesTest {
                         () -> assertEquals(404, client.get(REGISTER + "R-001").statusCode()),
                         () -> assertEquals(404, client.get(THREAT_ORIGIN + "T-99").statusCode()),
                         () -> assertEquals(422, client.get("/api/v1/isms/risks/draft").statusCode()),
-                        () -> assertEquals(404, client.change("POST", "/api/v1/documents/isms-register", "{}").statusCode()));
+                        () -> assertEquals(201, client.change("POST", "/api/v1/documents/isms-register", "{}").statusCode()),
+                        () -> assertEquals(404, client.change("POST", "/api/v1/documents/isms-core", "{}").statusCode()));
             }
         }
 

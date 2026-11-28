@@ -1,0 +1,103 @@
+{
+  "repository": "isms-register",
+  "id": "R-018",
+  "revisions": [
+    {
+      "ref": "b6f1c3e",
+      "commit": "b6f1c3e",
+      "kind": "save",
+      "tag": null,
+      "version": 3,
+      "at": "2026-11-26T10:12:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "v2",
+      "commit": "e41c9a8",
+      "kind": "release",
+      "tag": "risks/R-018/v2",
+      "version": 2,
+      "at": "2026-11-26T10:05:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "2d4a5f7",
+      "commit": "2d4a5f7",
+      "kind": "submit",
+      "tag": null,
+      "version": 2,
+      "at": "2026-11-25T14:30:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      }
+    },
+    {
+      "ref": "601b1dd",
+      "commit": "601b1dd",
+      "kind": "save",
+      "tag": null,
+      "version": 2,
+      "at": "2026-11-25T14:24:00Z",
+      "by": {
+        "pseudonym": "p-2b7f10",
+        "name": "Jordan Weber"
+      }
+    },
+    {
+      "ref": "v1",
+      "commit": "b8bb46f",
+      "kind": "release",
+      "tag": "risks/R-018/v1",
+      "version": 1,
+      "at": "2026-10-05T15:02:00Z",
+      "by": {
+        "pseudonym": "p-7d2e58",
+        "name": "Noor Haddad"
+      }
+    },
+    {
+      "ref": "8378b23",
+      "commit": "8378b23",
+      "kind": "submit",
+      "tag": null,
+      "version": 1,
+      "at": "2026-10-05T14:30:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "f9a99b5",
+      "commit": "f9a99b5",
+      "kind": "save",
+      "tag": null,
+      "version": 1,
+      "at": "2026-10-02T11:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    },
+    {
+      "ref": "0e58f52",
+      "commit": "0e58f52",
+      "kind": "create",
+      "tag": null,
+      "version": 1,
+      "at": "2026-09-28T09:00:00Z",
+      "by": {
+        "pseudonym": "p-4c1a9e",
+        "name": "Alex Example"
+      }
+    }
+  ],
+  "truncated": false
+}

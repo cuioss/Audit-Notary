@@ -4781,6 +4781,194 @@
         "repository": "isms-core",
         "action": "edit"
       }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=v1": {
+      "status": 200,
+      "body_file": "isms-doc-information-security-policy-at-v1.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=v2": {
+      "status": 200,
+      "body_file": "isms-doc-information-security-policy-at-v2.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=v3": {
+      "status": 200,
+      "body_file": "isms-doc-information-security-policy-at-v3.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2?at=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/at",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB2D4F6H8K0N2Q4S6V8X0Z3?at=v1": {
+      "status": 200,
+      "body_file": "isms-doc-access-control-policy-at-v1.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB2D4F6H8K0N2Q4S6V8X0Z3?at=v2": {
+      "status": 200,
+      "body_file": "isms-doc-access-control-policy-at-v2.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB3E5G7J9M1P3R5T7W9Y1B4?at=v1": {
+      "status": 200,
+      "body_file": "isms-doc-secure-development-policy-at-v1.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB4F6H8K0N2Q4S6V8X0Z2C5?at=v1": {
+      "status": 200,
+      "body_file": "isms-doc-isms-scope-at-v1.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB4F6H8K0N2Q4S6V8X0Z2C5?at=v2": {
+      "status": 200,
+      "body_file": "isms-doc-isms-scope-at-v2.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB5G7J9M1P3R5T7W9Y1B3D6?at=v1": {
+      "status": 200,
+      "body_file": "isms-doc-internal-audit-2025-at-v1.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB7J9M1P3R5T7W9Y1B3D5F8?at=v1": {
+      "status": 200,
+      "body_file": "isms-doc-management-review-2026-h1-at-v1.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB8K0N2Q4S6V8X0Z2C4E6G9?at=v1": {
+      "status": 200,
+      "body_file": "isms-doc-management-review-2025-at-v1.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/diff?from=v1&to=v2": {
+      "status": 200,
+      "body_file": "isms-diff-information-security-policy-v1-v2.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/diff?from=v2&to=v3": {
+      "status": 200,
+      "body_file": "isms-diff-information-security-policy-v2-v3.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/diff?from=v1&to=v3": {
+      "status": 200,
+      "body_file": "isms-diff-information-security-policy-v1-v3.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB4F6H8K0N2Q4S6V8X0Z2C5/diff?from=v1&to=v2": {
+      "status": 200,
+      "body_file": "isms-diff-isms-scope-v1-v2.json",
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/diff?from=v9": {
+      "status": 404,
+      "body": {
+        "outcome": "NOT_FOUND"
+      },
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/diff?from=zzz": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/from",
+            "code": "FORMAT"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
+    },
+    "GET /api/v1/documents/isms-core/01JZB1C3E5G7J9M1P3R5T7W9Y2/diff": {
+      "status": 422,
+      "body": {
+        "outcome": "VALIDATION",
+        "errors": [
+          {
+            "pointer": "/from",
+            "code": "REQUIRED"
+          }
+        ]
+      },
+      "requires": {
+        "repository": "isms-core",
+        "action": "read"
+      }
     }
   },
   "states": {
